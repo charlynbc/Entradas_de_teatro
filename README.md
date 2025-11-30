@@ -6,17 +6,15 @@ Sistema completo de gestión de entradas para teatro con roles de usuario, estad
 
 ## 🚀 Quick Start
 
-### Backend (PostgreSQL)
+### Todo el stack en un comando
 ```bash
-cd teatro-tickets-backend
-node index-v3-postgres.js
+npm run dev
 ```
+Este script usa `concurrently` para levantar:
+- `npm run dev:api` → backend en `localhost:3000`
+- `npm run dev:app` → Expo web en `localhost:8081`
 
-### App Móvil
-```bash
-cd baco-teatro-app
-npx expo start
-```
+> Seguí usando las rutas tradicionales si preferís procesos separados (`cd teatro-tickets-backend && npm run dev` o `cd baco-teatro-app && npm run web`).
 
 ---
 

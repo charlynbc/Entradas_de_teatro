@@ -1,4 +1,4 @@
-import db from '../db.js';
+import { readData, writeData } from '../utils/dataStore.js';
 
 export async function crearUsuario(req, res) {
   try {
@@ -12,19 +12,23 @@ export async function crearUsuario(req, res) {
       return res.status(400).json({ error: 'role debe ser ADMIN o VENDEDOR' });
     }
     
-    // Verificar si ya existe
-    const exists = await db.query('SELECT phone FROM users WHERE phone = $1', [phone]);
-    
-    if (exists.rows.length > 0) {
+    const data = await readData();
+    if (data.users.find(user => user.phone === phone)) {
       return res.status(400).json({ error: 'Ya existe un usuario con ese teléfono' });
     }
-    
-    const result = await db.query(
-      'INSERT INTO users(phone, name, role) VALUES($1, $2, $3) RETURNING phone, name, role, created_at',
-      [phone, name || null, role]
-    );
-    
-    res.status(201).json(result.rows[0]);
+
+    const nuevoUsuario = {
+      phone,
+      name: name || null,
+      role,
+      active: true,
+      created_at: new Date().toISOString()
+    };
+
+    data.users.push(nuevoUsuario);
+    await writeData(data);
+
+    res.status(201).json(nuevoUsuario);
   } catch (error) {
     console.error('Error creando usuario:', error);
     res.status(500).json({ error: error.message });
@@ -33,10 +37,11 @@ export async function crearUsuario(req, res) {
 
 export async function listarUsuarios(req, res) {
   try {
-    const result = await db.query(
-      'SELECT phone, name, role, created_at FROM users WHERE active = TRUE ORDER BY created_at'
-    );
-    res.json(result.rows);
+    const data = await readData();
+    const usuariosActivos = (data.users || [])
+      .filter(user => user.active !== false)
+      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    res.json(usuariosActivos);
   } catch (error) {
     console.error('Error listando usuarios:', error);
     res.status(500).json({ error: error.message });
@@ -45,12 +50,11 @@ export async function listarUsuarios(req, res) {
 
 export async function listarVendedores(req, res) {
   try {
-    const result = await db.query(
-      `SELECT phone, name, created_at FROM users 
-       WHERE role = 'VENDEDOR' AND active = TRUE 
-       ORDER BY name`
-    );
-    res.json(result.rows);
+    const data = await readData();
+    const vendedores = (data.users || [])
+      .filter(user => user.role === 'VENDEDOR' && user.active !== false)
+      .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    res.json(vendedores);
   } catch (error) {
     console.error('Error listando vendedores:', error);
     res.status(500).json({ error: error.message });
@@ -60,9 +64,13 @@ export async function listarVendedores(req, res) {
 export async function desactivarUsuario(req, res) {
   try {
     const { phone } = req.params;
-    
-    await db.query('UPDATE users SET active = FALSE WHERE phone = $1', [phone]);
-    
+    const data = await readData();
+    const user = data.users.find(u => u.phone === phone);
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+    user.active = false;
+    await writeData(data);
     res.json({ ok: true, mensaje: 'Usuario desactivado' });
   } catch (error) {
     console.error('Error desactivando usuario:', error);

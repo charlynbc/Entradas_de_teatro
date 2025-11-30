@@ -1,6 +1,6 @@
 import QRCode from 'qrcode';
 import { generateTicketCode } from '../utils/generateCode.js';
-import { getTickets, addTicket, updateTicketByCode } from '../utils/dataStore.js';
+import { getTickets, addTicket, updateTicketByCode, findShowById } from '../utils/dataStore.js';
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 
@@ -24,17 +24,27 @@ export async function asignarTickets(req, res) {
   try {
     const { cantidad, show_id } = req.body;
     const vendedorPhone = req.user.phone;
-    if (!cantidad || !show_id) {
+    const cantidadNum = Number(cantidad);
+    const showIdNum = Number(show_id);
+    if (!cantidadNum || !showIdNum) {
       return res.status(400).json({ error: 'Faltan datos' });
     }
+    const show = await findShowById(showIdNum);
+    if (!show) {
+      return res.status(404).json({ error: 'Función no encontrada' });
+    }
     const tickets = [];
-    for (let i = 0; i < cantidad; i++) {
+    const basePrice = Number(show.base_price) || 0;
+    for (let i = 0; i < cantidadNum; i++) {
       const ticket = {
         id: Date.now() + i,
         code: generateTicketCode(),
-        show_id,
+        show_id: showIdNum,
         vendedor_phone: vendedorPhone,
-        usado: false,
+        estado: 'STOCK_VENDEDOR',
+        precio: basePrice,
+        created_at: new Date().toISOString(),
+        usado: false
       };
       await addTicket(ticket);
       tickets.push(ticket);
@@ -71,11 +81,15 @@ export async function validarTicket(req, res) {
     if (!ticket) {
       return res.status(404).json({ ok: false, mensaje: 'Ticket inválido' });
     }
-    if (ticket.usado) {
+    if (ticket.usado || ticket.estado === 'USADO') {
       return res.json({ ok: false, mensaje: 'Ticket ya fue usado' });
     }
-    await updateTicketByCode(code, { usado: true });
-    res.json({ ok: true, mensaje: 'Ticket validado con éxito', ticket });
+    const actualizado = await updateTicketByCode(code, {
+      usado: true,
+      estado: 'USADO',
+      validado_at: new Date().toISOString()
+    });
+    res.json({ ok: true, mensaje: 'Ticket validado con éxito', ticket: actualizado });
   } catch (error) {
     console.error('Error validarTicket:', error);
     res.status(500).json({ ok: false, error: 'Error validando ticket' });

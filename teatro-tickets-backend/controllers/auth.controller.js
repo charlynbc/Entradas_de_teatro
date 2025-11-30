@@ -1,5 +1,5 @@
-import db from '../db.js';
 import { comparePassword, hashPassword, generateToken } from '../config/auth.js';
+import { readData, writeData } from '../utils/dataStore.js';
 
 export async function login(req, res) {
   try {
@@ -9,12 +9,8 @@ export async function login(req, res) {
       return res.status(400).json({ error: 'phone y password son obligatorios' });
     }
     
-    const result = await db.query(
-      'SELECT * FROM users WHERE phone = $1 AND active = TRUE',
-      [phone]
-    );
-    
-    const user = result.rows[0];
+    const data = await readData();
+    const user = (data.users || []).find(u => u.phone === phone && u.active !== false);
     
     if (!user) {
       return res.status(404).json({ error: 'Usuario no existe' });
@@ -62,37 +58,31 @@ export async function completarRegistro(req, res) {
       return res.status(400).json({ error: 'phone, name y password son obligatorios' });
     }
     
-    // Verificar que el usuario existe y no tiene password
-    const check = await db.query(
-      'SELECT password_hash FROM users WHERE phone = $1',
-      [phone]
-    );
+    const data = await readData();
+    const user = (data.users || []).find(u => u.phone === phone);
     
-    if (check.rows.length === 0) {
+    if (!user) {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
     
-    if (check.rows[0].password_hash) {
+    if (user.password_hash) {
       return res.status(400).json({ error: 'Usuario ya completó registro' });
     }
     
-    const passHash = await hashPassword(password);
-    
-    await db.query(
-      'UPDATE users SET name = $1, password_hash = $2 WHERE phone = $3',
-      [name, passHash, phone]
-    );
+    user.name = name;
+    user.password_hash = await hashPassword(password);
+    await writeData(data);
     
     const token = generateToken({
       phone,
-      role: check.rows[0].role,
+      role: user.role,
       name
     });
     
     res.json({ 
       ok: true, 
       token,
-      user: { phone, name, role: check.rows[0].role }
+      user: { phone, name, role: user.role }
     });
   } catch (error) {
     console.error('Error completando registro:', error);

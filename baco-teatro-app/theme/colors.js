@@ -1,45 +1,45 @@
-export default {
-  // Colores principales
-  primary: "#C84A1B",
-  secondary: "#2E7D32",
-  accent: "#FF6F00",
+const colors = {
+  primary: '#6A040F', // Vino Baco
+  primaryDark: '#370617',
+  secondary: '#F48C06', // Ámbar Baco
+  secondaryDark: '#DC6704',
+  accent: '#FFBE0B',
 
-  // Fondo y superficies
-  background: "#FAFAFA",
-  surface: "#FFFFFF",
-  card: "#FFFFFF",
-  white: "#FFFFFF",
-  lightGray: "#E0E0E0",
+  background: '#12090D',
+  surface: '#211018',
+  surfaceAlt: '#2B1420',
+  overlay: 'rgba(0,0,0,0.3)',
+  card: '#1B0E14',
+  white: '#FFFFFF',
+  black: '#000000',
 
-  // Texto
-  text: "#212121",
-  textSecondary: "#757575",
-  textLight: "#BDBDBD",
+  text: '#F5F1ED',
+  textMuted: '#CBBFBB',
+  textSoft: '#9C8C88',
 
-  // Estados
-  success: "#4CAF50",
-  error: "#F44336",
-  warning: "#FF9800",
-  info: "#2196F3",
+  success: '#2EC4B6',
+  warning: '#FF9F1C',
+  error: '#E63946',
+  info: '#4CC9F0',
 
-  // Grises
-  gray: "#9E9E9E",
-  grayLight: "#E0E0E0",
-  grayDark: "#616161",
+  gray: '#7C6F72',
+  grayLight: '#BFAFB5',
+  grayDark: '#4A4044',
+  border: 'rgba(255,255,255,0.08)',
+  shadow: 'rgba(0,0,0,0.25)',
 
-  // Bordes y sombras
-  border: "#E0E0E0",
-  shadow: "rgba(0,0,0,0.1)",
+  gradientPrimary: ['#6A040F', '#8C1C13', '#DC6704'],
+  gradientSecondary: ['#F48C06', '#FFBA08'],
+  gradientDark: ['#12090D', '#1F0B16'],
 
-  // Gradientes
-  gradientPrimary: ["#C84A1B", "#D84315"],
-  gradientSecondary: ["#2E7D32", "#388E3C"],
-
-  // Tema oscuro (opcional)
-  dark: {
-    background: "#121212",
-    surface: "#1E1E1E",
-    text: "#FFFFFF",
-    textSecondary: "#B0B0B0",
-  }
+  states: {
+    disponible: '#4CC9F0',
+    reservada: '#FFBE0B',
+    vendida: '#F48C06',
+    pagada: '#2EC4B6',
+    usada: '#9D4EDD',
+    transferida: '#FF6D00',
+  },
 };
+
+export default colors;

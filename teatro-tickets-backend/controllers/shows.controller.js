@@ -1,6 +1,6 @@
-import db from '../db.js';
-import { generateTicketCode } from '../utils/generateCode.js';
 import QRCode from 'qrcode';
+import { generateTicketCode } from '../utils/generateCode.js';
+import { readData, writeData, nextId } from '../utils/dataStore.js';
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 
@@ -18,43 +18,55 @@ async function generarQR(code) {
 export async function crearShow(req, res) {
   try {
     const { obra, fecha, lugar, capacidad, base_price } = req.body;
-    
-    if (!obra || !fecha || !capacidad || !base_price) {
+    const capacidadNum = Number(capacidad);
+    const basePriceNum = Number(base_price);
+
+    if (!obra || !fecha || !capacidadNum || !basePriceNum) {
       return res.status(400).json({ 
         error: 'obra, fecha, capacidad y base_price son obligatorios' 
       });
     }
-    
-    const result = await db.query(
-      `INSERT INTO shows(obra, fecha, lugar, capacidad, base_price)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING *`,
-      [obra, fecha, lugar || null, capacidad, base_price]
-    );
-    
-    const show = result.rows[0];
-    
-    // Generar tickets automáticamente
+    const data = await readData();
+    const showId = nextId(data.shows);
+    const now = new Date().toISOString();
+
+    const show = {
+      id: showId,
+      obra,
+      fecha,
+      lugar: lugar || null,
+      capacidad: capacidadNum,
+      base_price: basePriceNum,
+      created_at: now
+    };
+
     const tickets = [];
-    for (let i = 0; i < capacidad; i++) {
+    let ticketSequence = nextId(data.tickets);
+    for (let i = 0; i < capacidadNum; i++) {
       let code;
       do {
         code = generateTicketCode();
-        const exists = await db.query('SELECT code FROM tickets WHERE code = $1', [code]);
-        if (exists.rows.length === 0) break;
-      } while (true);
-      
-      const qrCode = await generarQR(code);
-      
-      await db.query(
-        `INSERT INTO tickets (code, show_id, estado, qr_code)
-         VALUES ($1, $2, 'DISPONIBLE', $3)`,
-        [code, show.id, qrCode]
+      } while (
+        data.tickets.some(t => t.code === code) ||
+        tickets.some(t => t.code === code)
       );
-      
-      tickets.push({ code, estado: 'DISPONIBLE' });
+
+      const qrCode = await generarQR(code);
+      tickets.push({
+        id: ticketSequence++,
+        code,
+        show_id: showId,
+        estado: 'DISPONIBLE',
+        qr_code: qrCode,
+        precio: basePriceNum,
+        created_at: now
+      });
     }
-    
+
+    data.shows.push(show);
+    data.tickets.push(...tickets);
+    await writeData(data);
+
     res.status(201).json({
       show,
       tickets_generados: tickets.length,
@@ -68,8 +80,9 @@ export async function crearShow(req, res) {
 
 export async function listarShows(req, res) {
   try {
-    const result = await db.query('SELECT * FROM shows ORDER BY fecha DESC');
-    res.json(result.rows);
+    const data = await readData();
+    const shows = [...(data.shows || [])].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+    res.json(shows);
   } catch (error) {
     console.error('Error listando shows:', error);
     res.status(500).json({ error: error.message });
@@ -80,47 +93,47 @@ export async function asignarTickets(req, res) {
   try {
     const showId = parseInt(req.params.id);
     const { vendedor_phone, cantidad } = req.body;
-    
-    if (!vendedor_phone || !cantidad) {
+    const cantidadNum = Number(cantidad);
+
+    if (!vendedor_phone || !cantidadNum) {
       return res.status(400).json({ error: 'vendedor_phone y cantidad son obligatorios' });
     }
-    
-    // Verificar vendedor
-    const vendedor = await db.query(
-      `SELECT phone, name FROM users WHERE phone = $1 AND role = 'VENDEDOR' AND active = TRUE`,
-      [vendedor_phone]
+    const data = await readData();
+    const show = data.shows.find(s => s.id === showId);
+    if (!show) {
+      return res.status(404).json({ error: 'Función no encontrada' });
+    }
+
+    const vendedor = (data.users || []).find(
+      user => user.phone === vendedor_phone && user.role === 'VENDEDOR' && user.active !== false
     );
-    
-    if (vendedor.rows.length === 0) {
+    if (!vendedor) {
       return res.status(404).json({ error: 'Vendedor no encontrado' });
     }
-    
-    // Obtener tickets disponibles
-    const disponibles = await db.query(
-      `SELECT code FROM tickets 
-       WHERE show_id = $1 AND estado = 'DISPONIBLE' 
-       LIMIT $2`,
-      [showId, cantidad]
+
+    const disponibles = data.tickets.filter(
+      ticket => ticket.show_id === showId && ticket.estado === 'DISPONIBLE'
     );
-    
-    if (disponibles.rows.length < cantidad) {
+
+    if (disponibles.length < cantidadNum) {
       return res.status(400).json({
-        error: `Solo hay ${disponibles.rows.length} tickets disponibles`
+        error: `Solo hay ${disponibles.length} tickets disponibles`
       });
     }
-    
-    // Asignar
-    const codes = disponibles.rows.map(r => r.code);
-    await db.query(
-      `UPDATE tickets 
-       SET estado = 'STOCK_VENDEDOR', vendedor_phone = $1, asignado_at = NOW()
-       WHERE code = ANY($2::text[])`,
-      [vendedor_phone, codes]
-    );
-    
+
+    const asignados = disponibles.slice(0, cantidadNum);
+    const now = new Date().toISOString();
+    asignados.forEach(ticket => {
+      ticket.estado = 'STOCK_VENDEDOR';
+      ticket.vendedor_phone = vendedor_phone;
+      ticket.asignado_at = now;
+    });
+
+    await writeData(data);
+    const codes = asignados.map(t => t.code);
     res.json({
-      mensaje: `${codes.length} tickets asignados a ${vendedor.rows[0].name}`,
-      vendedor: vendedor.rows[0],
+      mensaje: `${codes.length} tickets asignados a ${vendedor.name || vendedor.phone}`,
+      vendedor: { phone: vendedor.phone, name: vendedor.name },
       tickets: codes
     });
   } catch (error) {
