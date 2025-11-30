@@ -14,26 +14,29 @@
     "assetBundlePatterns": [
       "**/*"
     ],
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.bacoteatro.app"
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#C84A1B"
-      },
-      "package": "com.charlynbc.bacoteatro",
-      "permissions": [
-        "CAMERA",
-        "android.permission.CAMERA"
-      ]
-    },
+    "ios": {},
+    "android": {},
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "name": "Baco Teatro",
+      "shortName": "Baco",
+      "lang": "es",
+      "scope": "/",
+      "themeColor": "#C84A1B",
+      "description": "Sistema de gestión de tickets para teatro",
+      "orientation": "portrait",
+      "display": "standalone",
+      "startUrl": "/",
+      "backgroundColor": "#C84A1B",
+      "splash": {
+        "image": "./assets/splash.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#C84A1B"
+      }
     },
     "plugins": [
-      "expo-barcode-scanner"
+      "expo-barcode-scanner",
+      "expo-asset"
     ],
     "extra": {
       "eas": {

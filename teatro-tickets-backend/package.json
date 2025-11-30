@@ -2,11 +2,10 @@
   "name": "teatro-tickets-backend",
   "version": "3.0.0",
   "description": "Sistema Baco Teatro - Backend con PostgreSQL y JWT",
-  "main": "index.js",
-  "type": "module",
+  "main": "index-v3-postgres.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "node index.js",
+    "start": "node index-v3-postgres.js",
+    "dev": "node index-v3-postgres.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

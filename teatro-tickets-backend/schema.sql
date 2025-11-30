@@ -2,9 +2,9 @@
 -- BACO TEATRO - SCHEMA v3.0 con PostgreSQL
 -- ========================================
 
--- 1. USUARIOS (phone como ID único)
+-- 1. USUARIOS (cedula como ID único)
 CREATE TABLE users (
-  phone         VARCHAR(20) PRIMARY KEY,   -- número de teléfono (con código país)
+  cedula         VARCHAR(20) PRIMARY KEY,   -- número de cédula
   name          VARCHAR(100) NOT NULL,
   role          VARCHAR(20) NOT NULL CHECK (role IN ('ADMIN', 'VENDEDOR')),
   password_hash TEXT,                       -- NULL = primera vez, debe crear
@@ -13,10 +13,10 @@ CREATE TABLE users (
 );
 
 -- Admins iniciales
-INSERT INTO users (phone, name, role, password_hash, active) VALUES
-  ('+5491111111111', 'Admin Baco', 'ADMIN', '$2b$10$dummyhash1', TRUE),
-  ('+5491122222222', 'Javier Director', 'ADMIN', '$2b$10$dummyhash2', TRUE),
-  ('+5491133333333', 'Carolina Producción', 'ADMIN', '$2b$10$dummyhash3', TRUE);
+INSERT INTO users (cedula, name, role, password_hash, active) VALUES
+  ('48376669', 'Barrios', 'ADMIN', '$2b$10$dummyhash1', TRUE),
+  ('48376668', 'Admin Sistema', 'ADMIN', '$2b$10$dummyhash2', TRUE),
+  ('48376667', 'Vendedor Base', 'ADMIN', '$2b$10$dummyhash3', TRUE);
 
 -- 2. FUNCIONES (shows)
 CREATE TABLE shows (

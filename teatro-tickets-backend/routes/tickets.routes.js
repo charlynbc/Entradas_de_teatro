@@ -1,30 +1,17 @@
 import express from 'express';
-import {
-  misTickets,
-  reservarTicket,
-  reportarVenta,
-  aprobarPago,
-  generarQRTicket,
-  validarTicket,
-  buscarTickets,
-  transferirTicket
-} from '../controllers/tickets.controller.js';
+import { misTickets, asignarTickets, generarQR, validarTicket } from '../controllers/tickets.controller.js';
 import { authenticate, requireRole } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
-// Vendedor
+// Vendedor endpoints
 router.get('/mis-tickets', authenticate, requireRole('VENDEDOR'), misTickets);
-router.post('/:code/reserve', authenticate, requireRole('VENDEDOR'), reservarTicket);
-router.post('/:code/report-sold', authenticate, requireRole('VENDEDOR'), reportarVenta);
-router.post('/:code/transfer', authenticate, requireRole('VENDEDOR'), transferirTicket);
+router.post('/asignar', authenticate, requireRole('VENDEDOR'), asignarTickets);
 
-// Admin
-router.post('/:code/approve-payment', authenticate, requireRole('ADMIN'), aprobarPago);
-router.get('/search', authenticate, requireRole('ADMIN'), buscarTickets);
-router.post('/:code/validate', authenticate, requireRole('ADMIN'), validarTicket);
+// Generar QR para un ticket especifico
+router.get('/:ticket_id/qr', authenticate, requireRole('VENDEDOR'), generarQR);
 
-// Público (con autenticación)
-router.get('/:code/qr', authenticate, generarQRTicket);
+// Validar ticket (acceso publico)
+router.get('/validar/:code', validarTicket);
 
 export default router;

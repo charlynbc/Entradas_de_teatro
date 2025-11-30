@@ -11,53 +11,50 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+// import AsyncStorage from '@react-native-async-storage/async-storage';
 import colors from '../theme/colors';
 import { login } from '../api/api';
 
-export default function LoginScreen({ navigation }) {
-  const [phone, setPhone] = useState('');
+export default function LoginScreen({ onLogin }) {
+  const [cedula, setCedula] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    if (!phone || !password) {
-      Alert.alert('Error', 'Por favor ingresa teléfono y contraseña');
+    if (!cedula || !password) {
+      Alert.alert('Error', 'Por favor ingresa cédula y contraseña');
       return;
     }
 
     setLoading(true);
+    console.log('Iniciando login...');
+    console.log('Cédula:', cedula);
+    
     try {
-      const data = await login(phone, password);
+      const data = await login(cedula, password);
+      console.log('Datos recibidos:', data);
 
       if (data.error) {
+        console.error('Error del servidor:', data.error);
         Alert.alert('Error', data.error);
+        setLoading(false);
         return;
       }
 
-      if (data.requiresSetup) {
-        Alert.alert(
-          'Primera vez',
-          'Debes completar tu registro',
-          [{ text: 'OK' }]
-        );
-        return;
-      }
-
-      // Guardar datos en AsyncStorage
-      await AsyncStorage.setItem('token', data.token);
-      await AsyncStorage.setItem('user', JSON.stringify(data.user));
-
-      // Navegar según rol
-      if (data.user.role === 'ADMIN') {
-        navigation.replace('AdminHome');
+      // El backend devuelve: { token, usuario: { id, nombre, rol, ... } }
+      if (data.token && data.usuario) {
+        console.log('Login exitoso, usuario:', data.usuario);
+        await onLogin(data.usuario, data.token);
       } else {
-        navigation.replace('VendedorHome');
+        console.error('Respuesta inválida:', data);
+        Alert.alert('Error', 'Respuesta inválida del servidor');
+        setLoading(false);
       }
     } catch (error) {
       console.error('Error en login:', error);
-      Alert.alert('Error', 'No se pudo conectar con el servidor');
-    } finally {
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+      Alert.alert('Error', 'No se pudo conectar con el servidor: ' + error.message);
       setLoading(false);
     }
   };
@@ -77,14 +74,14 @@ export default function LoginScreen({ navigation }) {
 
         {/* Formulario */}
         <View style={styles.form}>
-          <Text style={styles.label}>Teléfono</Text>
+          <Text style={styles.label}>Cédula</Text>
           <TextInput
             style={styles.input}
-            placeholder="+5491122334455"
+            placeholder="12345678"
             placeholderTextColor={colors.gray}
-            value={phone}
-            onChangeText={setPhone}
-            keyboardType="phone-pad"
+            value={cedula}
+            onChangeText={setCedula}
+            keyboardType="numeric"
             autoCapitalize="none"
             autoCorrect={false}
           />
@@ -138,11 +135,11 @@ const styles = StyleSheet.create({
     marginBottom: 48,
   },
   title: {
-    fontSize: 72,
+    fontSize: 48,
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: 'bold',
     color: colors.primary,
     marginBottom: 4,

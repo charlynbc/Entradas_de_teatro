@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import { View, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Importar pantallas existentes
 import LoginScreen from './screens/LoginScreen';
@@ -9,44 +9,40 @@ import VendedorHome from './screens/VendedorHome';
 
 export default function App() {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
+  const handleLogin = (userData, token) => {
+    console.log('App.js - Login exitoso:', userData);
+    setUser(userData);
+  };
 
-  async function checkAuth() {
-    try {
-      const userStr = await AsyncStorage.getItem('user');
-      if (userStr) {
-        setUser(JSON.parse(userStr));
-      }
-    } catch (error) {
-      console.log('Error checking auth:', error);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  if (loading) {
-    return null;
-  }
+  const handleLogout = () => {
+    setUser(null);
+  };
 
   if (!user) {
     return (
-      <NavigationContainer>
-        <LoginScreen onLogin={(userData) => setUser(userData)} />
-      </NavigationContainer>
+      <View style={styles.container}>
+        <LoginScreen onLogin={handleLogin} />
+      </View>
     );
   }
-
+  
   return (
-    <NavigationContainer>
-      {user.role === 'ADMIN' ? (
-        <AdminHome onLogout={() => setUser(null)} />
-      ) : (
-        <VendedorHome onLogout={() => setUser(null)} />
-      )}
-    </NavigationContainer>
+    <View style={styles.container}>
+      <NavigationContainer>
+        {user.rol === 'supremo' || user.rol === 'admin' ? (
+          <AdminHome user={user} onLogout={handleLogout} />
+        ) : (
+          <VendedorHome user={user} onLogout={handleLogout} />
+        )}
+      </NavigationContainer>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#FAFAFA',
+  },
+});

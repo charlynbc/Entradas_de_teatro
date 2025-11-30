@@ -1,6 +1,5 @@
 // db.js - Conexión a PostgreSQL con soporte para Render y desarrollo local
-import pkg from 'pg';
-const { Pool } = pkg;
+const { Pool } = require('pg');
 
 // Configuración de conexión
 const isProduction = process.env.NODE_ENV === 'production';
@@ -77,7 +76,7 @@ const closePool = async () => {
   await pool.end();
 };
 
-export default {
+module.exports = {
   query,
   pool,
   testConnection,

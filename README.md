@@ -1,4 +1,4 @@
-# 🎭 Baco Teatro - Sistema de Gestión de Tickets v2.0
+# 🎭 Baco Teatro - Sistema de Gestión de Tickets v3.0
 
 Sistema completo de gestión de entradas para teatro con roles de usuario, estados de tickets y app móvil.
 
@@ -6,10 +6,10 @@ Sistema completo de gestión de entradas para teatro con roles de usuario, estad
 
 ## 🚀 Quick Start
 
-### Backend
+### Backend (PostgreSQL)
 ```bash
 cd teatro-tickets-backend
-node index.js
+node index-v3-postgres.js
 ```
 
 ### App Móvil
@@ -24,216 +24,330 @@ npx expo start
 
 ```
 Entradas_de_teatro/
-├── teatro-tickets-backend/     # Backend Node.js + Express
-│   └── index.js               # API REST completa (453 líneas)
+├── teatro-tickets-backend/     # Backend Node.js + Express + PostgreSQL
+│   ├── index-v3-postgres.js    # API REST completa
+│   ├── schema.sql             # Esquema de base de datos
+│   └── db.js                  # Conexión PostgreSQL
 ├── baco-teatro-app/           # App React Native + Expo
 │   ├── App.js                 # Navegación condicional
 │   └── src/
 │       ├── context/           # UserContext
 │       ├── services/          # API client
-│       ├── screens/           # 8 pantallas
+│       ├── screens/           # Pantallas
 │       └── theme/             # Colores Baco
-├── SISTEMA_V2.md              # 📘 Especificación técnica
-├── GUIA_USO_V2.md             # 📗 Manual de uso
-├── GUIA_IMPLEMENTACION_V2.md  # 📙 Resumen implementación
-└── test-sistema-v2.sh         # 🧪 Script de pruebas
+└── README.md                  # Esta guía
 ```
 
 ---
 
-## 🎯 Características Principales
+## ✅ Nuevas Funcionalidades Implementadas
 
-### ✅ Sistema de Roles
-- **ADMIN** (máx 3): Distribuir, cobrar, validar
-- **VENDEDOR** (ilimitados): Reservar, transferir
+### Backend (Node + Express + PostgreSQL)
+- ✅ Modelo de usuarios con cédula (supremo, admin, vendedor)
+- ✅ Autenticación con login
+- ✅ Generación automática de QR para cada ticket
+- ✅ Endpoint de venta con datos completos (vendedor, comprador, medio de pago, monto)
+- ✅ Reportes de ventas por vendedor y función
+- ✅ CRUD completo de usuarios y shows
 
-### ✅ Estados de Tickets
-```
-DISPONIBLE → STOCK_VENDEDOR → RESERVADO → PAGADO → USADO
-```
-
-### ✅ Funcionalidades
-- 📦 Distribución de tickets a vendedores
-- 🎫 Reserva de tickets con datos de comprador
-- 💰 Cobro y marcado como pagado
-- 📱 Scanner QR para validación en puerta
-- 🔄 Transferencias entre vendedores
-- 🔍 Búsqueda por código o nombre
-- 📊 Reportes en tiempo real
+### App Móvil (React Native + Expo)
+- ✅ Login con cédula y contraseña
+- ✅ Navegación por roles (Admin, Vendedor)
+- ✅ Pantalla de registro de ventas
+- ✅ Scanner de QR con cámara para validación
+- ✅ Pantalla de reportes con estadísticas
 
 ---
 
-## 📱 Pantallas de la App
+## 📋 Cómo Probar Todo el Sistema
 
-### Admin (4 tabs)
-- **Distribuir:** Asignar tickets a vendedores
-- **Cobrar:** Buscar y marcar como pagados
-- **Validar:** Scanner QR
-- **Reportes:** Estadísticas globales
+### 1️⃣ Preparar el Backend
 
-### Vendedor (3 tabs)
-- **Mis Tickets:** Inventario + transferencias
-- **Reservar:** Asignar ticket a cliente
-- **Reportes:** Estadísticas personales
-
----
-
-## 🎨 Identidad Visual
-
-**Baco Teatro**
-- Primario: `#C84A1B` (Naranja)
-- Fondo: `#FEFEFE` (Blanco)
-- Texto: `#2C2C2C` (Negro)
-
----
-
-## 📚 Documentación
-
-| Archivo | Descripción |
-|---------|-------------|
-| `SISTEMA_V2.md` | Especificación técnica completa con todos los endpoints |
-| `GUIA_USO_V2.md` | Manual de usuario con ejemplos y comandos curl |
-| `GUIA_IMPLEMENTACION_V2.md` | Resumen de lo implementado |
-
----
-
-## 🧪 Testing
-
-Ejecuta el script de pruebas:
 ```bash
-bash test-sistema-v2.sh
+# Terminal 1 - Levantar backend
+cd teatro-tickets-backend
+node index-v3-postgres.js
+# Debe decir: "Servidor escuchando en puerto 3000"
 ```
 
-Prueba todos los flujos:
-- Crear función → Asignar → Reservar → Cobrar → Validar
+### 2️⃣ Crear Datos de Prueba
 
----
+Abrí otra terminal y ejecutá estos comandos:
 
-## 🔌 API Endpoints (Principales)
+```bash
+# Crear vendedores
+curl -X POST http://localhost:3000/api/vendedores \
+  -H "Content-Type: application/json" \
+  -d '{"nombre":"Juan Pérez","alias":"Elenco","activo":true}'
 
-### Shows
-- `POST /api/shows` - Crear función (auto-genera tickets)
-- `GET /api/shows` - Listar funciones
+curl -X POST http://localhost:3000/api/vendedores \
+  -H "Content-Type: application/json" \
+  -d '{"nombre":"Ana García","alias":"Producción","activo":true}'
 
-### Admin
-- `POST /api/shows/:id/assign-tickets` - Asignar a vendedor
-- `GET /api/tickets/search?q=...` - Buscar tickets
-- `POST /api/tickets/:code/mark-paid` - Marcar como pagado
-- `POST /api/tickets/:code/validate` - Validar en puerta
+curl -X POST http://localhost:3000/api/vendedores \
+  -H "Content-Type: application/json" \
+  -d '{"nombre":"Carlos López","alias":"Staff","activo":true}'
 
-### Vendedor
-- `GET /api/vendedores/:id/tickets` - Mis tickets
-- `POST /api/tickets/:code/reserve` - Reservar
-- `POST /api/tickets/:code/transfer` - Transferir
+# Crear una función
+curl -X POST http://localhost:3000/api/shows \
+  -H "Content-Type: application/json" \
+  -d '{"obra":"Romeo y Julieta","fecha":"2025-12-31 20:00","capacidad":50}'
 
-### Reportes
-- `GET /api/reportes/ventas?showId=X` - Reporte de función
-
----
-
-## 👥 Usuarios Pre-configurados
-
-3 Administradores incluidos:
-1. Admin Baco (admin@baco.com)
-2. Javier Director (javier@baco.com)
-3. Carolina Producción (carolina@baco.com)
-
----
-
-## 🔄 Flujo de Trabajo
-
-```
-1. Admin crea función
-   └─> Se generan N tickets DISPONIBLES
-
-2. Admin asigna tickets a vendedor
-   └─> Pasan a STOCK_VENDEDOR
-
-3. Vendedor reserva para cliente
-   └─> Pasa a RESERVADO
-
-4. Cliente paga con admin
-   └─> Pasa a PAGADO
-
-5. Admin escanea QR en puerta
-   └─> Pasa a USADO ✅
+# Generar 20 tickets con QR
+curl -X POST http://localhost:3000/api/shows/1/generate-tickets \
+  -H "Content-Type: application/json" \
+  -d '{"cantidad":20}'
 ```
 
----
+**Anotar algunos códigos de ticket** (ej: T-A1B2C3D4) que vas a usar en la app.
 
-## 💪 Qué Resuelve
+### 3️⃣ Configurar la App Móvil
 
-✅ Control total del inventario
-✅ Trazabilidad completa de ventas
-✅ Evita fraude y duplicados
-✅ Proceso claro: reservar → pagar → validar
-✅ Reportes por vendedor
-✅ Transferencias entre vendedores
-✅ Entrada rápida con QR
+#### Si vas a usar desde el celular:
 
----
+1. En VS Code, panel **PORTS** → puerto 3000 → Click derecho → **Port Visibility** → **Public**
+2. Copiar la URL pública (ej: `https://xxxx-3000.app.github.dev`)
+3. Editar `baco-teatro-app/src/services/api.js`:
 
-## 🛠️ Stack Tecnológico
+```js
+export const API_URL = 'https://tu-url-publica-aqui.app.github.dev';
+```
 
-**Backend:**
-- Node.js + Express 5
-- QRCode (generación automática)
-- Crypto (códigos únicos)
+#### Si vas a usar en emulador (opcional):
 
-**Frontend:**
-- React Native 0.76
-- Expo ~52
-- React Navigation 6
-- Expo Barcode Scanner
+Dejá `http://localhost:3000` como está.
 
-**Arquitectura:**
-- REST API
-- In-memory storage (migrable a DB)
-- Context API para estado global
+### 4️⃣ Levantar la App Móvil
+
+```bash
+# Terminal 2
+cd baco-teatro-app
+npm start
+```
+
+Opciones:
+- **Presiona `a`** para abrir en emulador Android (si tenés uno)
+- **Escanea el QR con Expo Go** en tu celular (recomendado)
 
 ---
 
-## 🚀 Estado del Proyecto
+## 📱 Cómo Usar la App
 
-### ✅ Completado (100%)
-- [x] Backend v2.0 con roles
-- [x] Sistema de estados
-- [x] App móvil completa
-- [x] 8 pantallas funcionales
-- [x] Scanner QR
-- [x] Reportes
-- [x] Búsqueda
-- [x] Transferencias
-- [x] Documentación completa
+### Login
+- **Cédula**: 48376669, **Contraseña**: Te amo mama 1991 (Supremo)
+- **Cédula**: 48376668, **Contraseña**: admin123 (Admin)
+- **Cédula**: 48376667, **Contraseña**: vendedor123 (Vendedor)
 
-### 🎯 Listo para Producción
-El sistema está **completamente funcional** y documentado.
+### Pestaña 1: 💰 VENDER
 
----
+**Flujo completo de venta:**
 
-## 📞 Cómo Empezar
+1. Ingresá un código de ticket (ej: `T-A1B2C3D4`)
+2. Toca **Buscar**
+3. Si el ticket está disponible, se muestra info
+4. Completa el formulario:
+   - **Vendedor**: Selecciona uno (Juan, Ana, Carlos)
+   - **Nombre del comprador**: "María Rodríguez"
+   - **Contacto**: "099 123 456" (opcional)
+   - **Medio de pago**: Selecciona (EFECTIVO / TRANSFERENCIA / PREX / OTRO)
+   - **Monto**: "400"
+5. Toca **Registrar Venta**
+6. ✅ El ticket queda marcado como PAGADO
 
-1. **Lee** `GUIA_USO_V2.md` para entender el flujo
-2. **Inicia** el backend: `cd teatro-tickets-backend && node index.js`
-3. **Inicia** la app: `cd baco-teatro-app && npx expo start`
-4. **Selecciona** un usuario en LoginScreen
-5. **¡Empieza a gestionar tickets!**
-
----
-
-## 🔮 Mejoras Futuras (Opcional)
-
-- Base de datos persistente (PostgreSQL)
-- Autenticación con JWT
-- Pagos online (Mercado Pago)
-- Push notifications
-- Dashboard con gráficos
-- Exportar reportes PDF
+**Probá vender 5-10 tickets** con diferentes vendedores y medios de pago.
 
 ---
 
-**Sistema creado para Baco Teatro 🎭🍷**
+### Pestaña 2: 📷 VALIDAR
 
-**Versión:** 2.0
-**Estado:** ✅ Production Ready
-**Última actualización:** Noviembre 2025
+**Flujo de validación con QR:**
+
+1. Toca la pestaña **Validar**
+2. Permite acceso a la cámara
+3. **Apunta la cámara** a un código QR del ticket
+   - (Por ahora no tenés QR físico, pero podés probar manualmente)
+4. La app muestra:
+   - Código del ticket
+   - Estado actual
+   - Nombre del comprador
+5. Toca **Validar**
+6. ✅ Si está PAGADO → "Ticket válido, bienvenido"
+7. ❌ Si no está pagado o ya fue usado → Rechaza
+
+**Para probar sin QR físico:**
+
+Podés generar un QR en línea:
+1. Andá a https://www.qr-code-generator.com/
+2. Ingresa el código del ticket (ej: `T-A1B2C3D4`)
+3. Descarga el QR
+4. Abrilo en tu compu o imprimí
+5. Escanealo con la app
+
+---
+
+### Pestaña 3: 📊 REPORTES
+
+**Ver estadísticas de ventas:**
+
+1. Toca la pestaña **Reportes**
+2. Selecciona una función (Romeo y Julieta)
+3. Ves:
+   - **Total vendido**: X tickets
+   - **Total recaudado**: $X
+   - Por cada vendedor:
+     - Cantidad vendida
+     - Monto total
+     - Promedio por ticket
+4. **Pull to refresh** para actualizar
+
+---
+
+## 🧪 Casos de Prueba
+
+### Caso 1: Venta Normal
+```
+1. Buscar ticket T-ABC123
+2. Vendedor: Juan Pérez
+3. Comprador: Pedro Gómez
+4. Medio: EFECTIVO
+5. Monto: 400
+✅ Resultado: Ticket vendido
+```
+
+### Caso 2: Intentar Vender Ticket Ya Vendido
+```
+1. Buscar mismo ticket T-ABC123
+❌ Resultado: "Ticket ya vendido"
+```
+
+### Caso 3: Validar Ticket Pagado
+```
+1. Escanear QR de T-ABC123
+2. Confirmar validación
+✅ Resultado: "Ticket válido"
+3. Estado → USADO
+```
+
+### Caso 4: Intentar Validar Ticket Ya Usado
+```
+1. Escanear mismo QR T-ABC123
+❌ Resultado: "Ticket ya usado"
+```
+
+### Caso 5: Intentar Validar Ticket No Pagado
+```
+1. Buscar ticket nuevo T-XYZ789 (sin vender)
+2. Intentar validar
+❌ Resultado: "Ticket no está pagado"
+```
+
+### Caso 6: Ver Reportes con Múltiples Vendedores
+```
+1. Vender 3 tickets con Juan
+2. Vender 2 tickets con Ana
+3. Vender 1 ticket con Carlos
+4. Ir a Reportes
+✅ Resultado: Tabla con ventas de cada uno
+```
+
+---
+
+## 📊 Endpoints de Reportes
+
+### Ver reporte de una función específica:
+```bash
+curl http://localhost:3000/api/reportes/ventas?showId=1
+```
+
+### Ver reporte general (todas las funciones):
+```bash
+curl http://localhost:3000/api/reportes/ventas
+```
+
+Respuesta ejemplo:
+```json
+[
+  {
+    "vendedorId": 1,
+    "vendedorNombre": "Juan Pérez",
+    "cantidadVendida": 5,
+    "montoTotal": 2000
+  },
+  {
+    "vendedorId": 2,
+    "vendedorNombre": "Ana García",
+    "cantidadVendida": 3,
+    "montoTotal": 1200
+  }
+]
+```
+
+---
+
+## 🎯 Modelo de Datos Completo
+
+### Ticket
+```js
+{
+  code: "T-A1B2C3D4",
+  showId: 1,
+  estado: "PAGADO",             // DISPONIBLE | PAGADO | USADO
+  vendedorId: 1,                // Quién lo vendió
+  compradorNombre: "Juan Pérez",
+  compradorContacto: "099123456",
+  medioPago: "PREX",            // EFECTIVO | TRANSFERENCIA | PREX | OTRO
+  monto: 400,
+  qrCode: "data:image/png;base64...",  // QR en base64
+  pagadoAt: "2025-11-27T...",
+  usadoAt: null,
+  createdAt: "2025-11-27T..."
+}
+```
+
+### Usuario
+```js
+{
+  cedula: "48376669",
+  nombre: "Barrios",
+  rol: "supremo",
+  password_hash: "..."
+}
+```
+
+---
+
+## 🐛 Troubleshooting
+
+### La app no se conecta al backend
+1. Verifica que el backend esté corriendo
+2. Verifica que el puerto 3000 esté público
+3. Verifica la URL en `src/services/api.js`
+4. Prueba abrir la URL en el navegador del celular
+
+### La cámara no funciona
+1. Permite permisos de cámara cuando lo pida
+2. En Android: Configuración → Apps → Expo Go → Permisos → Cámara
+3. Reinicia la app
+
+### Error "Ticket no encontrado"
+1. Verifica que el código esté bien escrito (MAYÚSCULAS)
+2. Lista todos los tickets: `curl http://localhost:3000/api/shows/1/tickets`
+
+### Los reportes están vacíos
+1. Asegurate de haber **vendido** tickets (no solo generarlos)
+2. Usa el endpoint `/tickets/:code/sell`, no `/pay`
+
+---
+
+## ✨ Próximos Pasos
+
+Cuando todo esto funcione bien:
+
+1. **Deploy en Render** (backend en producción)
+2. **PostgreSQL en Render** (base de datos persistente)
+3. **Descargar QR** (generar PDF con todos los tickets)
+4. **Panel web** (administración desde navegador)
+
+---
+
+¡Todo listo para rockear! 🎭🍊

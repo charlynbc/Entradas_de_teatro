@@ -59,7 +59,7 @@ app.get('/health', async (req, res) => {
 app.get('/api/usuarios', async (req, res) => {
   try {
     const result = await db.query(
-      'SELECT phone, name, role, created_at FROM users WHERE active = TRUE ORDER BY created_at'
+      'SELECT cedula, name, role, created_at FROM users WHERE active = TRUE ORDER BY created_at'
     );
     res.json(result.rows);
   } catch (error) {
@@ -69,10 +69,10 @@ app.get('/api/usuarios', async (req, res) => {
 
 // Crear usuario (admin o vendedor)
 app.post('/api/usuarios', async (req, res) => {
-  const { phone, name, role, password } = req.body;
+  const { cedula, name, role, password } = req.body;
   
-  if (!phone || !name || !role) {
-    return res.status(400).json({ error: 'phone, name y role son obligatorios' });
+  if (!cedula || !name || !role) {
+    return res.status(400).json({ error: 'cedula, name y role son obligatorios' });
   }
   
   if (!['ADMIN', 'VENDEDOR'].includes(role)) {
@@ -81,7 +81,7 @@ app.post('/api/usuarios', async (req, res) => {
   
   try {
     // Verificar si ya existe
-    const exists = await db.query('SELECT phone FROM users WHERE phone = $1', [phone]);
+    const exists = await db.query('SELECT cedula FROM users WHERE cedula = $1', [cedula]);
     if (exists.rows.length > 0) {
       return res.status(400).json({ error: 'Ya existe un usuario con ese teléfono' });
     }
@@ -89,10 +89,10 @@ app.post('/api/usuarios', async (req, res) => {
     const passwordHash = password ? await hashPassword(password) : null;
     
     const result = await db.query(
-      `INSERT INTO users (phone, name, role, password_hash) 
+      `INSERT INTO users (cedula, name, role, password_hash) 
        VALUES ($1, $2, $3, $4) 
-       RETURNING phone, name, role, created_at`,
-      [phone, name, role, passwordHash]
+       RETURNING cedula, name, role, created_at`,
+      [cedula, name, role, passwordHash]
     );
     
     res.status(201).json(result.rows[0]);
@@ -103,16 +103,16 @@ app.post('/api/usuarios', async (req, res) => {
 
 // Login
 app.post('/api/auth/login', async (req, res) => {
-  const { phone, password } = req.body;
+  const { cedula, password } = req.body;
   
-  if (!phone || !password) {
-    return res.status(400).json({ error: 'phone y password son obligatorios' });
+  if (!cedula || !password) {
+    return res.status(400).json({ error: 'cedula y password son obligatorios' });
   }
   
   try {
     const result = await db.query(
-      'SELECT phone, name, role, password_hash FROM users WHERE phone = $1 AND active = TRUE',
-      [phone]
+      'SELECT cedula, name, role, password_hash FROM users WHERE cedula = $1 AND active = TRUE',
+      [cedula]
     );
     
     if (result.rows.length === 0) {
@@ -126,7 +126,7 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(403).json({ 
         error: 'Primera vez', 
         message: 'Debes crear tu contraseña',
-        phone: user.phone 
+        cedula: user.cedula 
       });
     }
     
@@ -137,9 +137,9 @@ app.post('/api/auth/login', async (req, res) => {
     
     // Login exitoso
     res.json({
-      phone: user.phone,
-      name: user.name,
-      role: user.role
+      cedula: user.cedula,
+      nombre: user.name,
+      rol: user.role
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -148,16 +148,16 @@ app.post('/api/auth/login', async (req, res) => {
 
 // Establecer contraseña (primera vez)
 app.post('/api/auth/set-password', async (req, res) => {
-  const { phone, name, password } = req.body;
+  const { cedula, name, password } = req.body;
   
-  if (!phone || !password) {
-    return res.status(400).json({ error: 'phone y password son obligatorios' });
+  if (!cedula || !password) {
+    return res.status(400).json({ error: 'cedula y password son obligatorios' });
   }
   
   try {
     const user = await db.query(
-      'SELECT phone, name, password_hash FROM users WHERE phone = $1 AND active = TRUE',
-      [phone]
+      'SELECT cedula, name, password_hash FROM users WHERE cedula = $1 AND active = TRUE',
+      [cedula]
     );
     
     if (user.rows.length === 0) {
@@ -172,8 +172,8 @@ app.post('/api/auth/set-password', async (req, res) => {
     const updateName = name || user.rows[0].name;
     
     const result = await db.query(
-      'UPDATE users SET password_hash = $1, name = $2 WHERE phone = $3 RETURNING phone, name, role',
-      [passwordHash, updateName, phone]
+      'UPDATE users SET password_hash = $1, name = $2 WHERE cedula = $3 RETURNING cedula, name, role',
+      [passwordHash, updateName, cedula]
     );
     
     res.json(result.rows[0]);
@@ -186,7 +186,7 @@ app.post('/api/auth/set-password', async (req, res) => {
 app.get('/api/vendedores', async (req, res) => {
   try {
     const result = await db.query(
-      `SELECT phone, name, created_at FROM users 
+      `SELECT cedula, name, created_at FROM users 
        WHERE role = 'VENDEDOR' AND active = TRUE 
        ORDER BY name`
     );
@@ -263,17 +263,17 @@ app.get('/api/shows', async (req, res) => {
 
 app.post('/api/shows/:id/assign-tickets', async (req, res) => {
   const showId = parseInt(req.params.id);
-  const { vendedor_phone, cantidad } = req.body;
+  const { vendedor_cedula, cantidad } = req.body;
   
-  if (!vendedor_phone || !cantidad) {
-    return res.status(400).json({ error: 'vendedor_phone y cantidad son obligatorios' });
+  if (!vendedor_cedula || !cantidad) {
+    return res.status(400).json({ error: 'vendedor_cedula y cantidad son obligatorios' });
   }
   
   try {
     // Verificar vendedor
     const vendedor = await db.query(
-      `SELECT phone, name FROM users WHERE phone = $1 AND role = 'VENDEDOR' AND active = TRUE`,
-      [vendedor_phone]
+      `SELECT cedula, name FROM users WHERE cedula = $1 AND role = 'VENDEDOR' AND active = TRUE`,
+      [vendedor_cedula]
     );
     
     if (vendedor.rows.length === 0) {
@@ -298,9 +298,9 @@ app.post('/api/shows/:id/assign-tickets', async (req, res) => {
     const codes = disponibles.rows.map(r => r.code);
     await db.query(
       `UPDATE tickets 
-       SET estado = 'STOCK_VENDEDOR', vendedor_phone = $1 
+       SET estado = 'STOCK_VENDEDOR', vendedor_cedula = $1 
        WHERE code = ANY($2::text[])`,
-      [vendedor_phone, codes]
+      [vendedor_cedula, codes]
     );
     
     res.json({
@@ -315,8 +315,8 @@ app.post('/api/shows/:id/assign-tickets', async (req, res) => {
 
 // ========== MIS TICKETS (VENDEDOR) ==========
 
-app.get('/api/vendedores/:phone/tickets', async (req, res) => {
-  const { phone } = req.params;
+app.get('/api/vendedores/:cedula/tickets', async (req, res) => {
+  const { cedula } = req.params;
   const { show_id } = req.query;
   
   try {
@@ -324,9 +324,9 @@ app.get('/api/vendedores/:phone/tickets', async (req, res) => {
       SELECT t.*, s.obra, s.fecha, s.base_price
       FROM tickets t
       JOIN shows s ON s.id = t.show_id
-      WHERE t.vendedor_phone = $1
+      WHERE t.vendedor_cedula = $1
     `;
-    const params = [phone];
+    const params = [cedula];
     
     if (show_id) {
       query += ' AND t.show_id = $2';
@@ -344,7 +344,7 @@ app.get('/api/vendedores/:phone/tickets', async (req, res) => {
     const pagadas = tickets.filter(t => t.estado === 'PAGADO' || t.estado === 'USADO').length;
     
     res.json({
-      vendedor_phone: phone,
+      vendedor_cedula: cedula,
       total: tickets.length,
       en_stock: enStock,
       reservadas,
@@ -361,7 +361,7 @@ app.get('/api/vendedores/:phone/tickets', async (req, res) => {
 
 app.post('/api/tickets/:code/reserve', async (req, res) => {
   const { code } = req.params;
-  const { vendedor_phone, comprador_nombre, comprador_contacto } = req.body;
+  const { vendedor_cedula, comprador_nombre, comprador_contacto } = req.body;
   
   if (!comprador_nombre) {
     return res.status(400).json({ error: 'comprador_nombre es obligatorio' });
@@ -376,7 +376,7 @@ app.post('/api/tickets/:code/reserve', async (req, res) => {
     
     const t = ticket.rows[0];
     
-    if (t.vendedor_phone !== vendedor_phone) {
+    if (t.vendedor_cedula !== vendedor_cedula) {
       return res.status(403).json({ error: 'Este ticket no está en tu stock' });
     }
     
@@ -408,7 +408,7 @@ app.post('/api/tickets/:code/reserve', async (req, res) => {
 
 app.post('/api/tickets/:code/report-sold', async (req, res) => {
   const { code } = req.params;
-  const { vendedor_phone, precio, medio_pago } = req.body;
+  const { vendedor_cedula, precio, medio_pago } = req.body;
   
   if (!precio || !medio_pago) {
     return res.status(400).json({ error: 'precio y medio_pago son obligatorios' });
@@ -423,7 +423,7 @@ app.post('/api/tickets/:code/report-sold', async (req, res) => {
     
     const t = ticket.rows[0];
     
-    if (t.vendedor_phone !== vendedor_phone) {
+    if (t.vendedor_cedula !== vendedor_cedula) {
       return res.status(403).json({ error: 'Este ticket no es tuyo' });
     }
     
@@ -469,7 +469,7 @@ app.post('/api/tickets/:code/transfer', async (req, res) => {
     
     const t = ticket.rows[0];
     
-    if (t.vendedor_phone !== vendedor_origen) {
+    if (t.vendedor_cedula !== vendedor_origen) {
       return res.status(403).json({ error: 'No sos el propietario' });
     }
     
@@ -481,7 +481,7 @@ app.post('/api/tickets/:code/transfer', async (req, res) => {
     
     // Verificar vendedor destino
     const destino = await db.query(
-      `SELECT phone, name FROM users WHERE phone = $1 AND role = 'VENDEDOR' AND active = TRUE`,
+      `SELECT cedula, name FROM users WHERE cedula = $1 AND role = 'VENDEDOR' AND active = TRUE`,
       [vendedor_destino]
     );
     
@@ -490,7 +490,7 @@ app.post('/api/tickets/:code/transfer', async (req, res) => {
     }
     
     await db.query(
-      'UPDATE tickets SET vendedor_phone = $1 WHERE code = $2',
+      'UPDATE tickets SET vendedor_cedula = $1 WHERE code = $2',
       [vendedor_destino, code]
     );
     
@@ -556,7 +556,7 @@ app.get('/api/tickets/search', async (req, res) => {
       `SELECT t.*, s.obra, s.fecha, u.name AS vendedor_nombre
        FROM tickets t
        JOIN shows s ON s.id = t.show_id
-       LEFT JOIN users u ON u.phone = t.vendedor_phone
+       LEFT JOIN users u ON u.cedula = t.vendedor_cedula
        WHERE LOWER(t.code) LIKE LOWER($1)
           OR LOWER(t.comprador_nombre) LIKE LOWER($1)
        ORDER BY t.created_at DESC
