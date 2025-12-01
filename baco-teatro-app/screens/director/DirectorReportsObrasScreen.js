@@ -7,8 +7,11 @@ import {
   Alert, 
   ActivityIndicator, 
   ScrollView,
-  Modal 
+  Modal,
+  Linking,
+  Platform 
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionCard from '../../components/SectionCard';
@@ -75,6 +78,42 @@ export default function DirectorReportsObrasScreen({ navigation }) {
         },
       ]
     );
+  };
+
+  const handleDescargarPDF = async (reporte) => {
+    try {
+      const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://baco-teatro-1jxj.onrender.com';
+      const token = await AsyncStorage.getItem('authToken');
+      
+      if (!token) {
+        Alert.alert('Error', 'No hay sesión activa');
+        return;
+      }
+      
+      const url = `${API_URL}/api/reportes-obras/${reporte.id}/pdf`;
+      
+      Alert.alert(
+        'Descargar PDF',
+        'Se abrirá el PDF en tu navegador',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Abrir',
+            onPress: () => {
+              // En web abrimos la URL directamente con el token en headers
+              // En móvil, usamos Linking
+              if (Platform.OS === 'web') {
+                window.open(`${url}?token=${token}`, '_blank');
+              } else {
+                Linking.openURL(`${url}?token=${token}`);
+              }
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      Alert.alert('Error', error.message || 'No se pudo descargar el PDF');
+    }
   };
 
   const formatFecha = (fecha) => {
@@ -158,6 +197,13 @@ export default function DirectorReportsObrasScreen({ navigation }) {
               </TouchableOpacity>
 
               <View style={styles.reporteActions}>
+                <TouchableOpacity 
+                  onPress={() => handleDescargarPDF(reporte)}
+                  style={styles.downloadButton}
+                >
+                  <Ionicons name="download-outline" size={18} color={colors.secondary} />
+                  <Text style={styles.downloadText}>Descargar PDF</Text>
+                </TouchableOpacity>
                 <TouchableOpacity 
                   onPress={() => handleEliminar(reporte)}
                   style={styles.deleteButton}
@@ -383,12 +429,38 @@ const styles = StyleSheet.create({
     padding: 12,
     borderTopWidth: 1,
     borderTopColor: colors.border,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    gap: 12,
+  },
+  downloadButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    flex: 1,
+    backgroundColor: colors.surface,
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.secondary + '40',
+  },
+  downloadText: {
+    color: colors.secondary,
+    fontWeight: '600',
+    fontSize: 14,
   },
   deleteButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
+    flex: 1,
+    backgroundColor: colors.surface,
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.error + '40',
   },
   deleteText: {
     color: colors.error,

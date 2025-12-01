@@ -1,4 +1,5 @@
 import { query } from '../db/postgres.js';
+import PDFDocument from 'pdfkit';
 
 export async function generarReporteObra(req, res) {
   try {
@@ -240,5 +241,179 @@ export async function eliminarReporte(req, res) {
   } catch (error) {
     console.error('Error eliminando reporte:', error);
     res.status(500).json({ error: error.message });
+  }
+}
+
+export async function descargarReportePDF(req, res) {
+  try {
+    const { id } = req.params;
+    
+    const result = await query(
+      'SELECT * FROM reportes_obras WHERE id = $1',
+      [id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Reporte no encontrado' });
+    }
+    
+    const reporte = result.rows[0];
+    
+    // Verificar permisos
+    if (req.user.role !== 'SUPER' && reporte.director_id !== req.user.id) {
+      return res.status(403).json({ error: 'No tienes permiso para descargar este reporte' });
+    }
+    
+    // Crear el PDF
+    const doc = new PDFDocument({ margin: 50 });
+    
+    // Headers para descarga
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=reporte-${reporte.nombre_obra.replace(/\s+/g, '-')}-${reporte.id}.pdf`);
+    
+    // Pipe del PDF a la respuesta
+    doc.pipe(res);
+    
+    // === HEADER ===
+    doc.fontSize(24)
+       .fillColor('#F48C06')
+       .text('BACO TEATRO', { align: 'center' })
+       .moveDown(0.5);
+    
+    doc.fontSize(18)
+       .fillColor('#000000')
+       .text('Reporte de Obra', { align: 'center' })
+       .moveDown(1.5);
+    
+    // === INFO DE LA OBRA ===
+    doc.fontSize(16)
+       .fillColor('#F48C06')
+       .text(reporte.nombre_obra, { underline: true })
+       .moveDown(0.5);
+    
+    doc.fontSize(11)
+       .fillColor('#000000')
+       .text(`Fecha de la Función: ${new Date(reporte.fecha_show).toLocaleString('es-UY')}`)
+       .text(`Fecha de Generación: ${new Date(reporte.fecha_generacion).toLocaleString('es-UY')}`)
+       .moveDown(1.5);
+    
+    // === RESUMEN GENERAL ===
+    doc.fontSize(14)
+       .fillColor('#F48C06')
+       .text('📊 Resumen General')
+       .moveDown(0.3);
+    
+    doc.fontSize(11)
+       .fillColor('#000000');
+    
+    const resumenY = doc.y;
+    doc.text(`Total de Tickets: ${reporte.total_tickets}`, 50, resumenY);
+    doc.text(`Tickets Vendidos: ${reporte.tickets_vendidos}`, 300, resumenY);
+    
+    doc.text(`Tickets Usados (Asistieron): ${reporte.tickets_usados}`, 50, doc.y + 5);
+    doc.text(`Ingresos Totales: $${parseFloat(reporte.ingresos_totales).toFixed(2)}`, 300, doc.y);
+    
+    doc.moveDown(2);
+    
+    // === VENDEDORES ===
+    doc.fontSize(14)
+       .fillColor('#F48C06')
+       .text('👥 Estadísticas por Vendedor')
+       .moveDown(0.5);
+    
+    const vendedores = reporte.datos_vendedores || [];
+    
+    if (vendedores.length > 0) {
+      // Tabla de vendedores
+      doc.fontSize(10)
+         .fillColor('#000000');
+      
+      const tableTop = doc.y;
+      const colWidths = [150, 70, 70, 70, 90];
+      const headers = ['Vendedor', 'Asignados', 'Vendidos', 'Usados', 'Ingresos'];
+      
+      // Headers
+      doc.font('Helvetica-Bold');
+      let xPos = 50;
+      headers.forEach((header, i) => {
+        doc.text(header, xPos, tableTop, { width: colWidths[i], align: 'left' });
+        xPos += colWidths[i];
+      });
+      
+      doc.moveDown(0.5);
+      doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+      doc.moveDown(0.3);
+      
+      // Datos
+      doc.font('Helvetica');
+      vendedores.forEach((vendedor, index) => {
+        const rowY = doc.y;
+        
+        doc.text(vendedor.nombre, 50, rowY, { width: 150 });
+        doc.text(vendedor.asignados.toString(), 200, rowY, { width: 70, align: 'center' });
+        doc.text(vendedor.vendidos.toString(), 270, rowY, { width: 70, align: 'center' });
+        doc.text(vendedor.usados.toString(), 340, rowY, { width: 70, align: 'center' });
+        doc.text(`$${vendedor.ingresos.toFixed(2)}`, 410, rowY, { width: 90, align: 'right' });
+        
+        doc.moveDown(0.8);
+        
+        // Separador cada 5 filas
+        if ((index + 1) % 5 === 0) {
+          doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke('#CCCCCC');
+          doc.moveDown(0.3);
+        }
+      });
+    } else {
+      doc.fontSize(10)
+         .fillColor('#666666')
+         .text('No hay vendedores asignados', { align: 'center' })
+         .moveDown(1);
+    }
+    
+    doc.moveDown(1.5);
+    
+    // === ESTADOS DE TICKETS ===
+    doc.fontSize(14)
+       .fillColor('#F48C06')
+       .text('🎫 Estados de Tickets')
+       .moveDown(0.5);
+    
+    const ventas = reporte.datos_ventas || {};
+    
+    doc.fontSize(11)
+       .fillColor('#000000');
+    
+    const ventasY = doc.y;
+    doc.text(`No Asignados: ${ventas.noAsignados || 0}`, 50, ventasY);
+    doc.text(`En Poder de Vendedor: ${ventas.enPoder || 0}`, 300, ventasY);
+    
+    doc.text(`Vendidas (No Pagadas): ${ventas.vendidasNoPagadas || 0}`, 50, doc.y + 5);
+    doc.text(`Vendidas (Pagadas): ${ventas.vendidasPagadas || 0}`, 300, doc.y);
+    
+    doc.text(`Usadas: ${ventas.usadas || 0}`, 50, doc.y + 5);
+    
+    doc.moveDown(3);
+    
+    // === FOOTER ===
+    doc.fontSize(8)
+       .fillColor('#666666')
+       .text('Este reporte fue generado automáticamente por el sistema de gestión de Baco Teatro.', 50, doc.page.height - 100, {
+         align: 'center',
+         width: 500
+       });
+    
+    doc.text(`ID del Reporte: ${reporte.id}`, {
+      align: 'center'
+    });
+    
+    // Finalizar el PDF
+    doc.end();
+    
+  } catch (error) {
+    console.error('Error generando PDF:', error);
+    // Si ya enviamos headers, no podemos enviar JSON
+    if (!res.headersSent) {
+      res.status(500).json({ error: error.message });
+    }
   }
 }

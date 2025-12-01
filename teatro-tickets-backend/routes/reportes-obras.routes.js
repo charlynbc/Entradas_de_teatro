@@ -3,7 +3,8 @@ import {
   generarReporteObra, 
   listarReportes, 
   obtenerReporte, 
-  eliminarReporte 
+  eliminarReporte,
+  descargarReportePDF 
 } from '../controllers/reportes-obras.controller.js';
 import { authenticate, requireRole } from '../middleware/auth.middleware.js';
 
@@ -17,6 +18,9 @@ router.get('/', authenticate, requireRole('ADMIN', 'SUPER'), listarReportes);
 
 // Obtener un reporte específico
 router.get('/:id', authenticate, requireRole('ADMIN', 'SUPER'), obtenerReporte);
+
+// Descargar reporte en PDF
+router.get('/:id/pdf', authenticate, requireRole('ADMIN', 'SUPER'), descargarReportePDF);
 
 // Eliminar un reporte
 router.delete('/:id', authenticate, requireRole('ADMIN', 'SUPER'), eliminarReporte);
