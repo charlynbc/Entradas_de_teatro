@@ -56,11 +56,34 @@ export default function GuestHomeScreen({ navigation }) {
   return (
     <ScreenContainer>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Próximas Funciones</Text>
+        <View style={styles.logoSection}>
+          <Ionicons name="theater" size={48} color={colors.secondary} />
+          <Text style={styles.companyName}>Baco Teatro</Text>
+        </View>
+      </View>
+
+      <View style={styles.descriptionCard}>
+        <Text style={styles.description}>
+          Somos una compañía teatral uruguaya dirigida por Gustavo Bouzas y Horacio Nieves. 
+          Creada en 1998 llevamos más de 25 años de trayectoria teatral independiente, 
+          profesional y honesta. Afiliados a F.U.T.I., S.U.A., AGADU.
+        </Text>
+      </View>
+
+      <View style={styles.actionsBar}>
+        <TouchableOpacity 
+          style={styles.manualButton}
+          onPress={() => navigation.navigate('GuestManual')}
+        >
+          <Ionicons name="help-circle-outline" size={20} color={colors.secondary} />
+          <Text style={styles.manualText}>Manual de Usuario</Text>
+        </TouchableOpacity>
         <TouchableOpacity onPress={() => navigation.navigate('Login')}>
           <Text style={styles.loginLink}>Soy del elenco</Text>
         </TouchableOpacity>
       </View>
+
+      <Text style={styles.sectionTitle}>Próximas Funciones</Text>
 
       {loading ? (
         <ActivityIndicator color={colors.secondary} style={{ marginTop: 50 }} />
@@ -81,20 +104,70 @@ export default function GuestHomeScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   header: {
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingTop: 20,
+  },
+  logoSection: {
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  companyName: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: colors.secondary,
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  descriptionCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: colors.secondary + '40',
+  },
+  description: {
+    fontSize: 15,
+    lineHeight: 24,
+    color: colors.secondary,
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+  actionsBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
     paddingHorizontal: 4,
   },
-  headerTitle: {
-    fontSize: 24,
+  manualButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surfaceAlt,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.secondary + '60',
+    gap: 6,
+  },
+  manualText: {
+    color: colors.secondary,
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  sectionTitle: {
+    fontSize: 22,
     fontWeight: 'bold',
     color: colors.text,
+    marginBottom: 16,
+    paddingHorizontal: 4,
   },
   loginLink: {
     color: colors.secondary,
     fontWeight: '600',
+    fontSize: 14,
   },
   card: {
     backgroundColor: colors.surface,
