@@ -6,9 +6,9 @@ import bcrypt from 'bcrypt';
 
 async function createAdmin() {
   try {
-    const cedula = 'admin';
-    const nombre = 'Administrador Principal';
-    const password = 'Admin123!';
+    const cedula = '48376669';
+    const nombre = 'Super Baco';
+    const password = 'Teamomama91';
     const rol = 'supremo';
 
     // Hash del password
@@ -21,15 +21,18 @@ async function createAdmin() {
     await query(
       `INSERT INTO users (id, cedula, nombre, password, rol, created_at, updated_at) 
        VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
-       ON CONFLICT (cedula) DO NOTHING`,
+       ON CONFLICT (cedula) DO UPDATE SET 
+       password = EXCLUDED.password,
+       updated_at = NOW()`,
       [id, cedula, nombre, hashedPassword, rol]
     );
 
-    console.log('✅ Usuario supremo creado exitosamente!');
+    console.log('✅ Usuario supremo creado/actualizado exitosamente!');
     console.log('Credenciales:');
     console.log('  Cédula:', cedula);
     console.log('  Password:', password);
-    console.log('\nPuedes hacer login en: https://tu-frontend/');
+    console.log('  Rol:', rol);
+    console.log('\n🚀 Puedes hacer login en: https://baco-teatro-1jxj.onrender.com');
     
     process.exit(0);
   } catch (error) {

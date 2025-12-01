@@ -1,5 +1,5 @@
 import { comparePassword, hashPassword, generateToken } from '../config/auth.js';
-import { readData, writeData } from '../utils/dataStore.js';
+import { query } from '../db/postgres.js';
 
 export async function login(req, res) {
   try {
@@ -9,39 +9,52 @@ export async function login(req, res) {
       return res.status(400).json({ error: 'phone y password son obligatorios' });
     }
     
-    const data = await readData();
-    const user = (data.users || []).find(u => u.phone === phone && u.active !== false);
+    // Buscar usuario por cédula en PostgreSQL
+    const result = await query(
+      'SELECT * FROM users WHERE cedula = $1',
+      [phone]
+    );
     
-    if (!user) {
+    if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Usuario no existe' });
     }
     
-    if (!user.password_hash) {
+    const user = result.rows[0];
+    
+    if (!user.password) {
       return res.status(400).json({ 
         error: 'Debe completar registro',
         requiresSetup: true,
-        phone: user.phone 
+        phone: user.cedula 
       });
     }
     
-    const valid = await comparePassword(password, user.password_hash);
+    // Verificar password con bcrypt
+    const valid = await comparePassword(password, user.password);
     
     if (!valid) {
       return res.status(401).json({ error: 'Contraseña incorrecta' });
     }
     
+    // Mapear roles: supremo -> SUPER, admin -> ADMIN, vendedor -> VENDEDOR
+    const roleMap = {
+      'supremo': 'SUPER',
+      'admin': 'ADMIN',
+      'vendedor': 'VENDEDOR'
+    };
+    
     const token = generateToken({
-      phone: user.phone,
-      role: user.role,
-      name: user.name
+      phone: user.cedula,
+      role: roleMap[user.rol] || user.rol,
+      name: user.nombre
     });
     
     res.json({
       token,
       user: {
-        phone: user.phone,
-        role: user.role,
-        name: user.name
+        phone: user.cedula,
+        role: roleMap[user.rol] || user.rol,
+        name: user.nombre
       }
     });
   } catch (error) {
@@ -58,33 +71,48 @@ export async function completarRegistro(req, res) {
       return res.status(400).json({ error: 'phone, name y password son obligatorios' });
     }
     
-    const data = await readData();
-    const user = (data.users || []).find(u => u.phone === phone);
+    // Buscar usuario en PostgreSQL
+    const result = await query('SELECT * FROM users WHERE cedula = $1', [phone]);
     
-    if (!user) {
+    if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
     
-    if (user.password_hash) {
+    const user = result.rows[0];
+    
+    if (user.password) {
       return res.status(400).json({ error: 'Usuario ya completó registro' });
     }
     
-    user.name = name;
-    user.password_hash = await hashPassword(password);
-    await writeData(data);
+    // Actualizar usuario con nombre y password hasheado
+    const hashedPassword = await hashPassword(password);
+    await query(
+      'UPDATE users SET nombre = $1, password = $2, updated_at = NOW() WHERE cedula = $3',
+      [name, hashedPassword, phone]
+    );
+    
+    const roleMap = {
+      'supremo': 'SUPER',
+      'admin': 'ADMIN',
+      'vendedor': 'VENDEDOR'
+    };
     
     const token = generateToken({
       phone,
-      role: user.role,
+      role: roleMap[user.rol] || user.rol,
       name
     });
     
     res.json({ 
       ok: true, 
       token,
-      user: { phone, name, role: user.role }
+      user: { phone, name, role: roleMap[user.rol] || user.rol }
     });
   } catch (error) {
+    console.error('Error en completar registro:', error);
+    res.status(500).json({ error: error.message });
+  }
+}
     console.error('Error completando registro:', error);
     res.status(500).json({ error: error.message });
   }
