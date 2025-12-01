@@ -89,13 +89,12 @@ async function startServer() {
       return res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
     });
 
-    // Middleware para rutas no encontradas (debe ir antes de iniciar servidor)
+    // Middleware para rutas no encontradas
     app.use((req, res, next) => {
       if (req.path.startsWith('/api')) {
         return res.status(404).json({ error: 'Ruta no encontrada' });
       }
       next();
-    });
     });
 
     // Middleware de manejo de errores
