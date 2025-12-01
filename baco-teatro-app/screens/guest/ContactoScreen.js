@@ -23,7 +23,7 @@ export default function ContactoScreen() {
             <Ionicons name="person" size={24} color={colors.secondary} style={styles.icon} />
             <View style={styles.infoText}>
               <Text style={styles.label}>Nombre</Text>
-              <Text style={styles.value}>Charlyn Barreiro Curbelo</Text>
+              <Text style={styles.value}>Carlos Barrios</Text>
             </View>
           </View>
 
