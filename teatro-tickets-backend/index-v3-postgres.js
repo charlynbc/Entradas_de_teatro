@@ -3,6 +3,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { initializeDatabase } from './db/postgres.js';
+import { initSupremo } from './init-supremo.js';
 import authRoutes from './routes/auth.routes.js';
 import usersRoutes from './routes/users.routes.js';
 import showsRoutes from './routes/shows.routes.js';
@@ -34,6 +35,9 @@ async function startServer() {
 
     // Inicializar schema de base de datos
     await initializeDatabase();
+    
+    // Inicializar usuario supremo si no existe
+    await initSupremo();
     
     // Rutas de la API
     app.get('/api', (req, res) => {
