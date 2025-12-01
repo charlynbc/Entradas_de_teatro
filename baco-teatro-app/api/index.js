@@ -299,3 +299,48 @@ export async function getPublicShowDetails(showId) {
 export async function guestReserveTicket(payload) {
   return mock.guestReserveTicket(payload);
 }
+
+// Reportes de obras
+export async function generarReporteObra(showId) {
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const response = await request('POST', `/reportes-obras/generar/${showId}`);
+    return response;
+  } catch (error) {
+    console.error('Error generando reporte:', error);
+    throw error;
+  }
+}
+
+export async function listarReportesObras() {
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const response = await request('GET', '/reportes-obras');
+    return response.reportes || [];
+  } catch (error) {
+    console.error('Error listando reportes:', error);
+    throw error;
+  }
+}
+
+export async function obtenerReporteObra(reporteId) {
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const response = await request('GET', `/reportes-obras/${reporteId}`);
+    return response.reporte;
+  } catch (error) {
+    console.error('Error obteniendo reporte:', error);
+    throw error;
+  }
+}
+
+export async function eliminarReporteObra(reporteId) {
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const response = await request('DELETE', `/reportes-obras/${reporteId}`);
+    return response;
+  } catch (error) {
+    console.error('Error eliminando reporte:', error);
+    throw error;
+  }
+}

@@ -8,6 +8,7 @@ import DirectorShowsScreen from '../screens/director/DirectorShowsScreen';
 import DirectorShowDetailScreen from '../screens/director/DirectorShowDetailScreen';
 import DirectorScannerScreen from '../screens/director/DirectorScannerScreen';
 import DirectorReportsScreen from '../screens/director/DirectorReportsScreen';
+import DirectorReportsObrasScreen from '../screens/director/DirectorReportsObrasScreen';
 import DirectorVendorsScreen from '../screens/director/DirectorVendorsScreen';
 import DirectorRehearsalsScreen from '../screens/director/DirectorRehearsalsScreen';
 import ProfileScreen from '../screens/shared/ProfileScreen';
@@ -76,6 +77,11 @@ export default function DirectorNavigator() {
         name="DirectorShowDetail" 
         component={DirectorShowDetailScreen} 
         options={{ headerShown: true, title: 'Detalle de Función' }}
+      />
+      <Stack.Screen 
+        name="DirectorReportsObras" 
+        component={DirectorReportsObrasScreen} 
+        options={{ headerShown: true, title: 'Reportes de Obras' }}
       />
       <Stack.Screen 
         name="Manual" 

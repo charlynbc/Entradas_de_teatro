@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Modal, Tex
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionCard from '../../components/SectionCard';
 import colors from '../../theme/colors';
-import { listVendors, assignTicketsToActor, markTicketsAsPaid, listDirectorShows } from '../../api'; // We might need a specific getShowDetails
+import { listVendors, assignTicketsToActor, markTicketsAsPaid, listDirectorShows, generarReporteObra } from '../../api'; // We might need a specific getShowDetails
 import { Ionicons } from '@expo/vector-icons';
 
 export default function DirectorShowDetailScreen({ route, navigation }) {
@@ -125,6 +125,37 @@ export default function DirectorShowDetailScreen({ route, navigation }) {
     );
   };
 
+  const handleGenerarReporte = () => {
+    Alert.alert(
+      'Generar Reporte',
+      `¿Generar reporte final de "${currentShow.obra}"? Esto incluirá todas las estadísticas de ventas y vendedores.`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Generar',
+          onPress: async () => {
+            try {
+              setLoading(true);
+              await generarReporteObra(currentShow.id);
+              Alert.alert(
+                'Reporte Generado',
+                'El reporte se ha generado correctamente. Puedes verlo en la sección "Reportes de Obras".',
+                [
+                  { text: 'Ver Reportes', onPress: () => navigation.navigate('DirectorReportsObras') },
+                  { text: 'Cerrar', style: 'cancel' }
+                ]
+              );
+            } catch (error) {
+              Alert.alert('Error', error.message || 'No se pudo generar el reporte');
+            } finally {
+              setLoading(false);
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const renderActorStat = (actor) => {
     if (!actor) return null;
     return (
@@ -222,6 +253,15 @@ export default function DirectorShowDetailScreen({ route, navigation }) {
       {(!currentShow.insights?.actores || currentShow.insights.actores.length === 0) && (
         <Text style={styles.emptyText}>Aún no hay actores asignados a esta función.</Text>
       )}
+
+      <TouchableOpacity 
+        style={styles.reporteButton}
+        onPress={handleGenerarReporte}
+        disabled={loading}
+      >
+        <Ionicons name="document-text" size={20} color={colors.secondary} />
+        <Text style={styles.reporteButtonText}>Generar Reporte Final</Text>
+      </TouchableOpacity>
 
       {/* Modal Assign Tickets */}
       <Modal
@@ -496,5 +536,23 @@ const styles = StyleSheet.create({
   },
   closeText: {
     color: colors.textMuted,
-  }
+  },
+  reporteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: 10,
+    padding: 16,
+    marginTop: 20,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: colors.secondary + '60',
+    gap: 10,
+  },
+  reporteButtonText: {
+    color: colors.secondary,
+    fontWeight: '700',
+    fontSize: 16,
+  },
 });

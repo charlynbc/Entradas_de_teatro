@@ -82,6 +82,18 @@ export default function DirectorDashboardScreen() {
           <StatCard label="Actores" value={data?.stats?.actores || 0} gradient={colors.gradientSecondary} />
         </View>
 
+        <TouchableOpacity 
+          style={styles.reportesButton}
+          onPress={() => navigation.navigate('DirectorReportsObras')}
+        >
+          <Ionicons name="document-text-outline" size={24} color={colors.secondary} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.reportesTitle}>Reportes de Obras</Text>
+            <Text style={styles.reportesSubtitle}>Ver historial de funciones finalizadas</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+        </TouchableOpacity>
+
         <SectionCard title="Salas abiertas" subtitle="Estado por función">
           {(data?.functions || []).map((funcion) => (
             <View key={funcion.id} style={styles.functionRow}>
@@ -220,5 +232,25 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingVertical: 20,
     fontStyle: 'italic',
+  },
+  reportesButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.secondary + '40',
+    gap: 12,
+  },
+  reportesTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: colors.text,
+  },
+  reportesSubtitle: {
+    fontSize: 12,
+    color: colors.textMuted,
+    marginTop: 2,
   },
 });
