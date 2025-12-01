@@ -74,8 +74,8 @@ export default function DirectorsScreen() {
 
   const handleDeleteDirector = (cedula) => {
     Alert.alert(
-        'Eliminar director',
-        `Se van a borrar las obras y funciones asignadas a ${cedula}. Continuar?`,
+      'Eliminar director',
+      `Se van a borrar las obras y funciones asignadas a ${cedula}. Continuar?`,
       [
         { text: 'Cancelar', style: 'cancel' },
         {
@@ -97,8 +97,8 @@ export default function DirectorsScreen() {
 
   const handleDeleteVendor = (cedula) => {
     Alert.alert(
-        'Eliminar vendedor',
-        `El stock de ${cedula} volvera a direccion. Confirmas?`,
+      'Eliminar vendedor',
+      `El stock de ${cedula} volvera a direccion. Confirmas?`,
       [
         { text: 'Cancelar', style: 'cancel' },
         {

@@ -4,10 +4,10 @@ import { authenticate, requireRole } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
-// Solo admin puede crear usuarios
-router.post('/', authenticate, requireRole('ADMIN'), crearUsuario);
-router.get('/', authenticate, requireRole('ADMIN'), listarUsuarios);
+// Solo admin y super pueden crear usuarios
+router.post('/', authenticate, requireRole('ADMIN', 'SUPER'), crearUsuario);
+router.get('/', authenticate, requireRole('ADMIN', 'SUPER'), listarUsuarios);
 router.get('/vendedores', authenticate, listarVendedores);
-router.delete('/:phone', authenticate, requireRole('ADMIN'), desactivarUsuario);
+router.delete('/:phone', authenticate, requireRole('ADMIN', 'SUPER'), desactivarUsuario);
 
 export default router;

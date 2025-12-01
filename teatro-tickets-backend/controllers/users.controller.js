@@ -50,11 +50,34 @@ export async function listarUsuarios(req, res) {
 
 export async function listarVendedores(req, res) {
   try {
-    const data = await readData();
-    const vendedores = (data.users || [])
-      .filter(user => user.role === 'VENDEDOR' && user.active !== false)
-      .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-    res.json(vendedores);
+    // Obtener vendedores con información de sus tickets y shows
+    const result = await query(`
+      SELECT 
+        u.id,
+        u.cedula,
+        u.nombre,
+        u.rol,
+        COUNT(DISTINCT t.show_id) as total_shows,
+        COUNT(t.id) as total_tickets,
+        json_agg(DISTINCT jsonb_build_object(
+          'show_id', s.id,
+          'show_nombre', s.nombre,
+          'tickets_asignados', (
+            SELECT COUNT(*) 
+            FROM tickets t2 
+            WHERE t2.vendedor_id = u.id 
+            AND t2.show_id = s.id
+          )
+        )) FILTER (WHERE s.id IS NOT NULL) as shows
+      FROM users u
+      LEFT JOIN tickets t ON t.vendedor_id = u.id
+      LEFT JOIN shows s ON s.id = t.show_id
+      WHERE u.rol = 'vendedor'
+      GROUP BY u.id, u.cedula, u.nombre, u.rol
+      ORDER BY u.nombre
+    `);
+    
+    res.json(result.rows);
   } catch (error) {
     console.error('Error listando vendedores:', error);
     res.status(500).json({ error: error.message });
@@ -64,16 +87,23 @@ export async function listarVendedores(req, res) {
 export async function desactivarUsuario(req, res) {
   try {
     const { phone } = req.params;
-    const data = await readData();
-    const user = data.users.find(u => u.phone === phone);
-    if (!user) {
+    
+    // Buscar usuario por cédula (phone es realmente cedula en nuestro sistema)
+    const result = await query(
+      'SELECT * FROM users WHERE cedula = $1',
+      [phone]
+    );
+    
+    if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
-    user.active = false;
-    await writeData(data);
-    res.json({ ok: true, mensaje: 'Usuario desactivado' });
+    
+    // Eliminar el usuario
+    await query('DELETE FROM users WHERE cedula = $1', [phone]);
+    
+    res.json({ ok: true, mensaje: 'Usuario eliminado correctamente' });
   } catch (error) {
-    console.error('Error desactivando usuario:', error);
+    console.error('Error eliminando usuario:', error);
     res.status(500).json({ error: error.message });
   }
 }

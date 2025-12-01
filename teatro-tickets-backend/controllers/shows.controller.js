@@ -1,6 +1,7 @@
 import QRCode from 'qrcode';
 import { generateTicketCode } from '../utils/generateCode.js';
 import { readData, writeData, nextId } from '../utils/dataStore.js';
+import { query } from '../db/postgres.js';
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 
@@ -138,6 +139,44 @@ export async function asignarTickets(req, res) {
     });
   } catch (error) {
     console.error('Error asignando tickets:', error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
+export async function eliminarShow(req, res) {
+  try {
+    const { id } = req.params;
+    
+    // Verificar que el show existe
+    const showResult = await query(
+      'SELECT * FROM shows WHERE id = $1',
+      [id]
+    );
+    
+    if (showResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Obra no encontrada' });
+    }
+    
+    // Verificar permisos: debe ser el creador o SUPER
+    const show = showResult.rows[0];
+    if (req.user.role !== 'SUPER' && show.creado_por !== req.user.id) {
+      return res.status(403).json({ error: 'No tienes permiso para eliminar esta obra' });
+    }
+    
+    // Eliminar tickets asociados (por CASCADE debería hacerse automático)
+    // Pero lo hacemos explícito para estar seguros
+    await query('DELETE FROM tickets WHERE show_id = $1', [id]);
+    
+    // Eliminar el show
+    await query('DELETE FROM shows WHERE id = $1', [id]);
+    
+    res.json({ 
+      ok: true, 
+      mensaje: 'Obra eliminada correctamente',
+      obra: show.nombre 
+    });
+  } catch (error) {
+    console.error('Error eliminando show:', error);
     res.status(500).json({ error: error.message });
   }
 }

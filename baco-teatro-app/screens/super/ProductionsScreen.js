@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ActivityInd
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionCard from '../../components/SectionCard';
 import colors from '../../theme/colors';
-import { listProductions, createProduction } from '../../api';
+import { listProductions, createProduction, deleteProduction } from '../../api';
 
 export default function ProductionsScreen() {
   const [productions, setProductions] = useState([]);
@@ -40,6 +40,29 @@ export default function ProductionsScreen() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleDelete = (obra) => {
+    Alert.alert(
+      'Eliminar Obra',
+      `¿Seguro que querés eliminar "${obra.titulo}"? Esto borrará todas las funciones y tickets asociados.`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteProduction(obra.id);
+              load();
+              Alert.alert('Listo', 'Obra eliminada');
+            } catch (error) {
+              Alert.alert('Error', error.message || 'No se pudo eliminar');
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -87,6 +110,9 @@ export default function ProductionsScreen() {
                 <Text style={styles.meta}>{obra.funciones} funciones · {obra.entradas} entradas</Text>
               </View>
               <Text style={styles.meta}>{obra.estado}</Text>
+              <TouchableOpacity onPress={() => handleDelete(obra)} style={styles.deleteBtn}>
+                <Text style={styles.deleteText}>Eliminar</Text>
+              </TouchableOpacity>
             </View>
           ))
         )}
@@ -142,5 +168,18 @@ const styles = StyleSheet.create({
   empty: {
     color: colors.textSoft,
     fontStyle: 'italic',
+  },
+  deleteBtn: {
+    backgroundColor: colors.surface,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: colors.error + '40',
+  },
+  deleteText: {
+    color: colors.error,
+    fontSize: 12,
+    fontWeight: '600',
   },
 });

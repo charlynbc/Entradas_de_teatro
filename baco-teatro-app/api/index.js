@@ -111,7 +111,13 @@ export async function resetDirectorPassword(cedula) {
 
 export async function deleteDirector(cedula) {
   requireRole(['SUPER']);
-  return mock.deleteDirector(cedula);
+  try {
+    const response = await request('DELETE', `/users/${cedula}`);
+    return response;
+  } catch (error) {
+    console.error('Error eliminando director:', error);
+    throw error;
+  }
 }
 
 export async function listProductions() {
@@ -122,6 +128,17 @@ export async function listProductions() {
 export async function createProduction(payload) {
   requireRole(['SUPER']);
   return mock.createProduction(payload);
+}
+
+export async function deleteProduction(id) {
+  requireRole(['SUPER', 'ADMIN']);
+  try {
+    const response = await request('DELETE', `/shows/${id}`);
+    return response;
+  } catch (error) {
+    console.error('Error eliminando obra:', error);
+    throw error;
+  }
 }
 
 export async function listVendors() {
@@ -216,7 +233,13 @@ export function getCurrentUser() {
 
 export async function deleteVendor(cedula) {
   requireRole(['SUPER', 'ADMIN']);
-  return mock.deleteVendor(cedula);
+  try {
+    const response = await request('DELETE', `/users/${cedula}`);
+    return response;
+  } catch (error) {
+    console.error('Error eliminando vendedor:', error);
+    throw error;
+  }
 }
 
 // --- New Features ---

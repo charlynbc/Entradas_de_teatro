@@ -6,7 +6,7 @@ import ScreenContainer from '../../components/ScreenContainer';
 import SectionCard from '../../components/SectionCard';
 import ShowCard from '../../components/ShowCard';
 import colors from '../../theme/colors';
-import { listDirectorShows, createShow, assignTicketsToActor } from '../../api';
+import { listDirectorShows, createShow, assignTicketsToActor, deleteProduction } from '../../api';
 import { Ionicons } from '@expo/vector-icons';
 
 const initialShow = { obra: '', fecha: new Date(), lugar: '', capacidad: '', base_price: '' };
@@ -68,6 +68,29 @@ export default function DirectorShowsScreen({ navigation }) {
     }
   };
 
+  const handleDeleteShow = (show) => {
+    Alert.alert(
+      'Eliminar Obra',
+      `¿Estás seguro de eliminar "${show.obra}"? Esto borrará todos los tickets asociados.`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteProduction(show.id);
+              load();
+              Alert.alert('Listo', 'Obra eliminada correctamente');
+            } catch (error) {
+              Alert.alert('Error', error.message || 'No se pudo eliminar la obra');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const onDateChange = (event, selectedDate) => {
     setShowDatePicker(false);
     if (selectedDate) {
@@ -109,21 +132,29 @@ export default function DirectorShowsScreen({ navigation }) {
           <ActivityIndicator color={colors.secondary} />
         ) : (
           shows.map((show) => (
-            <TouchableOpacity 
-              key={show.id} 
-              onPress={() => navigation.navigate('DirectorShowDetail', { show })}
-              activeOpacity={0.8}
-            >
-              <ShowCard
-                show={show}
-                footer={(
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Text style={styles.meta}>Stock actores {show.enStock} /  Vendidas {show.vendidas}</Text>
-                    <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
-                  </View>
-                )}
-              />
-            </TouchableOpacity>
+            <View key={show.id} style={styles.showItemContainer}>
+              <TouchableOpacity 
+                onPress={() => navigation.navigate('DirectorShowDetail', { show })}
+                activeOpacity={0.8}
+                style={{ flex: 1 }}
+              >
+                <ShowCard
+                  show={show}
+                  footer={(
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Text style={styles.meta}>Stock actores {show.enStock} /  Vendidas {show.vendidas}</Text>
+                      <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+                    </View>
+                  )}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity 
+                onPress={() => handleDeleteShow(show)}
+                style={styles.deleteButton}
+              >
+                <Ionicons name="trash-outline" size={20} color={colors.error} />
+              </TouchableOpacity>
+            </View>
           ))
         )}
       </SectionCard>
@@ -561,5 +592,18 @@ const styles = StyleSheet.create({
     color: colors.warning,
     fontSize: 10,
     marginBottom: 10,
-  }
+  },
+  showItemContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  deleteButton: {
+    backgroundColor: colors.surface,
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.error + '40',
+  },
 });
