@@ -36,8 +36,10 @@ async function startServer() {
     // Inicializar schema de base de datos
     await initializeDatabase();
     
-    // Inicializar usuario supremo si no existe
-    await initSupremo();
+    // Inicializar usuario supremo si no existe (sin bloquear el inicio)
+    initSupremo().catch(err => {
+      console.error('⚠️  Error inicializando usuario supremo (no crítico):', err.message);
+    });
     
     // Rutas de la API
     app.get('/api', (req, res) => {

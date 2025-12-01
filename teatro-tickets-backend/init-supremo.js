@@ -20,15 +20,17 @@ export async function initSupremo() {
     );
 
     if (existingUser.rows.length > 0) {
-      console.log('✅ Usuario supremo ya existe');
+      console.log('✅ Usuario supremo ya existe (cédula: ' + cedula + ')');
       return;
     }
+
+    console.log('📝 Creando usuario supremo...');
 
     // Hash del password
     const hashedPassword = await bcrypt.hash(password, 10);
     
     // Generar ID único
-    const id = `user_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    const id = `supremo_${Date.now()}`;
 
     // Insertar usuario supremo
     await query(
@@ -38,10 +40,11 @@ export async function initSupremo() {
     );
 
     console.log('✅ Usuario supremo creado exitosamente!');
-    console.log('   Cédula:', cedula);
-    console.log('   Rol:', rol);
+    console.log('   Cédula: ' + cedula);
+    console.log('   Rol: ' + rol);
   } catch (error) {
     console.error('❌ Error inicializando usuario supremo:', error.message);
-    // No lanzamos el error para no detener el servidor
+    console.error('   Stack:', error.stack);
+    throw error; // Re-lanzar para que el llamador lo maneje
   }
 }
