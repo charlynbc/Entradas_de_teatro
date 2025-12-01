@@ -130,3 +130,95 @@ export default function DirectorDashboardScreen() {
     </ScreenContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: colors.text,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: colors.textMuted,
+    marginTop: -8,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  functionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  functionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  functionMeta: {
+    fontSize: 13,
+    color: colors.textMuted,
+    marginTop: 4,
+  },
+  functionStats: {
+    alignItems: 'flex-end',
+  },
+  pill: {
+    backgroundColor: colors.success + '20',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginBottom: 4,
+  },
+  pillText: {
+    color: colors.success,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  metaText: {
+    fontSize: 13,
+    color: colors.textMuted,
+  },
+  actorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  actorName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  actorActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  alignRight: {
+    textAlign: 'right',
+  },
+  moneyText: {
+    color: colors.secondary,
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  deleteButton: {
+    padding: 8,
+  },
+  empty: {
+    color: colors.textMuted,
+    textAlign: 'center',
+    paddingVertical: 20,
+    fontStyle: 'italic',
+  },
+});

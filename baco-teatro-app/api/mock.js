@@ -66,8 +66,6 @@ const defaultData = {
       notes: 'Traer copias impresas',
     }
   ],
-  shows: [
-  ],
   productions: [
     {
       id: 'prd-1',
@@ -82,12 +80,32 @@ const defaultData = {
     {
       id: 'show-1',
       obra: 'Las Voces de Baco',
-      fecha: '2025-12-01T21:00:00Z',
+      fecha: new Date(Date.now() + 7 * 86400000).toISOString(), // 7 días en el futuro
       lugar: 'Sala principal',
       capacidad: 80,
       base_price: 900,
       directorId: '48376668',
       actores: ['48376667', '48999111'],
+    },
+    {
+      id: 'show-2',
+      obra: 'Sueños en la Oscuridad',
+      fecha: new Date(Date.now() + 14 * 86400000).toISOString(), // 14 días en el futuro
+      lugar: 'Teatro Circular',
+      capacidad: 120,
+      base_price: 750,
+      directorId: '48376668',
+      actores: ['48376667', '48999111'],
+    },
+    {
+      id: 'show-3',
+      obra: 'Cuentos de la Noche',
+      fecha: new Date(Date.now() + 21 * 86400000).toISOString(), // 21 días en el futuro
+      lugar: 'Sala alternativa',
+      capacidad: 60,
+      base_price: 850,
+      directorId: '48376668',
+      actores: ['48376667'],
     },
   ],
   tickets: [],

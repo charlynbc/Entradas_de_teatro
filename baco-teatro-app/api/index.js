@@ -1,5 +1,6 @@
 'use strict';
 
+import request from './client';
 import * as mock from './mock';
 
 let currentSession = {
@@ -35,9 +36,31 @@ function requireRole(roles) {
 }
 
 export async function login(credentials) {
-  const session = await mock.login(credentials);
-  setSession(session);
-  return session;
+  try {
+    // Intenta login contra el backend real
+    const body = { phone: credentials.cedula, password: credentials.password };
+    const response = await request('/api/auth/login', { method: 'POST', body });
+    
+    const user = {
+      id: response.user.phone,
+      nombre: response.user.name,
+      role: response.user.role,
+      email: response.user.phone + '@bacoteatro.com',
+      avatar: 'https://ui-avatars.com/api/?name=' + encodeURIComponent(response.user.name)
+    };
+    
+    const session = { token: response.token, user };
+    setSession(session);
+    return session;
+  } catch (error) {
+    console.warn('Backend login failed, falling back to mock if offline', error);
+    if (error.offline || error.message.includes('Network request failed')) {
+       const session = await mock.login(credentials);
+       setSession(session);
+       return session;
+    }
+    throw error;
+  }
 }
 
 export function clearSession() {
@@ -52,12 +75,15 @@ export function restoreSession(session) {
 
 export async function getMyProfile() {
   const user = requireUser();
-  return mock.getProfile(user.id);
+  // Si el usuario viene del backend (tiene phone como ID), usamos mock por ahora o implementamos endpoint
+  // Por simplicidad, devolvemos el usuario de la sesión
+  return { ...user, bio: 'Usuario del sistema' };
 }
 
 export async function updateMyProfile(payload) {
   requireUser();
-  const updated = await mock.updateProfile(currentSession.user.id, payload);
+  // Mock implementation for now
+  const updated = { ...currentSession.user, ...payload };
   setSession({ token: currentSession.token, user: updated });
   return updated;
 }
@@ -69,6 +95,7 @@ export async function getSuperDashboard() {
 
 export async function listDirectors() {
   requireRole(['SUPER']);
+  // TODO: Implementar backend /api/usuarios?role=ADMIN
   return mock.listDirectors();
 }
 
@@ -139,7 +166,23 @@ export async function getDirectorReports() {
 
 export async function validateTicket(code) {
   requireRole(['ADMIN', 'SUPER']);
-  return mock.validateTicket(code);
+  try {
+    const response = await request(`/api/tickets/validar/${code}`);
+    return {
+      ok: response.ok,
+      message: response.mensaje || response.error,
+      ticket: response.ticket ? {
+        code: response.ticket.code,
+        estado: response.ticket.estado,
+        obra: response.ticket.obra || 'Función',
+        fecha: response.ticket.fecha || new Date().toISOString(),
+        vendedor_nombre: response.ticket.vendedor_nombre || 'Sin asignar'
+      } : null
+    };
+  } catch (error) {
+    console.warn('Backend validateTicket failed, falling back to mock', error);
+    return mock.validateTicket(code);
+  }
 }
 
 export async function getActorStock() {
@@ -206,7 +249,24 @@ export async function getActorSchedule() {
 
 // Public endpoints (no auth required)
 export async function getPublicShows() {
-  return mock.getPublicShows();
+  try {
+    const shows = await request('/api/shows');
+    // If backend returns empty array, fall back to mock data
+    if (!shows || shows.length === 0) {
+      console.warn('Backend returned empty shows, falling back to mock');
+      return mock.getPublicShows();
+    }
+    return shows.map(s => ({
+      id: s.id,
+      obra: s.obra,
+      fecha: s.fecha,
+      lugar: s.lugar,
+      imagen: 'https://images.unsplash.com/photo-1507676184212-d03816a97f81?auto=format&fit=crop&w=500&q=80' // Placeholder
+    }));
+  } catch (error) {
+    console.warn('Backend getPublicShows failed, falling back to mock', error);
+    return mock.getPublicShows();
+  }
 }
 
 export async function getPublicShowDetails(showId) {

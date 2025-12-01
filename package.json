@@ -1,18 +1,13 @@
 {
-  "name": "entradas_de_teatro",
+  "name": "entradas-de-teatro-root",
   "version": "1.0.0",
-  "description": "Sistema completo de gestión de entradas para teatro con roles de usuario, estados de tickets y app móvil.",
-  "main": "index.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:api\" \"npm run dev:app\"",
-    "dev:api": "npm run dev --prefix teatro-tickets-backend",
-    "dev:app": "npm run web --prefix baco-teatro-app",
-    "test": "echo \"No hay tests configurados\" && exit 0"
+    "dev:api": "cd teatro-tickets-backend && npm start",
+    "dev:app": "cd baco-teatro-app && npm run web",
+    "install:all": "npm install && cd teatro-tickets-backend && npm install && cd ../baco-teatro-app && npm install"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "devDependencies": {
-    "concurrently": "^9.2.1"
+    "concurrently": "^8.2.2"
   }
 }

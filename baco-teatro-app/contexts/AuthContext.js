@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { View, Text } from 'react-native';
 import storage from '../utils/storage';
 import {
   login as loginApi,
@@ -13,12 +14,14 @@ const AuthContext = createContext();
 const STORAGE_KEY = 'baco:session';
 
 export function AuthProvider({ children }) {
+  console.log('AuthProvider rendering');
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
+    console.log('AuthProvider useEffect - hydrating session');
     (async () => {
       try {
         const data = await storage.getItem(STORAGE_KEY);
@@ -31,6 +34,7 @@ export function AuthProvider({ children }) {
       } catch (error) {
         console.warn('No se pudo restaurar la sesión', error);
       } finally {
+        console.log('AuthProvider hydrated = true');
         setHydrated(true);
       }
     })();
@@ -89,7 +93,11 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={value}>
-      {hydrated ? children : null}
+      {hydrated ? children : (
+        <View style={{ flex: 1, backgroundColor: '#12090D', justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={{ color: '#F5F1ED', fontSize: 18 }}>Cargando...</Text>
+        </View>
+      )}
     </AuthContext.Provider>
   );
 }

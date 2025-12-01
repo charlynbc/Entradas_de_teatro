@@ -7,17 +7,23 @@ import { getPublicShows } from '../../api';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function GuestHomeScreen({ navigation }) {
+  console.log('GuestHomeScreen mounted');
   const [shows, setShows] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('GuestHomeScreen useEffect');
     load();
   }, []);
 
   const load = async () => {
+    console.log('Loading shows...');
     try {
       const data = await getPublicShows();
+      console.log('Shows loaded:', data);
       setShows(data);
+    } catch (e) {
+      console.error('Error loading shows:', e);
     } finally {
       setLoading(false);
     }

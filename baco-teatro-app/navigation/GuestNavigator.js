@@ -7,6 +7,7 @@ import LoginScreen from '../screens/auth/LoginScreen';
 const Stack = createNativeStackNavigator();
 
 export default function GuestNavigator() {
+  console.log('GuestNavigator rendering');
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="GuestHome" component={GuestHomeScreen} />

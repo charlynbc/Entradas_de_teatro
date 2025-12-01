@@ -8,6 +8,8 @@ import RootNavigator from './navigation/RootNavigator';
 import colors from './theme/colors';
 
 export default function App() {
+  console.log('App rendering');
+  
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>
       <SafeAreaProvider>
