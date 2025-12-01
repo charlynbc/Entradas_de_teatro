@@ -1,15 +1,13 @@
-import React, { Component, lazy, Suspense } from 'react';
+import React, { Component } from 'react';
 import { View, Text, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuth } from '../contexts/AuthContext';
 import GuestNavigator from './GuestNavigator';
+import SuperNavigator from './SuperNavigator';
+import DirectorNavigator from './DirectorNavigator';
+import ActorNavigator from './ActorNavigator';
 import colors from '../theme/colors';
-
-// Lazy load navigators to prevent loading errors on startup
-const SuperNavigator = lazy(() => import('./SuperNavigator'));
-const DirectorNavigator = lazy(() => import('./DirectorNavigator'));
-const ActorNavigator = lazy(() => import('./ActorNavigator'));
 
 const Stack = createNativeStackNavigator();
 
@@ -46,21 +44,15 @@ export default function RootNavigator() {
   const { user } = useAuth();
   console.log('RootNavigator rendering, user:', user);
 
-  const LoadingScreen = () => (
-    <View style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }}>
-      <ActivityIndicator size="large" color={colors.secondary} />
-    </View>
-  );
-
   return (
     <ErrorBoundary>
       <NavigationContainer>
         {user ? (
-          <Suspense fallback={<LoadingScreen />}>
+          <>
             {user.role === 'SUPER' ? <SuperNavigator /> :
              user.role === 'ADMIN' ? <DirectorNavigator /> :
              <ActorNavigator />}
-          </Suspense>
+          </>
         ) : (
           <GuestNavigator />
         )}
