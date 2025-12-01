@@ -48,11 +48,11 @@ export default function GlobalActions() {
 
   const handleSupport = () => {
     if (Platform.OS === 'web') {
-      alert('Soporte Baco Teatro\n\nDesarrollado por Carlos Barrios.\nLinkedIn: www.linkedin.com/in/carlos-barrios-10474720b\n\nPara ayuda técnica: produccion@bacoteatro.com');
+      alert('Soporte Baco Teatro\n\nDesarrollado por Carlos Barrios.\nLinkedIn: www.linkedin.com/in/carlos-barrios-10474720b');
     } else {
       Alert.alert(
         'Soporte Baco Teatro',
-        'Desarrollado por Carlos Barrios.\nLinkedIn: www.linkedin.com/in/carlos-barrios-10474720b\n\nPara ayuda técnica: produccion@bacoteatro.com'
+        'Desarrollado por Carlos Barrios.\nLinkedIn: www.linkedin.com/in/carlos-barrios-10474720b'
       );
     }
   };
