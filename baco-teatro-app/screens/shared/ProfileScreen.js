@@ -9,6 +9,8 @@ import {
   TouchableOpacity,
   View,
   Platform,
+  Modal,
+  Dimensions,
 } from 'react-native';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionCard from '../../components/SectionCard';
@@ -17,6 +19,8 @@ import { getMyProfile } from '../../api';
 import { useAuth } from '../../contexts/AuthContext';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
+
+const { width } = Dimensions.get('window');
 
 const initialForm = {
   nombre: '',
@@ -34,6 +38,8 @@ export default function ProfileScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState(null);
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
+  const [tempAvatar, setTempAvatar] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -63,7 +69,11 @@ export default function ProfileScreen({ navigation }) {
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permiso denegado', 'Necesitamos acceso a tu galería para cambiar la foto.');
+      if (Platform.OS === 'web') {
+        alert('Necesitamos acceso a tu galería para cambiar la foto.');
+      } else {
+        Alert.alert('Permiso denegado', 'Necesitamos acceso a tu galería para cambiar la foto.');
+      }
       return;
     }
 
@@ -77,7 +87,8 @@ export default function ProfileScreen({ navigation }) {
 
     if (!result.canceled && result.assets && result.assets.length > 0) {
       const base64Img = `data:image/jpeg;base64,${result.assets[0].base64}`;
-      handleChange('avatar', base64Img);
+      setTempAvatar(base64Img);
+      setShowAvatarModal(true);
     }
   };
 
@@ -97,7 +108,36 @@ export default function ProfileScreen({ navigation }) {
 
     if (!result.canceled && result.assets && result.assets.length > 0) {
       const base64Img = `data:image/jpeg;base64,${result.assets[0].base64}`;
-      handleChange('avatar', base64Img);
+      setTempAvatar(base64Img);
+      setShowAvatarModal(true);
+    }
+  };
+
+  const handleAvatarConfirm = () => {
+    handleChange('avatar', tempAvatar);
+    setShowAvatarModal(false);
+    setTempAvatar(null);
+  };
+
+  const handleAvatarCancel = () => {
+    setShowAvatarModal(false);
+    setTempAvatar(null);
+  };
+
+  const removeAvatar = () => {
+    if (Platform.OS === 'web') {
+      if (window.confirm('¿Eliminar foto de perfil?')) {
+        handleChange('avatar', '');
+      }
+    } else {
+      Alert.alert(
+        'Eliminar foto',
+        '¿Estás seguro que querés eliminar tu foto de perfil?',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          { text: 'Eliminar', style: 'destructive', onPress: () => handleChange('avatar', '') },
+        ]
+      );
     }
   };
 
@@ -105,15 +145,17 @@ export default function ProfileScreen({ navigation }) {
     if (Platform.OS === 'web') {
       pickImage();
     } else {
-      Alert.alert(
-        'Cambiar Foto',
-        'Podés tomar una foto nueva o elegir una de tu galería. Podrás recortarla y ajustarla a tu gusto.',
-        [
-          { text: 'Cancelar', style: 'cancel' },
-          { text: 'Tomar Foto', onPress: takePhoto },
-          { text: 'Galería', onPress: pickImage },
-        ]
-      );
+      const options = [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Tomar Foto', onPress: takePhoto },
+        { text: 'Elegir de Galería', onPress: pickImage },
+      ];
+      
+      if (form.avatar) {
+        options.push({ text: 'Eliminar Foto', style: 'destructive', onPress: removeAvatar });
+      }
+      
+      Alert.alert('Foto de Perfil', '¿Qué querés hacer?', options);
     }
   };
 
@@ -272,6 +314,37 @@ export default function ProfileScreen({ navigation }) {
           <Text style={styles.buttonText}>Guardar cambios</Text>
         )}
       </TouchableOpacity>
+
+      {/* Modal estilo WhatsApp para preview de avatar */}
+      <Modal
+        visible={showAvatarModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleAvatarCancel}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={handleAvatarCancel} style={styles.modalCloseButton}>
+              <Ionicons name="close" size={28} color="#fff" />
+            </TouchableOpacity>
+          </View>
+          
+          <View style={styles.modalContent}>
+            {tempAvatar && (
+              <Image source={{ uri: tempAvatar }} style={styles.previewImage} resizeMode="contain" />
+            )}
+          </View>
+
+          <View style={styles.modalFooter}>
+            <TouchableOpacity onPress={handleAvatarCancel} style={styles.modalCancelButton}>
+              <Text style={styles.modalCancelText}>Cancelar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleAvatarConfirm} style={styles.modalConfirmButton}>
+              <Ionicons name="checkmark" size={24} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScreenContainer>
   );
 }
@@ -307,6 +380,19 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 40,
     backgroundColor: colors.surface,
+  },
+  cameraIconBadge: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
+    backgroundColor: colors.secondary,
+    borderRadius: 14,
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: colors.background,
   },
   avatarPlaceholder: {
     alignItems: 'center',
@@ -350,10 +436,64 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingVertical: 16,
     alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
   },
   buttonText: {
     color: colors.black,
     fontWeight: '700',
     fontSize: 16,
+  },
+  // Estilos del modal estilo WhatsApp
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+  },
+  modalHeader: {
+    paddingTop: Platform.OS === 'ios' ? 50 : 20,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  modalCloseButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  previewImage: {
+    width: width - 40,
+    height: width - 40,
+    borderRadius: 20,
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 20,
+    paddingTop: 20,
+  },
+  modalCancelButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+  },
+  modalCancelText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  modalConfirmButton: {
+    backgroundColor: colors.secondary,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
