@@ -82,8 +82,8 @@ export default function GuestHomeScreen({ navigation }) {
           style={styles.contactoButton}
           onPress={() => navigation.navigate('Contacto')}
         >
-          <Ionicons name="person-circle-outline" size={20} color={colors.secondary} />
-          <Text style={styles.manualText}>Contacto</Text>
+          <Ionicons name="code-slash-outline" size={20} color={colors.secondary} />
+          <Text style={styles.manualText}>Creador</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => navigation.navigate('Login')}>
           <Text style={styles.loginLink}>Soy del elenco</Text>
