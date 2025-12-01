@@ -26,3 +26,4 @@ Web Bundling failed 356ms node_modules/expo/AppEntry.js (785 modules)
 Unable to resolve "qrcode" from "screens/actor/ActorStockScreen.js"
 Web Bundling failed 1388ms node_modules/expo/AppEntry.js (732 modules)
 Unable to resolve "qrcode" from "screens/actor/ActorStockScreen.js"
+Killed
