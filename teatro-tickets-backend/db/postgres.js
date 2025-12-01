@@ -105,6 +105,29 @@ export async function initializeDatabase() {
     await query(`CREATE INDEX IF NOT EXISTS idx_tickets_qr_code ON tickets(qr_code)`);
     await query(`CREATE INDEX IF NOT EXISTS idx_users_cedula ON users(cedula)`);
 
+    // Crear tabla de reportes de obras finalizadas
+    await query(`
+      CREATE TABLE IF NOT EXISTS reportes_obras (
+        id SERIAL PRIMARY KEY,
+        show_id VARCHAR(50) REFERENCES shows(id) ON DELETE CASCADE,
+        nombre_obra VARCHAR(200) NOT NULL,
+        fecha_show TIMESTAMP NOT NULL,
+        fecha_generacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        director_id VARCHAR(50) REFERENCES users(id),
+        total_tickets INTEGER DEFAULT 0,
+        tickets_vendidos INTEGER DEFAULT 0,
+        tickets_usados INTEGER DEFAULT 0,
+        ingresos_totales DECIMAL(10, 2) DEFAULT 0,
+        datos_vendedores JSONB,
+        datos_ventas JSONB,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await query(`CREATE INDEX IF NOT EXISTS idx_reportes_show_id ON reportes_obras(show_id)`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_reportes_director_id ON reportes_obras(director_id)`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_reportes_fecha_show ON reportes_obras(fecha_show)`);
+
     console.log('✅ Schema de base de datos inicializado correctamente');
   } catch (error) {
     console.error('❌ Error inicializando base de datos:', error);

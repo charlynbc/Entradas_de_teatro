@@ -9,6 +9,7 @@ import usersRoutes from './routes/users.routes.js';
 import showsRoutes from './routes/shows.routes.js';
 import ticketsRoutes from './routes/tickets.routes.js';
 import reportesRoutes from './routes/reportes.routes.js';
+import reportesObrasRoutes from './routes/reportes-obras.routes.js';
 import { readData } from './utils/dataStore.js';
 
 const app = express();
@@ -80,6 +81,7 @@ async function startServer() {
     app.use('/api/shows', showsRoutes);
     app.use('/api/tickets', ticketsRoutes);
     app.use('/api/reportes', reportesRoutes);
+    app.use('/api/reportes-obras', reportesObrasRoutes);
 
     // Servir frontend en producción
     app.use((req, res, next) => {
