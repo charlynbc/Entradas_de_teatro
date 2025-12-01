@@ -29,10 +29,11 @@ async function startServer() {
     
     // Verificar que DATABASE_URL esté configurado
     if (!process.env.DATABASE_URL) {
-      console.warn('⚠️  DATABASE_URL no está configurado. Usando valor por defecto para desarrollo local.');
-      process.env.DATABASE_URL = 'postgresql://localhost:5432/teatro_tickets';
+      throw new Error('❌ DATABASE_URL no está configurado. Configura la variable de entorno en Render.');
     }
-
+    
+    console.log('✅ DATABASE_URL detectado:', process.env.DATABASE_URL.substring(0, 30) + '...');
+    
     // Inicializar schema de base de datos
     await initializeDatabase();
     

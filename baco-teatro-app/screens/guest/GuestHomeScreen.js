@@ -78,6 +78,13 @@ export default function GuestHomeScreen({ navigation }) {
           <Ionicons name="help-circle-outline" size={20} color={colors.secondary} />
           <Text style={styles.manualText}>Manual de Usuario</Text>
         </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.contactoButton}
+          onPress={() => navigation.navigate('Contacto')}
+        >
+          <Ionicons name="person-circle-outline" size={20} color={colors.secondary} />
+          <Text style={styles.manualText}>Contacto</Text>
+        </TouchableOpacity>
         <TouchableOpacity onPress={() => navigation.navigate('Login')}>
           <Text style={styles.loginLink}>Soy del elenco</Text>
         </TouchableOpacity>
@@ -142,6 +149,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   manualButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surfaceAlt,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.secondary + '60',
+    gap: 6,
+  },
+  contactoButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.surfaceAlt,
