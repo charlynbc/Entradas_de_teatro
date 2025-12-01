@@ -29,7 +29,8 @@ const MANUAL_CONTENT = {
       title: 'Scanner y Puerta',
       steps: [
         'Usa la pestaña "Escaner" para validar ingresos.',
-        'El sistema verifica autenticidad, pago y fecha.',
+        'En el celular, usa la cámara para escanear el QR de la entrada.',
+        'Si estás en PC, puedes ingresar el código manualmente.',
         'Luz Verde = Pase. Luz Roja = Rechazado.'
       ]
     }
@@ -40,7 +41,16 @@ const MANUAL_CONTENT = {
       steps: [
         'En "Stock" ves las entradas que te asignaron.',
         'Para vender: Toca una entrada "No vendida" y marca "Marcar como Vendida".',
-        'Comparte el QR con el espectador (botón compartir o foto).'
+        'Ingresa los datos del comprador (Nombre y Teléfono) para tener un registro.'
+      ]
+    },
+    {
+      title: 'Enviar Entrada (WhatsApp)',
+      steps: [
+        'Una vez que la entrada está VENDIDA o PAGADA, verás el icono de WhatsApp.',
+        'Tócalo para generar la "Entrada Dorada" en PDF.',
+        'Se abrirá WhatsApp automáticamente para enviarla a tu comprador.',
+        '¡Es importante enviar el PDF para que tengan el QR!'
       ]
     },
     {
@@ -85,37 +95,44 @@ export default function ManualScreen({ navigation }) {
 
   return (
     <ScreenContainer>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={colors.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{getRoleTitle()}</Text>
-        <View style={{ width: 24 }} />
-      </View>
+      <View style={styles.contentContainer}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color={colors.white} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>{getRoleTitle()}</Text>
+          <View style={{ width: 24 }} />
+        </View>
 
-      <Text style={styles.intro}>
-        Bienvenido, {user?.nombre}. Aquí tienes la guía rápida para usar la aplicación según tu rol.
-      </Text>
+        <Text style={styles.intro}>
+          Bienvenido, {user?.nombre}. Aquí tienes la guía rápida para usar la aplicación según tu rol.
+        </Text>
 
-      {content.map((section, index) => (
-        <SectionCard key={index} title={`${index + 1}. ${section.title}`}>
-          {section.steps.map((step, stepIndex) => (
-            <View key={stepIndex} style={styles.stepRow}>
-              <Text style={styles.bullet}>•</Text>
-              <Text style={styles.stepText}>{step}</Text>
-            </View>
-          ))}
-        </SectionCard>
-      ))}
+        {content.map((section, index) => (
+          <SectionCard key={index} title={`${index + 1}. ${section.title}`}>
+            {section.steps.map((step, stepIndex) => (
+              <View key={stepIndex} style={styles.stepRow}>
+                <Text style={styles.bullet}>•</Text>
+                <Text style={styles.stepText}>{step}</Text>
+              </View>
+            ))}
+          </SectionCard>
+        ))}
 
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>Baco Teatro App v1.0</Text>
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>Baco Teatro App v1.0</Text>
+        </View>
       </View>
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
+  contentContainer: {
+    width: '100%',
+    maxWidth: 800,
+    alignSelf: 'center',
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

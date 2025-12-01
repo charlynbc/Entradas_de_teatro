@@ -4,12 +4,21 @@ import { Picker } from '@react-native-picker/picker';
 import { Ionicons } from '@expo/vector-icons';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import QRCode from 'qrcode';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionCard from '../../components/SectionCard';
 import TicketStatusPill from '../../components/TicketStatusPill';
 import colors from '../../theme/colors';
 import { getActorStock, updateTicketStatus } from '../../api';
 import DailyQuote from '../../components/DailyQuote';
+
+// Web-only imports
+let jsPDF = null;
+let html2canvas = null;
+if (Platform.OS === 'web') {
+  import('jspdf').then(module => { jsPDF = module.default; });
+  import('html2canvas').then(module => { html2canvas = module.default; });
+}
 
 export default function ActorStockScreen() {
   const [stock, setStock] = useState([]);
@@ -156,13 +165,16 @@ export default function ActorStockScreen() {
               height: 320px;
               /* Fallback background color */
               background-color: #12090D;
-              /* Gradient background */
-              background-image: radial-gradient(circle at 85% 20%, #370617 0%, #12090D 70%);
+              /* Gradient background with texture */
+              background-image: 
+                radial-gradient(circle at 85% 20%, #370617 0%, transparent 70%),
+                repeating-linear-gradient(45deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 10px);
               border-radius: 20px;
               display: flex;
               position: relative;
               overflow: hidden;
               border: 2px solid #F48C06;
+              box-shadow: 0 0 50px rgba(244, 140, 6, 0.1);
             }
 
             .main-content {
@@ -171,7 +183,7 @@ export default function ActorStockScreen() {
               display: flex;
               flex-direction: column;
               justify-content: space-between;
-              border-right: 2px dashed #F48C06;
+              border-right: 3px dashed rgba(244, 140, 6, 0.5);
               position: relative;
               z-index: 2;
             }
@@ -365,30 +377,83 @@ export default function ActorStockScreen() {
 
       try {
         if (Platform.OS === 'web') {
-          // Web-specific: Create an iframe to print ONLY the ticket, avoiding the app UI
+          // Web-specific: Generate PDF using html2canvas + jsPDF with Iframe isolation
+          if (!jsPDF || !html2canvas) {
+            Alert.alert('Error', 'Librerías de PDF no cargadas. Intenta de nuevo en unos segundos.');
+            return;
+          }
+
+          // Create a hidden iframe to render the HTML in isolation
           const iframe = document.createElement('iframe');
           iframe.style.position = 'fixed';
-          iframe.style.top = '0';
-          iframe.style.left = '0';
-          iframe.style.width = '0';
-          iframe.style.height = '0';
+          iframe.style.top = '-10000px';
+          iframe.style.left = '-10000px';
+          iframe.style.width = '1000px'; // Fixed width for consistent rendering
+          iframe.style.height = '1000px';
           iframe.style.border = 'none';
           document.body.appendChild(iframe);
 
+          // Write HTML to iframe
           const doc = iframe.contentWindow.document;
           doc.open();
           doc.write(html);
           doc.close();
 
-          // Wait for content to render then print
-          iframe.contentWindow.focus();
-          setTimeout(() => {
-            iframe.contentWindow.print();
-            // Cleanup
-            setTimeout(() => {
-              document.body.removeChild(iframe);
-            }, 500);
-          }, 500);
+          // Wait for iframe content (including images/fonts) to load
+          await new Promise((resolve) => {
+            iframe.onload = resolve;
+            // Fallback if onload doesn't fire quickly
+            setTimeout(resolve, 1000);
+          });
+
+          // Wait a bit more for fonts to settle
+          await new Promise(r => setTimeout(r, 500));
+
+          // Capture the ticket element from within the iframe
+          const ticketElement = doc.querySelector('.ticket-wrapper');
+          if (!ticketElement) throw new Error('Ticket element not found in iframe');
+
+          const canvas = await html2canvas(ticketElement, {
+            scale: 2, // Higher quality
+            backgroundColor: '#000000',
+            useCORS: true,
+            logging: false,
+            windowWidth: 1000,
+            windowHeight: 1000
+          });
+
+          // Generate PDF
+          const imgData = canvas.toDataURL('image/jpeg', 0.95);
+          const pdf = new jsPDF({
+            orientation: 'landscape',
+            unit: 'px',
+            format: [canvas.width, canvas.height]
+          });
+
+          pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
+          
+          // Clean up
+          document.body.removeChild(iframe);
+
+          // Share or Download
+          const pdfBlob = pdf.output('blob');
+          const pdfFile = new File([pdfBlob], `Entrada_${selectedTicket.code}.pdf`, { type: 'application/pdf' });
+
+          if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+            try {
+              await navigator.share({
+                files: [pdfFile],
+                title: 'Entrada Baco Teatro',
+                text: `Aquí tienes tu entrada para ${selectedShowName}.`
+              });
+            } catch (shareError) {
+              console.log('Share cancelled or failed', shareError);
+            }
+          } else {
+            // Fallback to download
+            pdf.save(`Entrada_${selectedTicket.code}.pdf`);
+            Alert.alert('Descarga iniciada', 'El PDF se ha descargado. Puedes compartirlo desde tus descargas.');
+          }
 
         } else {
           const { uri } = await Print.printToFileAsync({ 
@@ -399,7 +464,8 @@ export default function ActorStockScreen() {
           await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
         }
       } catch (error) {
-        Alert.alert('Error', 'No se pudo generar el PDF');
+        console.error(error);
+        Alert.alert('Error', 'No se pudo generar el PDF: ' + error.message);
       } finally {
         setProcessing(false);
         setModalVisible(false);

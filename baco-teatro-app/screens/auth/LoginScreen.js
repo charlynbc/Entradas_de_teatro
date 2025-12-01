@@ -13,7 +13,8 @@ import {
   KeyboardAvoidingView,
   Keyboard,
   TouchableWithoutFeedback,
-  Image
+  Image,
+  ScrollView
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -146,8 +147,14 @@ export default function LoginScreen({ navigation }) {
 
         <KeyboardAvoidingView 
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.contentContainer}
+          style={{ flex: 1, zIndex: 10 }}
         >
+          <ScrollView
+            contentContainerStyle={styles.contentContainer}
+            showsVerticalScrollIndicator={false}
+            alwaysBounceVertical={true}
+            keyboardShouldPersistTaps="handled"
+          >
           <Animated.View style={[styles.headerContainer, { opacity: fadeAnim }]}>
             <View style={styles.logoContainer}>
               <Text style={styles.logoEmoji}>🎭</Text>
@@ -227,6 +234,7 @@ export default function LoginScreen({ navigation }) {
               <Text style={styles.versionText}>v1.0.0</Text>
             </View>
           </Animated.View>
+          </ScrollView>
         </KeyboardAvoidingView>
       </View>
     </KeyboardDismissWrapper>
@@ -272,10 +280,10 @@ const styles = StyleSheet.create({
     borderRadius: 100,
   },
   contentContainer: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'center',
     paddingHorizontal: 30,
-    zIndex: 10,
+    paddingVertical: 40,
   },
   headerContainer: {
     alignItems: 'center',

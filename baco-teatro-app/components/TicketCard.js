@@ -25,100 +25,130 @@ export default function TicketCard({ ticket, onPress, showActions = true, userRo
 
   return (
     <TouchableOpacity 
-      style={styles.card} 
+      style={styles.container} 
       onPress={onPress}
       activeOpacity={0.7}
     >
-      <View style={styles.header}>
-        <Text style={styles.code}>{ticket.code}</Text>
-        <View style={[styles.badge, { backgroundColor: getEstadoColor(ticket.estado) }]}>
-          <Text style={styles.badgeText}>{getEstadoTexto(ticket.estado)}</Text>
+      <View style={styles.card}>
+        {/* Notches */}
+        <View style={[styles.notch, styles.notchLeft]} />
+        <View style={[styles.notch, styles.notchRight]} />
+
+        <View style={styles.header}>
+          <Text style={styles.code}>{ticket.code}</Text>
+          <View style={[styles.badge, { backgroundColor: getEstadoColor(ticket.estado) }]}>
+            <Text style={styles.badgeText}>{getEstadoTexto(ticket.estado)}</Text>
+          </View>
         </View>
+
+        {ticket.obra && (
+          <Text style={styles.obra}>{ticket.obra}</Text>
+        )}
+
+        {ticket.comprador_nombre && (
+          <View style={styles.row}>
+            <Text style={styles.label}>Comprador:</Text>
+            <Text style={styles.value}>{ticket.comprador_nombre}</Text>
+          </View>
+        )}
+
+        {ticket.precio && (
+          <View style={styles.row}>
+            <Text style={styles.label}>Precio:</Text>
+            <Text style={styles.value}>${ticket.precio}</Text>
+          </View>
+        )}
+
+        {ticket.vendedor_nombre && userRole === 'ADMIN' && (
+          <View style={styles.row}>
+            <Text style={styles.label}>Vendedor:</Text>
+            <Text style={styles.value}>{ticket.vendedor_nombre}</Text>
+          </View>
+        )}
       </View>
-
-      {ticket.obra && (
-        <Text style={styles.obra}>{ticket.obra}</Text>
-      )}
-
-      {ticket.comprador_nombre && (
-        <View style={styles.row}>
-          <Text style={styles.label}>Comprador:</Text>
-          <Text style={styles.value}>{ticket.comprador_nombre}</Text>
-        </View>
-      )}
-
-      {ticket.precio && (
-        <View style={styles.row}>
-          <Text style={styles.label}>Precio:</Text>
-          <Text style={styles.value}>${ticket.precio}</Text>
-        </View>
-      )}
-
-      {ticket.vendedor_nombre && userRole === 'ADMIN' && (
-        <View style={styles.row}>
-          <Text style={styles.label}>Vendedor:</Text>
-          <Text style={styles.value}>{ticket.vendedor_nombre}</Text>
-        </View>
-      )}
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    marginVertical: 6,
+    marginHorizontal: 16,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 16,
-    marginVertical: 8,
-    marginHorizontal: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    borderLeftWidth: 4,
-    borderLeftColor: colors.primary,
+    borderWidth: 1,
+    borderColor: colors.border,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  notch: {
+    position: 'absolute',
+    width: 20,
+    height: 20,
+    backgroundColor: colors.background, // Match screen background
+    borderRadius: 10,
+    top: '50%',
+    marginTop: -10,
+    zIndex: 1,
+  },
+  notchLeft: {
+    left: -10,
+  },
+  notchRight: {
+    right: -10,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
+    paddingHorizontal: 8,
   },
   code: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: colors.text,
+    color: colors.textMuted,
     fontFamily: 'monospace',
+    fontSize: 12,
+    letterSpacing: 1,
   },
   badge: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: 4,
   },
   badgeText: {
     color: colors.white,
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: 'bold',
+    textTransform: 'uppercase',
   },
   obra: {
-    fontSize: 16,
-    fontWeight: '600',
     color: colors.text,
-    marginBottom: 8,
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    paddingHorizontal: 8,
   },
   row: {
     flexDirection: 'row',
-    marginVertical: 4,
+    justifyContent: 'space-between',
+    marginBottom: 4,
+    paddingHorizontal: 8,
   },
   label: {
+    color: colors.textMuted,
     fontSize: 14,
-    color: colors.gray,
-    marginRight: 8,
   },
   value: {
-    fontSize: 14,
     color: colors.text,
-    fontWeight: '500',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

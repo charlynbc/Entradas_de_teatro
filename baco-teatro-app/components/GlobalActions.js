@@ -47,19 +47,28 @@ export default function GlobalActions() {
   };
 
   const handleSupport = () => {
-    Alert.alert(
-      'Soporte Baco Teatro',
-      'Escribinos a produccion@bacoteatro.com o via WhatsApp +598 92 000 000.'
-    );
+    if (Platform.OS === 'web') {
+      alert('Soporte Baco Teatro\n\nDesarrollado por Carlos Barrios.\nLinkedIn: www.linkedin.com/in/carlos-barrios-10474720b\n\nPara ayuda técnica: produccion@bacoteatro.com');
+    } else {
+      Alert.alert(
+        'Soporte Baco Teatro',
+        'Desarrollado por Carlos Barrios.\nLinkedIn: www.linkedin.com/in/carlos-barrios-10474720b\n\nPara ayuda técnica: produccion@bacoteatro.com'
+      );
+    }
   };
 
   const goProfile = () => {
     navigation.navigate('Perfil');
   };
 
+  const goManual = () => {
+    navigation.navigate('Manual');
+  };
+
   return (
     <View style={styles.bar}>
       <ActionButton icon="person-circle-outline" label="Mi perfil" onPress={goProfile} variant="secondary" />
+      <ActionButton icon="book-outline" label="Manual" onPress={goManual} variant="secondary" />
       <ActionButton icon="chatbubbles-outline" label="Soporte" onPress={handleSupport} variant="secondary" />
       <ActionButton icon="log-out-outline" label="Cerrar sesión" onPress={handleLogout} />
     </View>

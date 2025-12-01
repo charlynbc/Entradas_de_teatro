@@ -1,13 +1,16 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import SuperDashboardScreen from '../screens/super/SuperDashboardScreen';
 import DirectorsScreen from '../screens/super/DirectorsScreen';
 import ProductionsScreen from '../screens/super/ProductionsScreen';
 import ProfileScreen from '../screens/shared/ProfileScreen';
+import ManualScreen from '../screens/shared/ManualScreen';
 import colors from '../theme/colors';
 
 const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
 
 const iconMap = {
   Dashboard: 'speedometer-outline',
@@ -16,7 +19,7 @@ const iconMap = {
   Perfil: 'person-circle-outline',
 };
 
-export default function SuperNavigator() {
+function SuperTabs() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -37,5 +40,14 @@ export default function SuperNavigator() {
       <Tab.Screen name="Producciones" component={ProductionsScreen} />
       <Tab.Screen name="Perfil" component={ProfileScreen} />
     </Tab.Navigator>
+  );
+}
+
+export default function SuperNavigator() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="SuperTabs" component={SuperTabs} />
+      <Stack.Screen name="Manual" component={ManualScreen} />
+    </Stack.Navigator>
   );
 }

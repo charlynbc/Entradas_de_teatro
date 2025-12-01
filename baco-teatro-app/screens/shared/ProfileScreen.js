@@ -8,6 +8,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Platform,
 } from 'react-native';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionCard from '../../components/SectionCard';
@@ -70,13 +71,49 @@ export default function ProfileScreen({ navigation }) {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.5,
+      quality: 0.8,
       base64: true,
     });
 
     if (!result.canceled && result.assets && result.assets.length > 0) {
       const base64Img = `data:image/jpeg;base64,${result.assets[0].base64}`;
       handleChange('avatar', base64Img);
+    }
+  };
+
+  const takePhoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permiso denegado', 'Necesitamos acceso a tu cámara para tomar la foto.');
+      return;
+    }
+
+    let result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+      base64: true,
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const base64Img = `data:image/jpeg;base64,${result.assets[0].base64}`;
+      handleChange('avatar', base64Img);
+    }
+  };
+
+  const handleAvatarPress = () => {
+    if (Platform.OS === 'web') {
+      pickImage();
+    } else {
+      Alert.alert(
+        'Cambiar Foto',
+        'Podés tomar una foto nueva o elegir una de tu galería. Podrás recortarla y ajustarla a tu gusto.',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          { text: 'Tomar Foto', onPress: takePhoto },
+          { text: 'Galería', onPress: pickImage },
+        ]
+      );
     }
   };
 
@@ -137,7 +174,7 @@ export default function ProfileScreen({ navigation }) {
     <ScreenContainer>
       <SectionCard title="Mi perfil" subtitle={`ID fijo: ${profile?.id || 'desconocido'}`}>
         <View style={styles.avatarRow}>
-          <TouchableOpacity onPress={pickImage} style={styles.avatarContainer}>
+          <TouchableOpacity onPress={handleAvatarPress} style={styles.avatarContainer}>
             {avatarSource ? (
               <Image source={avatarSource} style={styles.avatar} />
             ) : (
