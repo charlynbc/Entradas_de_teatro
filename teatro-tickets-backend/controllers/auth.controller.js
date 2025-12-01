@@ -113,10 +113,6 @@ export async function completarRegistro(req, res) {
     res.status(500).json({ error: error.message });
   }
 }
-    console.error('Error completando registro:', error);
-    res.status(500).json({ error: error.message });
-  }
-}
 
 export async function verificarToken(req, res) {
   // Si llegó acá, el middleware authenticate ya validó el token
