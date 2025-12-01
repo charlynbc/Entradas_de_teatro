@@ -1,351 +1,264 @@
-# 🎭 Baco Teatro - Sistema de Gestión de Tickets v3.0
+# 🎭 Baco Teatro - Sistema de Gestión de Entradas
 
-Sistema completo de gestión de entradas para teatro con roles de usuario, estados de tickets y app móvil.
+Sistema completo para gestión de entradas de teatro con roles de usuario (Supremo, Admin, Vendedor), generación de QR, trazabilidad completa y reportes de ventas.
 
----
+## 🚀 Deploy en Producción (Render)
 
-## 🚀 Quick Start
+### Backend + Base de Datos PostgreSQL
 
-### Todo el stack en un comando
-```bash
-npm run dev
-```
-Este script usa `concurrently` para levantar:
-- `npm run dev:api` → backend en `localhost:3000`
-- `npm run dev:app` → Expo web en `localhost:8081`
+El sistema usa PostgreSQL para persistencia real de datos. Sigue la guía completa:
 
-> Seguí usando las rutas tradicionales si preferís procesos separados (`cd teatro-tickets-backend && npm run dev` o `cd baco-teatro-app && npm run web`).
+👉 **[Guía de Deploy del Backend](./teatro-tickets-backend/DEPLOY-RENDER.md)**
 
----
+**Resumen rápido:**
+1. Crear base de datos PostgreSQL en Render
+2. Crear Web Service para el backend
+3. Configurar variables de entorno (`DATABASE_URL`, `JWT_SECRET`, etc.)
+4. Deploy automático desde GitHub
 
-## 📁 Estructura del Proyecto
+### Frontend (Expo Web)
 
-```
-Entradas_de_teatro/
-├── teatro-tickets-backend/     # Backend Node.js + Express + PostgreSQL
-│   ├── index-v3-postgres.js    # API REST completa
-│   ├── schema.sql             # Esquema de base de datos
-│   └── db.js                  # Conexión PostgreSQL
-├── baco-teatro-app/           # App React Native + Expo
-│   ├── App.js                 # Navegación condicional
-│   └── src/
-│       ├── context/           # UserContext
-│       ├── services/          # API client
-│       ├── screens/           # Pantallas
-│       └── theme/             # Colores Baco
-└── README.md                  # Esta guía
-```
+El frontend se puede desplegar como Static Site o servirse desde el backend:
+
+👉 **[Guía de Deploy del Frontend](./baco-teatro-app/DEPLOY-RENDER.md)**
+
+**Opciones:**
+- **Opción 1:** Static Site independiente en Render (CDN, más rápido)
+- **Opción 2:** Servir desde el backend (más simple, un solo servicio)
 
 ---
 
-## ✅ Nuevas Funcionalidades Implementadas
+## 💻 Desarrollo Local
 
-### Backend (Node + Express + PostgreSQL)
-- ✅ Modelo de usuarios con cédula (supremo, admin, vendedor)
-- ✅ Autenticación con login
-- ✅ Generación automática de QR para cada ticket
-- ✅ Endpoint de venta con datos completos (vendedor, comprador, medio de pago, monto)
-- ✅ Reportes de ventas por vendedor y función
-- ✅ CRUD completo de usuarios y shows
+### Requisitos
 
-### App Móvil (React Native + Expo)
-- ✅ Login con cédula y contraseña
-- ✅ Navegación por roles (Admin, Vendedor)
-- ✅ Pantalla de registro de ventas
-- ✅ Scanner de QR con cámara para validación
-- ✅ Pantalla de reportes con estadísticas
+- Node.js 18+
+- PostgreSQL 14+ (para backend con DB real)
+- npm o yarn
 
----
-
-## 📋 Cómo Probar Todo el Sistema
-
-### 1️⃣ Preparar el Backend
+### Backend
 
 ```bash
-# Terminal 1 - Levantar backend
 cd teatro-tickets-backend
-node index-v3-postgres.js
-# Debe decir: "Servidor escuchando en puerto 3000"
-```
 
-### 2️⃣ Crear Datos de Prueba
+# Instalar dependencias
+npm install
 
-Abrí otra terminal y ejecutá estos comandos:
+# Configurar variables de entorno
+cp .env.example .env
+# Editar .env con tu DATABASE_URL local
 
-```bash
-# Crear vendedores
-curl -X POST http://localhost:3000/api/vendedores \
-  -H "Content-Type: application/json" \
-  -d '{"nombre":"Juan Pérez","alias":"Elenco","activo":true}'
-
-curl -X POST http://localhost:3000/api/vendedores \
-  -H "Content-Type: application/json" \
-  -d '{"nombre":"Ana García","alias":"Producción","activo":true}'
-
-curl -X POST http://localhost:3000/api/vendedores \
-  -H "Content-Type: application/json" \
-  -d '{"nombre":"Carlos López","alias":"Staff","activo":true}'
-
-# Crear una función
-curl -X POST http://localhost:3000/api/shows \
-  -H "Content-Type: application/json" \
-  -d '{"obra":"Romeo y Julieta","fecha":"2025-12-31 20:00","capacidad":50}'
-
-# Generar 20 tickets con QR
-curl -X POST http://localhost:3000/api/shows/1/generate-tickets \
-  -H "Content-Type: application/json" \
-  -d '{"cantidad":20}'
-```
-
-**Anotar algunos códigos de ticket** (ej: T-A1B2C3D4) que vas a usar en la app.
-
-### 3️⃣ Configurar la App Móvil
-
-#### Si vas a usar desde el celular:
-
-1. En VS Code, panel **PORTS** → puerto 3000 → Click derecho → **Port Visibility** → **Public**
-2. Copiar la URL pública (ej: `https://xxxx-3000.app.github.dev`)
-3. Editar `baco-teatro-app/src/services/api.js`:
-
-```js
-export const API_URL = 'https://tu-url-publica-aqui.app.github.dev';
-```
-
-#### Si vas a usar en emulador (opcional):
-
-Dejá `http://localhost:3000` como está.
-
-### 4️⃣ Levantar la App Móvil
-
-```bash
-# Terminal 2
-cd baco-teatro-app
+# Iniciar servidor
 npm start
 ```
 
-Opciones:
-- **Presiona `a`** para abrir en emulador Android (si tenés uno)
-- **Escanea el QR con Expo Go** en tu celular (recomendado)
+El servidor correrá en `http://localhost:3000`
 
----
+**Endpoints importantes:**
+- `GET /health` - Estado del sistema
+- `GET /api` - Información de la API
+- `POST /api/auth/login` - Login
+- `POST /api/auth/register` - Registro de usuarios
 
-## 📱 Cómo Usar la App
+### Frontend (Expo Web)
 
-### Login
-- **Cédula**: 48376669, **Contraseña**: Te amo mama 1991 (Supremo)
-- **Cédula**: 48376668, **Contraseña**: admin123 (Admin)
-- **Cédula**: 48376667, **Contraseña**: vendedor123 (Vendedor)
-
-### Pestaña 1: 💰 VENDER
-
-**Flujo completo de venta:**
-
-1. Ingresá un código de ticket (ej: `T-A1B2C3D4`)
-2. Toca **Buscar**
-3. Si el ticket está disponible, se muestra info
-4. Completa el formulario:
-   - **Vendedor**: Selecciona uno (Juan, Ana, Carlos)
-   - **Nombre del comprador**: "María Rodríguez"
-   - **Contacto**: "099 123 456" (opcional)
-   - **Medio de pago**: Selecciona (EFECTIVO / TRANSFERENCIA / PREX / OTRO)
-   - **Monto**: "400"
-5. Toca **Registrar Venta**
-6. ✅ El ticket queda marcado como PAGADO
-
-**Probá vender 5-10 tickets** con diferentes vendedores y medios de pago.
-
----
-
-### Pestaña 2: 📷 VALIDAR
-
-**Flujo de validación con QR:**
-
-1. Toca la pestaña **Validar**
-2. Permite acceso a la cámara
-3. **Apunta la cámara** a un código QR del ticket
-   - (Por ahora no tenés QR físico, pero podés probar manualmente)
-4. La app muestra:
-   - Código del ticket
-   - Estado actual
-   - Nombre del comprador
-5. Toca **Validar**
-6. ✅ Si está PAGADO → "Ticket válido, bienvenido"
-7. ❌ Si no está pagado o ya fue usado → Rechaza
-
-**Para probar sin QR físico:**
-
-Podés generar un QR en línea:
-1. Andá a https://www.qr-code-generator.com/
-2. Ingresa el código del ticket (ej: `T-A1B2C3D4`)
-3. Descarga el QR
-4. Abrilo en tu compu o imprimí
-5. Escanealo con la app
-
----
-
-### Pestaña 3: 📊 REPORTES
-
-**Ver estadísticas de ventas:**
-
-1. Toca la pestaña **Reportes**
-2. Selecciona una función (Romeo y Julieta)
-3. Ves:
-   - **Total vendido**: X tickets
-   - **Total recaudado**: $X
-   - Por cada vendedor:
-     - Cantidad vendida
-     - Monto total
-     - Promedio por ticket
-4. **Pull to refresh** para actualizar
-
----
-
-## 🧪 Casos de Prueba
-
-### Caso 1: Venta Normal
-```
-1. Buscar ticket T-ABC123
-2. Vendedor: Juan Pérez
-3. Comprador: Pedro Gómez
-4. Medio: EFECTIVO
-5. Monto: 400
-✅ Resultado: Ticket vendido
-```
-
-### Caso 2: Intentar Vender Ticket Ya Vendido
-```
-1. Buscar mismo ticket T-ABC123
-❌ Resultado: "Ticket ya vendido"
-```
-
-### Caso 3: Validar Ticket Pagado
-```
-1. Escanear QR de T-ABC123
-2. Confirmar validación
-✅ Resultado: "Ticket válido"
-3. Estado → USADO
-```
-
-### Caso 4: Intentar Validar Ticket Ya Usado
-```
-1. Escanear mismo QR T-ABC123
-❌ Resultado: "Ticket ya usado"
-```
-
-### Caso 5: Intentar Validar Ticket No Pagado
-```
-1. Buscar ticket nuevo T-XYZ789 (sin vender)
-2. Intentar validar
-❌ Resultado: "Ticket no está pagado"
-```
-
-### Caso 6: Ver Reportes con Múltiples Vendedores
-```
-1. Vender 3 tickets con Juan
-2. Vender 2 tickets con Ana
-3. Vender 1 ticket con Carlos
-4. Ir a Reportes
-✅ Resultado: Tabla con ventas de cada uno
-```
-
----
-
-## 📊 Endpoints de Reportes
-
-### Ver reporte de una función específica:
 ```bash
-curl http://localhost:3000/api/reportes/ventas?showId=1
+cd baco-teatro-app
+
+# Instalar dependencias
+npm install
+
+# Configurar API URL
+cp .env.example .env
+# Editar .env: EXPO_PUBLIC_API_URL=http://localhost:3000
+
+# Iniciar en modo web
+npx expo start --web
 ```
 
-### Ver reporte general (todas las funciones):
-```bash
-curl http://localhost:3000/api/reportes/ventas
-```
-
-Respuesta ejemplo:
-```json
-[
-  {
-    "vendedorId": 1,
-    "vendedorNombre": "Juan Pérez",
-    "cantidadVendida": 5,
-    "montoTotal": 2000
-  },
-  {
-    "vendedorId": 2,
-    "vendedorNombre": "Ana García",
-    "cantidadVendida": 3,
-    "montoTotal": 1200
-  }
-]
-```
+La app correrá en `http://localhost:8081`
 
 ---
 
-## 🎯 Modelo de Datos Completo
+## 🏗️ Arquitectura del Sistema
 
-### Ticket
-```js
-{
-  code: "T-A1B2C3D4",
-  showId: 1,
-  estado: "PAGADO",             // DISPONIBLE | PAGADO | USADO
-  vendedorId: 1,                // Quién lo vendió
-  compradorNombre: "Juan Pérez",
-  compradorContacto: "099123456",
-  medioPago: "PREX",            // EFECTIVO | TRANSFERENCIA | PREX | OTRO
-  monto: 400,
-  qrCode: "data:image/png;base64...",  // QR en base64
-  pagadoAt: "2025-11-27T...",
-  usadoAt: null,
-  createdAt: "2025-11-27T..."
-}
+### Backend (`teatro-tickets-backend`)
+
+- **Runtime:** Node.js + Express
+- **Base de Datos:** PostgreSQL
+- **Autenticación:** JWT
+- **Estructura:**
+  - `index-v3-postgres.js` - Servidor principal
+  - `db/postgres.js` - Conexión y queries a PostgreSQL
+  - `routes/` - Rutas de la API (auth, users, shows, tickets, reportes)
+  - `controllers/` - Lógica de negocio
+  - `utils/` - Utilidades (dataStore adaptado a Postgres)
+
+### Frontend (`baco-teatro-app`)
+
+- **Framework:** React Native (Expo)
+- **Web:** Expo Web (React DOM)
+- **Estructura:**
+  - `App.js` - Punto de entrada, manejo de autenticación
+  - `screens/` - Pantallas (Login, AdminHome, VendedorHome)
+  - `api/` - Cliente HTTP para consumir backend
+  - `theme/` - Colores y estilos
+
+---
+
+## 👥 Roles de Usuario
+
+### 🔑 Supremo
+- Crear y gestionar usuarios (admins y vendedores)
+- Todas las funciones de Admin
+
+### 🎫 Admin
+- Crear funciones de teatro
+- Generar tickets con QR únicos
+- Asignar tickets a vendedores
+- Validar tickets (escaneo QR)
+- Ver reportes de ventas
+
+### 💰 Vendedor
+- Ver tickets asignados
+- Reportar ventas (con datos del comprador)
+- Marcar tickets como pagados
+- Ver historial de ventas
+
+---
+
+## 🔄 Flujo de Tickets
+
+```
+1. Admin crea función → Genera N tickets con QR
+2. Admin asigna tickets a vendedor → Estado: EN_PODER
+3. Vendedor reporta venta → Estado: VENDIDA_NO_PAGADA
+4. Vendedor confirma pago → Estado: VENDIDA_PAGADA
+5. Ticket se escanea en entrada → Estado: USADA
 ```
 
-### Usuario
-```js
-{
-  cedula: "48376669",
-  nombre: "Barrios",
-  rol: "supremo",
-  password_hash: "..."
-}
+**Estados posibles:**
+- `NO_ASIGNADO` - Recién creado
+- `EN_PODER` - Asignado a vendedor
+- `VENDIDA_NO_PAGADA` - Vendido pero sin pago confirmado
+- `VENDIDA_PAGADA` - Vendido y pagado
+- `USADA` - Ya se usó para ingresar
+
+---
+
+## 📊 Base de Datos
+
+### Tablas principales:
+
+**users**
+- id, cedula, nombre, password (hash), rol
+- Índice único en cedula
+
+**shows**
+- id, nombre, fecha, precio, total_tickets, creado_por
+- Relación: creado_por → users.id
+
+**tickets**
+- id, show_id, qr_code (único), estado, vendedor_id
+- precio_venta, comprador_nombre, comprador_contacto
+- fecha_asignacion, fecha_venta, fecha_uso
+- Relaciones: show_id → shows.id, vendedor_id → users.id
+
+---
+
+## 🔐 Seguridad
+
+- Contraseñas hasheadas con bcrypt
+- Autenticación JWT con secret configurable
+- SSL obligatorio en producción (Render lo maneja automáticamente)
+- Variables de entorno para secretos (nunca en código)
+
+---
+
+## 📦 Scripts Disponibles
+
+### Backend
+
+```bash
+npm start       # Iniciar servidor
+npm run dev     # Modo desarrollo (mismo que start)
+```
+
+### Frontend
+
+```bash
+npx expo start          # Iniciar con Expo Go
+npx expo start --web    # Iniciar en navegador
+npx expo export:web     # Build para producción web
 ```
 
 ---
 
 ## 🐛 Troubleshooting
 
-### La app no se conecta al backend
-1. Verifica que el backend esté corriendo
-2. Verifica que el puerto 3000 esté público
-3. Verifica la URL en `src/services/api.js`
-4. Prueba abrir la URL en el navegador del celular
+### Backend no se conecta a PostgreSQL
 
-### La cámara no funciona
-1. Permite permisos de cámara cuando lo pida
-2. En Android: Configuración → Apps → Expo Go → Permisos → Cámara
-3. Reinicia la app
+```bash
+# Verificar que PostgreSQL esté corriendo
+psql -U postgres -c "SELECT version();"
 
-### Error "Ticket no encontrado"
-1. Verifica que el código esté bien escrito (MAYÚSCULAS)
-2. Lista todos los tickets: `curl http://localhost:3000/api/shows/1/tickets`
+# Verificar DATABASE_URL en .env
+echo $DATABASE_URL
 
-### Los reportes están vacíos
-1. Asegurate de haber **vendido** tickets (no solo generarlos)
-2. Usa el endpoint `/tickets/:code/sell`, no `/pay`
+# Ver logs del servidor
+npm start
+```
 
----
+### Frontend no se conecta al backend
 
-## ✨ Próximos Pasos
+1. Verificar que backend esté corriendo: `curl http://localhost:3000/health`
+2. Verificar `EXPO_PUBLIC_API_URL` en `.env`
+3. Abrir consola del navegador (F12) para ver errores
 
-Cuando todo esto funcione bien:
+### Errores de CORS
 
-1. **Deploy en Render** (backend en producción)
-2. **PostgreSQL en Render** (base de datos persistente)
-3. **Descargar QR** (generar PDF con todos los tickets)
-4. **Panel web** (administración desde navegador)
+El backend ya tiene CORS habilitado. Si persiste:
+- Verificar que la URL del backend sea correcta
+- En desarrollo local, ambos deben usar `localhost` (no mezclar con `127.0.0.1`)
 
 ---
 
-¡Todo listo para rockear! 🎭🍊
+## 📚 Recursos
+
+- [Documentación de Render](https://render.com/docs)
+- [Expo Documentation](https://docs.expo.dev)
+- [PostgreSQL Docs](https://www.postgresql.org/docs/)
+- [Express.js Guide](https://expressjs.com/en/guide/routing.html)
+
+---
+
+## 🤝 Contribuir
+
+Este proyecto está en la rama `prototipo` para desarrollo activo. La rama `funciona` contiene la última versión estable.
+
+```bash
+# Clonar y trabajar en prototipo
+git clone https://github.com/charlynbc/Entradas_de_teatro.git
+cd Entradas_de_teatro
+git checkout prototipo
+
+# Crear feature branch
+git checkout -b feature/nueva-funcionalidad
+
+# Hacer cambios, commit y push
+git add .
+git commit -m "Descripción de cambios"
+git push origin feature/nueva-funcionalidad
+```
+
+---
+
+## 📄 Licencia
+
+ISC
+
+---
+
+**¡Listo para producción!** 🚀
+
+Para cualquier duda, revisa las guías de deploy específicas en cada carpeta.

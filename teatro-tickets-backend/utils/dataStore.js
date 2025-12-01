@@ -1,62 +1,105 @@
-import { readFile, writeFile } from 'fs/promises';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { query } from '../db/postgres.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DATA_PATH = path.join(__dirname, '..', 'data.json');
-
-const DEFAULT_DATA = Object.freeze({
-  tickets: [],
-  users: [],
-  shows: []
-});
-
-function cloneDefault() {
-  return JSON.parse(JSON.stringify(DEFAULT_DATA));
-}
-
-function normalizeData(raw = {}) {
-  const safe = cloneDefault();
-  return {
-    tickets: Array.isArray(raw.tickets) ? raw.tickets : safe.tickets,
-    users: Array.isArray(raw.users) ? raw.users : safe.users,
-    shows: Array.isArray(raw.shows) ? raw.shows : safe.shows
-  };
-}
-
-async function loadData() {
+// Leer todos los datos de la base de datos (equivalente a readData del archivo JSON)
+export async function readData() {
   try {
-    const content = await readFile(DATA_PATH, 'utf8');
-    return normalizeData(JSON.parse(content));
+    const [usersRes, showsRes, ticketsRes] = await Promise.all([
+      query('SELECT * FROM users ORDER BY created_at DESC'),
+      query('SELECT * FROM shows ORDER BY created_at DESC'),
+      query('SELECT * FROM tickets ORDER BY created_at DESC')
+    ]);
+
+    return {
+      users: usersRes.rows,
+      shows: showsRes.rows,
+      tickets: ticketsRes.rows
+    };
   } catch (error) {
-    if (error.code === 'ENOENT') {
-      const initial = cloneDefault();
-      await writeFile(DATA_PATH, JSON.stringify(initial, null, 2));
-      return initial;
-    }
+    console.error('Error leyendo datos:', error);
     throw error;
   }
 }
 
-async function saveData(data) {
-  const normalized = normalizeData(data);
-  await writeFile(DATA_PATH, JSON.stringify(normalized, null, 2));
-  return normalized;
-}
-
-export async function readData() {
-  return await loadData();
-}
-
+// Escribir datos completos (útil para migraciones, pero no recomendado en producción)
 export async function writeData(data) {
-  return await saveData(data);
+  console.warn('writeData: Esta función reemplaza TODOS los datos. Usar con precaución.');
+  
+  try {
+    // Limpiar tablas existentes
+    await query('DELETE FROM tickets');
+    await query('DELETE FROM shows');
+    await query('DELETE FROM users');
+
+    // Insertar usuarios
+    if (data.users && data.users.length > 0) {
+      for (const user of data.users) {
+        await query(
+          `INSERT INTO users (id, cedula, nombre, password, rol, created_at, updated_at) 
+           VALUES ($1, $2, $3, $4, $5, $6, $7)
+           ON CONFLICT (id) DO NOTHING`,
+          [user.id, user.cedula, user.nombre, user.password, user.rol, user.created_at || new Date(), user.updated_at || new Date()]
+        );
+      }
+    }
+
+    // Insertar shows
+    if (data.shows && data.shows.length > 0) {
+      for (const show of data.shows) {
+        await query(
+          `INSERT INTO shows (id, nombre, fecha, precio, total_tickets, creado_por, created_at, updated_at) 
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+           ON CONFLICT (id) DO NOTHING`,
+          [show.id, show.nombre, show.fecha, show.precio, show.total_tickets || show.totalTickets, show.creado_por || show.creadoPor, show.created_at || new Date(), show.updated_at || new Date()]
+        );
+      }
+    }
+
+    // Insertar tickets
+    if (data.tickets && data.tickets.length > 0) {
+      for (const ticket of data.tickets) {
+        await query(
+          `INSERT INTO tickets (id, show_id, qr_code, estado, vendedor_id, precio_venta, comprador_nombre, comprador_contacto, 
+                                fecha_asignacion, fecha_venta, fecha_uso, created_at, updated_at) 
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+           ON CONFLICT (id) DO NOTHING`,
+          [
+            ticket.id, 
+            ticket.show_id || ticket.showId, 
+            ticket.qr_code || ticket.qrCode, 
+            ticket.estado, 
+            ticket.vendedor_id || ticket.vendedorId, 
+            ticket.precio_venta || ticket.precioVenta,
+            ticket.comprador_nombre || ticket.compradorNombre,
+            ticket.comprador_contacto || ticket.compradorContacto,
+            ticket.fecha_asignacion || ticket.fechaAsignacion,
+            ticket.fecha_venta || ticket.fechaVenta,
+            ticket.fecha_uso || ticket.fechaUso,
+            ticket.created_at || new Date(),
+            ticket.updated_at || new Date()
+          ]
+        );
+      }
+    }
+
+    return await readData();
+  } catch (error) {
+    console.error('Error escribiendo datos:', error);
+    throw error;
+  }
 }
 
+// Actualizar datos usando una función callback (manteniendo compatibilidad con código existente)
 export async function updateData(updater) {
-  const current = await loadData();
-  const maybeUpdated = await updater(current);
-  const finalData = maybeUpdated || current;
-  return await saveData(finalData);
+  try {
+    const current = await readData();
+    const updated = await updater(current);
+    const finalData = updated || current;
+    await writeData(finalData);
+    return finalData;
+  } catch (error) {
+    console.error('Error actualizando datos:', error);
+    throw error;
+  }
 }
 
 export async function getUsers() {
