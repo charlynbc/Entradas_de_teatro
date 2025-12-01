@@ -1,4 +1,5 @@
 import React from 'react';
+import { TouchableOpacity } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -45,9 +46,27 @@ function SuperTabs() {
 
 export default function SuperNavigator() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator 
+      screenOptions={({ navigation }) => ({
+        headerShown: false,
+        headerStyle: { backgroundColor: colors.surface },
+        headerTintColor: colors.text,
+        headerRight: () => (
+          <TouchableOpacity
+            onPress={() => navigation.navigate('SuperTabs')}
+            style={{ marginRight: 15 }}
+          >
+            <Ionicons name="home" size={24} color={colors.secondary} />
+          </TouchableOpacity>
+        ),
+      })}
+    >
       <Stack.Screen name="SuperTabs" component={SuperTabs} />
-      <Stack.Screen name="Manual" component={ManualScreen} />
+      <Stack.Screen 
+        name="Manual" 
+        component={ManualScreen}
+        options={{ headerShown: true, title: 'Manual de Usuario' }}
+      />
     </Stack.Navigator>
   );
 }

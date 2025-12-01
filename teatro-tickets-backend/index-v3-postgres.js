@@ -87,13 +87,26 @@ async function startServer() {
         return next();
       }
       return res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
+    // Middleware para rutas no encontradas (debe ir antes de iniciar servidor)
+    app.use((req, res, next) => {
+      if (req.path.startsWith('/api')) {
+        return res.status(404).json({ error: 'Ruta no encontrada' });
+      }
+      next();
+    });
+
+    // Middleware de manejo de errores
+    app.use((err, req, res, next) => {
+      console.error('Error no controlado:', err);
+      res.status(err.status || 500).json({ error: err.message || 'Error interno' });
     });
 
     // Iniciar servidor
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`✅ Servidor corriendo en puerto ${PORT}`);
       console.log(`📊 Health check: http://localhost:${PORT}/health`);
       console.log(`🔌 API disponible en: http://localhost:${PORT}/api`);
+      console.log('🎭 Frontend servido desde /public');
     });
   } catch (error) {
     console.error('❌ Error iniciando servidor:', error);
@@ -102,18 +115,5 @@ async function startServer() {
 }
 
 startServer();
-
-app.use((req, res) => {
-  res.status(404).json({ error: 'Ruta no encontrada' });
-});
-
-app.use((err, req, res, next) => {
-  console.error('Error no controlado:', err);
-  res.status(err.status || 500).json({ error: err.message || 'Error interno' });
-});
-
-app.listen(PORT, () => {
-  console.log(`🎭 API Teatro Tickets escuchando en http://localhost:${PORT}`);
-});
 
 export default app;
