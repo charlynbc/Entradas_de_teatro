@@ -21,55 +21,58 @@ export async function crearShow(req, res) {
     const { obra, fecha, lugar, capacidad, base_price } = req.body;
     const capacidadNum = Number(capacidad);
     const basePriceNum = Number(base_price);
+    const adminId = req.user?.id; // ID del director que crea el show
 
     if (!obra || !fecha || !capacidadNum || !basePriceNum) {
       return res.status(400).json({ 
         error: 'obra, fecha, capacidad y base_price son obligatorios' 
       });
     }
-    const data = await readData();
-    const showId = nextId(data.shows);
-    const now = new Date().toISOString();
 
-    const show = {
-      id: showId,
-      obra,
-      fecha,
-      lugar: lugar || null,
-      capacidad: capacidadNum,
-      base_price: basePriceNum,
-      created_at: now
-    };
+    // Crear el show en PostgreSQL
+    const showResult = await query(
+      `INSERT INTO shows (titulo, fecha, lugar, capacidad, precio_base, director_id, created_at) 
+       VALUES ($1, $2, $3, $4, $5, $6, NOW()) 
+       RETURNING *`,
+      [obra, fecha, lugar || 'Sin especificar', capacidadNum, basePriceNum, adminId]
+    );
 
+    const show = showResult.rows[0];
+    const showId = show.id;
+
+    // Generar tickets
     const tickets = [];
-    let ticketSequence = nextId(data.tickets);
     for (let i = 0; i < capacidadNum; i++) {
       let code;
-      do {
+      let isUnique = false;
+      
+      while (!isUnique) {
         code = generateTicketCode();
-      } while (
-        data.tickets.some(t => t.code === code) ||
-        tickets.some(t => t.code === code)
-      );
+        const existing = await query('SELECT id FROM tickets WHERE code = $1', [code]);
+        isUnique = existing.rows.length === 0;
+      }
 
       const qrCode = await generarQR(code);
-      tickets.push({
-        id: ticketSequence++,
-        code,
-        show_id: showId,
-        estado: 'DISPONIBLE',
-        qr_code: qrCode,
-        precio: basePriceNum,
-        created_at: now
-      });
+      
+      const ticketResult = await query(
+        `INSERT INTO tickets (code, show_id, estado, qr_code, precio, created_at) 
+         VALUES ($1, $2, $3, $4, $5, NOW()) 
+         RETURNING *`,
+        [code, showId, 'DISPONIBLE', qrCode, basePriceNum]
+      );
+      
+      tickets.push(ticketResult.rows[0]);
     }
 
-    data.shows.push(show);
-    data.tickets.push(...tickets);
-    await writeData(data);
-
     res.status(201).json({
-      show,
+      show: {
+        id: show.id,
+        obra: show.titulo,
+        fecha: show.fecha,
+        lugar: show.lugar,
+        capacidad: show.capacidad,
+        base_price: show.precio_base
+      },
       tickets_generados: tickets.length,
       mensaje: `Función creada con ${tickets.length} tickets disponibles`
     });
@@ -81,9 +84,10 @@ export async function crearShow(req, res) {
 
 export async function listarShows(req, res) {
   try {
-    const data = await readData();
-    const shows = [...(data.shows || [])].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-    res.json(shows);
+    const result = await query(
+      'SELECT * FROM shows ORDER BY fecha DESC'
+    );
+    res.json(result.rows);
   } catch (error) {
     console.error('Error listando shows:', error);
     res.status(500).json({ error: error.message });

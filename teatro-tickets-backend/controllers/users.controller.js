@@ -105,9 +105,9 @@ export async function desactivarUsuario(req, res) {
   try {
     const { id } = req.params;
     
-    // Buscar usuario por cédula (id es la cedula en nuestro sistema)
+    // Buscar usuario por ID o cédula (flexible para ambos casos)
     const result = await query(
-      'SELECT * FROM users WHERE cedula = $1',
+      'SELECT * FROM users WHERE id = $1 OR cedula = $1',
       [id]
     );
     
@@ -115,8 +115,8 @@ export async function desactivarUsuario(req, res) {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
     
-    // Eliminar el usuario
-    await query('DELETE FROM users WHERE cedula = $1', [id]);
+    // Eliminar el usuario usando su ID interno
+    await query('DELETE FROM users WHERE id = $1', [result.rows[0].id]);
     
     res.json({ ok: true, mensaje: 'Usuario eliminado correctamente' });
   } catch (error) {
