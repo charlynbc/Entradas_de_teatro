@@ -124,7 +124,16 @@ export async function listDirectors() {
 export async function createDirector(payload) {
   requireRole(['SUPER']);
   try {
-    const response = await request('/api/usuarios', { method: 'POST', body: payload });
+    // SUPER crea admin (director)
+    const response = await request('/api/usuarios', { 
+      method: 'POST', 
+      body: {
+        cedula: payload.cedula,
+        nombre: payload.nombre,
+        password: '1234', // Contraseña por defecto
+        rol: 'admin' // Director
+      }
+    });
     return response;
   } catch (error) {
     console.error('Error creando director:', error);
@@ -189,12 +198,33 @@ export async function deleteProduction(id) {
 
 export async function listVendors() {
   requireRole(['SUPER', 'ADMIN']);
-  return mock.listVendors();
+  try {
+    const response = await request('/api/usuarios/vendedores');
+    return response;
+  } catch (error) {
+    console.error('Error listando vendedores:', error);
+    return [];
+  }
 }
 
 export async function createVendor(payload) {
   requireRole(['SUPER', 'ADMIN']);
-  return mock.createVendor(payload);
+  try {
+    // ADMIN y SUPER pueden crear vendedor (actor)
+    const response = await request('/api/usuarios', { 
+      method: 'POST', 
+      body: {
+        cedula: payload.cedula,
+        nombre: payload.nombre,
+        password: '1234', // Contraseña por defecto
+        rol: 'vendedor' // Actor/Vendedor
+      }
+    });
+    return response;
+  } catch (error) {
+    console.error('Error creando vendedor:', error);
+    throw error;
+  }
 }
 
 export async function getDirectorDashboard() {

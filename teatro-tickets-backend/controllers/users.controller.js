@@ -13,6 +13,14 @@ export async function crearUsuario(req, res) {
       return res.status(400).json({ error: 'rol debe ser admin o vendedor' });
     }
     
+    // Verificar permisos: ADMIN solo puede crear vendedores, SUPER puede crear ambos
+    const userRole = req.user.role;
+    if (userRole === 'ADMIN' && rol === 'admin') {
+      return res.status(403).json({ 
+        error: 'Los directores solo pueden crear actores. Solo el Super Usuario puede crear directores.' 
+      });
+    }
+    
     // Verificar si ya existe
     const existente = await query('SELECT id FROM users WHERE cedula = $1', [cedula]);
     if (existente.rows.length > 0) {
