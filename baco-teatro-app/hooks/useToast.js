@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 
-export default function useToast() {
+export function useToast() {
   const [toast, setToast] = useState({
     visible: false,
     message: '',
