@@ -70,44 +70,62 @@ Este documento describe cómo desplegar el sistema completo de Baco Teatro en Re
 
 ### Opción A: Static Site en Render (recomendado)
 
-1. Primero, en tu máquina local, genera el build web:
+1. Primero, en tu máquina local, asegúrate de tener todas las dependencias:
    ```bash
    cd baco-teatro-app
+   npm install
+   ```
+
+2. Genera el build web:
+   ```bash
    npx expo export:web
    ```
 
-2. Esto creará una carpeta `web-build` con archivos estáticos
+3. Esto creará una carpeta `web-build` con archivos estáticos
 
-3. En Render Dashboard, click en **"New +"** → **"Static Site"**
-4. Configura:
+4. En Render Dashboard, click en **"New +"** → **"Static Site"**
+5. Configura:
    - **Name:** `baco-teatro-app`
    - **Branch:** `prototipo`
    - **Root Directory:** `baco-teatro-app`
    - **Build Command:** `npm install && npx expo export:web`
    - **Publish Directory:** `web-build`
 
-5. **Variable de Entorno**:
+6. **Variable de Entorno**:
    ```
    EXPO_PUBLIC_API_URL = https://tu-api.onrender.com
    ```
 
-6. Click en **"Create Static Site"**
+7. Click en **"Create Static Site"**
 
-### Opción B: Servir desde el Backend (más simple)
+### Opción B: Servir desde el Backend (más simple) ⭐ RECOMENDADO
 
-1. Genera el build web localmente:
+**Importante:** Asegúrate de que `@expo/vector-icons` esté instalado en el package.json del frontend.
+
+1. Usa el script automatizado:
    ```bash
    cd baco-teatro-app
-   npx expo export:web
+   chmod +x build-for-render.sh
+   ./build-for-render.sh
    ```
 
-2. Copia la carpeta `web-build` a `teatro-tickets-backend/public`:
+   O manualmente:
    ```bash
+   cd baco-teatro-app
+   npm install
+   npx expo export:web
    cp -r web-build ../teatro-tickets-backend/public
    ```
 
-3. Commitea y pushea los cambios
-4. Render redespliegará automáticamente el backend con el frontend incluido
+2. Commitea y pushea los cambios:
+   ```bash
+   cd ..
+   git add -A
+   git commit -m "build: Actualizar build web con iconos"
+   git push origin prototipo
+   ```
+
+3. Render redespliegará automáticamente el backend con el frontend incluido
 
 ## 🔄 Paso 4: Crear Usuario Supremo Inicial
 
@@ -149,6 +167,12 @@ O usa Postman/Insomnia para hacer el request.
 - Si necesitas más recursos, upgradea a un plan pago desde el dashboard
 
 ## 🐛 Troubleshooting
+
+### Los iconos no se muestran en Render:
+- Verifica que `@expo/vector-icons` esté en `baco-teatro-app/package.json`
+- Asegúrate de ejecutar `npm install` antes de `npx expo export:web`
+- Regenera el build web y vuelve a desplegarlo
+- Los iconos deben estar incluidos en la carpeta `web-build/static`
 
 ### El backend no se conecta a la DB:
 - Verifica que `DATABASE_URL` esté configurada correctamente
