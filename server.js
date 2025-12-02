@@ -58,19 +58,49 @@ async function inicializarBaseDatos() {
     }
 }
 
+// Función para limpiar funciones pasadas automáticamente
+async function limpiarFuncionesPasadas() {
+    try {
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
+
+        const resultado = await Obra.deleteMany({
+            fecha: { $lt: hoy }
+        });
+
+        if (resultado.deletedCount > 0) {
+            console.log(`🗑️  Limpieza automática: ${resultado.deletedCount} funciones pasadas eliminadas`);
+        }
+    } catch (error) {
+        console.error('❌ Error en limpieza automática:', error);
+    }
+}
+
 // Llamar a la inicialización cuando se conecta la base de datos
 mongoose.connection.once('open', () => {
     inicializarBaseDatos();
+    limpiarFuncionesPasadas(); // Limpiar al iniciar
+    
+    // Ejecutar limpieza cada 24 horas
+    setInterval(limpiarFuncionesPasadas, 24 * 60 * 60 * 1000);
 });
 
 // ============================================
 // RUTAS DE API
 // ============================================
 
-// Obtener todas las obras (SOLO obras reales, no ejemplos)
+// Obtener todas las obras (SOLO obras futuras o del día actual)
 app.get('/api/obras', async (req, res) => {
     try {
-        const obras = await Obra.find().sort({ fecha: 1 });
+        // Obtener fecha actual a las 00:00 para comparar
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
+        
+        // Solo obtener obras cuya fecha sea hoy o en el futuro
+        const obras = await Obra.find({
+            fecha: { $gte: hoy }
+        }).sort({ fecha: 1, hora: 1 });
+        
         res.json(obras);
     } catch (error) {
         console.error('Error al obtener obras:', error);

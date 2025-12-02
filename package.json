@@ -8,6 +8,7 @@
     "dev": "nodemon server.js",
     "limpiar-db": "node scripts/limpiar-db.js",
     "verificar-db": "node scripts/verificar-db.js",
+    "limpiar-funciones-pasadas": "node scripts/limpiar-funciones-pasadas.js",
     "preparar-entrega": "node scripts/limpiar-db.js && node scripts/verificar-db.js",
     "test": "node tests/test-funcionalidades.js",
     "test:verificacion": "node tests/verificacion-completa.js",

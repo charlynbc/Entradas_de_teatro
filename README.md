@@ -56,8 +56,37 @@ npm run limpiar-db
 # Verificar estado de la base de datos
 npm run verificar-db
 
+# Limpiar funciones pasadas manualmente
+npm run limpiar-funciones-pasadas
+
 # Preparar para entrega (limpiar + verificar)
 npm run preparar-entrega
+```
+
+## 🕒 Limpieza Automática
+
+El sistema incluye limpieza automática de funciones pasadas:
+
+- ✅ Se ejecuta al iniciar el servidor
+- ✅ Se ejecuta cada 24 horas automáticamente
+- ✅ Solo muestra funciones actuales y futuras
+- ✅ Las funciones pasadas se ocultan automáticamente
+
+### Limpieza Manual
+
+Para limpiar funciones pasadas manualmente:
+
+```bash
+npm run limpiar-funciones-pasadas
+```
+
+### Configurar Limpieza con Cron (Opcional)
+
+En producción, puedes configurar un cron job:
+
+```bash
+# Ejecutar todos los días a las 00:00
+0 0 * * * cd /path/to/proyecto && npm run limpiar-funciones-pasadas
 ```
 
 ## 📊 Verificar Sistema Virgen
