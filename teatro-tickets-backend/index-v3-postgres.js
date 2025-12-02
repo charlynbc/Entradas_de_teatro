@@ -24,6 +24,12 @@ const PUBLIC_DIR = path.join(__dirname, 'public');
 // Middlewares
 app.use(cors());
 app.use(express.json());
+
+// Servir fuentes desde /fonts para evitar problemas con node_modules
+app.use('/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts', 
+  express.static(path.join(PUBLIC_DIR, 'fonts'))
+);
+
 app.use(express.static(PUBLIC_DIR));
 
 // Inicializar base de datos al arrancar
