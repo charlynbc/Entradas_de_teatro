@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ActivityIndicator, Modal, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
+import { LinearGradient } from 'expo-linear-gradient';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionCard from '../../components/SectionCard';
 import ShowCard from '../../components/ShowCard';
@@ -122,13 +124,31 @@ export default function DirectorShowsScreen({ navigation }) {
 
   return (
     <ScreenContainer>
-      <View style={styles.header}>
-        <Text style={styles.title}>Funciones</Text>
-        <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
-          <Ionicons name="add" size={24} color={colors.black} />
-          <Text style={styles.addButtonText}>Nueva</Text>
-        </TouchableOpacity>
-      </View>
+      <LinearGradient
+        colors={['#FFD700', '#FFA500', '#FF8C00']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.headerGradient}
+      >
+        <View style={styles.headerContent}>
+          <View>
+            <Text style={styles.title}>🎭 Funciones</Text>
+            <Text style={styles.subtitle}>Gestión de shows y entradas</Text>
+          </View>
+          <TouchableOpacity 
+            style={styles.addButton} 
+            onPress={() => setModalVisible(true)}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={['#8B0000', '#DC143C', '#8B0000']}
+              style={styles.addButtonGradient}
+            >
+              <MaterialCommunityIcons name="plus" size={28} color="#FFD700" />
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      </LinearGradient>
 
       <SectionCard title="Funciones creadas" subtitle={`${shows.length} registros`}>
         {loading ? (
@@ -388,30 +408,57 @@ export default function DirectorShowsScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  header: {
+  headerGradient: {
+    marginHorizontal: -20,
+    marginTop: -20,
+    marginBottom: 20,
+    paddingTop: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 24,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  headerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
-    paddingHorizontal: 4,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: colors.text,
+    fontSize: 32,
+    fontWeight: '900',
+    color: '#000',
+    textShadowColor: 'rgba(255, 255, 255, 0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+    letterSpacing: 0.5,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#000',
+    opacity: 0.8,
+    marginTop: 4,
+    fontWeight: '600',
   },
   addButton: {
-    flexDirection: 'row',
-    backgroundColor: colors.secondary,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    alignItems: 'center',
-    gap: 4,
+    shadowColor: '#8B0000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
+    elevation: 8,
   },
-  addButtonText: {
-    color: colors.black,
-    fontWeight: 'bold',
+  addButtonGradient: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: '#000',
   },
   input: {
     backgroundColor: colors.background,

@@ -12,10 +12,13 @@ import {
   Platform 
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionCard from '../../components/SectionCard';
 import Toast from '../../components/Toast';
+import { useToast } from '../../hooks/useToast';
+import colors from '../../theme/colors';
 import { useToast } from '../../hooks/useToast';
 import colors from '../../theme/colors';
 import { 
@@ -138,11 +141,20 @@ export default function DirectorReportsObrasScreen({ navigation }) {
 
   return (
     <ScreenContainer>
-      <View style={styles.header}>
-        <Ionicons name="document-text" size={40} color={colors.secondary} />
-        <Text style={styles.title}>Reportes de Obras</Text>
-        <Text style={styles.subtitle}>Historial de funciones finalizadas</Text>
-      </View>
+      <LinearGradient
+        colors={['#FFD700', '#FFA500', '#FF8C00']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.headerGradient}
+      >
+        <View style={styles.headerContent}>
+          <View>
+            <Text style={styles.headerTitle}>📊 Reportes</Text>
+            <Text style={styles.headerSubtitle}>Historial de obras</Text>
+          </View>
+          <MaterialCommunityIcons name="file-chart" size={48} color="#8B0000" />
+        </View>
+      </LinearGradient>
 
       <SectionCard title="Reportes Generados" subtitle={`${reportes.length} reportes`}>
         {loading ? (
@@ -342,6 +354,42 @@ export default function DirectorReportsObrasScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+  headerGradient: {
+    marginHorizontal: -20,
+    marginTop: -20,
+    marginBottom: 20,
+    paddingTop: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 24,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 32,
+    fontWeight: '900',
+    color: '#000',
+    textShadowColor: 'rgba(255, 255, 255, 0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+    letterSpacing: 0.5,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: '#000',
+    opacity: 0.8,
+    marginTop: 4,
+    fontWeight: '600',
+  },
   header: {
     alignItems: 'center',
     marginBottom: 20,

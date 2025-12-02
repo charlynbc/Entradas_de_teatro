@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionCard from '../../components/SectionCard';
 import Toast from '../../components/Toast';
@@ -127,6 +129,21 @@ export default function DirectorsScreen() {
 
   return (
     <ScreenContainer>
+      <LinearGradient
+        colors={['#8B0000', '#DC143C', '#8B0000']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.headerGradient}
+      >
+        <View style={styles.headerContent}>
+          <View>
+            <Text style={styles.headerTitle}>🎭 Administración</Text>
+            <Text style={styles.headerSubtitle}>Directores y Elenco</Text>
+          </View>
+          <MaterialCommunityIcons name="account-supervisor" size={48} color="#FFD700" />
+        </View>
+      </LinearGradient>
+      
       <SectionCard title="Crear director" subtitle="Cada director administra sus obras">
         <TextInput
           style={styles.input}
@@ -204,6 +221,42 @@ export default function DirectorsScreen() {
 }
 
 const styles = StyleSheet.create({
+  headerGradient: {
+    marginHorizontal: -20,
+    marginTop: -20,
+    marginBottom: 20,
+    paddingTop: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 24,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    shadowColor: '#8B0000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 32,
+    fontWeight: '900',
+    color: '#FFD700',
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 4,
+    letterSpacing: 0.5,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: '#FFF',
+    opacity: 0.9,
+    marginTop: 4,
+    fontWeight: '600',
+  },
   input: {
     backgroundColor: colors.surface,
     borderRadius: 12,
