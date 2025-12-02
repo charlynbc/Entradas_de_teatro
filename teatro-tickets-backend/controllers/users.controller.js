@@ -23,11 +23,14 @@ export async function crearUsuario(req, res) {
     const bcrypt = (await import('bcrypt')).default;
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Generar ID único
+    const id = `${rol}_${cedula}`;
+
     const result = await query(
-      `INSERT INTO users (cedula, nombre, password, rol, telefono, created_at) 
+      `INSERT INTO users (id, cedula, nombre, password, rol, created_at) 
        VALUES ($1, $2, $3, $4, $5, NOW()) 
-       RETURNING id, cedula, nombre, rol, telefono`,
-      [cedula, nombre, hashedPassword, rol, cedula]
+       RETURNING id, cedula, nombre, rol`,
+      [id, cedula, nombre, hashedPassword, rol]
     );
 
     const user = result.rows[0];
@@ -35,7 +38,7 @@ export async function crearUsuario(req, res) {
       message: 'Usuario creado exitosamente',
       user: {
         id: user.id,
-        phone: user.telefono,
+        phone: user.cedula,
         cedula: user.cedula,
         name: user.nombre,
         role: rol.toUpperCase()
@@ -50,7 +53,7 @@ export async function crearUsuario(req, res) {
 export async function listarUsuarios(req, res) {
   try {
     const result = await query(`
-      SELECT id, cedula, nombre, rol, telefono, created_at
+      SELECT id, cedula, nombre, rol, created_at
       FROM users
       WHERE rol IN ('admin', 'vendedor')
       ORDER BY created_at DESC
