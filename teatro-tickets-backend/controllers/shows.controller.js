@@ -30,15 +30,15 @@ export async function crearShow(req, res) {
     }
 
     // Crear el show en PostgreSQL
+    const showId = `show_${Date.now()}`;
     const showResult = await query(
-      `INSERT INTO shows (titulo, fecha, lugar, capacidad, precio_base, director_id, created_at) 
+      `INSERT INTO shows (id, nombre, fecha, precio, total_tickets, creado_por, created_at) 
        VALUES ($1, $2, $3, $4, $5, $6, NOW()) 
        RETURNING *`,
-      [obra, fecha, lugar || 'Sin especificar', capacidadNum, basePriceNum, adminId]
+      [showId, obra, fecha, basePriceNum, capacidadNum, adminId]
     );
 
     const show = showResult.rows[0];
-    const showId = show.id;
 
     // Generar tickets
     const tickets = [];
@@ -48,17 +48,18 @@ export async function crearShow(req, res) {
       
       while (!isUnique) {
         code = generateTicketCode();
-        const existing = await query('SELECT id FROM tickets WHERE code = $1', [code]);
+        const existing = await query('SELECT id FROM tickets WHERE qr_code = $1', [code]);
         isUnique = existing.rows.length === 0;
       }
 
       const qrCode = await generarQR(code);
+      const ticketId = `ticket_${showId}_${i+1}`;
       
       const ticketResult = await query(
-        `INSERT INTO tickets (code, show_id, estado, qr_code, precio, created_at) 
+        `INSERT INTO tickets (id, show_id, qr_code, estado, precio_venta, created_at) 
          VALUES ($1, $2, $3, $4, $5, NOW()) 
          RETURNING *`,
-        [code, showId, 'DISPONIBLE', qrCode, basePriceNum]
+        [ticketId, showId, qrCode, 'NO_ASIGNADO', basePriceNum]
       );
       
       tickets.push(ticketResult.rows[0]);
@@ -67,11 +68,10 @@ export async function crearShow(req, res) {
     res.status(201).json({
       show: {
         id: show.id,
-        obra: show.titulo,
+        obra: show.nombre,
         fecha: show.fecha,
-        lugar: show.lugar,
-        capacidad: show.capacidad,
-        base_price: show.precio_base
+        capacidad: show.total_tickets,
+        base_price: show.precio
       },
       tickets_generados: tickets.length,
       mensaje: `Función creada con ${tickets.length} tickets disponibles`
