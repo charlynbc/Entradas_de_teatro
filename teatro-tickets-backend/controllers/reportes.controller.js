@@ -208,20 +208,18 @@ export async function dashboardSuper(req, res) {
     );
     const ingresosTotal = parseFloat(ingresosResult.rows[0].total);
     
-    // Contar vendedores activos
+    // Contar vendedores activos (solo vendedores que son usuarios)
     const vendedoresResult = await query(
-      `SELECT COUNT(*) as total FROM users WHERE rol = 'vendedor' AND activo = true`
+      `SELECT COUNT(*) as total FROM users WHERE rol = 'vendedor'`
     );
     const vendedoresActivos = parseInt(vendedoresResult.rows[0].total);
     
-    // Información de ventas
+    // Información de ventas (simplificado - sin vendor tracking por ahora)
     const ventasResult = await query(
       `SELECT 
-        COUNT(DISTINCT vendedor_phone) as vendedores_con_ventas,
         COUNT(*) as total_ventas
        FROM tickets 
-       WHERE vendedor_phone IS NOT NULL 
-       AND estado IN ('REPORTADA_VENDIDA', 'PAGADO', 'USADO')`
+       WHERE estado IN ('REPORTADA_VENDIDA', 'PAGADO', 'USADO')`
     );
     
     res.json({
@@ -235,7 +233,7 @@ export async function dashboardSuper(req, res) {
       },
       vendedores: {
         activos: vendedoresActivos,
-        con_ventas: parseInt(ventasResult.rows[0].vendedores_con_ventas)
+        con_ventas: 0  // Simplificado - tickets no tienen vendor tracking
       },
       ventas: {
         total: parseInt(ventasResult.rows[0].total_ventas),
@@ -267,14 +265,9 @@ export async function dashboardDirector(req, res) {
       [userId]
     );
     
-    // Actores asignados a este director (vendedores que tienen tickets de sus shows)
+    // Actores (todos los vendedores del sistema - simplificado)
     const actoresResult = await query(
-      `SELECT DISTINCT u.id, u.nombre, u.cedula 
-       FROM users u
-       INNER JOIN tickets t ON t.vendedor_phone = u.cedula
-       INNER JOIN shows s ON t.show_id = s.id
-       WHERE s.creado_por = $1 AND u.rol = 'vendedor'`,
-      [userId]
+      `SELECT id, nombre, cedula FROM users WHERE rol = 'vendedor'`
     );
     
     res.json({
