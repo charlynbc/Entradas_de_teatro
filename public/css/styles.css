@@ -286,6 +286,29 @@ section {
     transform: scale(1.2);
 }
 
+/* Animaciones para notificaciones */
+@keyframes slideIn {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .main-header .container {
@@ -306,5 +329,10 @@ section {
     .main-footer .container {
         flex-direction: column;
         gap: 20px;
+    }
+    
+    #toast-container {
+        right: 10px !important;
+        left: 10px !important;
     }
 }

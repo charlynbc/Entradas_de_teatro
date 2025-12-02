@@ -15,13 +15,85 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Cargar eventos
     cargarEventos();
+    
+    // Agregar sistema de notificaciones
+    crearContenedorNotificaciones();
 });
+
+// Sistema de notificaciones personalizado
+function crearContenedorNotificaciones() {
+    if (!document.getElementById('toast-container')) {
+        const container = document.createElement('div');
+        container.id = 'toast-container';
+        container.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        `;
+        document.body.appendChild(container);
+    }
+}
+
+function mostrarNotificacion(mensaje, tipo = 'info') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    
+    const colores = {
+        success: '#10b981',
+        error: '#ef4444',
+        info: '#3b82f6',
+        warning: '#f59e0b'
+    };
+    
+    const iconos = {
+        success: '✓',
+        error: '✕',
+        info: 'ℹ',
+        warning: '⚠'
+    };
+    
+    toast.style.cssText = `
+        background: ${colores[tipo] || colores.info};
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 300px;
+        animation: slideIn 0.3s ease;
+    `;
+    
+    toast.innerHTML = `
+        <span style="font-size: 20px;">${iconos[tipo] || iconos.info}</span>
+        <span>${mensaje}</span>
+    `;
+    
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
 
 async function cargarEventos() {
     const eventosGrid = document.getElementById('eventos-grid');
     
+    if (!eventosGrid) return;
+    
     try {
         const response = await fetch('/api/eventos');
+        
+        if (!response.ok) {
+            throw new Error('Error al cargar eventos');
+        }
+        
         const eventos = await response.json();
         
         if (eventos && eventos.length > 0) {
@@ -32,6 +104,7 @@ async function cargarEventos() {
     } catch (error) {
         console.error('Error al cargar eventos:', error);
         mostrarEventosEjemplo();
+        mostrarNotificacion('No se pudieron cargar los eventos, mostrando ejemplos', 'warning');
     }
 }
 
@@ -79,7 +152,7 @@ function crearEventoCard(evento) {
                     <span><i class="fas fa-clock"></i> ${evento.hora}</span>
                     <span><i class="fas fa-ticket-alt"></i> ${evento.precio}</span>
                 </div>
-                <a href="#" class="btn-comprar" onclick="comprarEntrada(${evento.id}); return false;">
+                <a href="#" class="btn-comprar" onclick="comprarEntrada(${evento.id}, '${evento.titulo}'); return false;">
                     <i class="fas fa-shopping-cart"></i> Comprar Entrada
                 </a>
             </div>
@@ -88,13 +161,18 @@ function crearEventoCard(evento) {
 }
 
 function formatearFecha(fecha) {
-    const date = new Date(fecha);
+    const date = new Date(fecha + 'T00:00:00');
     const opciones = { year: 'numeric', month: 'long', day: 'numeric' };
     return date.toLocaleDateString('es-ES', opciones);
 }
 
-function comprarEntrada(eventoId) {
-    alert(`Redirigiendo a la compra de entradas para el evento ${eventoId}...`);
+function comprarEntrada(eventoId, titulo) {
+    mostrarNotificacion(`Procesando compra para "${titulo}"...`, 'info');
+    
+    setTimeout(() => {
+        mostrarNotificacion('¡Compra realizada con éxito!', 'success');
+    }, 1500);
+    
     // Aquí implementarías la lógica real de compra
-    window.location.href = `/comprar?evento=${eventoId}`;
+    // window.location.href = `/comprar?evento=${eventoId}`;
 }
