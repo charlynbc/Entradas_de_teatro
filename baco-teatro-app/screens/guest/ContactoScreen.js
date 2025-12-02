@@ -4,13 +4,17 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import colors from '../../theme/colors';
 
-export default function ContactoScreen() {
+export default function ContactoScreen({ navigation }) {
   const openLinkedIn = () => {
     Linking.openURL('https://www.linkedin.com/in/charlyn-barreiro-curbelo-5684b4240/');
   };
 
   const openInstagram = () => {
     Linking.openURL('https://www.instagram.com/charly_nbc/');
+  };
+
+  const goToHome = () => {
+    navigation.navigate('GuestHome');
   };
 
   return (
@@ -83,6 +87,17 @@ export default function ContactoScreen() {
             <Text style={styles.serviceText}>Deploy y Mantenimiento</Text>
           </View>
         </View>
+
+        {/* Botón Volver a Inicio */}
+        <TouchableOpacity style={styles.backButton} onPress={goToHome}>
+          <LinearGradient
+            colors={['#8B0000', '#DC143C', '#8B0000']}
+            style={styles.backGradient}
+          >
+            <MaterialCommunityIcons name="home" size={24} color="#FFD700" />
+            <Text style={styles.backText}>Volver a Inicio</Text>
+          </LinearGradient>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );
@@ -203,5 +218,29 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.text,
     fontWeight: '500',
+  },
+  backButton: {
+    marginHorizontal: 20,
+    marginTop: 24,
+    borderRadius: 12,
+    overflow: 'hidden',
+    elevation: 6,
+    shadowColor: '#8B0000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
+  },
+  backGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 18,
+    gap: 12,
+  },
+  backText: {
+    color: '#FFD700',
+    fontSize: 18,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
 });

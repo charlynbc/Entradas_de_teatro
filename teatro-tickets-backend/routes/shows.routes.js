@@ -6,6 +6,7 @@ const router = express.Router();
 
 router.post('/', authenticate, requireRole('ADMIN', 'SUPER'), crearShow);
 router.get('/', listarShows);  // Public endpoint - no authentication required
+router.get('/public', listarShows);  // Alias público explícito
 router.post('/:id/assign-tickets', authenticate, requireRole('ADMIN', 'SUPER'), asignarTickets);
 router.delete('/:id', authenticate, requireRole('ADMIN', 'SUPER'), eliminarShow);
 

@@ -51,13 +51,19 @@ export const listarEnsayos = async (req, res) => {
       );
     } else {
       // Actor ve ensayos donde está incluido
+      // Usamos jsonb_array_elements_text para extraer cada elemento del array
+      // y compararlo directamente con el userId
       ensayos = await query(
-        `SELECT e.*, u.nombre as director_nombre 
+        `SELECT DISTINCT e.*, u.nombre as director_nombre 
          FROM ensayos_generales e 
          LEFT JOIN users u ON e.director_id = u.id 
-         WHERE e.actores_ids::jsonb @> $1::jsonb
+         WHERE EXISTS (
+           SELECT 1 
+           FROM jsonb_array_elements_text(e.actores_ids) actor_id 
+           WHERE actor_id = $1
+         )
          ORDER BY e.fecha DESC`,
-        [JSON.stringify([userId])]
+        [userId]
       );
     }
 

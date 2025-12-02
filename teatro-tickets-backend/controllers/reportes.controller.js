@@ -177,3 +177,44 @@ export async function resumenFuncion(req, res) {
     res.status(500).json({ error: error.message });
   }
 }
+
+// Dashboard global para usuario SUPER
+export async function dashboardSuper(req, res) {
+  try {
+    const data = await readData();
+    
+    // Contar producciones únicas (por admin)
+    const productions = new Set();
+    data.shows?.forEach(show => {
+      if (show.admin_phone) {
+        productions.add(show.admin_phone);
+      }
+    });
+    
+    // Contar funciones activas
+    const functions = data.shows?.length || 0;
+    
+    // Contar tickets totales y vendidos
+    const totalTickets = data.tickets?.length || 0;
+    const ticketsVendidos = data.tickets?.filter(t => SOLD_STATES.has(t.estado)).length || 0;
+    
+    // Calcular ingresos totales
+    const ingresosTotal = data.tickets
+      ?.filter(t => t.estado === 'PAGADO' || t.estado === 'USADO')
+      .reduce((sum, t) => sum + (Number(t.precio) || 0), 0) || 0;
+    
+    res.json({
+      ok: true,
+      totals: {
+        productions: productions.size,
+        functions: functions,
+        tickets: totalTickets,
+        sold: ticketsVendidos,
+        revenue: ingresosTotal
+      }
+    });
+  } catch (error) {
+    console.error('Error en dashboard super:', error);
+    res.status(500).json({ error: error.message });
+  }
+}

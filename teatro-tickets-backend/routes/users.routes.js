@@ -9,6 +9,6 @@ router.post('/', authenticate, requireRole('ADMIN', 'SUPER'), crearUsuario);
 router.get('/', authenticate, requireRole('ADMIN', 'SUPER'), listarUsuarios);
 router.get('/vendedores', authenticate, listarVendedores);
 router.get('/miembros', authenticate, listarMiembros); // Nueva ruta para todos los miembros
-router.delete('/:phone', authenticate, requireRole('ADMIN', 'SUPER'), desactivarUsuario);
+router.delete('/:id', authenticate, requireRole('ADMIN', 'SUPER'), desactivarUsuario);
 
 export default router;

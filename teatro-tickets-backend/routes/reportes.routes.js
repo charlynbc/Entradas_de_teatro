@@ -1,8 +1,11 @@
 import express from 'express';
-import { resumenPorVendedor, resumenAdmin, deudores, resumenFuncion } from '../controllers/reportes.controller.js';
+import { resumenPorVendedor, resumenAdmin, deudores, resumenFuncion, dashboardSuper } from '../controllers/reportes.controller.js';
 import { authenticate, requireRole } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
+
+// Dashboard super
+router.get('/super', authenticate, requireRole('SUPER'), dashboardSuper);
 
 // Todos requieren admin
 router.get('/shows/:id/resumen-por-vendedor', authenticate, requireRole('ADMIN'), resumenPorVendedor);

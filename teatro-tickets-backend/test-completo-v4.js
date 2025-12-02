@@ -119,8 +119,8 @@ async function testAuth() {
   });
   test('Login inválido rechazado', !loginInvalido.ok, `Status: ${loginInvalido.status}`);
 
-  // Sin token
-  const sinToken = await makeRequest('GET', '/api/shows');
+  // Sin token - probando endpoint que requiere autenticación
+  const sinToken = await makeRequest('GET', '/api/usuarios');
   test('Endpoint protegido sin token rechaza', !sinToken.ok, `Status: ${sinToken.status}`);
 }
 
@@ -206,26 +206,26 @@ async function testShows() {
   const createShow = await makeRequest('POST', '/api/shows', {
     obra: 'Obra Test',
     fecha: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-    precio: 500,
-    cantidad: 50,
+    base_price: 500,
+    capacidad: 50,
     lugar: 'Teatro Test'
   }, authTokenDirector);
 
   test('Director puede crear show', createShow.ok, `Status: ${createShow.status}`);
   
   if (createShow.ok) {
-    createdShowId = createShow.data.id;
+    createdShowId = createShow.data.show?.id || createShow.data.id;
     log.info(`  - Show ID: ${createdShowId}`);
-    log.info(`  - Obra: ${createShow.data.nombre}`);
-    log.info(`  - Tickets generados: ${createShow.data.total_tickets || 0}`);
+    log.info(`  - Obra: ${createShow.data.show?.obra || createShow.data.obra}`);
+    log.info(`  - Tickets generados: ${createShow.data.tickets_generados || 0}`);
   }
 
   // Actor no puede crear show
   const actorCreateShow = await makeRequest('POST', '/api/shows', {
     obra: 'Obra Invalid',
     fecha: new Date().toISOString(),
-    precio: 300,
-    cantidad: 20
+    base_price: 300,
+    capacidad: 20
   }, authTokenActor);
 
   test('Actor no puede crear show', !actorCreateShow.ok, 'Debe requerir rol ADMIN/SUPER');

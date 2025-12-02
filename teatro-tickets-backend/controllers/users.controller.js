@@ -103,12 +103,12 @@ export async function listarVendedores(req, res) {
 
 export async function desactivarUsuario(req, res) {
   try {
-    const { phone } = req.params;
+    const { id } = req.params;
     
-    // Buscar usuario por cédula (phone es realmente cedula en nuestro sistema)
+    // Buscar usuario por cédula (id es la cedula en nuestro sistema)
     const result = await query(
       'SELECT * FROM users WHERE cedula = $1',
-      [phone]
+      [id]
     );
     
     if (result.rows.length === 0) {
@@ -116,7 +116,7 @@ export async function desactivarUsuario(req, res) {
     }
     
     // Eliminar el usuario
-    await query('DELETE FROM users WHERE cedula = $1', [phone]);
+    await query('DELETE FROM users WHERE cedula = $1', [id]);
     
     res.json({ ok: true, mensaje: 'Usuario eliminado correctamente' });
   } catch (error) {
