@@ -32,7 +32,7 @@ Este documento describe cómo desplegar el sistema completo de Baco Teatro en Re
    - **Branch:** `prototipo`
    - **Root Directory:** `teatro-tickets-backend`
    - **Runtime:** `Node`
-   - **Build Command:** `npm install`
+   - **Build Command:** `chmod +x build.sh && ./build.sh`
    - **Start Command:** `npm start`
    - **Plan:** Free (para empezar)
 
