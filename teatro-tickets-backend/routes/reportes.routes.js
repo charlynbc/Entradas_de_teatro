@@ -1,5 +1,5 @@
 import express from 'express';
-import { resumenPorVendedor, resumenAdmin, deudores, resumenFuncion, dashboardSuper } from '../controllers/reportes.controller.js';
+import { resumenPorVendedor, resumenAdmin, deudores, resumenFuncion, dashboardSuper, dashboardDirector } from '../controllers/reportes.controller.js';
 import { authenticate, requireRole } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
@@ -8,7 +8,7 @@ const router = express.Router();
 router.get('/super', authenticate, requireRole('SUPER'), dashboardSuper);
 
 // Dashboard director (admin)
-router.get('/director', authenticate, requireRole('ADMIN'), dashboardSuper);  // Reusar dashboardSuper
+router.get('/director', authenticate, requireRole('ADMIN'), dashboardDirector);
 
 // Todos requieren admin
 router.get('/shows/:id/resumen-por-vendedor', authenticate, requireRole('ADMIN'), resumenPorVendedor);

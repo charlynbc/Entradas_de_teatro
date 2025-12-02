@@ -106,7 +106,16 @@ export async function obtenerShow(req, res) {
       return res.status(404).json({ error: 'Show no encontrado' });
     }
     
-    res.json(result.rows[0]);
+    // Obtener tickets del show
+    const ticketsResult = await query(
+      'SELECT * FROM tickets WHERE show_id = $1 ORDER BY id',
+      [showId]
+    );
+    
+    const show = result.rows[0];
+    show.tickets = ticketsResult.rows;
+    
+    res.json(show);
   } catch (error) {
     console.error('Error obteniendo show:', error);
     res.status(500).json({ error: error.message });

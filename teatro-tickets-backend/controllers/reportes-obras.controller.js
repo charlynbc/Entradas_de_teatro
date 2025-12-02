@@ -197,11 +197,17 @@ export async function obtenerReporte(req, res) {
         fechaShow: reporte.fecha_show,
         fechaGeneracion: reporte.fecha_generacion,
         totalTickets: reporte.total_tickets,
+        total_tickets: reporte.total_tickets,  // Snake_case para compatibilidad
         ticketsVendidos: reporte.tickets_vendidos,
+        tickets_vendidos: reporte.tickets_vendidos,  // Snake_case para compatibilidad
         ticketsUsados: reporte.tickets_usados,
+        tickets_usados: reporte.tickets_usados,  // Snake_case para compatibilidad
         ingresosTotales: parseFloat(reporte.ingresos_totales),
-        vendedores: reporte.datos_vendedores,
-        ventas: reporte.datos_ventas
+        ingresos_totales: parseFloat(reporte.ingresos_totales),  // Snake_case para compatibilidad
+        datos_vendedores: reporte.datos_vendedores,  // Mantener nombre de columna de DB
+        datos_ventas: reporte.datos_ventas,  // Mantener nombre de columna de DB
+        vendedores: reporte.datos_vendedores,  // Alias para compatibilidad
+        ventas: reporte.datos_ventas  // Alias para compatibilidad
       }
     });
     

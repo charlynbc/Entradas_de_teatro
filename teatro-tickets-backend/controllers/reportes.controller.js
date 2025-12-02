@@ -249,3 +249,44 @@ export async function dashboardSuper(req, res) {
     res.status(500).json({ error: error.message });
   }
 }
+
+// Dashboard para directores (ADMIN)
+export async function dashboardDirector(req, res) {
+  try {
+    const { query } = await import('../db.js');
+    let { id: userId } = req.user;
+
+    // Backward compatibility para tokens sin ID
+    if (!userId && req.user.phone) {
+      const userResult = await query('SELECT id FROM users WHERE cedula = $1', [req.user.phone]);
+      if (userResult.rows.length > 0) {
+        userId = userResult.rows[0].id;
+      }
+    }
+    
+    // Shows del director
+    const showsResult = await query(
+      'SELECT * FROM shows WHERE creado_por = $1 ORDER BY fecha DESC',
+      [userId]
+    );
+    
+    // Actores asignados a este director (vendedores que tienen tickets de sus shows)
+    const actoresResult = await query(
+      `SELECT DISTINCT u.id, u.nombre, u.cedula 
+       FROM users u
+       INNER JOIN tickets t ON t.vendedor_phone = u.cedula
+       INNER JOIN shows s ON t.show_id = s.id
+       WHERE s.creado_por = $1 AND u.rol = 'vendedor'`,
+      [userId]
+    );
+    
+    res.json({
+      ok: true,
+      functions: showsResult.rows,
+      actors: actoresResult.rows
+    });
+  } catch (error) {
+    console.error('Error en dashboard director:', error);
+    res.status(500).json({ error: error.message });
+  }
+}
