@@ -1,0 +1,759 @@
+:root {
+    --teatro-rojo: #8B0000;
+    --teatro-dorado: #DAA520;
+    --teatro-negro: #1a1a1a;
+    --teatro-blanco: #f5f5f5;
+    --teatro-gris: #333;
+    --teatro-sombra: rgba(139, 0, 0, 0.3);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    background: linear-gradient(135deg, var(--teatro-negro) 0%, var(--teatro-gris) 100%);
+    color: var(--teatro-blanco);
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Efecto cortina teatral */
+.teatro-curtain {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 30px;
+    background: repeating-linear-gradient(
+        90deg,
+        var(--teatro-rojo) 0px,
+        var(--teatro-rojo) 20px,
+        #a00000 20px,
+        #a00000 40px
+    );
+    box-shadow: 0 3px 10px rgba(0,0,0,0.5);
+    z-index: 1000;
+}
+
+.teatro-curtain::after {
+    content: '🎭';
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 20px;
+    top: 5px;
+}
+
+/* Header */
+header {
+    margin-top: 50px;
+    text-align: center;
+    padding: 2rem;
+}
+
+h1 {
+    font-size: 3.5rem;
+    color: var(--teatro-dorado);
+    text-shadow: 3px 3px 6px rgba(0,0,0,0.7);
+    margin-bottom: 1rem;
+    letter-spacing: 3px;
+}
+
+/* Botones teatrales */
+.btn-teatro, .btn-volver, button {
+    background: linear-gradient(135deg, var(--teatro-rojo) 0%, #6d0000 100%);
+    color: var(--teatro-dorado);
+    border: 2px solid var(--teatro-dorado);
+    padding: 12px 30px;
+    font-size: 1.1rem;
+    font-family: 'Georgia', serif;
+    cursor: pointer;
+    border-radius: 5px;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px var(--teatro-sombra);
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.btn-teatro:hover, .btn-volver:hover, button:hover {
+    background: linear-gradient(135deg, #6d0000 0%, var(--teatro-rojo) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px var(--teatro-sombra);
+    color: white;
+}
+
+.btn-teatro:active, .btn-volver:active, button:active {
+    transform: translateY(0);
+}
+
+/* Contenedor principal */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Tarjetas de obras */
+.obras-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin: 2rem 0;
+}
+
+.obra-card {
+    background: rgba(26, 26, 26, 0.9);
+    border: 2px solid var(--teatro-dorado);
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+    transition: transform 0.3s ease;
+}
+
+.obra-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 35px rgba(218, 165, 32, 0.3);
+}
+
+.obra-card h3 {
+    color: var(--teatro-dorado);
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid var(--teatro-rojo);
+    padding-bottom: 0.5rem;
+}
+
+/* Navegación */
+nav {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin: 2rem 0;
+}
+
+/* Página de contacto profesional */
+.header-contacto {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.subtitulo-contacto {
+    color: var(--teatro-blanco);
+    font-size: 1.2rem;
+    font-style: italic;
+    opacity: 0.9;
+}
+
+.contacto-hero {
+    text-align: center;
+    padding: 2rem;
+    background: linear-gradient(135deg, rgba(139, 0, 0, 0.3), rgba(218, 165, 32, 0.2));
+    border-radius: 10px;
+    margin-bottom: 3rem;
+    border: 2px solid var(--teatro-dorado);
+}
+
+.contacto-hero h2 {
+    color: var(--teatro-dorado);
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.hero-subtitle {
+    color: var(--teatro-blanco);
+    font-size: 1.1rem;
+    font-style: italic;
+    opacity: 0.9;
+}
+
+.contacto-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    margin-bottom: 3rem;
+}
+
+/* Sección de información */
+.contacto-info-section,
+.contacto-form-section {
+    background: rgba(26, 26, 26, 0.95);
+    border: 2px solid var(--teatro-dorado);
+    border-radius: 10px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.section-title {
+    color: var(--teatro-dorado);
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--teatro-rojo);
+}
+
+.info-card {
+    background: rgba(139, 0, 0, 0.15);
+    border-left: 4px solid var(--teatro-dorado);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.info-card:hover {
+    background: rgba(139, 0, 0, 0.25);
+    transform: translateX(5px);
+}
+
+.info-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.icon-large {
+    font-size: 3rem;
+}
+
+.info-header h4 {
+    color: var(--teatro-dorado);
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+.info-header .subtitle {
+    color: var(--teatro-blanco);
+    opacity: 0.8;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.info-item-profesional {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.icon-pro {
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.info-content strong {
+    color: var(--teatro-dorado);
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.info-content p {
+    margin: 0.3rem 0;
+    color: var(--teatro-blanco);
+}
+
+.info-detail {
+    font-size: 0.9rem;
+    opacity: 0.8;
+    font-style: italic;
+}
+
+/* Horarios */
+.horarios-section,
+.redes-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid var(--teatro-rojo);
+}
+
+.horarios-section h4,
+.redes-section h4 {
+    color: var(--teatro-dorado);
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.horarios-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.horario-item {
+    background: rgba(218, 165, 32, 0.1);
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.horario-item strong {
+    color: var(--teatro-dorado);
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.horario-item p {
+    margin: 0.3rem 0;
+    font-size: 0.95rem;
+}
+
+/* Redes sociales */
+.redes-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.8rem;
+}
+
+.red-social {
+    background: rgba(139, 0, 0, 0.3);
+    color: var(--teatro-blanco);
+    padding: 0.8rem;
+    border-radius: 5px;
+    text-align: center;
+    text-decoration: none;
+    border: 1px solid var(--teatro-dorado);
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+}
+
+.red-social:hover {
+    background: rgba(218, 165, 32, 0.3);
+    transform: translateY(-2px);
+    color: var(--teatro-dorado);
+}
+
+/* Formulario profesional */
+.contacto-form-profesional {
+    margin-bottom: 2rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    color: var(--teatro-dorado);
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 12px 15px;
+    background: rgba(245, 245, 245, 0.1);
+    border: 2px solid rgba(218, 165, 32, 0.5);
+    border-radius: 5px;
+    color: var(--teatro-blanco);
+    font-family: 'Georgia', serif;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--teatro-dorado);
+    background: rgba(245, 245, 245, 0.15);
+    box-shadow: 0 0 15px rgba(218, 165, 32, 0.3);
+}
+
+.form-group select {
+    cursor: pointer;
+}
+
+.char-counter {
+    display: block;
+    text-align: right;
+    font-size: 0.85rem;
+    color: var(--teatro-dorado);
+    margin-top: 0.3rem;
+    opacity: 0.8;
+}
+
+.checkbox-group {
+    margin-top: 1rem;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    cursor: pointer;
+    color: var(--teatro-blanco);
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: auto;
+    cursor: pointer;
+    transform: scale(1.2);
+}
+
+.btn-submit {
+    width: 100%;
+    padding: 15px;
+    font-size: 1.2rem;
+    margin-top: 1rem;
+}
+
+.form-note {
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--teatro-blanco);
+    opacity: 0.7;
+    margin-top: 1rem;
+    font-style: italic;
+}
+
+/* Ayuda rápida */
+.ayuda-rapida {
+    background: rgba(218, 165, 32, 0.1);
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 2px solid var(--teatro-dorado);
+}
+
+.ayuda-rapida h4 {
+    color: var(--teatro-dorado);
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.faq-item {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(218, 165, 32, 0.3);
+}
+
+.faq-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.faq-item strong {
+    color: var(--teatro-dorado);
+    display: block;
+    margin-bottom: 0.3rem;
+}
+
+.faq-item p {
+    margin: 0;
+    opacity: 0.9;
+}
+
+/* Ubicación */
+.ubicacion-section {
+    background: rgba(26, 26, 26, 0.95);
+    border: 2px solid var(--teatro-dorado);
+    border-radius: 10px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.mapa-placeholder {
+    background: rgba(139, 0, 0, 0.15);
+    border: 2px dashed var(--teatro-dorado);
+    border-radius: 10px;
+    padding: 3rem;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.mapa-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.mapa-placeholder p {
+    margin: 0.5rem 0;
+}
+
+.mapa-info {
+    font-style: italic;
+    opacity: 0.8;
+}
+
+.transporte-info h4 {
+    color: var(--teatro-dorado);
+    margin: 2rem 0 1rem;
+    text-align: center;
+}
+
+.transporte-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.transporte-item {
+    background: rgba(218, 165, 32, 0.1);
+    padding: 1.5rem;
+    border-radius: 8px;
+    border-left: 4px solid var(--teatro-dorado);
+}
+
+.transporte-item strong {
+    color: var(--teatro-dorado);
+    display: block;
+    margin-bottom: 0.8rem;
+    font-size: 1.1rem;
+}
+
+.transporte-item p {
+    margin: 0.3rem 0;
+    font-size: 0.95rem;
+}
+
+/* Footer mejorado */
+.footer-legal {
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.footer-legal a {
+    color: var(--teatro-dorado);
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.footer-legal a:hover {
+    color: white;
+    text-decoration: underline;
+}
+
+/* Logo de Baco siempre visible */
+.logo-baco-fixed {
+    position: fixed;
+    top: 50px;
+    left: 20px;
+    width: 80px;
+    height: 80px;
+    z-index: 999;
+    background: rgba(26, 26, 26, 0.9);
+    border-radius: 50%;
+    padding: 5px;
+    border: 2px solid var(--teatro-dorado);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    transition: transform 0.3s ease;
+}
+
+.logo-baco-fixed:hover {
+    transform: scale(1.1);
+}
+
+.logo-baco-fixed img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* Iconos de redes sociales */
+.social-icons {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    justify-content: center;
+}
+
+.social-icon {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 10px 20px;
+    background: rgba(139, 0, 0, 0.3);
+    border: 2px solid var(--teatro-dorado);
+    border-radius: 8px;
+    color: var(--teatro-blanco);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+}
+
+.social-icon:hover {
+    background: var(--teatro-dorado);
+    color: var(--teatro-negro);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(218, 165, 32, 0.4);
+}
+
+.social-icon svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* Botones con iconos */
+.btn-con-icono {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 12px 25px;
+}
+
+.btn-con-icono svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* Modal de opciones de descarga */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-content {
+    background: rgba(26, 26, 26, 0.98);
+    border: 3px solid var(--teatro-dorado);
+    border-radius: 15px;
+    padding: 2rem;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 10px 50px rgba(0, 0, 0, 0.9);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.modal-header h2 {
+    color: var(--teatro-dorado);
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.modal-header p {
+    color: var(--teatro-blanco);
+    opacity: 0.9;
+}
+
+.modal-options {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.option-button {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: rgba(139, 0, 0, 0.2);
+    border: 2px solid var(--teatro-dorado);
+    border-radius: 10px;
+    color: var(--teatro-blanco);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: left;
+}
+
+.option-button:hover {
+    background: rgba(218, 165, 32, 0.2);
+    transform: translateX(5px);
+    box-shadow: 0 5px 20px rgba(218, 165, 32, 0.3);
+}
+
+.option-button svg {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+}
+
+.option-button .option-text h3 {
+    color: var(--teatro-dorado);
+    margin: 0 0 0.3rem 0;
+    font-size: 1.2rem;
+}
+
+.option-button .option-text p {
+    margin: 0;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.modal-close {
+    width: 100%;
+    padding: 12px;
+    background: transparent;
+    border: 2px solid var(--teatro-rojo);
+    color: var(--teatro-blanco);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.modal-close:hover {
+    background: var(--teatro-rojo);
+    color: var(--teatro-dorado);
+}
+
+/* Iconos en el header de contacto */
+.contacto-hero .logo-container {
+    margin-bottom: 1rem;
+}
+
+.contacto-hero .logo-container img {
+    width: 100px;
+    height: 100px;
+    animation: logoFloat 3s ease-in-out infinite;
+}
+
+@keyframes logoFloat {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+/* Responsive ajustes para logo */
+@media (max-width: 768px) {
+    .logo-baco-fixed {
+        width: 60px;
+        height: 60px;
+        top: 40px;
+        left: 10px;
+    }
+}
