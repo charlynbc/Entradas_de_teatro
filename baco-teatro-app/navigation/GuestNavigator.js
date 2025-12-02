@@ -4,6 +4,7 @@ import GuestHomeScreen from '../screens/guest/GuestHomeScreen';
 import GuestShowDetailScreen from '../screens/guest/GuestShowDetailScreen';
 import GuestManualScreen from '../screens/guest/GuestManualScreen';
 import ContactoScreen from '../screens/guest/ContactoScreen';
+import DeveloperScreen from '../screens/guest/DeveloperScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
 
 const Stack = createNativeStackNavigator();
@@ -16,6 +17,7 @@ export default function GuestNavigator() {
       <Stack.Screen name="GuestShowDetail" component={GuestShowDetailScreen} />
       <Stack.Screen name="GuestManual" component={GuestManualScreen} />
       <Stack.Screen name="Contacto" component={ContactoScreen} />
+      <Stack.Screen name="Developer" component={DeveloperScreen} />
       <Stack.Screen name="Login" component={LoginScreen} />
     </Stack.Navigator>
   );

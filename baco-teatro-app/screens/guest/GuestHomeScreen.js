@@ -99,7 +99,7 @@ export default function GuestHomeScreen({ navigation }) {
         
         <TouchableOpacity 
           style={styles.theatricalButton}
-          onPress={() => navigation.navigate('Contacto')}
+          onPress={() => navigation.navigate('Developer')}
         >
           <LinearGradient
             colors={['#FFD700', '#FFA500', '#FFD700']}

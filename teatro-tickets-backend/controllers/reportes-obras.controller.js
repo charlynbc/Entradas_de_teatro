@@ -22,12 +22,9 @@ export async function generarReporteObra(req, res) {
       return res.status(403).json({ error: 'No tienes permiso para generar este reporte' });
     }
     
-    // Obtener todos los tickets del show
+    // Obtener todos los tickets del show (sin vendor tracking - schema simplificado)
     const ticketsResult = await query(
-      `SELECT t.*, u.nombre as vendedor_nombre, u.cedula as vendedor_cedula
-       FROM tickets t
-       LEFT JOIN users u ON t.vendedor_id = u.id
-       WHERE t.show_id = $1`,
+      `SELECT * FROM tickets WHERE show_id = $1`,
       [showId]
     );
     
@@ -44,39 +41,8 @@ export async function generarReporteObra(req, res) {
       .filter(t => ['VENDIDA_PAGADA', 'USADA'].includes(t.estado))
       .reduce((sum, t) => sum + parseFloat(t.precio_venta || 0), 0);
     
-    // Agrupar por vendedor
-    const vendedoresMap = {};
-    tickets.forEach(ticket => {
-      if (ticket.vendedor_id) {
-        if (!vendedoresMap[ticket.vendedor_id]) {
-          vendedoresMap[ticket.vendedor_id] = {
-            id: ticket.vendedor_id,
-            nombre: ticket.vendedor_nombre,
-            cedula: ticket.vendedor_cedula,
-            asignados: 0,
-            vendidos: 0,
-            usados: 0,
-            ingresos: 0
-          };
-        }
-        
-        vendedoresMap[ticket.vendedor_id].asignados++;
-        
-        if (['VENDIDA_NO_PAGADA', 'VENDIDA_PAGADA', 'USADA'].includes(ticket.estado)) {
-          vendedoresMap[ticket.vendedor_id].vendidos++;
-        }
-        
-        if (ticket.estado === 'USADA') {
-          vendedoresMap[ticket.vendedor_id].usados++;
-        }
-        
-        if (['VENDIDA_PAGADA', 'USADA'].includes(ticket.estado)) {
-          vendedoresMap[ticket.vendedor_id].ingresos += parseFloat(ticket.precio_venta || 0);
-        }
-      }
-    });
-    
-    const datosVendedores = Object.values(vendedoresMap);
+    // Datos de vendedores - simplificado (sin vendor tracking en schema actual)
+    const datosVendedores = [];
     
     // Datos de ventas por estado
     const datosVentas = {
