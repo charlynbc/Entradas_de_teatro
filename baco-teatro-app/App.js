@@ -16,9 +16,12 @@ export default function App() {
   useEffect(() => {
     async function loadFonts() {
       try {
+        // Load Ionicons font explicitly
         await Font.loadAsync({
           ...Ionicons.font,
+          'Ionicons': require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.ttf'),
         });
+        console.log('Fonts loaded successfully');
         setFontsLoaded(true);
       } catch (error) {
         console.error('Error loading fonts:', error);
