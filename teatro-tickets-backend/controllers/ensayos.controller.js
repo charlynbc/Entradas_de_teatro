@@ -119,6 +119,15 @@ export const listarEnsayos = async (req, res) => {
 export const obtenerEnsayo = async (req, res) => {
   try {
     const { id } = req.params;
+    let { role, id: userId } = req.user;
+
+    // Backward compatibility para tokens sin ID
+    if (!userId && req.user.phone) {
+      const userResult = await query('SELECT id FROM users WHERE cedula = $1', [req.user.phone]);
+      if (userResult.rows.length > 0) {
+        userId = userResult.rows[0].id;
+      }
+    }
 
     const result = await query(
       `SELECT e.*, u.nombre as director_nombre 
@@ -133,6 +142,23 @@ export const obtenerEnsayo = async (req, res) => {
     }
 
     const ensayo = result.rows[0];
+
+    // Verificar permisos: Super ve todo, Director ve los suyos, Actor ve donde está asignado
+    if (role === 'VENDEDOR') {
+      return res.status(403).json({ error: 'No tienes permisos para ver ensayos' });
+    }
+
+    if (role === 'ADMIN' && ensayo.director_id !== userId) {
+      return res.status(403).json({ error: 'No puedes ver ensayos de otros directores' });
+    }
+
+    if (role === 'ACTOR') {
+      const actoresIds = ensayo.actores_ids || [];
+      if (!actoresIds.includes(userId)) {
+        return res.status(403).json({ error: 'No estás asignado a este ensayo' });
+      }
+    }
+
     const actoresIds = JSON.parse(ensayo.actores_ids || '[]');
     
     if (actoresIds.length > 0) {

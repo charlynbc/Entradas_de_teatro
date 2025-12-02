@@ -94,6 +94,25 @@ export async function listarShows(req, res) {
   }
 }
 
+export async function obtenerShow(req, res) {
+  try {
+    const showId = parseInt(req.params.id);
+    const result = await query(
+      'SELECT * FROM shows WHERE id = $1',
+      [showId]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Show no encontrado' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error obteniendo show:', error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
 export async function asignarTickets(req, res) {
   try {
     const showId = parseInt(req.params.id);

@@ -181,36 +181,67 @@ export async function resumenFuncion(req, res) {
 // Dashboard global para usuario SUPER
 export async function dashboardSuper(req, res) {
   try {
-    const data = await readData();
+    // Usar PostgreSQL en vez de dataStore
+    const { query } = await import('../db.js');
     
-    // Contar producciones únicas (por admin)
-    const productions = new Set();
-    data.shows?.forEach(show => {
-      if (show.admin_phone) {
-        productions.add(show.admin_phone);
-      }
-    });
+    // Contar shows
+    const showsResult = await query('SELECT COUNT(*) as total FROM shows');
+    const functions = parseInt(showsResult.rows[0].total);
     
-    // Contar funciones activas
-    const functions = data.shows?.length || 0;
+    // Contar directores únicos (productions = directores con shows)
+    const directoresResult = await query('SELECT COUNT(DISTINCT creado_por) as total FROM shows');
+    const productions = parseInt(directoresResult.rows[0].total);
     
-    // Contar tickets totales y vendidos
-    const totalTickets = data.tickets?.length || 0;
-    const ticketsVendidos = data.tickets?.filter(t => SOLD_STATES.has(t.estado)).length || 0;
+    // Contar tickets totales
+    const ticketsResult = await query('SELECT COUNT(*) as total FROM tickets');
+    const totalTickets = parseInt(ticketsResult.rows[0].total);
     
-    // Calcular ingresos totales
-    const ingresosTotal = data.tickets
-      ?.filter(t => t.estado === 'PAGADO' || t.estado === 'USADO')
-      .reduce((sum, t) => sum + (Number(t.precio) || 0), 0) || 0;
+    // Contar tickets vendidos (REPORTADA_VENDIDA, PAGADO, USADO)
+    const vendidosResult = await query(
+      `SELECT COUNT(*) as total FROM tickets 
+       WHERE estado IN ('REPORTADA_VENDIDA', 'PAGADO', 'USADO')`
+    );
+    const ticketsVendidos = parseInt(vendidosResult.rows[0].total);
+    
+    // Calcular ingresos totales (solo PAGADO y USADO)
+    const ingresosResult = await query(
+      `SELECT COALESCE(SUM(precio_venta), 0) as total FROM tickets 
+       WHERE estado IN ('PAGADO', 'USADO')`
+    );
+    const ingresosTotal = parseFloat(ingresosResult.rows[0].total);
+    
+    // Contar vendedores activos
+    const vendedoresResult = await query(
+      `SELECT COUNT(*) as total FROM users WHERE rol = 'vendedor' AND activo = true`
+    );
+    const vendedoresActivos = parseInt(vendedoresResult.rows[0].total);
+    
+    // Información de ventas
+    const ventasResult = await query(
+      `SELECT 
+        COUNT(DISTINCT vendedor_phone) as vendedores_con_ventas,
+        COUNT(*) as total_ventas
+       FROM tickets 
+       WHERE vendedor_phone IS NOT NULL 
+       AND estado IN ('REPORTADA_VENDIDA', 'PAGADO', 'USADO')`
+    );
     
     res.json({
       ok: true,
       totals: {
-        productions: productions.size,
+        productions: productions,
         functions: functions,
         tickets: totalTickets,
         sold: ticketsVendidos,
         revenue: ingresosTotal
+      },
+      vendedores: {
+        activos: vendedoresActivos,
+        con_ventas: parseInt(ventasResult.rows[0].vendedores_con_ventas)
+      },
+      ventas: {
+        total: parseInt(ventasResult.rows[0].total_ventas),
+        porcentaje: totalTickets > 0 ? ((ticketsVendidos / totalTickets) * 100).toFixed(2) : 0
       }
     });
   } catch (error) {

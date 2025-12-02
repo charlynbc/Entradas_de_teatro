@@ -7,6 +7,9 @@ const router = express.Router();
 // Dashboard super
 router.get('/super', authenticate, requireRole('SUPER'), dashboardSuper);
 
+// Dashboard director (admin)
+router.get('/director', authenticate, requireRole('ADMIN'), dashboardSuper);  // Reusar dashboardSuper
+
 // Todos requieren admin
 router.get('/shows/:id/resumen-por-vendedor', authenticate, requireRole('ADMIN'), resumenPorVendedor);
 router.get('/shows/:id/resumen-admin', authenticate, requireRole('ADMIN'), resumenAdmin);
