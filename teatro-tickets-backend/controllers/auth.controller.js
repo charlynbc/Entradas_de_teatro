@@ -44,6 +44,7 @@ export async function login(req, res) {
     };
     
     const token = generateToken({
+      id: user.id,
       phone: user.cedula,
       role: roleMap[user.rol] || user.rol,
       name: user.nombre
@@ -52,6 +53,7 @@ export async function login(req, res) {
     res.json({
       token,
       user: {
+        id: user.id,
         phone: user.cedula,
         role: roleMap[user.rol] || user.rol,
         name: user.nombre
@@ -98,6 +100,7 @@ export async function completarRegistro(req, res) {
     };
     
     const token = generateToken({
+      id: user.id,
       phone,
       role: roleMap[user.rol] || user.rol,
       name
@@ -106,7 +109,7 @@ export async function completarRegistro(req, res) {
     res.json({ 
       ok: true, 
       token,
-      user: { phone, name, role: roleMap[user.rol] || user.rol }
+      user: { id: user.id, phone, name, role: roleMap[user.rol] || user.rol }
     });
   } catch (error) {
     console.error('Error en completar registro:', error);

@@ -53,6 +53,7 @@ export const listarEnsayos = async (req, res) => {
       // Actor ve ensayos donde está incluido
       // Usamos jsonb_array_elements_text para extraer cada elemento del array
       // y compararlo directamente con el userId
+      console.log(`[DEBUG] Actor buscando ensayos para userId: ${userId}`);
       ensayos = await query(
         `SELECT DISTINCT e.*, u.nombre as director_nombre 
          FROM ensayos_generales e 
@@ -65,6 +66,10 @@ export const listarEnsayos = async (req, res) => {
          ORDER BY e.fecha DESC`,
         [userId]
       );
+      console.log(`[DEBUG] Ensayos encontrados: ${ensayos.rows.length}`);
+      if (ensayos.rows.length > 0) {
+        console.log(`[DEBUG] Primer ensayo actores_ids:`, ensayos.rows[0].actores_ids);
+      }
     }
 
     // Obtener nombres de actores para cada ensayo
