@@ -174,6 +174,37 @@ app.get('/api/mis-entradas/:email', async (req, res) => {
     }
 });
 
+// API endpoint para eventos
+app.get('/api/eventos', (req, res) => {
+    const eventos = [
+        {
+            id: 1,
+            titulo: 'Hamlet',
+            fecha: '2024-02-15',
+            hora: '20:00',
+            precio: '$5000',
+            descripcion: 'La clásica obra de William Shakespeare'
+        },
+        {
+            id: 2,
+            titulo: 'La Casa de Bernarda Alba',
+            fecha: '2024-02-20',
+            hora: '21:00',
+            precio: '$4500',
+            descripcion: 'Drama de Federico García Lorca'
+        },
+        {
+            id: 3,
+            titulo: 'Esperando a Godot',
+            fecha: '2024-02-25',
+            hora: '19:30',
+            precio: '$4000',
+            descripcion: 'Obra maestra de Samuel Beckett'
+        }
+    ];
+    res.json(eventos);
+});
+
 // ============================================
 // RUTAS DE PÁGINAS
 // ============================================
