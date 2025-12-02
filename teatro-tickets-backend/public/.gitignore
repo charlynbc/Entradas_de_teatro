@@ -1,8 +1,0 @@
-# Build artifacts - regenerated on deploy
-_expo/
-*.html
-metadata.json
-favicon.ico
-
-# Keep assets
-!assets/

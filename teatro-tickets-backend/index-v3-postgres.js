@@ -12,6 +12,7 @@ import ticketsRoutes from './routes/tickets.routes.js';
 import reportesRoutes from './routes/reportes.routes.js';
 import reportesObrasRoutes from './routes/reportes-obras.routes.js';
 import ensayosRoutes from './routes/ensayos.routes.js';
+import adminRoutes from './routes/admin.routes.js';
 import { readData } from './utils/dataStore.js';
 
 const app = express();
@@ -85,6 +86,7 @@ async function startServer() {
     app.use('/api/reportes', reportesRoutes);
     app.use('/api/reportes-obras', reportesObrasRoutes);
     app.use('/api/ensayos', ensayosRoutes);
+    app.use('/api/admin', adminRoutes);
 
     // Servir frontend en producción
     app.use((req, res, next) => {
