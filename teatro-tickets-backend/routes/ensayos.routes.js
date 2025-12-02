@@ -1,5 +1,5 @@
 import express from 'express';
-import { authMiddleware, isAdminOrSuper } from '../middleware/auth.js';
+import { authenticate, requireRole } from '../middleware/auth.middleware.js';
 import {
   crearEnsayo,
   listarEnsayos,
@@ -11,10 +11,10 @@ import {
 const router = express.Router();
 
 // Todas las rutas requieren autenticación
-router.use(authMiddleware);
+router.use(authenticate);
 
 // Crear ensayo (solo directores y super)
-router.post('/', isAdminOrSuper, crearEnsayo);
+router.post('/', requireRole('ADMIN', 'SUPER'), crearEnsayo);
 
 // Listar ensayos (todos los usuarios autenticados)
 router.get('/', listarEnsayos);
@@ -23,9 +23,9 @@ router.get('/', listarEnsayos);
 router.get('/:id', obtenerEnsayo);
 
 // Actualizar ensayo (solo creador o super)
-router.put('/:id', isAdminOrSuper, actualizarEnsayo);
+router.put('/:id', requireRole('ADMIN', 'SUPER'), actualizarEnsayo);
 
 // Eliminar ensayo (solo creador o super)
-router.delete('/:id', isAdminOrSuper, eliminarEnsayo);
+router.delete('/:id', requireRole('ADMIN', 'SUPER'), eliminarEnsayo);
 
 export default router;
