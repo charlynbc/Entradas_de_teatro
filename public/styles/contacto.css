@@ -110,6 +110,7 @@
 
 .icon-large {
     font-size: 3rem;
+    color: var(--teatro-dorado);
 }
 
 .info-header h4 {
@@ -133,6 +134,7 @@
 
 .icon-pro {
     font-size: 2rem;
+    color: var(--teatro-dorado);
     flex-shrink: 0;
 }
 
@@ -221,6 +223,10 @@
     color: var(--teatro-dorado);
 }
 
+.social-icon i {
+    font-size: 1.2rem;
+}
+
 .social-icon svg {
     width: 20px;
     height: 20px;
@@ -241,6 +247,11 @@
     margin-bottom: 0.5rem;
     font-weight: bold;
     font-size: 1rem;
+}
+
+.form-group label i {
+    margin-right: 0.5rem;
+    color: var(--teatro-dorado);
 }
 
 .form-group input,

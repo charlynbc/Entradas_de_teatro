@@ -136,6 +136,11 @@
     opacity: 0.8;
 }
 
+.modal-options .option-button i {
+    font-size: 2.5rem;
+    color: var(--teatro-dorado);
+}
+
 .modal-close {
     width: 100%;
     padding: 12px;
