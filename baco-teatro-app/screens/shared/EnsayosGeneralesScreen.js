@@ -10,7 +10,7 @@ import Toast from '../../components/Toast';
 import colors from '../../theme/colors';
 import { listarEnsayos, crearEnsayo, eliminarEnsayo, listarVendedores } from '../../api';
 import { useAuth } from '../../contexts/AuthContext';
-import useToast from '../../hooks/useToast';
+import { useToast } from '../../hooks/useToast';
 
 export default function EnsayosGeneralesScreen({ navigation }) {
   const [ensayos, setEnsayos] = useState([]);
