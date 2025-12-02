@@ -19,6 +19,8 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
+import Toast from '../../components/Toast';
+import { useToast } from '../../hooks/useToast';
 import colors from '../../theme/colors';
 import DailyQuote from '../../components/DailyQuote';
 
@@ -37,6 +39,7 @@ const KeyboardDismissWrapper = ({ children }) => {
 
 export default function LoginScreen({ navigation }) {
   const { login, loading } = useAuth();
+  const { toast, showSuccess, showError, showWarning, hideToast } = useToast();
   const [cedula, setCedula] = useState('');
   const [password, setPassword] = useState('');
   
@@ -94,13 +97,13 @@ export default function LoginScreen({ navigation }) {
 
   const handleSubmit = async () => {
     if (!cedula || !password) {
-      Alert.alert('¡Atención!', 'Por favor ingresá tu cédula y contraseña para entrar a función.');
+      showWarning('Ingresá tu cédula y contraseña para entrar');
       return;
     }
     try {
       await login({ cedula, password });
     } catch (error) {
-      Alert.alert('Error de acceso', error.message || 'Credenciales inválidas. Intentalo de nuevo.');
+      showError(error.message || 'Credenciales inválidas. Intentá de nuevo.');
     }
   };
 
@@ -236,6 +239,13 @@ export default function LoginScreen({ navigation }) {
           </Animated.View>
           </ScrollView>
         </KeyboardAvoidingView>
+        
+        <Toast 
+          visible={toast.visible} 
+          message={toast.message} 
+          type={toast.type}
+          onHide={hideToast}
+        />
       </View>
     </KeyboardDismissWrapper>
   );

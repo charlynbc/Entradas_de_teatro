@@ -5,6 +5,8 @@ import { Picker } from '@react-native-picker/picker';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionCard from '../../components/SectionCard';
 import ShowCard from '../../components/ShowCard';
+import Toast from '../../components/Toast';
+import { useToast } from '../../hooks/useToast';
 import colors from '../../theme/colors';
 import { listDirectorShows, createShow, assignTicketsToActor, deleteProduction } from '../../api';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,6 +15,7 @@ const initialShow = { obra: '', fecha: new Date(), lugar: '', capacidad: '', bas
 const initialAssign = { showId: '', actorId: '', cantidad: '' };
 
 export default function DirectorShowsScreen({ navigation }) {
+  const { toast, showSuccess, showError, hideToast } = useToast();
   const [shows, setShows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -42,7 +45,7 @@ export default function DirectorShowsScreen({ navigation }) {
 
   const handleCreateShow = async () => {
     if (!showForm.obra || !showForm.lugar || !showForm.capacidad) {
-      Alert.alert('Falta info', 'Completa obra, lugar y capacidad');
+      showError('Completá obra, lugar y capacidad');
       return;
     }
     setCreating(true);
@@ -60,9 +63,9 @@ export default function DirectorShowsScreen({ navigation }) {
       setShowForm(initialShow);
       setModalVisible(false);
       load();
-      Alert.alert('Listo', 'Función creada y tickets generados');
+      showSuccess('✨ Función creada y tickets generados con éxito');
     } catch (error) {
-      Alert.alert('Error', error.message || 'No se pudo crear la función');
+      showError(error.message || 'No se pudo crear la función');
     } finally {
       setCreating(false);
     }
@@ -70,7 +73,7 @@ export default function DirectorShowsScreen({ navigation }) {
 
   const handleDeleteShow = (show) => {
     Alert.alert(
-      'Eliminar Obra',
+      '🗑️ Eliminar Obra',
       `¿Estás seguro de eliminar "${show.obra}"? Esto borrará todos los tickets asociados.`,
       [
         { text: 'Cancelar', style: 'cancel' },
@@ -81,9 +84,9 @@ export default function DirectorShowsScreen({ navigation }) {
             try {
               await deleteProduction(show.id);
               load();
-              Alert.alert('Listo', 'Obra eliminada correctamente');
+              showSuccess('🗑️ Obra eliminada con éxito');
             } catch (error) {
-              Alert.alert('Error', error.message || 'No se pudo eliminar la obra');
+              showError(error.message || 'No se pudo eliminar la obra');
             }
           },
         },
@@ -373,6 +376,13 @@ export default function DirectorShowsScreen({ navigation }) {
           </View>
         </View>
       </Modal>
+      
+      <Toast 
+        visible={toast.visible} 
+        message={toast.message} 
+        type={toast.type}
+        onHide={hideToast}
+      />
     </ScreenContainer>
   );
 }

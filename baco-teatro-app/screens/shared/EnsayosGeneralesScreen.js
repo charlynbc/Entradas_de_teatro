@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Alert, Modal, TextInput, ScrollView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionCard from '../../components/SectionCard';
+import Toast from '../../components/Toast';
 import colors from '../../theme/colors';
 import { listarEnsayos, crearEnsayo, eliminarEnsayo, listarVendedores } from '../../api';
 import { useAuth } from '../../contexts/AuthContext';
+import useToast from '../../hooks/useToast';
 
 export default function EnsayosGeneralesScreen({ navigation }) {
   const [ensayos, setEnsayos] = useState([]);
@@ -23,6 +26,7 @@ export default function EnsayosGeneralesScreen({ navigation }) {
   });
   const [showDatePicker, setShowDatePicker] = useState(false);
   const { user } = useAuth();
+  const { toast, showSuccess, showError, hideToast } = useToast();
   const isDirector = ['ADMIN', 'SUPER'].includes(user?.role);
 
   useEffect(() => {
@@ -38,7 +42,7 @@ export default function EnsayosGeneralesScreen({ navigation }) {
       setEnsayos(ensayosData);
       setVendedores(vendedoresData);
     } catch (error) {
-      Alert.alert('Error', 'No se pudieron cargar los ensayos');
+      showError('No se pudieron cargar los ensayos');
       console.error(error);
     } finally {
       setLoading(false);
@@ -47,7 +51,7 @@ export default function EnsayosGeneralesScreen({ navigation }) {
 
   const handleCrearEnsayo = async () => {
     if (!formData.titulo || !formData.lugar) {
-      Alert.alert('Campos requeridos', 'Ingresa título y lugar del ensayo');
+      showError('Completa título y lugar del ensayo');
       return;
     }
 
@@ -62,15 +66,15 @@ export default function EnsayosGeneralesScreen({ navigation }) {
         actores: []
       });
       loadData();
-      Alert.alert('Éxito', 'Ensayo creado correctamente');
+      showSuccess('✨ Ensayo creado con éxito');
     } catch (error) {
-      Alert.alert('Error', error.message || 'No se pudo crear el ensayo');
+      showError(error.message || 'No se pudo crear el ensayo');
     }
   };
 
   const handleEliminarEnsayo = (ensayoId, titulo) => {
     Alert.alert(
-      'Eliminar ensayo',
+      '🗑️ Eliminar ensayo',
       `¿Eliminar "${titulo}"?`,
       [
         { text: 'Cancelar', style: 'cancel' },
@@ -81,8 +85,9 @@ export default function EnsayosGeneralesScreen({ navigation }) {
             try {
               await eliminarEnsayo(ensayoId);
               loadData();
+              showSuccess('🗑️ Ensayo eliminado con éxito');
             } catch (error) {
-              Alert.alert('Error', 'No se pudo eliminar el ensayo');
+              showError('No se pudo eliminar el ensayo');
             }
           }
         }
@@ -292,6 +297,13 @@ export default function EnsayosGeneralesScreen({ navigation }) {
           </View>
         </View>
       </Modal>
+      
+      <Toast 
+        visible={toast.visible} 
+        message={toast.message} 
+        type={toast.type}
+        onHide={hideToast}
+      />
     </ScreenContainer>
   );
 }

@@ -7,6 +7,8 @@ import * as Sharing from 'expo-sharing';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionCard from '../../components/SectionCard';
 import TicketStatusPill from '../../components/TicketStatusPill';
+import Toast from '../../components/Toast';
+import { useToast } from '../../hooks/useToast';
 import colors from '../../theme/colors';
 import { getActorStock, updateTicketStatus } from '../../api';
 import DailyQuote from '../../components/DailyQuote';
@@ -20,6 +22,7 @@ if (Platform.OS === 'web') {
 }
 
 export default function ActorStockScreen() {
+  const { toast, showSuccess, showError, showWarning, hideToast } = useToast();
   const [stock, setStock] = useState([]);
   const [loading, setLoading] = useState(true);
   
@@ -85,8 +88,9 @@ export default function ActorStockScreen() {
       });
       setModalVisible(false);
       load();
+      showSuccess('✅ Ticket actualizado con éxito');
     } catch (error) {
-      Alert.alert('Error', error.message || 'No se pudo actualizar');
+      showError(error.message || 'No se pudo actualizar el ticket');
     } finally {
       setProcessing(false);
     }
@@ -95,7 +99,7 @@ export default function ActorStockScreen() {
   const confirmModal = async () => {
     if (modalMode === 'SHARE') {
       if (!buyerPhone) {
-        Alert.alert('Falta teléfono', 'Ingresa el número para registrar el envío');
+        showError('Ingresá el número de teléfono para registrar el envío');
         return;
       }
 
@@ -378,7 +382,7 @@ export default function ActorStockScreen() {
         if (Platform.OS === 'web') {
           // Web-specific: Generate PDF using html2canvas + jsPDF with Iframe isolation
           if (!jsPDF || !html2canvas) {
-            Alert.alert('Error', 'Librerías de PDF no cargadas. Intenta de nuevo en unos segundos.');
+            showError('Librerías de PDF no cargadas. Intentá de nuevo en unos segundos.');
             return;
           }
 
@@ -464,7 +468,7 @@ export default function ActorStockScreen() {
           } else {
             // Fallback to download
             pdf.save(`Entrada_${selectedTicket.code}.pdf`);
-            Alert.alert('Descarga iniciada', 'El PDF se ha descargado. Puedes compartirlo desde tus descargas.');
+            showSuccess('💾 Entrada descargada con éxito');
           }
 
         } else {
@@ -477,7 +481,7 @@ export default function ActorStockScreen() {
         }
       } catch (error) {
         console.error(error);
-        Alert.alert('Error', 'No se pudo generar el PDF: ' + error.message);
+        showError('No se pudo generar el PDF: ' + error.message);
       } finally {
         setProcessing(false);
         setModalVisible(false);
@@ -629,6 +633,13 @@ export default function ActorStockScreen() {
           </View>
         </View>
       </Modal>
+      
+      <Toast 
+        visible={toast.visible} 
+        message={toast.message} 
+        type={toast.type}
+        onHide={hideToast}
+      />
     </ScreenContainer>
   );
 }

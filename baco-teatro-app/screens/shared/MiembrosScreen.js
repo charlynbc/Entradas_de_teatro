@@ -3,10 +3,13 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, 
 import { Ionicons } from '@expo/vector-icons';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionCard from '../../components/SectionCard';
+import Toast from '../../components/Toast';
+import { useToast } from '../../hooks/useToast';
 import colors from '../../theme/colors';
 import { listarMiembros } from '../../api';
 
 export default function MiembrosScreen({ navigation }) {
+  const { toast, showError, hideToast } = useToast();
   const [miembros, setMiembros] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -19,7 +22,7 @@ export default function MiembrosScreen({ navigation }) {
       const data = await listarMiembros();
       setMiembros(data);
     } catch (error) {
-      Alert.alert('Error', 'No se pudieron cargar los miembros');
+      showError('No se pudieron cargar los miembros');
       console.error(error);
     } finally {
       setLoading(false);
@@ -145,6 +148,13 @@ export default function MiembrosScreen({ navigation }) {
           <Text style={styles.emptyText}>No hay miembros registrados</Text>
         </View>
       )}
+      
+      <Toast 
+        visible={toast.visible} 
+        message={toast.message} 
+        type={toast.type}
+        onHide={hideToast}
+      />
     </ScreenContainer>
   );
 }

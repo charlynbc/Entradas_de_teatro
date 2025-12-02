@@ -2,10 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionCard from '../../components/SectionCard';
+import Toast from '../../components/Toast';
+import { useToast } from '../../hooks/useToast';
 import colors from '../../theme/colors';
 import { listProductions, createProduction, deleteProduction } from '../../api';
 
 export default function ProductionsScreen() {
+  const { toast, showSuccess, showError, hideToast } = useToast();
   const [productions, setProductions] = useState([]);
   const [form, setForm] = useState({ titulo: '', descripcion: '', color: '#F48C06' });
   const [saving, setSaving] = useState(false);
@@ -27,7 +30,7 @@ export default function ProductionsScreen() {
 
   const handleCreate = async () => {
     if (!form.titulo) {
-      Alert.alert('Falta título', 'Ingresá el nombre de la obra');
+      showError('Ingresá el nombre de la obra');
       return;
     }
     setSaving(true);
@@ -35,8 +38,9 @@ export default function ProductionsScreen() {
       await createProduction(form);
       setForm({ titulo: '', descripcion: '', color: form.color });
       load();
+      showSuccess('✨ Obra creada con éxito');
     } catch (error) {
-      Alert.alert('Error', error.message || 'No se pudo crear la obra');
+      showError(error.message || 'No se pudo crear la obra');
     } finally {
       setSaving(false);
     }
@@ -44,7 +48,7 @@ export default function ProductionsScreen() {
 
   const handleDelete = (obra) => {
     Alert.alert(
-      'Eliminar Obra',
+      '🗑️ Eliminar Obra',
       `¿Seguro que querés eliminar "${obra.titulo}"? Esto borrará todas las funciones y tickets asociados.`,
       [
         { text: 'Cancelar', style: 'cancel' },
@@ -55,9 +59,9 @@ export default function ProductionsScreen() {
             try {
               await deleteProduction(obra.id);
               load();
-              Alert.alert('Listo', 'Obra eliminada');
+              showSuccess('🗑️ Obra eliminada con éxito');
             } catch (error) {
-              Alert.alert('Error', error.message || 'No se pudo eliminar');
+              showError(error.message || 'No se pudo eliminar la obra');
             }
           },
         },
@@ -117,6 +121,13 @@ export default function ProductionsScreen() {
           ))
         )}
       </SectionCard>
+      
+      <Toast 
+        visible={toast.visible} 
+        message={toast.message} 
+        type={toast.type}
+        onHide={hideToast}
+      />
     </ScreenContainer>
   );
 }

@@ -15,6 +15,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionCard from '../../components/SectionCard';
+import Toast from '../../components/Toast';
+import { useToast } from '../../hooks/useToast';
 import colors from '../../theme/colors';
 import { 
   listarReportesObras, 
@@ -23,6 +25,7 @@ import {
 } from '../../api';
 
 export default function DirectorReportsObrasScreen({ navigation }) {
+  const { toast, showSuccess, showError, showInfo, hideToast } = useToast();
   const [reportes, setReportes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedReporte, setSelectedReporte] = useState(null);
@@ -34,7 +37,7 @@ export default function DirectorReportsObrasScreen({ navigation }) {
       const data = await listarReportesObras();
       setReportes(data);
     } catch (error) {
-      Alert.alert('Error', error.message || 'No se pudieron cargar los reportes');
+      showError(error.message || 'No se pudieron cargar los reportes');
     } finally {
       setLoading(false);
     }
@@ -53,13 +56,13 @@ export default function DirectorReportsObrasScreen({ navigation }) {
       setSelectedReporte(detalle);
       setModalVisible(true);
     } catch (error) {
-      Alert.alert('Error', error.message || 'No se pudo cargar el reporte');
+      showError(error.message || 'No se pudo cargar el reporte');
     }
   };
 
   const handleEliminar = (reporte) => {
     Alert.alert(
-      'Eliminar Reporte',
+      '🗑️ Eliminar Reporte',
       `¿Estás seguro de eliminar el reporte de "${reporte.nombreObra}"?`,
       [
         { text: 'Cancelar', style: 'cancel' },
@@ -70,9 +73,9 @@ export default function DirectorReportsObrasScreen({ navigation }) {
             try {
               await eliminarReporteObra(reporte.id);
               load();
-              Alert.alert('Listo', 'Reporte eliminado');
+              showSuccess('🗑️ Reporte eliminado con éxito');
             } catch (error) {
-              Alert.alert('Error', error.message || 'No se pudo eliminar');
+              showError(error.message || 'No se pudo eliminar el reporte');
             }
           },
         },
@@ -86,14 +89,14 @@ export default function DirectorReportsObrasScreen({ navigation }) {
       const token = await AsyncStorage.getItem('authToken');
       
       if (!token) {
-        Alert.alert('Error', 'No hay sesión activa');
+        showError('No hay sesión activa');
         return;
       }
       
       const url = `${API_URL}/api/reportes-obras/${reporte.id}/pdf`;
       
       Alert.alert(
-        'Descargar PDF',
+        '💾 Descargar PDF',
         'Se abrirá el PDF en tu navegador',
         [
           { text: 'Cancelar', style: 'cancel' },
@@ -107,12 +110,13 @@ export default function DirectorReportsObrasScreen({ navigation }) {
               } else {
                 Linking.openURL(`${url}?token=${token}`);
               }
+              showInfo('Abriendo PDF...');
             }
           }
         ]
       );
     } catch (error) {
-      Alert.alert('Error', error.message || 'No se pudo descargar el PDF');
+      showError(error.message || 'No se pudo descargar el PDF');
     }
   };
 
@@ -326,6 +330,13 @@ export default function DirectorReportsObrasScreen({ navigation }) {
           </View>
         </View>
       </Modal>
+      
+      <Toast 
+        visible={toast.visible} 
+        message={toast.message} 
+        type={toast.type}
+        onHide={hideToast}
+      />
     </ScreenContainer>
   );
 }

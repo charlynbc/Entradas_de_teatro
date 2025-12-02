@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionCard from '../../components/SectionCard';
+import Toast from '../../components/Toast';
+import { useToast } from '../../hooks/useToast';
 import colors from '../../theme/colors';
 import {
   listDirectors,
@@ -13,6 +15,7 @@ import {
 } from '../../api';
 
 export default function DirectorsScreen() {
+  const { toast, showSuccess, showError, showWarning, hideToast } = useToast();
   const [directors, setDirectors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [vendors, setVendors] = useState([]);
@@ -39,7 +42,7 @@ export default function DirectorsScreen() {
 
   const handleCreate = async () => {
     if (!form.nombre || !form.cedula) {
-      Alert.alert('Falta info', 'Completa nombre y cedula');
+      showError('Completa nombre y cédula');
       return;
     }
     setSaving(true);
@@ -47,9 +50,9 @@ export default function DirectorsScreen() {
       await createDirector(form);
       setForm({ nombre: '', cedula: '' });
       load();
-      Alert.alert('Listo', 'Director creado con contrasena 1234');
+      showSuccess('✨ Director creado con éxito (contraseña: 1234)');
     } catch (error) {
-      Alert.alert('Error', error.message || 'No se pudo crear');
+      showError(error.message || 'No se pudo crear el director');
     } finally {
       setSaving(false);
     }
@@ -57,15 +60,19 @@ export default function DirectorsScreen() {
 
   const handleReset = async (cedula) => {
     Alert.alert(
-      'Resetear contrasena',
-      `Queres restablecer la contrasena de ${cedula} a 1234?`,
+      '🔐 Resetear contraseña',
+      `¿Querés restablecer la contraseña de ${cedula} a 1234?`,
       [
         { text: 'Cancelar', style: 'cancel' },
         {
           text: 'Confirmar',
           onPress: async () => {
-            await resetDirectorPassword(cedula);
-            Alert.alert('Hecho', 'Contrasena reseteada');
+            try {
+              await resetDirectorPassword(cedula);
+              showSuccess('🔐 Contraseña reseteada con éxito');
+            } catch (error) {
+              showError('No se pudo resetear la contraseña');
+            }
           },
         },
       ]
@@ -74,8 +81,8 @@ export default function DirectorsScreen() {
 
   const handleDeleteDirector = (cedula) => {
     Alert.alert(
-      'Eliminar director',
-      `Se van a borrar las obras y funciones asignadas a ${cedula}. Continuar?`,
+      '🗑️ Eliminar director',
+      `Se van a borrar las obras y funciones asignadas a ${cedula}. ¿Continuar?`,
       [
         { text: 'Cancelar', style: 'cancel' },
         {
@@ -85,9 +92,9 @@ export default function DirectorsScreen() {
             try {
               await deleteDirector(cedula);
               load();
-              Alert.alert('Listo', 'Director eliminado');
+              showSuccess('🗑️ Director eliminado con éxito');
             } catch (error) {
-              Alert.alert('Error', error.message || 'No se pudo eliminar');
+              showError(error.message || 'No se pudo eliminar el director');
             }
           },
         },
@@ -97,8 +104,8 @@ export default function DirectorsScreen() {
 
   const handleDeleteVendor = (cedula) => {
     Alert.alert(
-      'Eliminar vendedor',
-      `El stock de ${cedula} volvera a direccion. Confirmas?`,
+      '🗑️ Eliminar vendedor',
+      `El stock de ${cedula} volverá a dirección. ¿Confirmás?`,
       [
         { text: 'Cancelar', style: 'cancel' },
         {
@@ -108,9 +115,9 @@ export default function DirectorsScreen() {
             try {
               await deleteVendor(cedula);
               load();
-              Alert.alert('Listo', 'Vendedor eliminado');
+              showSuccess('🗑️ Vendedor eliminado con éxito');
             } catch (error) {
-              Alert.alert('Error', error.message || 'No se pudo eliminar');
+              showError(error.message || 'No se pudo eliminar el vendedor');
             }
           },
         },
@@ -185,6 +192,13 @@ export default function DirectorsScreen() {
           ))
         )}
       </SectionCard>
+      
+      <Toast 
+        visible={toast.visible} 
+        message={toast.message} 
+        type={toast.type}
+        onHide={hideToast}
+      />
     </ScreenContainer>
   );
 }
