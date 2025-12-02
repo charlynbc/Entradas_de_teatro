@@ -58,6 +58,7 @@ function SuperTabs() {
       })}
     >
       <Tab.Screen name="Dashboard" component={SuperDashboardScreen} />
+      <Tab.Screen name="Directores" component={DirectorsScreen} />
       <Tab.Screen name="Funciones" component={DirectorShowsScreen} />
       <Tab.Screen name="Mis Entradas" component={ActorStockScreen} options={{ title: 'Mis Entradas' }} />
       <Tab.Screen name="Miembros" component={MiembrosScreen} />
