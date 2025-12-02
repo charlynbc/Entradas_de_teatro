@@ -249,11 +249,13 @@ async function testShows() {
   // Detalle de show
   if (createdShowId) {
     const showDetail = await makeRequest('GET', `/api/shows/${createdShowId}`, null, authToken);
-    test('Obtener detalle de show', showDetail.ok);
+    test('Obtener detalle de show', showDetail.ok, `Status: ${showDetail.status}, showId: ${createdShowId}`);
     
     if (showDetail.ok) {
       test('Detalle incluye tickets', Array.isArray(showDetail.data.tickets));
       log.info(`  - Tickets en show: ${showDetail.data.tickets?.length || 0}`);
+    } else {
+      log.warn(`  - Error obteniendo show: ${JSON.stringify(showDetail.data)}`);
     }
   }
 }
@@ -313,11 +315,13 @@ async function testTickets() {
 
   // Dashboard del director
   const directorDash = await makeRequest('GET', '/api/reportes/director', null, authTokenDirector);
-  test('Director puede ver dashboard', directorDash.ok);
+  test('Director puede ver dashboard', directorDash.ok, `Status: ${directorDash.status}`);
   
   if (directorDash.ok) {
     log.info(`  - Funciones: ${directorDash.data.functions?.length || 0}`);
     log.info(`  - Actores: ${directorDash.data.actors?.length || 0}`);
+  } else {
+    log.warn(`  - Error dashboard: ${JSON.stringify(directorDash.data)}`);
   }
 }
 
@@ -357,20 +361,24 @@ async function testEnsayos() {
 
   // Listar ensayos como director
   const listEnsayosDir = await makeRequest('GET', '/api/ensayos', null, authTokenDirector);
-  test('Director puede listar ensayos', listEnsayosDir.ok);
+  test('Director puede listar ensayos', listEnsayosDir.ok, `Status: ${listEnsayosDir.status}`);
   
   if (listEnsayosDir.ok) {
     log.info(`  - Ensayos del director: ${listEnsayosDir.data.length}`);
+  } else {
+    log.warn(`  - Error listar ensayos: ${JSON.stringify(listEnsayosDir.data)}`);
   }
 
   // Listar ensayos como actor
   const listEnsayosActor = await makeRequest('GET', '/api/ensayos', null, authTokenActor);
-  test('Actor puede ver sus ensayos', listEnsayosActor.ok);
+  test('Actor puede ver sus ensayos', listEnsayosActor.ok, `Status: ${listEnsayosActor.status}`);
   
   if (listEnsayosActor.ok) {
     const suEnsayo = listEnsayosActor.data.find(e => e.id === createdEnsayoId);
     test('Actor ve ensayo donde está asignado', !!suEnsayo);
     log.info(`  - Ensayos del actor: ${listEnsayosActor.data.length}`);
+  } else {
+    log.warn(`  - Error listar ensayos actor: ${JSON.stringify(listEnsayosActor.data)}`);
   }
 
   // Obtener detalle de ensayo
@@ -438,12 +446,14 @@ async function testReportes() {
 
   // Dashboard del super
   const superDash = await makeRequest('GET', '/api/reportes/super', null, authToken);
-  test('Super puede ver dashboard global', superDash.ok);
+  test('Super puede ver dashboard global', superDash.ok, `Status: ${superDash.status}`);
   
   if (superDash.ok) {
     log.info(`  - Producciones activas: ${superDash.data.totals?.productions || 0}`);
     log.info(`  - Total funciones: ${superDash.data.totals?.functions || 0}`);
     log.info(`  - Total tickets: ${superDash.data.totals?.tickets || 0}`);
+  } else {
+    log.warn(`  - Error dashboard super: ${JSON.stringify(superDash.data)}`);
   }
 }
 

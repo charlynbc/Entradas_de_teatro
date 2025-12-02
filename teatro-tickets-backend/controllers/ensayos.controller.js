@@ -94,7 +94,8 @@ export const listarEnsayos = async (req, res) => {
     // Obtener nombres de actores para cada ensayo
     const ensayosConActores = await Promise.all(
       ensayos.rows.map(async (ensayo) => {
-        const actoresIds = JSON.parse(ensayo.actores_ids || '[]');
+        // actores_ids ya viene como array JSONB de PostgreSQL, no necesita parse
+        const actoresIds = Array.isArray(ensayo.actores_ids) ? ensayo.actores_ids : [];
         if (actoresIds.length > 0) {
           const actoresResult = await query(
             `SELECT id, nombre FROM users WHERE id = ANY($1)`,
@@ -159,7 +160,8 @@ export const obtenerEnsayo = async (req, res) => {
       }
     }
 
-    const actoresIds = JSON.parse(ensayo.actores_ids || '[]');
+    // actores_ids ya viene como array JSONB de PostgreSQL, no necesita parse
+    const actoresIds = Array.isArray(ensayo.actores_ids) ? ensayo.actores_ids : [];
     
     if (actoresIds.length > 0) {
       const actoresResult = await query(

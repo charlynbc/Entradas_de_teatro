@@ -1,5 +1,5 @@
 import { readData } from '../utils/dataStore.js';
-import { query } from '../db.js';  // Import query for PostgreSQL operations
+import { query } from '../db/postgres.js';  // Import query for PostgreSQL operations
 
 const SOLD_STATES = new Set(['REPORTADA_VENDIDA', 'PAGADO', 'USADO']);
 const STOCK_STATES = new Set(['STOCK_VENDEDOR', 'RESERVADO']);
