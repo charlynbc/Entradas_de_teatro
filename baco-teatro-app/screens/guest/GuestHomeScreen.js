@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, FlatList, 
 import { LinearGradient } from 'expo-linear-gradient';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionCard from '../../components/SectionCard';
+import TheatricalButton from '../../components/TheatricalButton';
 import colors from '../../theme/colors';
 import { getPublicShows } from '../../api';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -124,20 +125,30 @@ export default function GuestHomeScreen({ navigation }) {
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.sectionTitle}>Próximas Funciones</Text>
-
       {loading ? (
-        <ActivityIndicator color={colors.secondary} style={{ marginTop: 50 }} />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator color={colors.secondary} size="large" />
+          <Text style={styles.loadingText}>Cargando funciones...</Text>
+        </View>
+      ) : shows.length > 0 ? (
+        <>
+          <Text style={styles.sectionTitle}>🎭 Próximas Funciones</Text>
+          <FlatList
+            data={shows}
+            renderItem={renderShow}
+            keyExtractor={item => item.id}
+            contentContainerStyle={{ paddingBottom: 40 }}
+          />
+        </>
       ) : (
-        <FlatList
-          data={shows}
-          renderItem={renderShow}
-          keyExtractor={item => item.id}
-          contentContainerStyle={{ paddingBottom: 40 }}
-          ListEmptyComponent={
-            <Text style={styles.empty}>No hay funciones disponibles por ahora.</Text>
-          }
-        />
+        <View style={styles.emptyState}>
+          <MaterialCommunityIcons name="theater" size={80} color={colors.secondary} />
+          <Text style={styles.emptyTitle}>Próximamente</Text>
+          <Text style={styles.emptyText}>
+            Estamos preparando nuevas funciones para ti.
+            Vuelve pronto para ver nuestra cartelera.
+          </Text>
+        </View>
       )}
     </ScreenContainer>
   );
@@ -317,6 +328,34 @@ const styles = StyleSheet.create({
   meta: {
     color: colors.textMuted,
     fontSize: 14,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    marginTop: 50,
+  },
+  loadingText: {
+    color: colors.textMuted,
+    marginTop: 12,
+    fontSize: 14,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 80,
+    paddingHorizontal: 40,
+  },
+  emptyTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: colors.secondary,
+    marginTop: 20,
+    marginBottom: 12,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: colors.textMuted,
+    textAlign: 'center',
+    lineHeight: 24,
   },
   empty: {
     color: colors.textMuted,
