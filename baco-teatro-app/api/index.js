@@ -90,23 +90,57 @@ export async function updateMyProfile(payload) {
 
 export async function getSuperDashboard() {
   requireRole(['SUPER']);
-  return mock.getSuperDashboard();
+  try {
+    const response = await request('/api/super/dashboard');
+    return response;
+  } catch (error) {
+    console.log('Backend no disponible, usando datos vacíos');
+    // Retornar estructura vacía en lugar de datos mock
+    return {
+      totals: {
+        productions: 0,
+        functions: 0,
+        tickets: 0,
+        sold: 0,
+        attendees: 0,
+      },
+      upcomingShows: [],
+      alerts: [],
+    };
+  }
 }
 
 export async function listDirectors() {
   requireRole(['SUPER']);
-  // TODO: Implementar backend /api/usuarios?role=ADMIN
-  return mock.listDirectors();
+  try {
+    const response = await request('/api/usuarios?role=ADMIN');
+    return response;
+  } catch (error) {
+    console.log('Backend no disponible, retornando lista vacía');
+    return [];
+  }
 }
 
 export async function createDirector(payload) {
   requireRole(['SUPER']);
-  return mock.createDirector(payload);
+  try {
+    const response = await request('/api/usuarios', { method: 'POST', body: payload });
+    return response;
+  } catch (error) {
+    console.error('Error creando director:', error);
+    throw error;
+  }
 }
 
 export async function resetDirectorPassword(cedula) {
   requireRole(['SUPER']);
-  return mock.resetDirectorPassword(cedula);
+  try {
+    const response = await request(`/api/usuarios/${cedula}/reset-password`, { method: 'POST' });
+    return response;
+  } catch (error) {
+    console.error('Error reseteando contraseña:', error);
+    throw error;
+  }
 }
 
 export async function deleteDirector(cedula) {
@@ -122,12 +156,24 @@ export async function deleteDirector(cedula) {
 
 export async function listProductions() {
   requireRole(['SUPER']);
-  return mock.listProductions();
+  try {
+    const response = await request('/api/obras');
+    return response;
+  } catch (error) {
+    console.log('Backend no disponible, retornando lista vacía');
+    return [];
+  }
 }
 
 export async function createProduction(payload) {
   requireRole(['SUPER']);
-  return mock.createProduction(payload);
+  try {
+    const response = await request('/api/obras', { method: 'POST', body: payload });
+    return response;
+  } catch (error) {
+    console.error('Error creando producción:', error);
+    throw error;
+  }
 }
 
 export async function deleteProduction(id) {
