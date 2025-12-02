@@ -19,8 +19,6 @@ import SectionCard from '../../components/SectionCard';
 import Toast from '../../components/Toast';
 import { useToast } from '../../hooks/useToast';
 import colors from '../../theme/colors';
-import { useToast } from '../../hooks/useToast';
-import colors from '../../theme/colors';
 import { 
   listarReportesObras, 
   obtenerReporteObra, 
@@ -28,7 +26,7 @@ import {
 } from '../../api';
 
 export default function DirectorReportsObrasScreen({ navigation }) {
-  const { toast, showSuccess, showError, showInfo, hideToast } = useToast();
+  const { toast, showSuccess, showError, hideToast } = useToast();
   const [reportes, setReportes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedReporte, setSelectedReporte] = useState(null);
