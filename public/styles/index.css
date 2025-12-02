@@ -157,3 +157,24 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Logo principal en la página de inicio */
+.logo-container-principal {
+    margin-bottom: 1.5rem;
+    animation: logoFloat 3s ease-in-out infinite;
+}
+
+.logo-principal {
+    width: 150px;
+    height: 150px;
+    filter: drop-shadow(0 5px 15px rgba(218, 165, 32, 0.5));
+}
+
+@keyframes logoFloat {
+    0%, 100% {
+        transform: translateY(0) scale(1);
+    }
+    50% {
+        transform: translateY(-10px) scale(1.05);
+    }
+}

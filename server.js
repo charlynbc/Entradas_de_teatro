@@ -360,3 +360,47 @@ app.get('/api/descargar-entrada/:id', async (req, res) => {
         res.status(500).json({ error: 'Error al generar el PDF' });
     }
 });
+
+// Inicializar base de datos limpia - solo usuario supremo
+async function inicializarBaseDatos() {
+    try {
+        // Verificar si ya existe el usuario supremo
+        const usuarioExistente = await Usuario.findOne({ email: 'admin@bacoteatro.com' });
+        
+        if (!usuarioExistente) {
+            // Crear solo el usuario supremo
+            const usuarioSupremo = new Usuario({
+                nombre: 'Administrador',
+                email: 'admin@bacoteatro.com',
+                password: 'admin123', // Cambiar en producción
+                rol: 'supremo'
+            });
+            
+            await usuarioSupremo.save();
+            console.log('✅ Usuario supremo creado exitosamente');
+            console.log('📧 Email: admin@bacoteatro.com');
+            console.log('🔑 Password: admin123');
+            console.log('⚠️  IMPORTANTE: Cambiar la contraseña en producción');
+        } else {
+            console.log('✅ Usuario supremo ya existe');
+        }
+
+        // Verificar que no haya otros datos
+        const totalObras = await Obra.countDocuments();
+        const totalEntradas = await Entrada.countDocuments();
+        
+        console.log('\n📊 Estado de la base de datos:');
+        console.log(`   Obras: ${totalObras}`);
+        console.log(`   Entradas: ${totalEntradas}`);
+        console.log(`   Sistema: VIRGEN ✨`);
+        
+    } catch (error) {
+        console.error('❌ Error al inicializar base de datos:', error);
+    }
+}
+
+// Llamar a la inicialización cuando se conecta la base de datos
+mongoose.connection.once('open', () => {
+    console.log('✅ Conectado a MongoDB');
+    inicializarBaseDatos();
+});

@@ -1,264 +1,159 @@
-# 🎭 Baco Teatro - Sistema de Gestión de Entradas
+# 🎭 Baco Teatro - Sistema de Venta de Entradas
 
-Sistema completo para gestión de entradas de teatro con roles de usuario (Supremo, Admin, Vendedor), generación de QR, trazabilidad completa y reportes de ventas.
+Sistema completo de gestión y venta de entradas para teatro con diseño teatral profesional.
 
-## 🚀 Deploy en Producción (Render)
+## 🚀 Características
 
-### Backend + Base de Datos PostgreSQL
+- ✨ **Sistema virgen** - Se entrega sin datos precargados
+- 👤 **Usuario supremo** inicial para configuración
+- 🎫 **Venta de entradas** con generación de PDF
+- 📧 **Envío por Email** y WhatsApp
+- 🎨 **Diseño teatral** profesional y responsive
+- 📱 **Optimizado para móviles**
 
-El sistema usa PostgreSQL para persistencia real de datos. Sigue la guía completa:
-
-👉 **[Guía de Deploy del Backend](./teatro-tickets-backend/DEPLOY-RENDER.md)**
-
-**Resumen rápido:**
-1. Crear base de datos PostgreSQL en Render
-2. Crear Web Service para el backend
-3. Configurar variables de entorno (`DATABASE_URL`, `JWT_SECRET`, etc.)
-4. Deploy automático desde GitHub
-
-### Frontend (Expo Web)
-
-El frontend se puede desplegar como Static Site o servirse desde el backend:
-
-👉 **[Guía de Deploy del Frontend](./baco-teatro-app/DEPLOY-RENDER.md)**
-
-**Opciones:**
-- **Opción 1:** Static Site independiente en Render (CDN, más rápido)
-- **Opción 2:** Servir desde el backend (más simple, un solo servicio)
-
----
-
-## 💻 Desarrollo Local
-
-### Requisitos
-
-- Node.js 18+
-- PostgreSQL 14+ (para backend con DB real)
-- npm o yarn
-
-### Backend
+## 📦 Instalación
 
 ```bash
-cd teatro-tickets-backend
+# Clonar repositorio
+git clone <url-del-repo>
+cd Entradas_de_teatro
 
 # Instalar dependencias
 npm install
 
 # Configurar variables de entorno
 cp .env.example .env
-# Editar .env con tu DATABASE_URL local
+# Editar .env con tus configuraciones
 
 # Iniciar servidor
 npm start
 ```
 
-El servidor correrá en `http://localhost:3000`
+## 🎯 Primera Configuración
 
-**Endpoints importantes:**
-- `GET /health` - Estado del sistema
-- `GET /api` - Información de la API
-- `POST /api/auth/login` - Login
-- `POST /api/auth/register` - Registro de usuarios
+El sistema se entrega **completamente virgen** con solo:
 
-### Frontend (Expo Web)
+### Usuario Supremo Inicial
 
-```bash
-cd baco-teatro-app
+- **Email:** `admin@bacoteatro.com`
+- **Password:** `admin123`
+- **Rol:** Supremo
 
-# Instalar dependencias
-npm install
+⚠️ **IMPORTANTE:** Cambiar la contraseña inmediatamente después del primer acceso.
 
-# Configurar API URL
-cp .env.example .env
-# Editar .env: EXPO_PUBLIC_API_URL=http://localhost:3000
-
-# Iniciar en modo web
-npx expo start --web
-```
-
-La app correrá en `http://localhost:8081`
-
----
-
-## 🏗️ Arquitectura del Sistema
-
-### Backend (`teatro-tickets-backend`)
-
-- **Runtime:** Node.js + Express
-- **Base de Datos:** PostgreSQL
-- **Autenticación:** JWT
-- **Estructura:**
-  - `index-v3-postgres.js` - Servidor principal
-  - `db/postgres.js` - Conexión y queries a PostgreSQL
-  - `routes/` - Rutas de la API (auth, users, shows, tickets, reportes)
-  - `controllers/` - Lógica de negocio
-  - `utils/` - Utilidades (dataStore adaptado a Postgres)
-
-### Frontend (`baco-teatro-app`)
-
-- **Framework:** React Native (Expo)
-- **Web:** Expo Web (React DOM)
-- **Estructura:**
-  - `App.js` - Punto de entrada, manejo de autenticación
-  - `screens/` - Pantallas (Login, AdminHome, VendedorHome)
-  - `api/` - Cliente HTTP para consumir backend
-  - `theme/` - Colores y estilos
-
----
-
-## 👥 Roles de Usuario
-
-### 🔑 Supremo
-- Crear y gestionar usuarios (admins y vendedores)
-- Todas las funciones de Admin
-
-### 🎫 Admin
-- Crear funciones de teatro
-- Generar tickets con QR únicos
-- Asignar tickets a vendedores
-- Validar tickets (escaneo QR)
-- Ver reportes de ventas
-
-### 💰 Vendedor
-- Ver tickets asignados
-- Reportar ventas (con datos del comprador)
-- Marcar tickets como pagados
-- Ver historial de ventas
-
----
-
-## 🔄 Flujo de Tickets
-
-```
-1. Admin crea función → Genera N tickets con QR
-2. Admin asigna tickets a vendedor → Estado: EN_PODER
-3. Vendedor reporta venta → Estado: VENDIDA_NO_PAGADA
-4. Vendedor confirma pago → Estado: VENDIDA_PAGADA
-5. Ticket se escanea en entrada → Estado: USADA
-```
-
-**Estados posibles:**
-- `NO_ASIGNADO` - Recién creado
-- `EN_PODER` - Asignado a vendedor
-- `VENDIDA_NO_PAGADA` - Vendido pero sin pago confirmado
-- `VENDIDA_PAGADA` - Vendido y pagado
-- `USADA` - Ya se usó para ingresar
-
----
-
-## 📊 Base de Datos
-
-### Tablas principales:
-
-**users**
-- id, cedula, nombre, password (hash), rol
-- Índice único en cedula
-
-**shows**
-- id, nombre, fecha, precio, total_tickets, creado_por
-- Relación: creado_por → users.id
-
-**tickets**
-- id, show_id, qr_code (único), estado, vendedor_id
-- precio_venta, comprador_nombre, comprador_contacto
-- fecha_asignacion, fecha_venta, fecha_uso
-- Relaciones: show_id → shows.id, vendedor_id → users.id
-
----
-
-## 🔐 Seguridad
-
-- Contraseñas hasheadas con bcrypt
-- Autenticación JWT con secret configurable
-- SSL obligatorio en producción (Render lo maneja automáticamente)
-- Variables de entorno para secretos (nunca en código)
-
----
-
-## 📦 Scripts Disponibles
-
-### Backend
+## 🛠️ Scripts Disponibles
 
 ```bash
-npm start       # Iniciar servidor
-npm run dev     # Modo desarrollo (mismo que start)
-```
-
-### Frontend
-
-```bash
-npx expo start          # Iniciar con Expo Go
-npx expo start --web    # Iniciar en navegador
-npx expo export:web     # Build para producción web
-```
-
----
-
-## 🐛 Troubleshooting
-
-### Backend no se conecta a PostgreSQL
-
-```bash
-# Verificar que PostgreSQL esté corriendo
-psql -U postgres -c "SELECT version();"
-
-# Verificar DATABASE_URL en .env
-echo $DATABASE_URL
-
-# Ver logs del servidor
+# Iniciar servidor
 npm start
+
+# Desarrollo con auto-reinicio
+npm run dev
+
+# Limpiar base de datos (mantiene usuario supremo)
+npm run limpiar-db
+
+# Verificar estado de la base de datos
+npm run verificar-db
+
+# Preparar para entrega (limpiar + verificar)
+npm run preparar-entrega
 ```
 
-### Frontend no se conecta al backend
+## 📊 Verificar Sistema Virgen
 
-1. Verificar que backend esté corriendo: `curl http://localhost:3000/health`
-2. Verificar `EXPO_PUBLIC_API_URL` en `.env`
-3. Abrir consola del navegador (F12) para ver errores
-
-### Errores de CORS
-
-El backend ya tiene CORS habilitado. Si persiste:
-- Verificar que la URL del backend sea correcta
-- En desarrollo local, ambos deben usar `localhost` (no mezclar con `127.0.0.1`)
-
----
-
-## 📚 Recursos
-
-- [Documentación de Render](https://render.com/docs)
-- [Expo Documentation](https://docs.expo.dev)
-- [PostgreSQL Docs](https://www.postgresql.org/docs/)
-- [Express.js Guide](https://expressjs.com/en/guide/routing.html)
-
----
-
-## 🤝 Contribuir
-
-Este proyecto está en la rama `prototipo` para desarrollo activo. La rama `funciona` contiene la última versión estable.
+Para verificar que el sistema está virgen:
 
 ```bash
-# Clonar y trabajar en prototipo
-git clone https://github.com/charlynbc/Entradas_de_teatro.git
-cd Entradas_de_teatro
-git checkout prototipo
-
-# Crear feature branch
-git checkout -b feature/nueva-funcionalidad
-
-# Hacer cambios, commit y push
-git add .
-git commit -m "Descripción de cambios"
-git push origin feature/nueva-funcionalidad
+npm run verificar-db
 ```
 
----
+Debe mostrar:
+- ✅ Obras: 0
+- ✅ Entradas: 0
+- ✅ Usuarios: 1 (solo supremo)
+- ✅ Estado: VIRGEN
+
+## 🗂️ Estructura del Proyecto
+
+```
+Entradas_de_teatro/
+├── models/              # Modelos de MongoDB
+│   ├── Obra.js
+│   ├── Entrada.js
+│   └── Usuario.js
+├── public/              # Archivos estáticos
+│   ├── styles/
+│   │   ├── common.css
+│   │   ├── index.css
+│   │   └── contacto.css
+│   ├── images/
+│   │   └── logo-baco.svg
+│   ├── index.html
+│   ├── contacto.html
+│   └── script.js
+├── scripts/             # Scripts de utilidad
+│   ├── limpiar-db.js
+│   └── verificar-db.js
+├── server.js            # Servidor principal
+├── package.json
+└── README.md
+```
+
+## 🎨 Características del Diseño
+
+- 🎭 Logo de Baco Teatro en todas las páginas
+- 🎪 Cortina teatral animada
+- 🎨 Paleta de colores: Rojo oscuro y Dorado
+- 📱 Diseño responsive
+- ✨ Efectos hover y animaciones sutiles
+
+## 📧 Configuración de Email (Opcional)
+
+Para habilitar envío de entradas por email:
+
+1. Configurar en `.env`:
+```bash
+EMAIL_USER=tu-email@gmail.com
+EMAIL_PASSWORD=tu-app-password
+```
+
+2. Para Gmail, crear App Password:
+   - Ir a Cuenta Google → Seguridad
+   - Verificación en dos pasos → Contraseñas de aplicaciones
+
+## 📱 WhatsApp
+
+El sistema genera enlaces de WhatsApp para enviar entradas directamente.
+
+## 🔒 Seguridad
+
+- ⚠️ Cambiar contraseña del usuario supremo
+- 🔐 Configurar variables de entorno en producción
+- 🛡️ No compartir credenciales de email
+
+## 🐛 Solución de Problemas
+
+### Base de datos no se conecta
+```bash
+# Verificar que MongoDB está corriendo
+sudo systemctl status mongodb
+```
+
+### Limpiar datos de prueba
+```bash
+npm run limpiar-db
+```
+
+### Verificar estado
+```bash
+npm run verificar-db
+```
 
 ## 📄 Licencia
 
-ISC
+Baco Teatro © 2024 - Todos los derechos reservados
 
----
+## 👥 Soporte
 
-**¡Listo para producción!** 🚀
-
-Para cualquier duda, revisa las guías de deploy específicas en cada carpeta.
+Para consultas: info@bacoteatro.com.ar

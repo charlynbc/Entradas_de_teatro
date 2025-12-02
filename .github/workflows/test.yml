@@ -1,0 +1,30 @@
+name: Tests y Verificación
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+    
+    - name: Install dependencies
+      run: npm install
+    
+    - name: Run verification tests
+      run: npm run test:verificacion
+    
+    - name: Check if ready for deploy
+      run: |
+        echo "✅ All checks passed!"
+        echo "🚀 Ready for deployment to Render"

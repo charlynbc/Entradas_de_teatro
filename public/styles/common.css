@@ -90,7 +90,7 @@ h1 {
     letter-spacing: 3px;
 }
 
-/* Botones teatrales */
+/* Botones teatrales mejorados */
 .btn-teatro, .btn-volver, button {
     background: linear-gradient(135deg, var(--teatro-rojo) 0%, #6d0000 100%);
     color: var(--teatro-dorado);
@@ -101,11 +101,26 @@ h1 {
     cursor: pointer;
     border-radius: 5px;
     text-decoration: none;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
     transition: all 0.3s ease;
     box-shadow: 0 4px 15px var(--teatro-sombra);
     font-weight: bold;
     letter-spacing: 1px;
+}
+
+.btn-icono {
+    font-size: 1.2rem;
+    display: inline-block;
+}
+
+.btn-activo {
+    background: linear-gradient(135deg, var(--teatro-dorado) 0%, #b8860b 100%);
+    color: var(--teatro-negro);
+    border-color: var(--teatro-dorado);
+    box-shadow: 0 6px 20px rgba(218, 165, 32, 0.5);
 }
 
 .btn-teatro:hover, .btn-volver:hover, button:hover {
@@ -115,8 +130,9 @@ h1 {
     color: white;
 }
 
-.btn-teatro:active, .btn-volver:active, button:active {
-    transform: translateY(0);
+.btn-activo:hover {
+    background: linear-gradient(135deg, #b8860b 0%, var(--teatro-dorado) 100%);
+    color: var(--teatro-negro);
 }
 
 /* Navegación */
