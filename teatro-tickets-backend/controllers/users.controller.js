@@ -3,33 +3,44 @@ import { query } from '../db/postgres.js';
 
 export async function crearUsuario(req, res) {
   try {
-    const { phone, name, role } = req.body;
+    const { cedula, nombre, password, rol } = req.body;
     
-    if (!phone || !role) {
-      return res.status(400).json({ error: 'phone y role son obligatorios' });
+    if (!cedula || !nombre || !password || !rol) {
+      return res.status(400).json({ error: 'cedula, nombre, password y rol son obligatorios' });
     }
     
-    if (!['ADMIN', 'VENDEDOR'].includes(role)) {
-      return res.status(400).json({ error: 'role debe ser ADMIN o VENDEDOR' });
+    if (!['admin', 'vendedor'].includes(rol)) {
+      return res.status(400).json({ error: 'rol debe ser admin o vendedor' });
     }
     
-    const data = await readData();
-    if (data.users.find(user => user.phone === phone)) {
-      return res.status(400).json({ error: 'Ya existe un usuario con ese teléfono' });
+    // Verificar si ya existe
+    const existente = await query('SELECT id FROM users WHERE cedula = $1', [cedula]);
+    if (existente.rows.length > 0) {
+      return res.status(400).json({ error: 'Ya existe un usuario con esa cédula' });
     }
 
-    const nuevoUsuario = {
-      phone,
-      name: name || null,
-      role,
-      active: true,
-      created_at: new Date().toISOString()
-    };
+    // Importar bcrypt
+    const bcrypt = (await import('bcrypt')).default;
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    data.users.push(nuevoUsuario);
-    await writeData(data);
+    const result = await query(
+      `INSERT INTO users (cedula, nombre, password, rol, telefono, created_at) 
+       VALUES ($1, $2, $3, $4, $5, NOW()) 
+       RETURNING id, cedula, nombre, rol, telefono`,
+      [cedula, nombre, hashedPassword, rol, cedula]
+    );
 
-    res.status(201).json(nuevoUsuario);
+    const user = result.rows[0];
+    res.status(201).json({
+      message: 'Usuario creado exitosamente',
+      user: {
+        id: user.id,
+        phone: user.telefono,
+        cedula: user.cedula,
+        name: user.nombre,
+        role: rol.toUpperCase()
+      }
+    });
   } catch (error) {
     console.error('Error creando usuario:', error);
     res.status(500).json({ error: error.message });
@@ -38,11 +49,13 @@ export async function crearUsuario(req, res) {
 
 export async function listarUsuarios(req, res) {
   try {
-    const data = await readData();
-    const usuariosActivos = (data.users || [])
-      .filter(user => user.active !== false)
-      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-    res.json(usuariosActivos);
+    const result = await query(`
+      SELECT id, cedula, nombre, rol, telefono, created_at
+      FROM users
+      WHERE rol IN ('admin', 'vendedor')
+      ORDER BY created_at DESC
+    `);
+    res.json(result.rows);
   } catch (error) {
     console.error('Error listando usuarios:', error);
     res.status(500).json({ error: error.message });

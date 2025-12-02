@@ -128,14 +128,14 @@ async function testUsers() {
   log.section('TEST 3: Gestión de Usuarios');
 
   // Crear director
-  const createDirector = await makeRequest('POST', '/api/auth/register', {
+  const createDirector = await makeRequest('POST', '/api/usuarios', {
     cedula: `DIR${Date.now()}`,
     nombre: 'Director Test',
     password: 'test123',
     rol: 'admin'
   }, authToken);
 
-  test('Crear director exitoso', createDirector.ok, `Status: ${createDirector.status}`);
+  test('Crear director exitoso', createDirector.ok, `Status: ${createDirector.status}, Error: ${createDirector.data.error || createDirector.data.message || ''}`);
   
   if (createDirector.ok) {
     createdDirectorId = createDirector.data.user.id;
@@ -154,7 +154,7 @@ async function testUsers() {
   }
 
   // Crear actor/vendedor
-  const createActor = await makeRequest('POST', '/api/auth/register', {
+  const createActor = await makeRequest('POST', '/api/usuarios', {
     cedula: `ACT${Date.now()}`,
     nombre: 'Actor Test',
     password: 'test123',
@@ -240,7 +240,11 @@ async function testShows() {
 
   // Shows públicos (sin auth)
   const publicShows = await makeRequest('GET', '/api/shows/public');
-  test('Shows públicos accesibles sin auth', publicShows.ok);
+  test('Shows públicos accesibles sin auth', publicShows.ok, `Status: ${publicShows.status}`);
+  
+  if (publicShows.ok) {
+    log.info(`  - Shows públicos: ${Array.isArray(publicShows.data) ? publicShows.data.length : 0}`);
+  }
 
   // Detalle de show
   if (createdShowId) {
@@ -453,7 +457,7 @@ async function testPermissions() {
   }
 
   // Actor no puede crear directores
-  const actorCreateDir = await makeRequest('POST', '/api/auth/register', {
+  const actorCreateDir = await makeRequest('POST', '/api/usuarios', {
     cedula: 'TESTINVALID',
     nombre: 'Invalid',
     password: 'test',
@@ -519,11 +523,20 @@ async function testRender() {
     
     // Shows públicos en producción
     const showsProd = await makeRequest('GET', '/api/shows/public', null, null, true);
-    test('Render: Shows públicos accesibles', showsProd.ok);
+    test('Render: Shows públicos accesibles', showsProd.ok, `Status: ${showsProd.status}`);
+    
+    if (showsProd.ok) {
+      log.info(`  - Shows en producción: ${Array.isArray(showsProd.data) ? showsProd.data.length : 0}`);
+    }
     
     // Dashboard en producción
     const dashProd = await makeRequest('GET', '/api/reportes/super', null, tokenProd, true);
-    test('Render: Dashboard funciona', dashProd.ok);
+    test('Render: Dashboard funciona', dashProd.ok, `Status: ${dashProd.status}`);
+    
+    if (dashProd.ok) {
+      log.info(`  - Total funciones: ${dashProd.data.totals?.functions || 0}`);
+      log.info(`  - Total tickets: ${dashProd.data.totals?.tickets || 0}`);
+    }
   }
 }
 
