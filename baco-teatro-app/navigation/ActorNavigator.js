@@ -7,6 +7,8 @@ import ActorStockScreen from '../screens/actor/ActorStockScreen';
 import ActorTransferScreen from '../screens/actor/ActorTransferScreen';
 import ActorHistoryScreen from '../screens/actor/ActorHistoryScreen';
 import ActorRehearsalsScreen from '../screens/actor/ActorRehearsalsScreen';
+import MiembrosScreen from '../screens/shared/MiembrosScreen';
+import EnsayosGeneralesScreen from '../screens/shared/EnsayosGeneralesScreen';
 import ProfileScreen from '../screens/shared/ProfileScreen';
 import ManualScreen from '../screens/shared/ManualScreen';
 import colors from '../theme/colors';
@@ -18,6 +20,7 @@ const iconMap = {
   'Mis Entradas': 'ticket-outline',
   Transferir: 'swap-horizontal-outline',
   Historial: 'time-outline',
+  Miembros: 'people-outline',
   Ensayos: 'calendar-outline',
   Perfil: 'person-circle-outline',
 };
@@ -40,7 +43,8 @@ function ActorTabs() {
     >
       <Tab.Screen name="Mis Entradas" component={ActorStockScreen} />
       <Tab.Screen name="Transferir" component={ActorTransferScreen} />
-      <Tab.Screen name="Ensayos" component={ActorRehearsalsScreen} />
+      <Tab.Screen name="Miembros" component={MiembrosScreen} />
+      <Tab.Screen name="Ensayos" component={EnsayosGeneralesScreen} />
       <Tab.Screen name="Historial" component={ActorHistoryScreen} />
       <Tab.Screen name="Perfil" component={ProfileScreen} />
     </Tab.Navigator>

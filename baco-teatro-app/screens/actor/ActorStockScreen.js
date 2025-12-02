@@ -440,10 +440,23 @@ export default function ActorStockScreen() {
 
           if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
             try {
+              const whatsappMessage = `🎭 *¡Tu entrada está lista!*\n\n` +
+                `✨ *${selectedShowName}*\n` +
+                `📅 ${new Date(selectedTicket.showDate).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}\n` +
+                `🕐 ${new Date(selectedTicket.showDate).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })} hs\n` +
+                `📍 ${selectedTicket.lugar || 'Ver en la entrada'}\n\n` +
+                `🎟️ *Código:* ${selectedTicket.code}\n` +
+                `💰 *Precio:* $${selectedTicket.precio}\n\n` +
+                `📎 Encontrarás tu entrada adjunta en PDF.\n` +
+                `🔍 Presenta el código QR en la entrada del teatro.\n\n` +
+                `🎬 *Baco Teatro* - 25 años de historia\n` +
+                `_Dirigido por Gustavo Bouzas y Horacio Nieves_\n\n` +
+                `¡Te esperamos! 🌟`;
+
               await navigator.share({
                 files: [pdfFile],
-                title: 'Entrada Baco Teatro',
-                text: `Aquí tienes tu entrada para ${selectedShowName}.`
+                title: '🎭 Entrada Baco Teatro',
+                text: whatsappMessage
               });
             } catch (shareError) {
               console.log('Share cancelled or failed', shareError);
@@ -625,16 +638,17 @@ const styles = StyleSheet.create({
   ticketRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 10,
+    paddingVertical: 14,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+    minHeight: 70,
   },
-  ticketCode: { color: colors.white, fontWeight: '700' },
-  meta: { color: colors.textMuted, fontSize: 12 },
-  buyerInfo: { color: colors.secondary, fontSize: 12, fontStyle: 'italic' },
-  ticketActions: { alignItems: 'flex-end', gap: 8 },
-  actionsRow: { flexDirection: 'row', gap: 12, alignItems: 'center' },
-  iconButton: { padding: 4 },
+  ticketCode: { color: colors.white, fontWeight: '700', fontSize: 15 },
+  meta: { color: colors.textMuted, fontSize: 13, marginTop: 2 },
+  buyerInfo: { color: colors.secondary, fontSize: 13, fontStyle: 'italic', marginTop: 2 },
+  ticketActions: { alignItems: 'flex-end', gap: 10, justifyContent: 'center' },
+  actionsRow: { flexDirection: 'row', gap: 14, alignItems: 'center' },
+  iconButton: { padding: 6, borderRadius: 8, backgroundColor: colors.surface },
   actionText: { color: colors.secondary, fontWeight: '600' },
   empty: { color: colors.textSoft, textAlign: 'center', marginTop: 40 },
   
@@ -692,9 +706,11 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     flex: 1,
-    padding: 14,
-    borderRadius: 12,
+    padding: 16,
+    borderRadius: 14,
     alignItems: 'center',
+    minHeight: 50,
+    justifyContent: 'center',
   },
   cancelButton: {
     backgroundColor: 'transparent',
@@ -711,5 +727,6 @@ const styles = StyleSheet.create({
   saveButtonText: {
     color: colors.black,
     fontWeight: 'bold',
+    fontSize: 15,
   },
 });

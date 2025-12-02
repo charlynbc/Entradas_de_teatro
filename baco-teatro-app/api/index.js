@@ -344,3 +344,71 @@ export async function eliminarReporteObra(reporteId) {
     throw error;
   }
 }
+
+// Ensayos Generales
+export async function crearEnsayo(ensayoData) {
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const response = await request('POST', '/ensayos', ensayoData);
+    return response;
+  } catch (error) {
+    console.error('Error creando ensayo:', error);
+    throw error;
+  }
+}
+
+export async function listarEnsayos() {
+  requireUser();
+  try {
+    const response = await request('GET', '/ensayos');
+    return response || [];
+  } catch (error) {
+    console.error('Error listando ensayos:', error);
+    throw error;
+  }
+}
+
+export async function obtenerEnsayo(ensayoId) {
+  requireUser();
+  try {
+    const response = await request('GET', `/ensayos/${ensayoId}`);
+    return response;
+  } catch (error) {
+    console.error('Error obteniendo ensayo:', error);
+    throw error;
+  }
+}
+
+export async function actualizarEnsayo(ensayoId, ensayoData) {
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const response = await request('PUT', `/ensayos/${ensayoId}`, ensayoData);
+    return response;
+  } catch (error) {
+    console.error('Error actualizando ensayo:', error);
+    throw error;
+  }
+}
+
+export async function eliminarEnsayo(ensayoId) {
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const response = await request('DELETE', `/ensayos/${ensayoId}`);
+    return response;
+  } catch (error) {
+    console.error('Error eliminando ensayo:', error);
+    throw error;
+  }
+}
+
+// Miembros del elenco
+export async function listarMiembros() {
+  requireUser();
+  try {
+    const response = await request('GET', '/usuarios/miembros');
+    return response || [];
+  } catch (error) {
+    console.error('Error listando miembros:', error);
+    throw error;
+  }
+}

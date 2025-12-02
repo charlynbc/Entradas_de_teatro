@@ -1,5 +1,5 @@
 import express from 'express';
-import { crearUsuario, listarUsuarios, listarVendedores, desactivarUsuario } from '../controllers/users.controller.js';
+import { crearUsuario, listarUsuarios, listarVendedores, desactivarUsuario, listarMiembros } from '../controllers/users.controller.js';
 import { authenticate, requireRole } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
@@ -8,6 +8,7 @@ const router = express.Router();
 router.post('/', authenticate, requireRole('ADMIN', 'SUPER'), crearUsuario);
 router.get('/', authenticate, requireRole('ADMIN', 'SUPER'), listarUsuarios);
 router.get('/vendedores', authenticate, listarVendedores);
+router.get('/miembros', authenticate, listarMiembros); // Nueva ruta para todos los miembros
 router.delete('/:phone', authenticate, requireRole('ADMIN', 'SUPER'), desactivarUsuario);
 
 export default router;

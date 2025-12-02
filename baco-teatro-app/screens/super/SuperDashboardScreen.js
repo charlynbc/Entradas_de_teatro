@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import ScreenContainer from '../../components/ScreenContainer';
 import StatCard from '../../components/StatCard';
 import SectionCard from '../../components/SectionCard';
@@ -8,7 +9,7 @@ import colors from '../../theme/colors';
 import { getSuperDashboard } from '../../api';
 import DailyQuote from '../../components/DailyQuote';
 
-export default function SuperDashboardScreen() {
+export default function SuperDashboardScreen({ navigation }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -45,6 +46,54 @@ export default function SuperDashboardScreen() {
         <StatCard label="Tickets generados" value={data?.totals?.tickets || 0} helper={`Vendidos: ${data?.totals?.sold || 0}`} />
         <StatCard label="Asistencias" value={data?.totals?.attendees || 0} />
       </ScrollView>
+
+      {/* Sección de accesos rápidos combinados (director + vendedor) */}
+      <SectionCard title="Accesos Rápidos" subtitle="Todas las funcionalidades">
+        <View style={styles.quickActionsGrid}>
+          <TouchableOpacity 
+            style={styles.quickAction}
+            onPress={() => navigation.navigate('DirectorVendors')}
+          >
+            <Ionicons name="people-outline" size={32} color={colors.secondary} />
+            <Text style={styles.quickActionText}>Vendedores</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.quickAction}
+            onPress={() => navigation.navigate('DirectorScanner')}
+          >
+            <Ionicons name="qr-code-outline" size={32} color={colors.secondary} />
+            <Text style={styles.quickActionText}>Validar QR</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.quickAction}
+            onPress={() => navigation.navigate('ActorTransfer')}
+          >
+            <Ionicons name="swap-horizontal-outline" size={32} color={colors.secondary} />
+            <Text style={styles.quickActionText}>Transferir</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.quickAction}
+            onPress={() => navigation.navigate('DirectorReportsObras')}
+          >
+            <Ionicons name="document-text-outline" size={32} color={colors.secondary} />
+            <Text style={styles.quickActionText}>Reportes</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.quickAction}
+            onPress={() => navigation.navigate('ActorHistory')}
+          >
+            <Ionicons name="time-outline" size={32} color={colors.secondary} />
+            <Text style={styles.quickActionText}>Historial</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.quickAction}
+            onPress={() => navigation.navigate('Productions')}
+          >
+            <Ionicons name="color-palette-outline" size={32} color={colors.secondary} />
+            <Text style={styles.quickActionText}>Producciones</Text>
+          </TouchableOpacity>
+        </View>
+      </SectionCard>
 
       <SectionCard title="Alertas" subtitle="Movimientos clave de directores">
         {(data?.alerts || []).map((alert) => (
@@ -118,5 +167,29 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  quickActionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginTop: 4,
+  },
+  quickAction: {
+    flex: 1,
+    minWidth: '30%',
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderColor: colors.secondary + '30',
+  },
+  quickActionText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.text,
+    textAlign: 'center',
   },
 });

@@ -128,6 +128,24 @@ export async function initializeDatabase() {
     await query(`CREATE INDEX IF NOT EXISTS idx_reportes_director_id ON reportes_obras(director_id)`);
     await query(`CREATE INDEX IF NOT EXISTS idx_reportes_fecha_show ON reportes_obras(fecha_show)`);
 
+    // Crear tabla de ensayos generales
+    await query(`
+      CREATE TABLE IF NOT EXISTS ensayos_generales (
+        id SERIAL PRIMARY KEY,
+        titulo VARCHAR(200) NOT NULL,
+        fecha TIMESTAMP NOT NULL,
+        lugar VARCHAR(200) NOT NULL,
+        descripcion TEXT,
+        director_id VARCHAR(50) REFERENCES users(id) ON DELETE CASCADE,
+        actores_ids JSONB DEFAULT '[]',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await query(`CREATE INDEX IF NOT EXISTS idx_ensayos_director_id ON ensayos_generales(director_id)`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_ensayos_fecha ON ensayos_generales(fecha)`);
+
     console.log('✅ Schema de base de datos inicializado correctamente');
   } catch (error) {
     console.error('❌ Error inicializando base de datos:', error);

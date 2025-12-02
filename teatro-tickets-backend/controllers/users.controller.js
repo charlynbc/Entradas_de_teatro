@@ -1,4 +1,5 @@
 import { readData, writeData } from '../utils/dataStore.js';
+import { query } from '../db/postgres.js';
 
 export async function crearUsuario(req, res) {
   try {
@@ -104,6 +105,46 @@ export async function desactivarUsuario(req, res) {
     res.json({ ok: true, mensaje: 'Usuario eliminado correctamente' });
   } catch (error) {
     console.error('Error eliminando usuario:', error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
+// Listar todos los miembros (excluye usuario supremo)
+export async function listarMiembros(req, res) {
+  try {
+    const { role } = req.user;
+
+    // Super puede ver todos incluyéndose, directores y actores ven a todos excepto super
+    const result = await query(`
+      SELECT 
+        u.id,
+        u.cedula,
+        u.nombre,
+        u.rol,
+        u.created_at,
+        COUNT(DISTINCT t.show_id) as obras_activas,
+        json_agg(DISTINCT jsonb_build_object(
+          'show_id', s.id,
+          'show_nombre', s.nombre,
+          'show_fecha', s.fecha
+        )) FILTER (WHERE s.id IS NOT NULL) as obras
+      FROM users u
+      LEFT JOIN tickets t ON t.vendedor_id = u.id AND t.estado != 'USADA'
+      LEFT JOIN shows s ON s.id = t.show_id
+      WHERE u.rol != 'supremo' OR $1 = 'SUPER'
+      GROUP BY u.id, u.cedula, u.nombre, u.rol, u.created_at
+      ORDER BY 
+        CASE u.rol 
+          WHEN 'admin' THEN 1 
+          WHEN 'vendedor' THEN 2 
+          ELSE 3 
+        END,
+        u.nombre
+    `, [role]);
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error listando miembros:', error);
     res.status(500).json({ error: error.message });
   }
 }
