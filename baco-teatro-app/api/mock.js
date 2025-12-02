@@ -16,7 +16,7 @@ const defaultData = {
       id: '48376669',
       nombre: 'Super Baco',
       role: 'SUPER',
-      password: hashPassword('1234'),
+      password: hashPassword('Teamomama91'),
       email: 'super@bacoteatro.com',
       telefono: '+598 92 000 001',
       edad: 38,

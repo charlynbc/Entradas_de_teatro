@@ -53,12 +53,15 @@ export async function login(credentials) {
     setSession(session);
     return session;
   } catch (error) {
-    console.warn('Backend login failed, falling back to mock if offline', error);
-    if (error.offline || error.message.includes('Network request failed')) {
+    console.warn('Backend login failed:', error.message);
+    // Solo usar mock si es un error de red/timeout, NO si es error de autenticación
+    if (error.offline && (error.message.includes('Network request failed') || error.message.includes('Tiempo de espera'))) {
+       console.log('Usando modo offline con mock');
        const session = await mock.login(credentials);
        setSession(session);
        return session;
     }
+    // Re-lanzar error de autenticación (credenciales incorrectas, etc)
     throw error;
   }
 }
