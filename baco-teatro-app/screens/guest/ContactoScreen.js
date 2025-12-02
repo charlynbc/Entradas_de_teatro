@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Linking, ScrollView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import colors from '../../theme/colors';
 
 export default function ContactoScreen() {
@@ -8,59 +9,79 @@ export default function ContactoScreen() {
     Linking.openURL('https://www.linkedin.com/in/charlyn-barreiro-curbelo-5684b4240/');
   };
 
+  const openInstagram = () => {
+    Linking.openURL('https://www.instagram.com/charly_nbc/');
+  };
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.content}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Ionicons name="code-slash" size={64} color={colors.secondary} />
-          <Text style={styles.title}>Desarrollador</Text>
-        </View>
+        {/* Header con gradiente */}
+        <LinearGradient
+          colors={['#FFD700', '#FFA500', '#FF8C00']}
+          style={styles.headerGradient}
+        >
+          <View style={styles.avatarContainer}>
+            <MaterialCommunityIcons name="account-circle" size={100} color="#000" />
+          </View>
+          <Text style={styles.name}>Carlos Barrios</Text>
+          <Text style={styles.role}>Desarrollador Full Stack</Text>
+        </LinearGradient>
 
-        {/* Info Card */}
+        {/* Sección Sobre Mí */}
         <View style={styles.card}>
-          <View style={styles.infoSection}>
-            <Ionicons name="person" size={24} color={colors.secondary} style={styles.icon} />
-            <View style={styles.infoText}>
-              <Text style={styles.label}>Nombre</Text>
-              <Text style={styles.value}>Carlos Barrios</Text>
-            </View>
-          </View>
-
-          <View style={styles.divider} />
-
-          <View style={styles.infoSection}>
-            <Ionicons name="briefcase" size={24} color={colors.secondary} style={styles.icon} />
-            <View style={styles.infoText}>
-              <Text style={styles.label}>Rol</Text>
-              <Text style={styles.value}>Full Stack Developer</Text>
-            </View>
-          </View>
-
-          <View style={styles.divider} />
-
-          <View style={styles.infoSection}>
-            <Ionicons name="code-working" size={24} color={colors.secondary} style={styles.icon} />
-            <View style={styles.infoText}>
-              <Text style={styles.label}>Tecnologías</Text>
-              <Text style={styles.value}>React Native • Node.js • PostgreSQL</Text>
-            </View>
-          </View>
+          <Text style={styles.cardTitle}>
+            <MaterialCommunityIcons name="account-details" size={20} color={colors.secondary} /> Sobre mí
+          </Text>
+          <Text style={styles.bioText}>
+            ¿Interesado en tener una página web o aplicación personalizada? 
+            Me especializo en crear soluciones digitales profesionales y escalables 
+            para tu negocio o proyecto.
+          </Text>
         </View>
 
-        {/* LinkedIn Button */}
-        <TouchableOpacity style={styles.linkedinButton} onPress={openLinkedIn}>
-          <Ionicons name="logo-linkedin" size={24} color="#fff" />
-          <Text style={styles.linkedinText}>Ver perfil en LinkedIn</Text>
-        </TouchableOpacity>
+        {/* Botones de Redes Sociales */}
+        <View style={styles.socialContainer}>
+          <TouchableOpacity style={styles.instagramButton} onPress={openInstagram}>
+            <LinearGradient
+              colors={['#833AB4', '#FD1D1D', '#FCAF45']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.socialGradient}
+            >
+              <MaterialCommunityIcons name="instagram" size={28} color="#fff" />
+              <Text style={styles.socialText}>@charly_nbc</Text>
+            </LinearGradient>
+          </TouchableOpacity>
 
-        {/* About Project */}
-        <View style={styles.aboutCard}>
-          <Text style={styles.aboutTitle}>Sobre este proyecto</Text>
-          <Text style={styles.aboutText}>
-            Sistema de gestión de entradas para Baco Teatro, desarrollado con React Native y 
-            Node.js. Incluye gestión de usuarios, obras, reservas y validación de tickets mediante QR.
+          <TouchableOpacity style={styles.linkedinButton} onPress={openLinkedIn}>
+            <LinearGradient
+              colors={['#0077B5', '#0e76a8']}
+              style={styles.socialGradient}
+            >
+              <Ionicons name="logo-linkedin" size={28} color="#fff" />
+              <Text style={styles.socialText}>Ver perfil completo</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+
+        {/* Servicios */}
+        <View style={styles.servicesCard}>
+          <Text style={styles.cardTitle}>
+            <MaterialCommunityIcons name="briefcase" size={20} color={colors.secondary} /> Servicios
           </Text>
+          <View style={styles.serviceItem}>
+            <MaterialCommunityIcons name="web" size={24} color="#FFD700" />
+            <Text style={styles.serviceText}>Desarrollo Web y Móvil</Text>
+          </View>
+          <View style={styles.serviceItem}>
+            <MaterialCommunityIcons name="database" size={24} color="#FFD700" />
+            <Text style={styles.serviceText}>Bases de Datos y Backend</Text>
+          </View>
+          <View style={styles.serviceItem}>
+            <MaterialCommunityIcons name="cloud-upload" size={24} color="#FFD700" />
+            <Text style={styles.serviceText}>Deploy y Mantenimiento</Text>
+          </View>
         </View>
       </View>
     </ScrollView>
@@ -73,89 +94,114 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   content: {
-    padding: 20,
+    paddingBottom: 40,
   },
-  header: {
+  headerGradient: {
     alignItems: 'center',
-    marginBottom: 30,
-    marginTop: 20,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: colors.secondary,
-    marginTop: 12,
-  },
-  card: {
-    backgroundColor: colors.cardBackground,
-    borderRadius: 12,
-    padding: 20,
+    paddingVertical: 40,
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
     marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
-  infoSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  icon: {
-    marginRight: 16,
-  },
-  infoText: {
-    flex: 1,
-  },
-  label: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    marginBottom: 4,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  value: {
-    fontSize: 16,
-    color: colors.text,
-    fontWeight: '500',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: colors.border,
-    marginVertical: 8,
-  },
-  linkedinButton: {
-    flexDirection: 'row',
+  avatarContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(0,0,0,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#0077B5',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 20,
+    marginBottom: 16,
+    borderWidth: 4,
+    borderColor: '#000',
   },
-  linkedinText: {
-    color: '#fff',
+  name: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#000',
+    marginBottom: 8,
+  },
+  role: {
     fontSize: 16,
+    color: '#000',
     fontWeight: '600',
-    marginLeft: 10,
   },
-  aboutCard: {
-    backgroundColor: colors.cardBackground,
-    borderRadius: 12,
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: 16,
     padding: 20,
+    marginHorizontal: 20,
+    marginBottom: 16,
+    borderWidth: 2,
+    borderColor: '#8B0000',
     borderLeftWidth: 4,
-    borderLeftColor: colors.secondary,
+    borderLeftColor: '#FFD700',
   },
-  aboutTitle: {
+  cardTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: colors.secondary,
     marginBottom: 12,
   },
-  aboutText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    lineHeight: 22,
+  bioText: {
+    fontSize: 15,
+    color: colors.text,
+    lineHeight: 24,
+  },
+  socialContainer: {
+    paddingHorizontal: 20,
+    gap: 12,
+    marginBottom: 16,
+  },
+  instagramButton: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    elevation: 4,
+    shadowColor: '#833AB4',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  linkedinButton: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    elevation: 4,
+    shadowColor: '#0077B5',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  socialGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    gap: 10,
+  },
+  socialText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  servicesCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    padding: 20,
+    marginHorizontal: 20,
+    borderWidth: 2,
+    borderColor: '#4B0082',
+    borderLeftWidth: 4,
+    borderLeftColor: '#FFD700',
+  },
+  serviceItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    gap: 12,
+  },
+  serviceText: {
+    fontSize: 15,
+    color: colors.text,
+    fontWeight: '500',
   },
 });

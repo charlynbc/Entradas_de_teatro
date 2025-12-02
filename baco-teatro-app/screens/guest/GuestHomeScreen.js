@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, FlatList, Image } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionCard from '../../components/SectionCard';
 import colors from '../../theme/colors';
 import { getPublicShows } from '../../api';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function GuestHomeScreen({ navigation }) {
   console.log('GuestHomeScreen mounted');
@@ -56,9 +57,21 @@ export default function GuestHomeScreen({ navigation }) {
   return (
     <ScreenContainer>
       <View style={styles.header}>
+        <View style={styles.curtainTop}>
+          <View style={styles.curtainLeft} />
+          <View style={styles.curtainRight} />
+        </View>
         <View style={styles.logoSection}>
-          <Ionicons name="theater" size={48} color={colors.secondary} />
+          <View style={styles.spotlightContainer}>
+            <LinearGradient
+              colors={['#FFD700', '#FFA500', '#FF8C00']}
+              style={styles.spotlight}
+            >
+              <MaterialCommunityIcons name="drama-masks" size={56} color="#000" />
+            </LinearGradient>
+          </View>
           <Text style={styles.companyName}>Baco Teatro</Text>
+          <Text style={styles.subtitle}>25 años de historia teatral</Text>
         </View>
       </View>
 
@@ -72,21 +85,42 @@ export default function GuestHomeScreen({ navigation }) {
 
       <View style={styles.actionsBar}>
         <TouchableOpacity 
-          style={styles.manualButton}
+          style={styles.theatricalButton}
           onPress={() => navigation.navigate('GuestManual')}
         >
-          <Ionicons name="help-circle-outline" size={20} color={colors.secondary} />
-          <Text style={styles.manualText}>Manual de Usuario</Text>
+          <LinearGradient
+            colors={['#8B0000', '#DC143C', '#8B0000']}
+            style={styles.buttonGradient}
+          >
+            <MaterialCommunityIcons name="book-open-page-variant" size={28} color="#FFD700" />
+          </LinearGradient>
+          <Text style={styles.buttonLabel}>Manual</Text>
         </TouchableOpacity>
+        
         <TouchableOpacity 
-          style={styles.contactoButton}
+          style={styles.theatricalButton}
           onPress={() => navigation.navigate('Contacto')}
         >
-          <Ionicons name="code-slash-outline" size={20} color={colors.secondary} />
-          <Text style={styles.manualText}>Creador</Text>
+          <LinearGradient
+            colors={['#FFD700', '#FFA500', '#FFD700']}
+            style={styles.buttonGradient}
+          >
+            <MaterialCommunityIcons name="account-star" size={28} color="#000" />
+          </LinearGradient>
+          <Text style={styles.buttonLabel}>Desarrollador</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-          <Text style={styles.loginLink}>Soy del elenco</Text>
+        
+        <TouchableOpacity 
+          style={styles.theatricalButton}
+          onPress={() => navigation.navigate('Login')}
+        >
+          <LinearGradient
+            colors={['#4B0082', '#8A2BE2', '#4B0082']}
+            style={styles.buttonGradient}
+          >
+            <MaterialCommunityIcons name="account-group" size={28} color="#FFD700" />
+          </LinearGradient>
+          <Text style={styles.buttonLabel}>Elenco</Text>
         </TouchableOpacity>
       </View>
 
@@ -114,17 +148,67 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
     paddingTop: 20,
+    position: 'relative',
+  },
+  curtainTop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 30,
+    flexDirection: 'row',
+    zIndex: 1,
+  },
+  curtainLeft: {
+    flex: 1,
+    backgroundColor: '#8B0000',
+    borderBottomRightRadius: 40,
+    borderRightWidth: 3,
+    borderRightColor: '#FFD700',
+  },
+  curtainRight: {
+    flex: 1,
+    backgroundColor: '#8B0000',
+    borderBottomLeftRadius: 40,
+    borderLeftWidth: 3,
+    borderLeftColor: '#FFD700',
   },
   logoSection: {
     alignItems: 'center',
     marginBottom: 10,
+    marginTop: 40,
+  },
+  spotlightContainer: {
+    marginBottom: 16,
+  },
+  spotlight: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 20,
+    elevation: 10,
   },
   companyName: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold',
-    color: colors.secondary,
+    color: '#FFD700',
     marginTop: 8,
     textAlign: 'center',
+    textShadowColor: '#000',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 4,
+    letterSpacing: 2,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: colors.secondary,
+    marginTop: 4,
+    fontStyle: 'italic',
   },
   descriptionCard: {
     backgroundColor: colors.surface,
@@ -145,68 +229,59 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    marginBottom: 20,
-    paddingHorizontal: 4,
+    marginBottom: 30,
+    paddingHorizontal: 10,
+    gap: 16,
+  },
+  theatricalButton: {
+    alignItems: 'center',
     gap: 8,
   },
-  manualButton: {
-    flex: 1,
-    flexDirection: 'row',
+  buttonGradient: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.surfaceAlt,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.secondary + '60',
-    gap: 6,
-    minHeight: 48,
+    borderWidth: 3,
+    borderColor: '#000',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
   },
-  contactoButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surfaceAlt,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.secondary + '60',
-    gap: 6,
-    minHeight: 48,
-  },
-  manualText: {
-    color: colors.secondary,
-    fontWeight: '600',
-    fontSize: 13,
-  },
-  sectionTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: colors.text,
-    marginBottom: 16,
-    paddingHorizontal: 4,
-  },
-  loginLink: {
+  buttonLabel: {
     color: colors.secondary,
     fontWeight: '700',
-    fontSize: 15,
-    textDecorationLine: 'underline',
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  sectionTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFD700',
+    marginBottom: 16,
+    paddingHorizontal: 4,
+    textAlign: 'center',
+    textShadowColor: '#000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
   },
   card: {
     backgroundColor: colors.surface,
     borderRadius: 16,
     marginBottom: 16,
     padding: 18,
-    borderWidth: 1,
-    borderColor: colors.border,
-    elevation: 3,
-    shadowColor: colors.secondary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    borderWidth: 2,
+    borderColor: '#8B0000',
+    borderLeftWidth: 4,
+    borderLeftColor: '#FFD700',
+    elevation: 5,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
   },
   cardContent: {
     flexDirection: 'row',
