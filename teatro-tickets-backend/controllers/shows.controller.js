@@ -96,7 +96,7 @@ export async function listarShows(req, res) {
 
 export async function obtenerShow(req, res) {
   try {
-    const showId = parseInt(req.params.id);
+    const showId = req.params.id;  // No parsear como int, puede ser string "show_123"
     const result = await query(
       'SELECT * FROM shows WHERE id = $1',
       [showId]

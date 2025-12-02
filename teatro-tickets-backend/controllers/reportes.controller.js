@@ -1,4 +1,5 @@
 import { readData } from '../utils/dataStore.js';
+import { query } from '../db.js';  // Import query for PostgreSQL operations
 
 const SOLD_STATES = new Set(['REPORTADA_VENDIDA', 'PAGADO', 'USADO']);
 const STOCK_STATES = new Set(['STOCK_VENDEDOR', 'RESERVADO']);
@@ -181,9 +182,6 @@ export async function resumenFuncion(req, res) {
 // Dashboard global para usuario SUPER
 export async function dashboardSuper(req, res) {
   try {
-    // Usar PostgreSQL en vez de dataStore
-    const { query } = await import('../db.js');
-    
     // Contar shows
     const showsResult = await query('SELECT COUNT(*) as total FROM shows');
     const functions = parseInt(showsResult.rows[0].total);
@@ -253,7 +251,6 @@ export async function dashboardSuper(req, res) {
 // Dashboard para directores (ADMIN)
 export async function dashboardDirector(req, res) {
   try {
-    const { query } = await import('../db.js');
     let { id: userId } = req.user;
 
     // Backward compatibility para tokens sin ID
