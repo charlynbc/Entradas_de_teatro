@@ -17,6 +17,7 @@ import SectionCard from '../../components/SectionCard';
 import colors from '../../theme/colors';
 import { getMyProfile } from '../../api';
 import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../hooks/useToast';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -33,6 +34,7 @@ const initialForm = {
 
 export default function ProfileScreen({ navigation }) {
   const { updateProfile } = useAuth();
+  const { showToast } = useToast();
   const [form, setForm] = useState(initialForm);
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [loading, setLoading] = useState(true);
@@ -77,18 +79,27 @@ export default function ProfileScreen({ navigation }) {
       return;
     }
 
+    // Mostrar mensaje informativo sobre recorte
+    if (Platform.OS !== 'web') {
+      showToast('📸 Después de seleccionar, podrás recortar tu foto', 'info');
+    }
+
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
+      allowsEditing: true, // Habilita el editor de recorte nativo
+      aspect: [1, 1], // Formato cuadrado para foto de perfil
       quality: 0.8,
       base64: true,
+      // Opciones adicionales para mejor UX
+      allowsMultipleSelection: false,
+      selectionLimit: 1,
     });
 
     if (!result.canceled && result.assets && result.assets.length > 0) {
       const base64Img = `data:image/jpeg;base64,${result.assets[0].base64}`;
       setTempAvatar(base64Img);
       setShowAvatarModal(true);
+      showToast('✂️ Foto recortada lista para guardar', 'success');
     }
   };
 
@@ -99,17 +110,25 @@ export default function ProfileScreen({ navigation }) {
       return;
     }
 
+    // Mostrar mensaje informativo sobre recorte
+    if (Platform.OS !== 'web') {
+      showToast('📸 Después de tomar la foto, podrás recortarla', 'info');
+    }
+
     let result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      aspect: [1, 1],
+      allowsEditing: true, // Habilita el editor de recorte nativo
+      aspect: [1, 1], // Formato cuadrado para foto de perfil
       quality: 0.8,
       base64: true,
+      // Opciones para mejor calidad de foto
+      exif: false,
     });
 
     if (!result.canceled && result.assets && result.assets.length > 0) {
       const base64Img = `data:image/jpeg;base64,${result.assets[0].base64}`;
       setTempAvatar(base64Img);
       setShowAvatarModal(true);
+      showToast('✂️ Foto recortada lista para guardar', 'success');
     }
   };
 
@@ -143,19 +162,24 @@ export default function ProfileScreen({ navigation }) {
 
   const handleAvatarPress = () => {
     if (Platform.OS === 'web') {
+      showToast('📸 Podrás recortar tu imagen después de seleccionarla', 'info');
       pickImage();
     } else {
       const options = [
         { text: 'Cancelar', style: 'cancel' },
-        { text: 'Tomar Foto', onPress: takePhoto },
-        { text: 'Elegir de Galería', onPress: pickImage },
+        { text: '📸 Tomar Foto (con recorte)', onPress: takePhoto },
+        { text: '🖼️ Elegir de Galería (con recorte)', onPress: pickImage },
       ];
       
       if (form.avatar) {
-        options.push({ text: 'Eliminar Foto', style: 'destructive', onPress: removeAvatar });
+        options.push({ text: '🗑️ Eliminar Foto', style: 'destructive', onPress: removeAvatar });
       }
       
-      Alert.alert('Foto de Perfil', '¿Qué querés hacer?', options);
+      Alert.alert(
+        'Foto de Perfil', 
+        '✂️ Podrás recortar tu imagen en formato cuadrado después de seleccionarla o tomarla', 
+        options
+      );
     }
   };
 
@@ -327,11 +351,18 @@ export default function ProfileScreen({ navigation }) {
             <TouchableOpacity onPress={handleAvatarCancel} style={styles.modalCloseButton}>
               <Ionicons name="close" size={28} color="#fff" />
             </TouchableOpacity>
+            <Text style={styles.modalTitle}>Vista Previa</Text>
           </View>
           
           <View style={styles.modalContent}>
             {tempAvatar && (
-              <Image source={{ uri: tempAvatar }} style={styles.previewImage} resizeMode="contain" />
+              <>
+                <Image source={{ uri: tempAvatar }} style={styles.previewImage} resizeMode="contain" />
+                <View style={styles.cropInfoBadge}>
+                  <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
+                  <Text style={styles.cropInfoText}>✂️ Imagen recortada</Text>
+                </View>
+              </>
             )}
           </View>
 
@@ -341,6 +372,7 @@ export default function ProfileScreen({ navigation }) {
             </TouchableOpacity>
             <TouchableOpacity onPress={handleAvatarConfirm} style={styles.modalConfirmButton}>
               <Ionicons name="checkmark" size={24} color="#fff" />
+              <Text style={styles.modalConfirmText}>Guardar</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -453,6 +485,14 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'ios' ? 50 : 20,
     paddingHorizontal: 20,
     paddingBottom: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  modalTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
+    marginLeft: 16,
   },
   modalCloseButton: {
     width: 40,
@@ -470,6 +510,21 @@ const styles = StyleSheet.create({
     width: width - 40,
     height: width - 40,
     borderRadius: 20,
+  },
+  cropInfoBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(76, 175, 80, 0.2)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginTop: 16,
+    gap: 8,
+  },
+  cropInfoText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
   modalFooter: {
     flexDirection: 'row',
@@ -490,10 +545,17 @@ const styles = StyleSheet.create({
   },
   modalConfirmButton: {
     backgroundColor: colors.secondary,
-    width: 56,
-    height: 56,
+    flexDirection: 'row',
+    paddingVertical: 14,
+    paddingHorizontal: 24,
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
+    gap: 8,
+  },
+  modalConfirmText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
   },
 });
