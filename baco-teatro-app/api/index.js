@@ -320,10 +320,10 @@ export async function getActorSchedule() {
 export async function getPublicShows() {
   try {
     const shows = await request('/api/shows');
-    // If backend returns empty array, fall back to mock data
+    // Return empty array if no shows, DO NOT fallback to mock in production
     if (!shows || shows.length === 0) {
-      console.warn('Backend returned empty shows, falling back to mock');
-      return mock.getPublicShows();
+      console.log('No hay funciones disponibles en este momento');
+      return [];
     }
     return shows.map(s => ({
       id: s.id,
@@ -333,8 +333,9 @@ export async function getPublicShows() {
       imagen: 'https://images.unsplash.com/photo-1507676184212-d03816a97f81?auto=format&fit=crop&w=500&q=80' // Placeholder
     }));
   } catch (error) {
-    console.warn('Backend getPublicShows failed, falling back to mock', error);
-    return mock.getPublicShows();
+    console.error('Error conectando con backend:', error);
+    // Return empty array instead of mock data
+    return [];
   }
 }
 
