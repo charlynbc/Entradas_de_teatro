@@ -4,7 +4,15 @@ import { query } from '../db/postgres.js';
 export const crearEnsayo = async (req, res) => {
   try {
     const { titulo, fecha, lugar, descripcion, actores } = req.body;
-    const directorId = req.user.id;
+    let directorId = req.user.id;
+
+    // Si el token no tiene ID (tokens antiguos), obtenerlo de la base de datos
+    if (!directorId && req.user.phone) {
+      const userResult = await query('SELECT id FROM users WHERE cedula = $1', [req.user.phone]);
+      if (userResult.rows.length > 0) {
+        directorId = userResult.rows[0].id;
+      }
+    }
 
     if (!titulo || !fecha || !lugar) {
       return res.status(400).json({ error: 'Título, fecha y lugar son requeridos' });
@@ -28,7 +36,16 @@ export const crearEnsayo = async (req, res) => {
 // Listar ensayos
 export const listarEnsayos = async (req, res) => {
   try {
-    const { role, id: userId } = req.user;
+    let { role, id: userId } = req.user;
+
+    // Si el token no tiene ID (tokens antiguos), obtenerlo de la base de datos
+    if (!userId && req.user.phone) {
+      const userResult = await query('SELECT id FROM users WHERE cedula = $1', [req.user.phone]);
+      if (userResult.rows.length > 0) {
+        userId = userResult.rows[0].id;
+        console.log(`[DEBUG] ID obtenido de DB para ${req.user.phone}: ${userId}`);
+      }
+    }
 
     let ensayos;
     if (role === 'SUPER') {
@@ -41,6 +58,7 @@ export const listarEnsayos = async (req, res) => {
       );
     } else if (role === 'ADMIN') {
       // Director ve los suyos
+      console.log(`[DEBUG] Director buscando ensayos con director_id: ${userId}`);
       ensayos = await query(
         `SELECT e.*, u.nombre as director_nombre 
          FROM ensayos_generales e 
@@ -49,6 +67,7 @@ export const listarEnsayos = async (req, res) => {
          ORDER BY e.fecha DESC`,
         [userId]
       );
+      console.log(`[DEBUG] Ensayos encontrados para director: ${ensayos.rows.length}`);
     } else {
       // Actor ve ensayos donde está incluido
       // Usamos jsonb_array_elements_text para extraer cada elemento del array
@@ -138,7 +157,15 @@ export const actualizarEnsayo = async (req, res) => {
   try {
     const { id } = req.params;
     const { titulo, fecha, lugar, descripcion, actores } = req.body;
-    const { role, id: userId } = req.user;
+    let { role, id: userId } = req.user;
+
+    // Si el token no tiene ID (tokens antiguos), obtenerlo de la base de datos
+    if (!userId && req.user.phone) {
+      const userResult = await query('SELECT id FROM users WHERE cedula = $1', [req.user.phone]);
+      if (userResult.rows.length > 0) {
+        userId = userResult.rows[0].id;
+      }
+    }
 
     // Verificar permisos
     const ensayoActual = await query(
@@ -173,7 +200,15 @@ export const actualizarEnsayo = async (req, res) => {
 export const eliminarEnsayo = async (req, res) => {
   try {
     const { id } = req.params;
-    const { role, id: userId } = req.user;
+    let { role, id: userId } = req.user;
+
+    // Si el token no tiene ID (tokens antiguos), obtenerlo de la base de datos
+    if (!userId && req.user.phone) {
+      const userResult = await query('SELECT id FROM users WHERE cedula = $1', [req.user.phone]);
+      if (userResult.rows.length > 0) {
+        userId = userResult.rows[0].id;
+      }
+    }
 
     // Verificar permisos
     const ensayoActual = await query(
