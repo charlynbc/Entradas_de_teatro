@@ -10,7 +10,7 @@ import ShowCard from '../../components/ShowCard';
 import Toast from '../../components/Toast';
 import { useToast } from '../../hooks/useToast';
 import colors from '../../theme/colors';
-import { listDirectorShows, createShow, assignTicketsToActor, deleteProduction } from '../../api';
+import { listDirectorShows, createShow, assignTicketsToActor, deleteProduction, updateShow, deleteShow, addVendorToShow, removeVendorFromShow, getShowCast, listVendors } from '../../api';
 import { Ionicons } from '@expo/vector-icons';
 
 const initialShow = { obra: '', fecha: new Date(), lugar: '', capacidad: '', base_price: '' };
@@ -23,6 +23,18 @@ export default function DirectorShowsScreen({ navigation }) {
   const [creating, setCreating] = useState(false);
   const [showForm, setShowForm] = useState(initialShow);
   const [modalVisible, setModalVisible] = useState(false);
+  
+  // Edit modal states
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editingShow, setEditingShow] = useState(null);
+  const [editForm, setEditForm] = useState(initialShow);
+  
+  // Cast management modal states
+  const [castModalVisible, setCastModalVisible] = useState(false);
+  const [managingShow, setManagingShow] = useState(null);
+  const [showCast, setShowCast] = useState([]);
+  const [availableVendors, setAvailableVendors] = useState([]);
+  const [selectedVendor, setSelectedVendor] = useState('');
   
   // Date Picker states
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -122,6 +134,97 @@ export default function DirectorShowsScreen({ navigation }) {
 
   const formatMoney = (value = 0) => `$${Number(value || 0).toLocaleString('es-UY')}`;
 
+  const handleEditShow = (show) => {
+    setEditingShow(show);
+    setEditForm({
+      obra: show.obra || show.nombre,
+      fecha: new Date(show.fecha),
+      lugar: show.lugar || '',
+      capacidad: String(show.capacidad || show.total_tickets || ''),
+      base_price: String(show.base_price || show.precio || '')
+    });
+    setEditModalVisible(true);
+  };
+
+  const handleUpdateShow = async () => {
+    if (!editForm.obra) {
+      showError('El nombre de la obra es obligatorio');
+      return;
+    }
+    setCreating(true);
+    try {
+      await updateShow(editingShow.id, {
+        obra: editForm.obra,
+        fecha: editForm.fecha.toISOString(),
+        lugar: editForm.lugar,
+        capacidad: Number(editForm.capacidad),
+        base_price: Number(editForm.base_price)
+      });
+      setEditModalVisible(false);
+      load();
+      showSuccess('✅ Obra actualizada exitosamente');
+    } catch (error) {
+      showError(error.message || 'No se pudo actualizar la obra');
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleManageCast = async (show) => {
+    setManagingShow(show);
+    setCastModalVisible(true);
+    try {
+      const [cast, vendors] = await Promise.all([
+        getShowCast(show.id),
+        listVendors()
+      ]);
+      setShowCast(cast);
+      setAvailableVendors(vendors);
+    } catch (error) {
+      showError('Error cargando datos del elenco');
+    }
+  };
+
+  const handleAddVendor = async () => {
+    if (!selectedVendor) {
+      showError('Seleccioná un vendedor');
+      return;
+    }
+    try {
+      await addVendorToShow(managingShow.id, selectedVendor);
+      const cast = await getShowCast(managingShow.id);
+      setShowCast(cast);
+      setSelectedVendor('');
+      showSuccess('✅ Vendedor agregado al elenco');
+    } catch (error) {
+      showError(error.message || 'Error agregando vendedor');
+    }
+  };
+
+  const handleRemoveVendor = async (cedula) => {
+    Alert.alert(
+      'Remover del elenco',
+      '¿Estás seguro de remover este vendedor de la obra?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Remover',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await removeVendorFromShow(managingShow.id, cedula);
+              const cast = await getShowCast(managingShow.id);
+              setShowCast(cast);
+              showSuccess('✅ Vendedor removido del elenco');
+            } catch (error) {
+              showError(error.message || 'Error removiendo vendedor');
+            }
+          }
+        }
+      ]
+    );
+  };
+
   return (
     <ScreenContainer>
       <LinearGradient
@@ -171,12 +274,26 @@ export default function DirectorShowsScreen({ navigation }) {
                   )}
                 />
               </TouchableOpacity>
-              <TouchableOpacity 
-                onPress={() => handleDeleteShow(show)}
-                style={styles.deleteButton}
-              >
-                <Ionicons name="trash-outline" size={20} color={colors.error} />
-              </TouchableOpacity>
+              <View style={styles.actionButtons}>
+                <TouchableOpacity 
+                  onPress={() => handleManageCast(show)}
+                  style={[styles.actionButton, styles.castButton]}
+                >
+                  <Ionicons name="people-outline" size={20} color={colors.primary} />
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  onPress={() => handleEditShow(show)}
+                  style={[styles.actionButton, styles.editButton]}
+                >
+                  <Ionicons name="create-outline" size={20} color={colors.warning} />
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  onPress={() => handleDeleteShow(show)}
+                  style={[styles.actionButton, styles.deleteButton]}
+                >
+                  <Ionicons name="trash-outline" size={20} color={colors.error} />
+                </TouchableOpacity>
+              </View>
             </View>
           ))
         )}
@@ -391,6 +508,154 @@ export default function DirectorShowsScreen({ navigation }) {
                 ) : (
                   <Text style={styles.saveButtonText}>Crear</Text>
                 )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal de Edición */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={editModalVisible}
+        onRequestClose={() => setEditModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Editar Función</Text>
+            
+            <Text style={styles.label}>Nombre de la obra</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Nombre de la obra"
+              placeholderTextColor={colors.textSoft}
+              value={editForm.obra}
+              onChangeText={(text) => setEditForm(prev => ({ ...prev, obra: text }))}
+            />
+
+            <Text style={styles.label}>Lugar</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Teatro, auditorio..."
+              placeholderTextColor={colors.textSoft}
+              value={editForm.lugar}
+              onChangeText={(text) => setEditForm(prev => ({ ...prev, lugar: text }))}
+            />
+
+            <Text style={styles.label}>Capacidad</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Cantidad de entradas"
+              placeholderTextColor={colors.textSoft}
+              value={editForm.capacidad}
+              onChangeText={(text) => setEditForm(prev => ({ ...prev, capacidad: text }))}
+              keyboardType="numeric"
+            />
+
+            <Text style={styles.label}>Precio Base ($)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Precio por entrada"
+              placeholderTextColor={colors.textSoft}
+              value={editForm.base_price}
+              onChangeText={(text) => setEditForm(prev => ({ ...prev, base_price: text }))}
+              keyboardType="numeric"
+            />
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.cancelButton]} 
+                onPress={() => setEditModalVisible(false)}
+              >
+                <Text style={styles.cancelButtonText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.confirmButton]} 
+                onPress={handleUpdateShow}
+                disabled={creating}
+              >
+                {creating ? (
+                  <ActivityIndicator color="#FFF" />
+                ) : (
+                  <Text style={styles.confirmButtonText}>💾 Guardar</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal de Gestión de Elenco */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={castModalVisible}
+        onRequestClose={() => setCastModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>
+              🎭 Elenco - {managingShow?.obra || managingShow?.nombre}
+            </Text>
+            
+            <Text style={styles.label}>Agregar Vendedor</Text>
+            <View style={styles.addVendorRow}>
+              <View style={[styles.pickerWrapper, { flex: 1 }]}>
+                <Picker
+                  selectedValue={selectedVendor}
+                  onValueChange={setSelectedVendor}
+                  style={styles.picker}
+                >
+                  <Picker.Item label="Seleccionar vendedor..." value="" />
+                  {availableVendors
+                    .filter(v => !showCast.find(c => c.cedula === v.cedula))
+                    .map(v => (
+                      <Picker.Item 
+                        key={v.cedula} 
+                        label={`${v.nombre || v.name} (${v.cedula})`} 
+                        value={v.cedula} 
+                      />
+                    ))
+                  }
+                </Picker>
+              </View>
+              <TouchableOpacity 
+                style={styles.addVendorButton} 
+                onPress={handleAddVendor}
+              >
+                <Ionicons name="add-circle" size={32} color={colors.primary} />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={[styles.label, { marginTop: 20 }]}>
+              Elenco Actual ({showCast.length})
+            </Text>
+            {showCast.length === 0 ? (
+              <Text style={styles.emptyText}>No hay vendedores en el elenco</Text>
+            ) : (
+              showCast.map((member) => (
+                <View key={member.cedula} style={styles.castMemberRow}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.castMemberName}>{member.name}</Text>
+                    <Text style={styles.castMemberCedula}>CI: {member.cedula}</Text>
+                  </View>
+                  <TouchableOpacity 
+                    onPress={() => handleRemoveVendor(member.cedula)}
+                    style={styles.removeButton}
+                  >
+                    <Ionicons name="close-circle" size={28} color={colors.error} />
+                  </TouchableOpacity>
+                </View>
+              ))
+            )}
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.confirmButton, { flex: 1 }]} 
+                onPress={() => setCastModalVisible(false)}
+              >
+                <Text style={styles.confirmButtonText}>Cerrar</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -656,11 +921,62 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 12,
   },
+  actionButtons: {
+    flexDirection: 'column',
+    gap: 6,
+  },
+  actionButton: {
+    backgroundColor: colors.surface,
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  castButton: {
+    borderColor: colors.primary + '40',
+  },
+  editButton: {
+    borderColor: colors.warning + '40',
+  },
   deleteButton: {
+    borderColor: colors.error + '40',
+  },
+  addVendorRow: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+  },
+  addVendorButton: {
+    padding: 4,
+  },
+  castMemberRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: colors.surface,
     padding: 12,
     borderRadius: 8,
+    marginBottom: 8,
     borderWidth: 1,
-    borderColor: colors.error + '40',
+    borderColor: colors.border,
+  },
+  castMemberName: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  castMemberCedula: {
+    color: colors.textMuted,
+    fontSize: 14,
+  },
+  removeButton: {
+    padding: 4,
+  },
+  emptyText: {
+    color: colors.textMuted,
+    fontSize: 14,
+    textAlign: 'center',
+    paddingVertical: 20,
+    fontStyle: 'italic',
   },
 });
