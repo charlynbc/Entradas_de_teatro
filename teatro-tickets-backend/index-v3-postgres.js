@@ -3,7 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { initializeDatabase } from './db/postgres.js';
+import { initializeDatabase, query } from './db/postgres.js';
 import { initSupremo } from './init-supremo.js';
 import authRoutes from './routes/auth.routes.js';
 import usersRoutes from './routes/users.routes.js';
@@ -17,7 +17,6 @@ import reportesRoutes from './routes/reportes.routes.js';
 import reportesObrasRoutes from './routes/reportes-obras.routes.js';
 import ensayosRoutes from './routes/ensayos.routes.js';
 import adminRoutes from './routes/admin.routes.js';
-import { readData } from './utils/dataStore.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -68,15 +67,21 @@ async function startServer() {
 
     app.get('/health', async (req, res) => {
       try {
-        const data = await readData();
+        // Consultar totales de la nueva estructura
+        const obrasResult = await query('SELECT COUNT(*) FROM obras');
+        const funcionesResult = await query('SELECT COUNT(*) FROM funciones');
+        const entradasResult = await query('SELECT COUNT(*) FROM entradas');
+        const usersResult = await query('SELECT COUNT(*) FROM users');
+        
         res.json({
           status: 'ok',
           storage: 'postgresql',
           database: process.env.DATABASE_URL ? 'connected' : 'not configured',
           totals: {
-            users: data.users.length,
-            shows: data.shows.length,
-            tickets: data.tickets.length
+            users: parseInt(usersResult.rows[0].count),
+            obras: parseInt(obrasResult.rows[0].count),
+            funciones: parseInt(funcionesResult.rows[0].count),
+            entradas: parseInt(entradasResult.rows[0].count)
           }
         });
       } catch (error) {
