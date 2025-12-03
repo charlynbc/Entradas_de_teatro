@@ -100,7 +100,7 @@ export async function updateMyProfile(payload) {
 export async function getSuperDashboard() {
   requireRole(['SUPER']);
   try {
-    const response = await authenticatedRequest('/api/super/dashboard');
+    const response = await authenticatedRequest('/api/reportes/super');
     return response;
   } catch (error) {
     console.log('Backend no disponible, usando datos vacíos');
@@ -237,33 +237,73 @@ export async function createVendor(payload) {
 }
 
 export async function getDirectorDashboard() {
-  const user = requireRole(['ADMIN']);
-  return mock.getDirectorDashboard(user.id);
+  requireRole(['ADMIN']);
+  try {
+    const response = await authenticatedRequest('/api/reportes/director');
+    return response;
+  } catch (error) {
+    console.error('Error obteniendo dashboard director:', error);
+    // Fallback a estructura vacía
+    return {
+      totals: { shows: 0, tickets: 0, sold: 0, revenue: 0 },
+      upcomingShows: [],
+      pendingTickets: []
+    };
+  }
 }
 
 export async function listDirectorShows() {
-  const user = requireRole(['ADMIN']);
-  return mock.listDirectorShows(user.id);
+  requireRole(['ADMIN']);
+  try {
+    const response = await authenticatedRequest('/api/shows');
+    return response;
+  } catch (error) {
+    console.error('Error listando shows:', error);
+    return [];
+  }
 }
 
 export async function createShow(payload) {
-  const user = requireRole(['ADMIN']);
-  return mock.createShow(user.id, payload);
+  requireRole(['ADMIN']);
+  try {
+    const response = await authenticatedRequest('/api/shows', {
+      method: 'POST',
+      body: payload
+    });
+    return response;
+  } catch (error) {
+    console.error('Error creando show:', error);
+    throw error;
+  }
 }
 
 export async function assignTicketsToActor(payload) {
-  const user = requireRole(['ADMIN']);
-  return mock.assignTicketsToActor(user.id, payload);
+  requireRole(['ADMIN']);
+  try {
+    const { showId, vendedorCedula, cantidad } = payload;
+    const response = await authenticatedRequest(`/api/shows/${showId}/assign-tickets`, {
+      method: 'POST',
+      body: { vendedor_cedula: vendedorCedula, cantidad }
+    });
+    return response;
+  } catch (error) {
+    console.error('Error asignando tickets:', error);
+    throw error;
+  }
 }
 
 export async function markTicketsAsPaid(payload) {
-  const user = requireRole(['ADMIN']);
-  return mock.markTicketsAsPaid(user.id, payload);
+  requireRole(['ADMIN']);
+  // TODO: Implementar endpoint en backend
+  console.warn('markTicketsAsPaid: usando mock temporalmente');
+  return mock.markTicketsAsPaid(currentSession.user.id, payload);
 }
 
 export async function getDirectorReports() {
-  const user = requireRole(['ADMIN']);
-  return mock.getDirectorReports(user.id);
+  requireRole(['ADMIN']);
+  // TODO: Implementar endpoint en backend
+  console.warn('getDirectorReports: usando mock temporalmente');
+  return mock.getDirectorReports(currentSession.user.id);
 }
 
 export async function validateTicket(code) {
@@ -288,28 +328,62 @@ export async function validateTicket(code) {
 }
 
 export async function getActorStock() {
-  const user = requireRole(['VENDEDOR']);
-  return mock.getActorStock(user.id);
+  requireRole(['VENDEDOR']);
+  try {
+    const response = await authenticatedRequest('/api/tickets/mis-tickets');
+    return response;
+  } catch (error) {
+    console.error('Error obteniendo stock:', error);
+    return [];
+  }
 }
 
 export async function updateTicketStatus(payload) {
-  const user = requireRole(['VENDEDOR']);
-  return mock.updateTicketStatus(user.id, payload);
+  requireRole(['VENDEDOR']);
+  try {
+    // TODO: Implementar endpoint en backend si es necesario
+    console.warn('updateTicketStatus: endpoint no implementado aún');
+    return mock.updateTicketStatus(currentSession.user.id, payload);
+  } catch (error) {
+    console.error('Error actualizando estado de ticket:', error);
+    throw error;
+  }
 }
 
 export async function transferTicket(payload) {
-  const user = requireRole(['VENDEDOR']);
-  return mock.transferTicket(user.id, payload);
+  requireRole(['VENDEDOR']);
+  try {
+    // TODO: Implementar endpoint en backend si es necesario
+    console.warn('transferTicket: endpoint no implementado aún');
+    return mock.transferTicket(currentSession.user.id, payload);
+  } catch (error) {
+    console.error('Error transfiriendo ticket:', error);
+    throw error;
+  }
 }
 
 export async function getActorTransfers() {
-  const user = requireRole(['VENDEDOR']);
-  return mock.getActorTransfers(user.id);
+  requireRole(['VENDEDOR']);
+  try {
+    // TODO: Implementar endpoint en backend si es necesario
+    console.warn('getActorTransfers: endpoint no implementado aún');
+    return mock.getActorTransfers(currentSession.user.id);
+  } catch (error) {
+    console.error('Error obteniendo transferencias:', error);
+    return [];
+  }
 }
 
 export async function getActorHistory() {
-  const user = requireRole(['VENDEDOR']);
-  return mock.getActorHistory(user.id);
+  requireRole(['VENDEDOR']);
+  try {
+    // TODO: Implementar endpoint en backend si es necesario
+    console.warn('getActorHistory: endpoint no implementado aún');
+    return mock.getActorHistory(currentSession.user.id);
+  } catch (error) {
+    console.error('Error obteniendo historial:', error);
+    return [];
+  }
 }
 
 export function getCurrentUser() {
@@ -331,28 +405,33 @@ export async function deleteVendor(cedula) {
 
 export async function createRehearsal(payload) {
   requireRole(['ADMIN']);
-  return mock.createRehearsal(payload);
+  // Usar crearEnsayo que ya está implementado
+  return crearEnsayo(payload);
 }
 
 export async function listRehearsals() {
   requireUser();
-  return mock.listRehearsals();
+  // Usar listarEnsayos que ya está implementado
+  return listarEnsayos();
 }
 
 export async function deleteRehearsal(id) {
   requireRole(['ADMIN']);
-  return mock.deleteRehearsal(id);
+  // Usar eliminarEnsayo que ya está implementado
+  return eliminarEnsayo(id);
 }
 
 export async function getShowRehearsals(showId) {
-  // Both Admin and Actors can see rehearsals
-  requireUser(); 
+  requireUser();
+  // TODO: Implementar filtro por show en backend
+  console.warn('getShowRehearsals: usando mock temporalmente');
   return mock.getShowRehearsals(showId);
 }
 
 export async function getActorSchedule() {
-  const user = requireRole(['VENDEDOR']);
-  return mock.getActorSchedule(user.id);
+  requireRole(['VENDEDOR']);
+  // Listar todos los ensayos - el backend ya filtra por usuario
+  return listarEnsayos();
 }
 
 // Public endpoints (no auth required)
