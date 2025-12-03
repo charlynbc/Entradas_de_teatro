@@ -1,4 +1,4 @@
-import { query } from '../db.js';
+import { query } from '../db/postgres.js';
 
 /**
  * Agregar vendedor al elenco de una obra

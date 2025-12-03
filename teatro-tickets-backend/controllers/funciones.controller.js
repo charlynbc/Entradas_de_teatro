@@ -1,4 +1,4 @@
-import { query } from '../db.js';
+import { query } from '../db/postgres.js';
 import QRCode from 'qrcode';
 import { generateTicketCode } from '../utils/generateCode.js';
 
