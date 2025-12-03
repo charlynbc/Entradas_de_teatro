@@ -9,13 +9,16 @@ export async function crearUsuario(req, res) {
       return res.status(400).json({ error: 'cedula, nombre, password y rol son obligatorios' });
     }
     
-    if (!['admin', 'vendedor'].includes(rol)) {
+    // Normalizar rol a minúsculas para BD
+    const rolNormalizado = rol.toLowerCase();
+    
+    if (!['admin', 'vendedor'].includes(rolNormalizado)) {
       return res.status(400).json({ error: 'rol debe ser admin o vendedor' });
     }
     
     // Verificar permisos: ADMIN solo puede crear vendedores, SUPER puede crear ambos
-    const userRole = req.user.role;
-    if (userRole === 'ADMIN' && rol === 'admin') {
+    const userRole = req.user.role; // SUPER, ADMIN, VENDEDOR (mayúsculas del token)
+    if (userRole === 'ADMIN' && rolNormalizado === 'admin') {
       return res.status(403).json({ 
         error: 'Los directores solo pueden crear actores. Solo el Super Usuario puede crear directores.' 
       });
@@ -32,13 +35,13 @@ export async function crearUsuario(req, res) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Generar ID único
-    const id = `${rol}_${cedula}`;
+    const id = `${rolNormalizado}_${cedula}`;
 
     const result = await query(
       `INSERT INTO users (id, cedula, nombre, password, rol, created_at) 
        VALUES ($1, $2, $3, $4, $5, NOW()) 
        RETURNING id, cedula, nombre, rol`,
-      [id, cedula, nombre, hashedPassword, rol]
+      [id, cedula, nombre, hashedPassword, rolNormalizado]
     );
 
     const user = result.rows[0];
@@ -49,7 +52,7 @@ export async function crearUsuario(req, res) {
         phone: user.cedula,
         cedula: user.cedula,
         name: user.nombre,
-        role: rol.toUpperCase()
+        role: rolNormalizado.toUpperCase() // Devolver en mayúsculas para frontend
       }
     });
   } catch (error) {
