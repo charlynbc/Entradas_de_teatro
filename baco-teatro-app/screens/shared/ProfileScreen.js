@@ -339,7 +339,7 @@ export default function ProfileScreen({ navigation }) {
         )}
       </TouchableOpacity>
 
-      {/* Modal estilo WhatsApp para preview de avatar */}
+      {/* Modal estilo Instagram para preview de avatar */}
       <Modal
         visible={showAvatarModal}
         transparent={true}
@@ -356,13 +356,31 @@ export default function ProfileScreen({ navigation }) {
           
           <View style={styles.modalContent}>
             {tempAvatar && (
-              <>
-                <Image source={{ uri: tempAvatar }} style={styles.previewImage} resizeMode="contain" />
+              <View style={styles.previewContainer}>
+                {/* Preview circular (como se verá en el perfil) */}
+                <View style={styles.circularPreviewContainer}>
+                  <Image 
+                    source={{ uri: tempAvatar }} 
+                    style={styles.circularPreview} 
+                    resizeMode="cover" 
+                  />
+                  <View style={styles.circularBorder} />
+                </View>
+                
+                {/* Preview cuadrado (imagen completa recortada) */}
+                <View style={styles.squarePreviewContainer}>
+                  <Image 
+                    source={{ uri: tempAvatar }} 
+                    style={styles.squarePreview} 
+                    resizeMode="cover" 
+                  />
+                </View>
+                
                 <View style={styles.cropInfoBadge}>
                   <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
-                  <Text style={styles.cropInfoText}>✂️ Imagen recortada</Text>
+                  <Text style={styles.cropInfoText}>✂️ Imagen recortada en formato cuadrado</Text>
                 </View>
-              </>
+              </View>
             )}
           </View>
 
@@ -372,7 +390,7 @@ export default function ProfileScreen({ navigation }) {
             </TouchableOpacity>
             <TouchableOpacity onPress={handleAvatarConfirm} style={styles.modalConfirmButton}>
               <Ionicons name="checkmark" size={24} color="#fff" />
-              <Text style={styles.modalConfirmText}>Guardar</Text>
+              <Text style={styles.modalConfirmText}>Usar esta foto</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -476,7 +494,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 16,
   },
-  // Estilos del modal estilo WhatsApp
+  // Estilos del modal estilo Instagram
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.95)',
@@ -506,6 +524,43 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
   },
+  previewContainer: {
+    alignItems: 'center',
+    gap: 24,
+  },
+  circularPreviewContainer: {
+    position: 'relative',
+    width: 200,
+    height: 200,
+    marginBottom: 16,
+  },
+  circularPreview: {
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+  },
+  circularBorder: {
+    position: 'absolute',
+    width: 206,
+    height: 206,
+    borderRadius: 103,
+    borderWidth: 3,
+    borderColor: colors.secondary,
+    top: -3,
+    left: -3,
+  },
+  squarePreviewContainer: {
+    width: 160,
+    height: 160,
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: colors.border,
+  },
+  squarePreview: {
+    width: '100%',
+    height: '100%',
+  },
   previewImage: {
     width: width - 40,
     height: width - 40,
@@ -518,12 +573,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    marginTop: 16,
+    marginTop: 8,
     gap: 8,
   },
   cropInfoText: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
   },
   modalFooter: {
