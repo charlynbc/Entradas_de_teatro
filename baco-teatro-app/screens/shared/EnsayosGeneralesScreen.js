@@ -194,7 +194,8 @@ export default function EnsayosGeneralesScreen({ navigation }) {
           data={ensayos}
           renderItem={renderEnsayo}
           keyExtractor={item => item.id.toString()}
-          contentContainerStyle={{ paddingBottom: 20 }}
+          contentContainerStyle={{ paddingBottom: 60 }}
+          scrollEnabled={false}
         />
       ) : (
         <View style={styles.empty}>

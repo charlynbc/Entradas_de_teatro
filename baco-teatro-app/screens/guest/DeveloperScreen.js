@@ -22,7 +22,7 @@ export default function DeveloperScreen({ navigation }) {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={{ flexGrow: 1 }}>
       <View style={styles.content}>
         {/* Cortinas teatrales superior */}
         <View style={styles.curtainTop}>

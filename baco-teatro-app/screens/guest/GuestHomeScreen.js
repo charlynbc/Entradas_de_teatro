@@ -137,7 +137,8 @@ export default function GuestHomeScreen({ navigation }) {
             data={shows}
             renderItem={renderShow}
             keyExtractor={item => item.id}
-            contentContainerStyle={{ paddingBottom: 40 }}
+            contentContainerStyle={{ paddingBottom: 60 }}
+            scrollEnabled={false}
           />
         </>
       ) : (

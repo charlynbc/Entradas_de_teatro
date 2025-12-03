@@ -57,6 +57,6 @@ const styles = StyleSheet.create({
   content: {
     padding: 16,
     gap: 14,
-    paddingBottom: 100, // Extra space for mobile browsers
+    paddingBottom: 120, // Extra space for mobile browsers and tab bars
   },
 });

@@ -153,9 +153,9 @@ export default function LoginScreen({ navigation }) {
           style={{ flex: 1, zIndex: 10 }}
         >
           <ScrollView
-            contentContainerStyle={styles.contentContainer}
+            contentContainerStyle={[styles.contentContainer, { flexGrow: 1 }]}
             showsVerticalScrollIndicator={false}
-            alwaysBounceVertical={true}
+            bounces={false}
             keyboardShouldPersistTaps="handled"
           >
           <Animated.View style={[styles.headerContainer, { opacity: fadeAnim }]}>

@@ -18,7 +18,7 @@ export default function ContactoScreen({ navigation }) {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={{ flexGrow: 1 }}>
       <View style={styles.content}>
         {/* Header con gradiente */}
         <LinearGradient
