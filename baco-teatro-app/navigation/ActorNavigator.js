@@ -3,6 +3,7 @@ import { TouchableOpacity } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import MisEntradasScreen from '../screens/actor/MisEntradasScreen';
 import ActorStockScreen from '../screens/actor/ActorStockScreen';
 import ActorTransferScreen from '../screens/actor/ActorTransferScreen';
 import ActorHistoryScreen from '../screens/actor/ActorHistoryScreen';
@@ -18,6 +19,7 @@ const Stack = createNativeStackNavigator();
 
 const iconMap = {
   'Mis Entradas': 'ticket-outline',
+  'Stock V2': 'albums-outline',
   Transferir: 'swap-horizontal-outline',
   Historial: 'time-outline',
   Miembros: 'people-outline',
@@ -41,7 +43,8 @@ function ActorTabs() {
         ),
       })}
     >
-      <Tab.Screen name="Mis Entradas" component={ActorStockScreen} />
+      <Tab.Screen name="Mis Entradas" component={MisEntradasScreen} />
+      <Tab.Screen name="Stock V2" component={ActorStockScreen} />
       <Tab.Screen name="Transferir" component={ActorTransferScreen} />
       <Tab.Screen name="Miembros" component={MiembrosScreen} />
       <Tab.Screen name="Ensayos" component={EnsayosGeneralesScreen} />

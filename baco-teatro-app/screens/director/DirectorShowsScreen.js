@@ -276,6 +276,12 @@ export default function DirectorShowsScreen({ navigation }) {
               </TouchableOpacity>
               <View style={styles.actionButtons}>
                 <TouchableOpacity 
+                  onPress={() => navigation.navigate('FuncionesObra', { obra: show })}
+                  style={[styles.actionButton, styles.functionsButton]}
+                >
+                  <Ionicons name="calendar-outline" size={20} color="#4169E1" />
+                </TouchableOpacity>
+                <TouchableOpacity 
                   onPress={() => handleManageCast(show)}
                   style={[styles.actionButton, styles.castButton]}
                 >
@@ -932,6 +938,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  functionsButton: {
+    borderColor: '#4169E1' + '40',
   },
   castButton: {
     borderColor: colors.primary + '40',

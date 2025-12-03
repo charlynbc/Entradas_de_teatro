@@ -84,6 +84,24 @@ export default function GuestHomeScreen({ navigation }) {
         </Text>
       </View>
 
+      {/* Botón principal para ver todas las obras */}
+      <TouchableOpacity 
+        style={styles.verObrasButton}
+        onPress={() => navigation.navigate('ObrasPublic')}
+        activeOpacity={0.9}
+      >
+        <LinearGradient
+          colors={['#FFD700', '#FFA500', '#FFD700']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.verObrasGradient}
+        >
+          <MaterialCommunityIcons name="theater" size={32} color="#8B0000" />
+          <Text style={styles.verObrasText}>Ver Todas las Obras</Text>
+          <MaterialCommunityIcons name="chevron-right" size={28} color="#8B0000" />
+        </LinearGradient>
+      </TouchableOpacity>
+
       <View style={styles.actionsBar}>
         <TouchableOpacity 
           style={styles.theatricalButton}
@@ -236,6 +254,32 @@ const styles = StyleSheet.create({
     color: colors.secondary,
     textAlign: 'center',
     fontWeight: '500',
+  },
+  verObrasButton: {
+    marginHorizontal: 10,
+    marginBottom: 20,
+    borderRadius: 16,
+    overflow: 'hidden',
+    elevation: 10,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+  },
+  verObrasGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 18,
+    paddingHorizontal: 24,
+    gap: 12,
+  },
+  verObrasText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#8B0000',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   actionsBar: {
     flexDirection: 'row',

@@ -11,6 +11,7 @@ import DirectorReportsScreen from '../screens/director/DirectorReportsScreen';
 import DirectorReportsObrasScreen from '../screens/director/DirectorReportsObrasScreen';
 import DirectorVendorsScreen from '../screens/director/DirectorVendorsScreen';
 import DirectorRehearsalsScreen from '../screens/director/DirectorRehearsalsScreen';
+import FuncionesObraScreen from '../screens/director/FuncionesObraScreen';
 // Importar pantallas de vendedor (actor) para que director pueda usarlas
 import ActorStockScreen from '../screens/actor/ActorStockScreen';
 import ActorTransferScreen from '../screens/actor/ActorTransferScreen';
@@ -127,6 +128,11 @@ export default function DirectorNavigator() {
         name="Manual" 
         component={ManualScreen} 
         options={{ headerShown: true, title: 'Manual de Usuario' }}
+      />
+      <Stack.Screen 
+        name="FuncionesObra" 
+        component={FuncionesObraScreen} 
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );

@@ -641,3 +641,262 @@ export async function listarMiembros() {
     throw error;
   }
 }
+
+// ============================================
+// NUEVA API: OBRAS, FUNCIONES Y ENTRADAS
+// ============================================
+
+/**
+ * OBRAS
+ */
+export async function listarObras() {
+  try {
+    const response = await request('/api/obras');
+    return response || [];
+  } catch (error) {
+    console.error('Error listando obras:', error);
+    return [];
+  }
+}
+
+export async function obtenerObra(obraId) {
+  try {
+    const response = await request(`/api/obras/${obraId}`);
+    return response;
+  } catch (error) {
+    console.error('Error obteniendo obra:', error);
+    throw error;
+  }
+}
+
+export async function crearObra(payload) {
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const response = await authenticatedRequest('/api/obras', {
+      method: 'POST',
+      body: payload
+    });
+    return response;
+  } catch (error) {
+    console.error('Error creando obra:', error);
+    throw error;
+  }
+}
+
+export async function actualizarObra(obraId, payload) {
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const response = await authenticatedRequest(`/api/obras/${obraId}`, {
+      method: 'PUT',
+      body: payload
+    });
+    return response;
+  } catch (error) {
+    console.error('Error actualizando obra:', error);
+    throw error;
+  }
+}
+
+export async function eliminarObra(obraId) {
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const response = await authenticatedRequest(`/api/obras/${obraId}`, {
+      method: 'DELETE'
+    });
+    return response;
+  } catch (error) {
+    console.error('Error eliminando obra:', error);
+    throw error;
+  }
+}
+
+/**
+ * ELENCO DE OBRA
+ */
+export async function obtenerElencoObra(obraId) {
+  try {
+    const response = await request(`/api/obras/${obraId}/elenco`);
+    return response.elenco || [];
+  } catch (error) {
+    console.error('Error obteniendo elenco:', error);
+    return [];
+  }
+}
+
+export async function agregarVendedorAObra(obraId, cedulaVendedor) {
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const response = await authenticatedRequest(`/api/obras/${obraId}/elenco`, {
+      method: 'POST',
+      body: { cedula_vendedor: cedulaVendedor }
+    });
+    return response;
+  } catch (error) {
+    console.error('Error agregando vendedor al elenco:', error);
+    throw error;
+  }
+}
+
+export async function removerVendedorDeObra(obraId, cedulaVendedor) {
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const response = await authenticatedRequest(`/api/obras/${obraId}/elenco/${cedulaVendedor}`, {
+      method: 'DELETE'
+    });
+    return response;
+  } catch (error) {
+    console.error('Error removiendo vendedor del elenco:', error);
+    throw error;
+  }
+}
+
+/**
+ * FUNCIONES
+ */
+export async function listarFunciones(obraId = null) {
+  try {
+    const url = obraId ? `/api/funciones?obra_id=${obraId}` : '/api/funciones';
+    const response = await request(url);
+    return response || [];
+  } catch (error) {
+    console.error('Error listando funciones:', error);
+    return [];
+  }
+}
+
+export async function obtenerFuncion(funcionId) {
+  try {
+    const response = await request(`/api/funciones/${funcionId}`);
+    return response;
+  } catch (error) {
+    console.error('Error obteniendo función:', error);
+    throw error;
+  }
+}
+
+export async function crearFuncion(payload) {
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const response = await authenticatedRequest('/api/funciones', {
+      method: 'POST',
+      body: payload
+    });
+    return response;
+  } catch (error) {
+    console.error('Error creando función:', error);
+    throw error;
+  }
+}
+
+export async function actualizarFuncion(funcionId, payload) {
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const response = await authenticatedRequest(`/api/funciones/${funcionId}`, {
+      method: 'PUT',
+      body: payload
+    });
+    return response;
+  } catch (error) {
+    console.error('Error actualizando función:', error);
+    throw error;
+  }
+}
+
+export async function eliminarFuncion(funcionId) {
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const response = await authenticatedRequest(`/api/funciones/${funcionId}`, {
+      method: 'DELETE'
+    });
+    return response;
+  } catch (error) {
+    console.error('Error eliminando función:', error);
+    throw error;
+  }
+}
+
+export async function asignarEntradasAVendedor(funcionId, cedulaVendedor, cantidad) {
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const response = await authenticatedRequest(`/api/funciones/${funcionId}/asignar`, {
+      method: 'POST',
+      body: { cedula_vendedor: cedulaVendedor, cantidad }
+    });
+    return response;
+  } catch (error) {
+    console.error('Error asignando entradas:', error);
+    throw error;
+  }
+}
+
+/**
+ * ENTRADAS
+ */
+export async function crearReserva(funcionId, compradorNombre, compradorContacto, cantidad) {
+  try {
+    const response = await request('/api/entradas/reservar', {
+      method: 'POST',
+      body: {
+        funcion_id: funcionId,
+        comprador_nombre: compradorNombre,
+        comprador_contacto: compradorContacto,
+        cantidad
+      }
+    });
+    return response;
+  } catch (error) {
+    console.error('Error creando reserva:', error);
+    throw error;
+  }
+}
+
+export async function quitarReserva(codigoEntrada) {
+  requireUser();
+  try {
+    const response = await authenticatedRequest(`/api/entradas/${codigoEntrada}/reserva`, {
+      method: 'DELETE'
+    });
+    return response;
+  } catch (error) {
+    console.error('Error quitando reserva:', error);
+    throw error;
+  }
+}
+
+export async function misEntradasVendedor() {
+  requireRole(['VENDEDOR', 'ADMIN', 'SUPER']);
+  try {
+    const response = await authenticatedRequest('/api/entradas/mis-entradas');
+    return response || [];
+  } catch (error) {
+    console.error('Error obteniendo mis entradas:', error);
+    return [];
+  }
+}
+
+export async function reportarVentaEntrada(codigoEntrada, precio) {
+  requireRole(['VENDEDOR', 'ADMIN', 'SUPER']);
+  try {
+    const response = await authenticatedRequest(`/api/entradas/${codigoEntrada}/vender`, {
+      method: 'POST',
+      body: { precio }
+    });
+    return response;
+  } catch (error) {
+    console.error('Error reportando venta:', error);
+    throw error;
+  }
+}
+
+export async function validarEntrada(codigoEntrada) {
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const response = await authenticatedRequest(`/api/entradas/${codigoEntrada}/validar`, {
+      method: 'POST'
+    });
+    return response;
+  } catch (error) {
+    console.error('Error validando entrada:', error);
+    throw error;
+  }
+}
