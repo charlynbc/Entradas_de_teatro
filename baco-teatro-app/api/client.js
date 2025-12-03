@@ -1,4 +1,4 @@
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://baco-teatro-1jxj.onrender.com';
 
 async function request(path, { method = 'GET', body, token } = {}) {
   const controller = new AbortController();
