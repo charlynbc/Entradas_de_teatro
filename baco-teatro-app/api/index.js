@@ -292,6 +292,70 @@ export async function assignTicketsToActor(payload) {
   }
 }
 
+export async function updateShow(showId, payload) {
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const response = await authenticatedRequest(`/api/shows/${showId}`, {
+      method: 'PUT',
+      body: payload
+    });
+    return response;
+  } catch (error) {
+    console.error('Error actualizando show:', error);
+    throw error;
+  }
+}
+
+export async function deleteShow(showId) {
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const response = await authenticatedRequest(`/api/shows/${showId}`, {
+      method: 'DELETE'
+    });
+    return response;
+  } catch (error) {
+    console.error('Error eliminando show:', error);
+    throw error;
+  }
+}
+
+export async function addVendorToShow(showId, cedulaVendedor) {
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const response = await authenticatedRequest(`/api/shows/${showId}/cast`, {
+      method: 'POST',
+      body: { cedula_vendedor: cedulaVendedor }
+    });
+    return response;
+  } catch (error) {
+    console.error('Error agregando vendedor al elenco:', error);
+    throw error;
+  }
+}
+
+export async function removeVendorFromShow(showId, cedulaVendedor) {
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const response = await authenticatedRequest(`/api/shows/${showId}/cast/${cedulaVendedor}`, {
+      method: 'DELETE'
+    });
+    return response;
+  } catch (error) {
+    console.error('Error removiendo vendedor del elenco:', error);
+    throw error;
+  }
+}
+
+export async function getShowCast(showId) {
+  try {
+    const response = await authenticatedRequest(`/api/shows/${showId}/cast`);
+    return response.elenco || [];
+  } catch (error) {
+    console.error('Error obteniendo elenco:', error);
+    return [];
+  }
+}
+
 export async function markTicketsAsPaid(payload) {
   requireRole(['ADMIN']);
   // TODO: Implementar endpoint en backend

@@ -8,6 +8,7 @@ import { initSupremo } from './init-supremo.js';
 import authRoutes from './routes/auth.routes.js';
 import usersRoutes from './routes/users.routes.js';
 import showsRoutes from './routes/shows.routes.js';
+import castRoutes from './routes/cast.routes.js';
 import ticketsRoutes from './routes/tickets.routes.js';
 import reportesRoutes from './routes/reportes.routes.js';
 import reportesObrasRoutes from './routes/reportes-obras.routes.js';
@@ -88,6 +89,7 @@ async function startServer() {
     app.use('/api/auth', authRoutes);
     app.use('/api/usuarios', usersRoutes);
     app.use('/api/shows', showsRoutes);
+    app.use('/api/shows', castRoutes);  // Rutas de elenco: /api/shows/:id/cast
     app.use('/api/tickets', ticketsRoutes);
     app.use('/api/reportes', reportesRoutes);
     app.use('/api/reportes-obras', reportesObrasRoutes);

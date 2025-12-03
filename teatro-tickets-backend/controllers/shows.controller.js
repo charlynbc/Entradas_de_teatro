@@ -68,10 +68,10 @@ export async function crearShow(req, res) {
     res.status(201).json({
       show: {
         id: show.id,
-        obra: show.nombre,
+        obra: show.nombre || show.obra,  // Compatible con ambos nombres de columna
         fecha: show.fecha,
-        capacidad: show.total_tickets,
-        base_price: show.precio
+        capacidad: show.total_tickets || show.capacidad,
+        base_price: show.precio || show.base_price
       },
       tickets_generados: tickets.length,
       mensaje: `Función creada con ${tickets.length} tickets disponibles`
@@ -175,6 +175,75 @@ export async function asignarTickets(req, res) {
   }
 }
 
+export async function actualizarShow(req, res) {
+  try {
+    const { id } = req.params;
+    const { obra, fecha, lugar, capacidad, base_price } = req.body;
+    
+    // Verificar que el show existe
+    const showResult = await query(
+      'SELECT * FROM shows WHERE id = $1',
+      [id]
+    );
+    
+    if (showResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Obra no encontrada' });
+    }
+    
+    // Solo ADMIN y SUPER pueden editar
+    if (!['ADMIN', 'SUPER'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'No tienes permiso para editar obras' });
+    }
+    
+    const show = showResult.rows[0];
+    
+    // Construir query dinámica solo con campos que vienen en el body
+    const updates = [];
+    const values = [];
+    let paramIndex = 1;
+    
+    if (obra !== undefined) {
+      updates.push(`obra = $${paramIndex++}`);
+      values.push(obra);
+    }
+    if (fecha !== undefined) {
+      updates.push(`fecha = $${paramIndex++}`);
+      values.push(fecha);
+    }
+    if (lugar !== undefined) {
+      updates.push(`lugar = $${paramIndex++}`);
+      values.push(lugar);
+    }
+    if (capacidad !== undefined) {
+      updates.push(`capacidad = $${paramIndex++}`);
+      values.push(capacidad);
+    }
+    if (base_price !== undefined) {
+      updates.push(`base_price = $${paramIndex++}`);
+      values.push(base_price);
+    }
+    
+    if (updates.length === 0) {
+      return res.status(400).json({ error: 'No hay campos para actualizar' });
+    }
+    
+    values.push(id);
+    const sql = `UPDATE shows SET ${updates.join(', ')} WHERE id = $${paramIndex} RETURNING *`;
+    
+    const result = await query(sql, values);
+    const updated = result.rows[0];
+    
+    res.json({
+      ok: true,
+      mensaje: 'Obra actualizada correctamente',
+      obra: updated
+    });
+  } catch (error) {
+    console.error('Error actualizando show:', error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
 export async function eliminarShow(req, res) {
   try {
     const { id } = req.params;
@@ -189,11 +258,12 @@ export async function eliminarShow(req, res) {
       return res.status(404).json({ error: 'Obra no encontrada' });
     }
     
-    // Verificar permisos: debe ser el creador o SUPER
-    const show = showResult.rows[0];
-    if (req.user.role !== 'SUPER' && show.creado_por !== req.user.id) {
-      return res.status(403).json({ error: 'No tienes permiso para eliminar esta obra' });
+    // Solo ADMIN y SUPER pueden eliminar
+    if (!['ADMIN', 'SUPER'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'No tienes permiso para eliminar obras' });
     }
+    
+    const show = showResult.rows[0];
     
     // Eliminar tickets asociados (por CASCADE debería hacerse automático)
     // Pero lo hacemos explícito para estar seguros
@@ -205,7 +275,7 @@ export async function eliminarShow(req, res) {
     res.json({ 
       ok: true, 
       mensaje: 'Obra eliminada correctamente',
-      obra: show.nombre 
+      obra: show.nombre || show.obra  // Compatible con ambos nombres
     });
   } catch (error) {
     console.error('Error eliminando show:', error);
