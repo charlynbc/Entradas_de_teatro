@@ -16,6 +16,12 @@ function getSession() {
   return currentSession;
 }
 
+// Wrapper para request que inyecta automáticamente el token
+async function authenticatedRequest(path, options = {}) {
+  const token = currentSession.token;
+  return request(path, { ...options, token });
+}
+
 function requireUser() {
   if (!currentSession.user) {
     const error = new Error('Sesion expirada. Volve a iniciar sesion.');
@@ -94,7 +100,7 @@ export async function updateMyProfile(payload) {
 export async function getSuperDashboard() {
   requireRole(['SUPER']);
   try {
-    const response = await request('/api/super/dashboard');
+    const response = await authenticatedRequest('/api/super/dashboard');
     return response;
   } catch (error) {
     console.log('Backend no disponible, usando datos vacíos');
@@ -116,7 +122,7 @@ export async function getSuperDashboard() {
 export async function listDirectors() {
   requireRole(['SUPER']);
   try {
-    const response = await request('/api/usuarios?role=ADMIN');
+    const response = await authenticatedRequest('/api/usuarios?role=ADMIN');
     return response;
   } catch (error) {
     console.log('Backend no disponible, retornando lista vacía');
@@ -128,8 +134,8 @@ export async function createDirector(payload) {
   requireRole(['SUPER']);
   try {
     // SUPER crea admin (director)
-    const response = await request('/api/usuarios', { 
-      method: 'POST', 
+    const response = await authenticatedRequest('/api/usuarios', { 
+      method: 'POST',
       body: {
         cedula: payload.cedula,
         nombre: payload.nombre,
@@ -147,7 +153,7 @@ export async function createDirector(payload) {
 export async function resetDirectorPassword(cedula) {
   requireRole(['SUPER']);
   try {
-    const response = await request(`/api/usuarios/${cedula}/reset-password`, { method: 'POST' });
+    const response = await authenticatedRequest(`/api/usuarios/${cedula}/reset-password`, { method: 'POST' });
     return response;
   } catch (error) {
     console.error('Error reseteando contraseña:', error);
@@ -158,7 +164,7 @@ export async function resetDirectorPassword(cedula) {
 export async function deleteDirector(cedula) {
   requireRole(['SUPER']);
   try {
-    const response = await request('DELETE', `/users/${cedula}`);
+    const response = await authenticatedRequest(`/api/usuarios/${cedula}`, { method: 'DELETE' });
     return response;
   } catch (error) {
     console.error('Error eliminando director:', error);
@@ -169,7 +175,7 @@ export async function deleteDirector(cedula) {
 export async function listProductions() {
   requireRole(['SUPER']);
   try {
-    const response = await request('/api/obras');
+    const response = await authenticatedRequest('/api/obras');
     return response;
   } catch (error) {
     console.log('Backend no disponible, retornando lista vacía');
@@ -180,7 +186,7 @@ export async function listProductions() {
 export async function createProduction(payload) {
   requireRole(['SUPER']);
   try {
-    const response = await request('/api/obras', { method: 'POST', body: payload });
+    const response = await authenticatedRequest('/api/obras', { method: 'POST', body: payload });
     return response;
   } catch (error) {
     console.error('Error creando producción:', error);
@@ -191,7 +197,7 @@ export async function createProduction(payload) {
 export async function deleteProduction(id) {
   requireRole(['SUPER', 'ADMIN']);
   try {
-    const response = await request('DELETE', `/shows/${id}`);
+    const response = await authenticatedRequest(`/api/shows/${id}`, { method: 'DELETE' });
     return response;
   } catch (error) {
     console.error('Error eliminando obra:', error);
@@ -202,7 +208,7 @@ export async function deleteProduction(id) {
 export async function listVendors() {
   requireRole(['SUPER', 'ADMIN']);
   try {
-    const response = await request('/api/usuarios/vendedores');
+    const response = await authenticatedRequest('/api/usuarios/vendedores');
     return response;
   } catch (error) {
     console.error('Error listando vendedores:', error);
@@ -214,7 +220,7 @@ export async function createVendor(payload) {
   requireRole(['SUPER', 'ADMIN']);
   try {
     // ADMIN y SUPER pueden crear vendedor (actor)
-    const response = await request('/api/usuarios', { 
+    const response = await authenticatedRequest('/api/usuarios', { 
       method: 'POST', 
       body: {
         cedula: payload.cedula,
@@ -263,7 +269,7 @@ export async function getDirectorReports() {
 export async function validateTicket(code) {
   requireRole(['ADMIN', 'SUPER']);
   try {
-    const response = await request(`/api/tickets/validar/${code}`);
+    const response = await authenticatedRequest(`/api/tickets/validar/${code}`);
     return {
       ok: response.ok,
       message: response.mensaje || response.error,
@@ -313,7 +319,7 @@ export function getCurrentUser() {
 export async function deleteVendor(cedula) {
   requireRole(['SUPER', 'ADMIN']);
   try {
-    const response = await request('DELETE', `/users/${cedula}`);
+    const response = await authenticatedRequest(`/api/usuarios/${cedula}`, { method: 'DELETE' });
     return response;
   } catch (error) {
     console.error('Error eliminando vendedor:', error);
@@ -384,7 +390,7 @@ export async function guestReserveTicket(payload) {
 export async function generarReporteObra(showId) {
   requireRole(['ADMIN', 'SUPER']);
   try {
-    const response = await request('POST', `/reportes-obras/generar/${showId}`);
+    const response = await authenticatedRequest(`/api/reportes-obras/generar/${showId}`, { method: 'POST' });
     return response;
   } catch (error) {
     console.error('Error generando reporte:', error);
@@ -395,7 +401,7 @@ export async function generarReporteObra(showId) {
 export async function listarReportesObras() {
   requireRole(['ADMIN', 'SUPER']);
   try {
-    const response = await request('GET', '/reportes-obras');
+    const response = await authenticatedRequest('/api/reportes-obras');
     return response.reportes || [];
   } catch (error) {
     console.error('Error listando reportes:', error);
@@ -406,7 +412,7 @@ export async function listarReportesObras() {
 export async function obtenerReporteObra(reporteId) {
   requireRole(['ADMIN', 'SUPER']);
   try {
-    const response = await request('GET', `/reportes-obras/${reporteId}`);
+    const response = await authenticatedRequest(`/api/reportes-obras/${reporteId}`);
     return response.reporte;
   } catch (error) {
     console.error('Error obteniendo reporte:', error);
@@ -417,7 +423,7 @@ export async function obtenerReporteObra(reporteId) {
 export async function eliminarReporteObra(reporteId) {
   requireRole(['ADMIN', 'SUPER']);
   try {
-    const response = await request('DELETE', `/reportes-obras/${reporteId}`);
+    const response = await authenticatedRequest(`/api/reportes-obras/${reporteId}`, { method: 'DELETE' });
     return response;
   } catch (error) {
     console.error('Error eliminando reporte:', error);
@@ -429,7 +435,7 @@ export async function eliminarReporteObra(reporteId) {
 export async function crearEnsayo(ensayoData) {
   requireRole(['ADMIN', 'SUPER']);
   try {
-    const response = await request('POST', '/ensayos', ensayoData);
+    const response = await authenticatedRequest('/api/ensayos', { method: 'POST', body: ensayoData });
     return response;
   } catch (error) {
     console.error('Error creando ensayo:', error);
@@ -440,7 +446,7 @@ export async function crearEnsayo(ensayoData) {
 export async function listarEnsayos() {
   requireUser();
   try {
-    const response = await request('GET', '/ensayos');
+    const response = await authenticatedRequest('/api/ensayos');
     return response || [];
   } catch (error) {
     console.error('Error listando ensayos:', error);
@@ -451,7 +457,7 @@ export async function listarEnsayos() {
 export async function obtenerEnsayo(ensayoId) {
   requireUser();
   try {
-    const response = await request('GET', `/ensayos/${ensayoId}`);
+    const response = await authenticatedRequest(`/api/ensayos/${ensayoId}`);
     return response;
   } catch (error) {
     console.error('Error obteniendo ensayo:', error);
@@ -462,7 +468,7 @@ export async function obtenerEnsayo(ensayoId) {
 export async function actualizarEnsayo(ensayoId, ensayoData) {
   requireRole(['ADMIN', 'SUPER']);
   try {
-    const response = await request('PUT', `/ensayos/${ensayoId}`, ensayoData);
+    const response = await authenticatedRequest(`/api/ensayos/${ensayoId}`, { method: 'PUT', body: ensayoData });
     return response;
   } catch (error) {
     console.error('Error actualizando ensayo:', error);
@@ -473,7 +479,7 @@ export async function actualizarEnsayo(ensayoId, ensayoData) {
 export async function eliminarEnsayo(ensayoId) {
   requireRole(['ADMIN', 'SUPER']);
   try {
-    const response = await request('DELETE', `/ensayos/${ensayoId}`);
+    const response = await authenticatedRequest(`/api/ensayos/${ensayoId}`, { method: 'DELETE' });
     return response;
   } catch (error) {
     console.error('Error eliminando ensayo:', error);
@@ -485,7 +491,7 @@ export async function eliminarEnsayo(ensayoId) {
 export async function listarMiembros() {
   requireUser();
   try {
-    const response = await request('GET', '/usuarios/miembros');
+    const response = await authenticatedRequest('/api/usuarios/miembros');
     return response || [];
   } catch (error) {
     console.error('Error listando miembros:', error);
