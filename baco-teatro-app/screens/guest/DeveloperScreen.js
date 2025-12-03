@@ -6,7 +6,7 @@ import colors from '../../theme/colors';
 
 export default function DeveloperScreen({ navigation }) {
   const openLinkedIn = () => {
-    Linking.openURL('https://www.linkedin.com/in/charlyn-barreiro-curbelo-5684b4240/');
+    Linking.openURL('https://www.linkedin.com/in/carlos-barrios-10474720b?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=ios_app');
   };
 
   const openInstagram = () => {
@@ -18,7 +18,7 @@ export default function DeveloperScreen({ navigation }) {
   };
 
   const openEmail = () => {
-    Linking.openURL('mailto:charlyn.barreiro@example.com');
+    Linking.openURL('mailto:charly_nbc@icloud.com');
   };
 
   return (
