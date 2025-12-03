@@ -5,7 +5,7 @@ import { query } from '../db.js';
  */
 export async function agregarVendedor(req, res) {
   try {
-    const { id } = req.params;  // show_id
+    const { id } = req.params;  // obra_id
     const { cedula_vendedor } = req.body;
     
     // Solo ADMIN y SUPER
@@ -14,15 +14,15 @@ export async function agregarVendedor(req, res) {
     }
     
     // Verificar que la obra existe
-    const showResult = await query('SELECT * FROM shows WHERE id = $1', [id]);
-    if (showResult.rows.length === 0) {
+    const obraResult = await query('SELECT * FROM obras WHERE id = $1', [id]);
+    if (obraResult.rows.length === 0) {
       return res.status(404).json({ error: 'Obra no encontrada' });
     }
     
     // Verificar que el vendedor existe y es VENDEDOR
     const vendedorResult = await query(
-      'SELECT * FROM users WHERE cedula = $1 AND role = $2',
-      [cedula_vendedor, 'VENDEDOR']
+      'SELECT * FROM users WHERE cedula = $1 AND rol = $2',
+      [cedula_vendedor, 'vendedor']
     );
     
     if (vendedorResult.rows.length === 0) {
@@ -31,7 +31,7 @@ export async function agregarVendedor(req, res) {
     
     // Verificar si ya está en el elenco
     const existeResult = await query(
-      'SELECT * FROM shows_cast WHERE show_id = $1 AND cedula_vendedor = $2',
+      'SELECT * FROM elenco_obra WHERE obra_id = $1 AND cedula_vendedor = $2',
       [id, cedula_vendedor]
     );
     
@@ -41,7 +41,7 @@ export async function agregarVendedor(req, res) {
     
     // Agregar al elenco
     await query(
-      'INSERT INTO shows_cast (show_id, cedula_vendedor) VALUES ($1, $2)',
+      'INSERT INTO elenco_obra (obra_id, cedula_vendedor) VALUES ($1, $2)',
       [id, cedula_vendedor]
     );
     
@@ -49,10 +49,10 @@ export async function agregarVendedor(req, res) {
     
     res.json({
       ok: true,
-      mensaje: `${vendedor.name} agregado al elenco`,
+      mensaje: `${vendedor.nombre} agregado al elenco`,
       vendedor: {
         cedula: vendedor.cedula,
-        nombre: vendedor.name
+        nombre: vendedor.nombre
       }
     });
   } catch (error) {
@@ -66,7 +66,7 @@ export async function agregarVendedor(req, res) {
  */
 export async function removerVendedor(req, res) {
   try {
-    const { id, cedula } = req.params;  // show_id, cedula_vendedor
+    const { id, cedula } = req.params;  // obra_id, cedula_vendedor
     
     // Solo ADMIN y SUPER
     if (!['ADMIN', 'SUPER'].includes(req.user.role)) {
@@ -75,7 +75,7 @@ export async function removerVendedor(req, res) {
     
     // Verificar que existe la relación
     const result = await query(
-      'SELECT * FROM shows_cast WHERE show_id = $1 AND cedula_vendedor = $2',
+      'SELECT * FROM elenco_obra WHERE obra_id = $1 AND cedula_vendedor = $2',
       [id, cedula]
     );
     
@@ -85,7 +85,7 @@ export async function removerVendedor(req, res) {
     
     // Remover del elenco
     await query(
-      'DELETE FROM shows_cast WHERE show_id = $1 AND cedula_vendedor = $2',
+      'DELETE FROM elenco_obra WHERE obra_id = $1 AND cedula_vendedor = $2',
       [id, cedula]
     );
     
@@ -104,14 +104,14 @@ export async function removerVendedor(req, res) {
  */
 export async function listarElenco(req, res) {
   try {
-    const { id } = req.params;  // show_id
+    const { id } = req.params;  // obra_id
     
     const result = await query(
-      `SELECT u.cedula, u.name, u.active, sc.assigned_at
-       FROM shows_cast sc
-       JOIN users u ON sc.cedula_vendedor = u.cedula
-       WHERE sc.show_id = $1
-       ORDER BY sc.assigned_at DESC`,
+      `SELECT u.cedula, u.nombre as name, u.activo as active, e.assigned_at
+       FROM elenco_obra e
+       JOIN users u ON e.cedula_vendedor = u.cedula
+       WHERE e.obra_id = $1
+       ORDER BY e.assigned_at DESC`,
       [id]
     );
     

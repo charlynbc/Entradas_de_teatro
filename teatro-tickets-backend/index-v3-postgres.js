@@ -7,9 +7,12 @@ import { initializeDatabase } from './db/postgres.js';
 import { initSupremo } from './init-supremo.js';
 import authRoutes from './routes/auth.routes.js';
 import usersRoutes from './routes/users.routes.js';
-import showsRoutes from './routes/shows.routes.js';
-import castRoutes from './routes/cast.routes.js';
-import ticketsRoutes from './routes/tickets.routes.js';
+import obrasRoutes from './routes/obras.routes.js';
+import funcionesRoutes from './routes/funciones.routes.js';
+import entradasRoutes from './routes/entradas.routes.js';
+import elencoRoutes from './routes/cast.routes.js';
+import showsRoutes from './routes/shows.routes.js'; // Mantener por compatibilidad
+import ticketsRoutes from './routes/tickets.routes.js'; // Mantener por compatibilidad
 import reportesRoutes from './routes/reportes.routes.js';
 import reportesObrasRoutes from './routes/reportes-obras.routes.js';
 import ensayosRoutes from './routes/ensayos.routes.js';
@@ -88,9 +91,17 @@ async function startServer() {
 
     app.use('/api/auth', authRoutes);
     app.use('/api/usuarios', usersRoutes);
+    
+    // Nuevas rutas con estructura Obras → Funciones → Entradas
+    app.use('/api/obras', obrasRoutes);
+    app.use('/api/obras', elencoRoutes);  // /api/obras/:id/elenco
+    app.use('/api/funciones', funcionesRoutes);
+    app.use('/api/entradas', entradasRoutes);
+    
+    // Rutas legacy (mantener por compatibilidad)
     app.use('/api/shows', showsRoutes);
-    app.use('/api/shows', castRoutes);  // Rutas de elenco: /api/shows/:id/cast
     app.use('/api/tickets', ticketsRoutes);
+    
     app.use('/api/reportes', reportesRoutes);
     app.use('/api/reportes-obras', reportesObrasRoutes);
     app.use('/api/ensayos', ensayosRoutes);

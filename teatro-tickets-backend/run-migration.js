@@ -8,45 +8,32 @@ const { Pool } = pg;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-async function runMigration() {
+async function runMigration(migrationFile) {
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false }
   });
 
   try {
-    console.log('🚀 Ejecutando migración: shows_cast...');
+    console.log(`🚀 Ejecutando migración: ${migrationFile}...`);
     
     // Leer el archivo SQL
-    const migrationPath = path.join(__dirname, 'migrations', '001_create_shows_cast.sql');
+    const migrationPath = path.join(__dirname, 'migrations', migrationFile);
     const sql = fs.readFileSync(migrationPath, 'utf8');
     
     // Ejecutar la migración
     await pool.query(sql);
     
-    console.log('✅ Migración ejecutada correctamente');
-    console.log('✅ Tabla shows_cast creada');
-    
-    // Verificar que la tabla existe
-    const checkResult = await pool.query(`
-      SELECT table_name 
-      FROM information_schema.tables 
-      WHERE table_schema = 'public' 
-      AND table_name = 'shows_cast'
-    `);
-    
-    if (checkResult.rows.length > 0) {
-      console.log('✅ Tabla shows_cast verificada');
-    } else {
-      console.error('❌ La tabla shows_cast no fue creada');
-    }
+    console.log(`✅ Migración ${migrationFile} ejecutada correctamente`);
     
   } catch (error) {
-    console.error('❌ Error ejecutando migración:', error);
-    process.exit(1);
+    console.error(`❌ Error ejecutando migración ${migrationFile}:`, error);
+    throw error;
   } finally {
     await pool.end();
   }
 }
 
-runMigration();
+// Ejecutar la migración especificada o la última
+const migrationFile = process.argv[2] || '002_obras_y_funciones.sql';
+runMigration(migrationFile);
