@@ -13,14 +13,6 @@
       "type": "shell",
       "command": "docker rm -f teatro-postgres || true",
       "problemMatcher": [],
-    {
-      "label": "Backend: debug (inspect)",
-      "type": "npm",
-      "script": "debug",
-      "path": "teatro-tickets-backend",
-      "problemMatcher": [],
-      "group": "build"
-    }
       "group": "none"
     },
     {
@@ -41,6 +33,28 @@
       "label": "Backend: stop",
       "type": "shell",
       "command": "cd teatro-tickets-backend && npm run stop",
+      "problemMatcher": []
+    }
+    ,
+    {
+      "label": "Backend: debug (inspect)",
+      "type": "npm",
+      "script": "debug",
+      "path": "teatro-tickets-backend",
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "Backend: debug (inspect background)",
+      "type": "shell",
+      "command": "cd teatro-tickets-backend && npm run debug & echo $! > /tmp/backend-debug.pid",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Backend: stop debug",
+      "type": "shell",
+      "command": "test -f /tmp/backend-debug.pid && kill $(cat /tmp/backend-debug.pid) || pkill -f \"--inspect=9229 index-v3-postgres.js\" || true",
       "problemMatcher": []
     }
   ]
