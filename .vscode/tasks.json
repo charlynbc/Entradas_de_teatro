@@ -1,0 +1,47 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "DB: start postgres",
+      "type": "shell",
+      "command": "docker rm -f teatro-postgres || true && docker run -d --name teatro-postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_USER=postgres -e POSTGRES_DB=teatro -p 5432:5432 postgres:15",
+      "problemMatcher": [],
+      "group": "none"
+    },
+    {
+      "label": "DB: stop postgres",
+      "type": "shell",
+      "command": "docker rm -f teatro-postgres || true",
+      "problemMatcher": [],
+    {
+      "label": "Backend: debug (inspect)",
+      "type": "npm",
+      "script": "debug",
+      "path": "teatro-tickets-backend",
+      "problemMatcher": [],
+      "group": "build"
+    }
+      "group": "none"
+    },
+    {
+      "label": "Backend: dev (nodemon)",
+      "type": "shell",
+      "command": "cd teatro-tickets-backend && cp -n .env.example .env || true && npm run dev",
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "Backend: reload (background)",
+      "type": "shell",
+      "command": "export DATABASE_URL=postgres://postgres:postgres@localhost:5432/teatro && cd teatro-tickets-backend && npm run reload",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Backend: stop",
+      "type": "shell",
+      "command": "cd teatro-tickets-backend && npm run stop",
+      "problemMatcher": []
+    }
+  ]
+}
