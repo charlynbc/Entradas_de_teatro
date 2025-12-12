@@ -2,6 +2,13 @@
 
 Sistema completo de gestión y venta de entradas para teatro con diseño teatral profesional.
 
+## 📚 Documentación
+
+Toda la documentación funcional, técnica y operativa está centralizada en:
+- [documentacion/README.md](documentacion/README.md)
+
+Incluye guía de entorno, deploy en Render, manuales, arquitectura y reportes de testing.
+
 ## 🚀 Características
 
 - ✨ **Sistema virgen** - Se entrega sin datos precargados
@@ -128,6 +135,24 @@ Entradas_de_teatro/
 ├── package.json
 └── README.md
 ```
+
+### Estructura (backend actual)
+
+```
+teatro-tickets-backend/
+├── config/        # Configuración (auth, middlewares comunes)
+├── controllers/   # Controladores HTTP (capa de entrada)
+├── db/            # Conexión y helpers PostgreSQL
+├── factories/     # Creación/ensamblado de objetos (a migrar gradualmente)
+├── middleware/    # Middlewares Express
+├── public/        # Frontend web empaquetado (build)
+├── routes/        # Definición de rutas y wiring de controladores
+├── services/      # Lógica de negocio reutilizable (a migrar gradualmente)
+├── utils/         # Utilidades compartidas
+└── index-v3-postgres.js  # Entry point del servidor
+```
+
+Nota: si en el futuro adoptamos TypeScript, las “interfaces” vivirán en `src/types/` o `@types/`. Por ahora, se modela con JSDoc y tipado implícito.
 
 ## 🎨 Características del Diseño
 
