@@ -96,6 +96,7 @@ Después de limpiar la base de datos:
 2. 🧹 Ejecutar limpieza de base de datos
 3. ✅ Verificar que todo funciona correctamente
 4. 📱 Probar la app en navegador web
+5. 🧩 Aplicar migración `users.phone` + FK `tickets.vendedor_phone` si corresponde. Ver guía: [MIGRACION-2025-12-12-phone-fk.md](MIGRACION-2025-12-12-phone-fk.md)
 
 ## 🧪 Verificar Deploy
 

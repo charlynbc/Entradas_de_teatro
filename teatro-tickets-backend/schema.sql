@@ -9,8 +9,13 @@ CREATE TABLE users (
   role          VARCHAR(20) NOT NULL CHECK (role IN ('ADMIN', 'VENDEDOR')),
   password_hash TEXT,                       -- NULL = primera vez, debe crear
   created_at    TIMESTAMP NOT NULL DEFAULT NOW(),
-  active        BOOLEAN NOT NULL DEFAULT TRUE
+  active        BOOLEAN NOT NULL DEFAULT TRUE,
+  -- agregado para relacionar tickets con vendedores
+  phone         VARCHAR(20)
 );
+
+-- Índice único opcional para phone si se usa como identificador de login
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_phone_unique ON users(phone);
 
 -- Admins iniciales
 INSERT INTO users (cedula, name, role, password_hash, active) VALUES

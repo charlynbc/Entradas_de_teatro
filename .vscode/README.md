@@ -1,3 +1,40 @@
+# Tareas de VS Code: Flujo Dev + Migración
+
+Esta guía resume las tareas disponibles en `.vscode/tasks.json` y cuándo usarlas.
+
+## Tareas principales
+
+- **DB: start postgres**: levanta PostgreSQL local en Docker (`teatro-postgres`).
+- **DB: stop postgres**: detiene y borra el contenedor de PostgreSQL.
+- **DB: migrate phone+FK**: aplica la migración `users.phone` (índice único) y FK `tickets.vendedor_phone -> users(phone)`. Requiere `DATABASE_URL`.
+- **Backend: dev (nodemon)**: inicia el backend con recarga (watch).
+- **Backend: debug (inspect background)**: inicia backend con `--inspect=9229` en background y guarda PID.
+- **Backend: stop debug**: detiene el backend en modo debug.
+
+## Compuestos (secuencia automatizada)
+
+- **Dev: Start DB + Backend Debug**
+  1) Inicia PostgreSQL
+  2) Ejecuta migración phone+FK
+  3) Levanta backend en debug (inspect 9229)
+
+- **Dev: Start DB + Backend Dev (nodemon)**
+  1) Inicia PostgreSQL
+  2) Ejecuta migración phone+FK
+  3) Levanta backend en modo dev (nodemon)
+
+- **Dev: Backend Dev (nodemon only + migrate)**
+  1) Ejecuta migración phone+FK (asume DB arriba)
+  2) Levanta backend en modo dev (nodemon)
+
+## Variables de entorno
+
+- `DATABASE_URL`: conexión Postgres. Local: `postgres://postgres:postgres@localhost:5432/teatro`.
+
+## Tips
+
+- Si cambia el esquema, corre **DB: migrate phone+FK** antes de levantar el backend.
+- Para depurar, usa **Backend: debug (inspect)** y adjunta el debugger al puerto 9229.
 # Guía de Tareas y Depuración en VS Code
 
 Este proyecto incluye tareas preconfiguradas y configuraciones de depuración para acelerar el flujo en Codespaces.

@@ -5,8 +5,9 @@ Sistema completo de gestión y venta de entradas para teatro con diseño teatral
 ## 📚 Documentación
 
 Toda la documentación funcional, técnica y operativa está centralizada en:
-- [documentacion/README.md](documentacion/README.md)
-
+ - [documentacion/README.md](documentacion/README.md)
+ - Guía de tareas de VS Code: [./.vscode/README.md](.vscode/README.md)
+ Migración 2025-12-12 (users.phone + FK tickets): ver `documentacion/deploy/MIGRACION-2025-12-12-phone-fk.md`
 Incluye guía de entorno, deploy en Render, manuales, arquitectura y reportes de testing.
 
 ## 🚀 Características
