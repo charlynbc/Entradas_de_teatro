@@ -22,7 +22,7 @@
 ## Desarrollo en Codespaces
 - Tareas VS Code en [.vscode/tasks.json](../.vscode/tasks.json): DB start/stop, backend dev/reload/stop, debug, y compuestas.
 - Depuración: script `npm run debug` (abre `--inspect=9229`), luego attach con “Attach (9229)” en [.vscode/launch.json](../.vscode/launch.json).
-- Resumen operativo: [RESUMEN-ENTORNO-02-12.md](../RESUMEN-ENTORNO-02-12.md).
+ - Resumen operativo: [RESUMEN-ENTORNO-02-12.md](./deploy/RESUMEN-ENTORNO-02-12.md).
 
 ## Estructura rápida
 - `baco-teatro-app/` → código del frontend (Expo/React Web)
