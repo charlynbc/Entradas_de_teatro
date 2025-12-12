@@ -56,6 +56,22 @@
       "type": "shell",
       "command": "test -f /tmp/backend-debug.pid && kill $(cat /tmp/backend-debug.pid) || pkill -f \"--inspect=9229 index-v3-postgres.js\" || true",
       "problemMatcher": []
+    },
+    {
+      "label": "Dev: Start DB + Backend Debug",
+      "dependsOn": [
+        "DB: start postgres",
+        "Backend: debug (inspect background)"
+      ],
+      "dependsOrder": "sequence"
+    },
+    {
+      "label": "Dev: Stop DB + Backend",
+      "dependsOn": [
+        "Backend: stop debug",
+        "DB: stop postgres"
+      ],
+      "dependsOrder": "sequence"
     }
   ]
 }
