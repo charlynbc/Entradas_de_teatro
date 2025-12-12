@@ -45,6 +45,22 @@ Opcional en `baco-teatro-app/.env`:
 
 Frontend (web) ya se copia al backend por `baco-teatro-app/build-for-render.sh`.
 
+## Tareas VS Code
+
+Puedes usar tareas preconfiguradas desde el menú “Run Task”:
+- DB: start/stop postgres
+- Backend: dev (nodemon), reload (background), stop
+- Backend: debug (inspect), debug (inspect background), stop debug
+- Dev: Start DB + Backend Debug / Dev: Stop DB + Backend
+
+Consulta detalles en .vscode/README.md.
+
+## Depuración
+
+- Script: `npm run debug` abre el inspector en el puerto 9229 y exporta `DATABASE_URL` local.
+- Launch: “Attach (9229)” en .vscode/launch.json permite adjuntar en un clic.
+- Flujo recomendado: ejecutar “Backend: debug (inspect)” (o la compuesta de Start DB + Backend Debug) y luego anexar con “Attach (9229)”.
+
 ## Tag de estado estable
 
 Se creó el tag `render-2025-12-02` apuntando al commit del 02/12.
