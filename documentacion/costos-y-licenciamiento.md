@@ -18,6 +18,13 @@ Estas cifras son orientativas y dependen del uso y el proveedor.
 Ejemplo OPEX mensual (bajo uso): US$25–60
 Ejemplo OPEX mensual (uso medio): US$60–150
 
+## Precio de venta actual (propuesta)
+- Básico (one‑off): US$1,500–3,500 — entrega del sistema como está, instalación inicial y 1 ronda de ajustes menores.
+- Mantenimiento: US$49–149/mes — hosting básico, monitoreo simple, parches menores y soporte por email.
+- Pro (one‑off): US$3,500–6,500 — incluye ajustes de marca, reportes y flujos pulidos + handoff completo.
+- SaaS: US$99–249/mes por organización — sin fee inicial o con onboarding reducido (US$300–900).
+- Nota: si se integra WhatsApp Business API, emailing transaccional a escala o autoescalado, sumar OPEX (ver secciones arriba).
+
 ## Costos de puesta en marcha (one-off)
 - Setup e infraestructura (provisión Render, DB, dominios, CI/CD): 6–12 horas
 - Ajustes de marca y contenidos iniciales: 4–10 horas
