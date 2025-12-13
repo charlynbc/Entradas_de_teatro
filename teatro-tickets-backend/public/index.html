@@ -35,5 +35,34 @@
     <!-- The root element for your Expo app. -->
     <div id="root"></div>
   <script src="/_expo/static/js/web/AppEntry-8fd583ac086f0e8a07602b497bba944d.js" defer></script>
+    <script>
+      // Nota: evitamos redirigir por 'unhandledrejection' / 'error' para no
+      // interferir con flujos de login o llamadas fetch que manejan retries.
+      window.addEventListener('unhandledrejection', function(e) {
+        var msg = (e && e.reason && (e.reason.message || e.reason.toString())) || '';
+        if (typeof msg === 'string' && (msg.includes('Network request failed') || msg.includes('Tiempo de espera'))) {
+          // Evitar bucles: no redirigir si ya estamos en /404
+          if (window.location.pathname !== '/404') {
+            window.location.replace('/404');
+          }
+        }
+      });
+      window.addEventListener('error', function(e) {
+        var msg = (e && e.message) || '';
+        if (typeof msg === 'string' && (msg.includes('Network request failed') || msg.includes('Tiempo de espera'))) {
+          if (window.location.pathname !== '/404') {
+            window.location.replace('/404');
+          }
+        }
+      }, true);
+    </script>
+    <!-- Offline -> 404 teatral -->
+    <script>
+      window.addEventListener('offline', function() {
+        if (window.location.pathname !== '/404') {
+          window.location.replace('/404');
+        }
+      });
+    </script>
 </body>
 </html>
