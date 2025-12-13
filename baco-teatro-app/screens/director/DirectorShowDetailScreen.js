@@ -74,7 +74,7 @@ export default function DirectorShowDetailScreen({ route, navigation }) {
         actorId: selectedActor.cedula || selectedActor.id, // Handle different ID fields if any
         cantidad: Number(amount)
       });
-      Alert.alert('Éxito', `Se asignaron ${amount} entradas a ${selectedActor.nombre}`);
+      Alert.alert('Éxito', `Se asignaron ${amount} entradas a ${selectedActor.name}`);
       setModalVisible(false);
       loadData(); // Reload data instead of going back
     } catch (error) {
@@ -100,7 +100,7 @@ export default function DirectorShowDetailScreen({ route, navigation }) {
   const handleCollect = async (actor) => {
     Alert.alert(
       'Confirmar Cobro',
-      `¿Marcar como PAGADAS todas las entradas vendidas por ${actor.nombre}?`,
+      `¿Marcar como PAGADAS todas las entradas vendidas por ${actor.name}?`,
       [
         { text: 'Cancelar', style: 'cancel' },
         {
@@ -162,7 +162,7 @@ export default function DirectorShowDetailScreen({ route, navigation }) {
       <View key={actor.id} style={styles.actorCard}>
         <View style={styles.actorHeader}>
           <View style={styles.actorInfo}>
-            <Text style={styles.actorName}>{actor.nombre || 'Actor'}</Text>
+            <Text style={styles.actorName}>{actor.name || 'Actor'}</Text>
             <Text style={styles.actorId}>ID: {actor.id}</Text>
           </View>
           <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -273,7 +273,7 @@ export default function DirectorShowDetailScreen({ route, navigation }) {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Asignar Entradas</Text>
-            <Text style={styles.modalSubtitle}>Para: {selectedActor?.nombre}</Text>
+            <Text style={styles.modalSubtitle}>Para: {selectedActor?.name}</Text>
             
             <Text style={styles.label}>Cantidad</Text>
             <TextInput
@@ -313,7 +313,7 @@ export default function DirectorShowDetailScreen({ route, navigation }) {
               keyExtractor={item => item.cedula}
               renderItem={({ item }) => (
                 <TouchableOpacity style={styles.vendorItem} onPress={() => handleAddActor(item)}>
-                  <Text style={styles.vendorName}>{item.nombre}</Text>
+                  <Text style={styles.vendorName}>{item.name}</Text>
                   <Ionicons name="add-circle-outline" size={24} color={colors.secondary} />
                 </TouchableOpacity>
               )}

@@ -89,7 +89,7 @@ export default function GuestShowDetailScreen({ route, navigation }) {
           <TouchableOpacity style={styles.actorCard} onPress={() => handleSelectActor(item)}>
             <Image source={{ uri: item.avatar }} style={styles.avatar} />
             <View style={styles.actorInfo}>
-              <Text style={styles.actorName}>{item.nombre}</Text>
+              <Text style={styles.actorName}>{item.name}</Text>
               <Text style={styles.stockText}>{item.stock} entradas disponibles</Text>
             </View>
             <Ionicons name="ticket-outline" size={24} color={colors.secondary} />
@@ -108,7 +108,7 @@ export default function GuestShowDetailScreen({ route, navigation }) {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Reservar Entrada</Text>
             <Text style={styles.modalSubtitle}>
-              Estás reservando una entrada con {selectedActor?.nombre}.
+              Estás reservando una entrada con {selectedActor?.name}.
             </Text>
 
             <Text style={styles.label}>Tu Nombre</Text>

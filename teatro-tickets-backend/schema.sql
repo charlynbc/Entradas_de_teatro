@@ -6,8 +6,8 @@
 CREATE TABLE users (
   cedula         VARCHAR(20) PRIMARY KEY,   -- número de cédula
   name          VARCHAR(100) NOT NULL,
-  role          VARCHAR(20) NOT NULL CHECK (role IN ('ADMIN', 'VENDEDOR')),
-  password_hash TEXT,                       -- NULL = primera vez, debe crear
+  role          VARCHAR(20) NOT NULL CHECK (role IN ('SUPER', 'ADMIN', 'VENDEDOR', 'INVITADO')),
+  password_hash TEXT,                       -- NULL si es invitado
   created_at    TIMESTAMP NOT NULL DEFAULT NOW(),
   active        BOOLEAN NOT NULL DEFAULT TRUE,
   -- agregado para relacionar tickets con vendedores
@@ -17,11 +17,11 @@ CREATE TABLE users (
 -- Índice único opcional para phone si se usa como identificador de login
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_phone_unique ON users(phone);
 
--- Admins iniciales
-INSERT INTO users (cedula, name, role, password_hash, active) VALUES
-  ('48376669', 'Barrios', 'ADMIN', '$2b$10$dummyhash1', TRUE),
-  ('48376668', 'Admin Sistema', 'ADMIN', '$2b$10$dummyhash2', TRUE),
-  ('48376667', 'Vendedor Base', 'ADMIN', '$2b$10$dummyhash3', TRUE);
+-- Usuario Super (único) - password por defecto: admin123
+-- Tipos de usuario: SUPER (único), ADMIN (directores), VENDEDOR (actores), INVITADO (sin login)
+INSERT INTO users (cedula, name, role, password_hash, phone, active) VALUES
+  ('48376669', 'Super Usuario', 'SUPER', '$2b$10$ZXH8vT/SpnVBDGDjj3L7M.7BKMCuQC19V5Ieou0Rv25KTk3lHIT1e', '48376669', TRUE)
+ON CONFLICT (cedula) DO UPDATE SET role = 'SUPER', password_hash = '$2b$10$ZXH8vT/SpnVBDGDjj3L7M.7BKMCuQC19V5Ieou0Rv25KTk3lHIT1e';
 
 -- 2. FUNCIONES (shows)
 CREATE TABLE shows (

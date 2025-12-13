@@ -52,15 +52,15 @@ export default function DirectorDashboardScreen({ navigation }) {
     );
   }
 
-  const handleDeleteVendor = (actorId) => {
-    Alert.alert('Eliminar vendedor', 'El stock pendiente volverá a dirección. ¿Continuar?', [
+  const handleDeleteVendor = (actor) => {
+    Alert.alert('Eliminar vendedor', `¿Estás seguro de eliminar a ${actor.name}? El stock pendiente volverá a dirección.`, [
       { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Eliminar',
         style: 'destructive',
         onPress: async () => {
           try {
-            await deleteVendor(actorId);
+            await deleteVendor(actor.cedula || actor.id);
             onRefresh();
           } catch (error) {
             Alert.alert('Error', error.message || 'No se pudo eliminar');
@@ -152,14 +152,14 @@ export default function DirectorDashboardScreen({ navigation }) {
           {(data?.actors || []).map((actor) => (
             <View key={actor.id} style={styles.actorRow}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.actorName}>{actor.nombre}</Text>
+                <Text style={styles.actorName}>{actor.name}</Text>
                 <Text style={styles.metaText}>Stock {actor.stock} /  Vendidas {actor.vendidas}</Text>
               </View>
               <View style={styles.actorActions}>
                 <Text style={[styles.metaText, styles.alignRight, styles.moneyText]}>${actor.caja}</Text>
                 {['ADMIN', 'SUPER'].includes(user?.role) && (
                   <TouchableOpacity 
-                    onPress={() => handleDeleteVendor(actor.id)}
+                    onPress={() => handleDeleteVendor(actor)}
                     style={styles.deleteButton}
                   >
                     <Ionicons name="trash-outline" size={18} color={colors.error} />

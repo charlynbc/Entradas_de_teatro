@@ -134,7 +134,7 @@ export default function EnsayosGeneralesScreen({ navigation }) {
               <View style={styles.actoresList}>
                 <Ionicons name="people-outline" size={14} color={colors.secondary} />
                 <Text style={styles.actoresText}>
-                  {actores.map(a => a.nombre).join(', ')}
+                  {actores.map(a => a.name).join(', ')}
                 </Text>
               </View>
             )}
@@ -291,7 +291,7 @@ export default function EnsayosGeneralesScreen({ navigation }) {
                       styles.actorChipText,
                       formData.actores.includes(vendedor.id) && styles.actorChipTextSelected
                     ]}>
-                      {vendedor.nombre}
+                      {vendedor.name}
                     </Text>
                   </TouchableOpacity>
                 ))}

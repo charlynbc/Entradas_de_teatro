@@ -9,7 +9,7 @@ router.get('/mis-tickets', authenticate, misTickets);
 router.post('/asignar', authenticate, asignarTickets);
 
 // Generar QR para un ticket especifico
-router.get('/:ticket_id/qr', authenticate, generarQR);
+router.get('/:code/qr', authenticate, generarQR);
 
 // Validar ticket (acceso publico)
 router.get('/validar/:code', validarTicket);

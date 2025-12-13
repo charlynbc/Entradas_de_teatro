@@ -277,7 +277,7 @@ export default function DirectorReportsObrasScreen({ navigation }) {
                     {selectedReporte.vendedores && selectedReporte.vendedores.map((vendedor, idx) => (
                       <View key={idx} style={styles.vendedorCard}>
                         <View style={styles.vendedorHeader}>
-                          <Text style={styles.vendedorNombre}>{vendedor.nombre}</Text>
+                          <Text style={styles.vendedorNombre}>{vendedor.name}</Text>
                           <Text style={styles.vendedorCedula}>CI: {vendedor.cedula}</Text>
                         </View>
                         <View style={styles.vendedorStats}>

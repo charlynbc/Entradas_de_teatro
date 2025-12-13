@@ -21,7 +21,6 @@ export async function crearShow(req, res) {
     const { obra, fecha, lugar, capacidad, base_price } = req.body;
     const capacidadNum = Number(capacidad);
     const basePriceNum = Number(base_price);
-    const adminId = req.user?.id; // ID del director que crea el show
 
     if (!obra || !fecha || !capacidadNum || !basePriceNum) {
       return res.status(400).json({ 
@@ -30,12 +29,11 @@ export async function crearShow(req, res) {
     }
 
     // Crear el show en PostgreSQL
-    const showId = `show_${Date.now()}`;
     const showResult = await query(
-      `INSERT INTO shows (id, nombre, fecha, precio, total_tickets, creado_por, created_at) 
-       VALUES ($1, $2, $3, $4, $5, $6, NOW()) 
+      `INSERT INTO shows (obra, fecha, lugar, capacidad, base_price) 
+       VALUES ($1, $2, $3, $4, $5) 
        RETURNING *`,
-      [showId, obra, fecha, basePriceNum, capacidadNum, adminId]
+      [obra, fecha, lugar || 'Teatro Principal', capacidadNum, basePriceNum]
     );
 
     const show = showResult.rows[0];
@@ -48,18 +46,17 @@ export async function crearShow(req, res) {
       
       while (!isUnique) {
         code = generateTicketCode();
-        const existing = await query('SELECT id FROM tickets WHERE qr_code = $1', [code]);
+        const existing = await query('SELECT code FROM tickets WHERE code = $1', [code]);
         isUnique = existing.rows.length === 0;
       }
 
       const qrCode = await generarQR(code);
-      const ticketId = `ticket_${showId}_${i+1}`;
       
       const ticketResult = await query(
-        `INSERT INTO tickets (id, show_id, qr_code, estado, precio_venta, created_at) 
-         VALUES ($1, $2, $3, $4, $5, NOW()) 
+        `INSERT INTO tickets (code, show_id, qr_code, estado, precio) 
+         VALUES ($1, $2, $3, 'DISPONIBLE', $4) 
          RETURNING *`,
-        [ticketId, showId, qrCode, 'NO_ASIGNADO', basePriceNum]
+        [code, show.id, qrCode, basePriceNum]
       );
       
       tickets.push(ticketResult.rows[0]);
@@ -68,10 +65,11 @@ export async function crearShow(req, res) {
     res.status(201).json({
       show: {
         id: show.id,
-        obra: show.nombre,
+        obra: show.obra,
         fecha: show.fecha,
-        capacidad: show.total_tickets,
-        base_price: show.precio
+        lugar: show.lugar,
+        capacidad: show.capacidad,
+        base_price: show.base_price
       },
       tickets_generados: tickets.length,
       mensaje: `Función creada con ${tickets.length} tickets disponibles`
@@ -96,7 +94,7 @@ export async function listarShows(req, res) {
 
 export async function obtenerShow(req, res) {
   try {
-    const showId = req.params.id;  // No parsear como int, puede ser string "show_123"
+    const showId = parseInt(req.params.id);
     const result = await query(
       'SELECT * FROM shows WHERE id = $1',
       [showId]
@@ -108,7 +106,7 @@ export async function obtenerShow(req, res) {
     
     // Obtener tickets del show
     const ticketsResult = await query(
-      'SELECT * FROM tickets WHERE show_id = $1 ORDER BY id',
+      'SELECT * FROM tickets WHERE show_id = $1 ORDER BY code',
       [showId]
     );
     
@@ -125,48 +123,53 @@ export async function obtenerShow(req, res) {
 export async function asignarTickets(req, res) {
   try {
     const showId = parseInt(req.params.id);
-    const { vendedor_phone, cantidad } = req.body;
+    const { vendedor_cedula, cantidad } = req.body;
     const cantidadNum = Number(cantidad);
 
-    if (!vendedor_phone || !cantidadNum) {
-      return res.status(400).json({ error: 'vendedor_phone y cantidad son obligatorios' });
+    if (!vendedor_cedula || !cantidadNum) {
+      return res.status(400).json({ error: 'vendedor_cedula y cantidad son obligatorios' });
     }
-    const data = await readData();
-    const show = data.shows.find(s => s.id === showId);
-    if (!show) {
+    
+    // Verificar que el show existe
+    const showResult = await query('SELECT * FROM shows WHERE id = $1', [showId]);
+    if (showResult.rows.length === 0) {
       return res.status(404).json({ error: 'Función no encontrada' });
     }
 
-    const vendedor = (data.users || []).find(
-      user => user.phone === vendedor_phone && user.role === 'VENDEDOR' && user.active !== false
+    // Verificar que el vendedor existe
+    const vendedorResult = await query(
+      'SELECT * FROM users WHERE cedula = $1 AND role = $2 AND active = TRUE',
+      [vendedor_cedula, 'VENDEDOR']
     );
-    if (!vendedor) {
+    if (vendedorResult.rows.length === 0) {
       return res.status(404).json({ error: 'Vendedor no encontrado' });
     }
+    const vendedor = vendedorResult.rows[0];
 
-    const disponibles = data.tickets.filter(
-      ticket => ticket.show_id === showId && ticket.estado === 'DISPONIBLE'
+    // Obtener tickets disponibles
+    const disponiblesResult = await query(
+      'SELECT * FROM tickets WHERE show_id = $1 AND estado = $2 LIMIT $3',
+      [showId, 'DISPONIBLE', cantidadNum]
     );
 
-    if (disponibles.length < cantidadNum) {
+    if (disponiblesResult.rows.length < cantidadNum) {
       return res.status(400).json({
-        error: `Solo hay ${disponibles.length} tickets disponibles`
+        error: `Solo hay ${disponiblesResult.rows.length} tickets disponibles`
       });
     }
 
-    const asignados = disponibles.slice(0, cantidadNum);
-    const now = new Date().toISOString();
-    asignados.forEach(ticket => {
-      ticket.estado = 'STOCK_VENDEDOR';
-      ticket.vendedor_phone = vendedor_phone;
-      ticket.asignado_at = now;
-    });
+    // Asignar tickets al vendedor
+    const codes = disponiblesResult.rows.map(t => t.code);
+    await query(
+      `UPDATE tickets 
+       SET estado = 'STOCK_VENDEDOR', vendedor_cedula = $1, reservado_at = NOW() 
+       WHERE code = ANY($2::text[])`,
+      [vendedor_cedula, codes]
+    );
 
-    await writeData(data);
-    const codes = asignados.map(t => t.code);
     res.json({
-      mensaje: `${codes.length} tickets asignados a ${vendedor.name || vendedor.phone}`,
-      vendedor: { phone: vendedor.phone, name: vendedor.name },
+      mensaje: `${codes.length} tickets asignados a ${vendedor.name}`,
+      vendedor: { cedula: vendedor.cedula, name: vendedor.name },
       tickets: codes
     });
   } catch (error) {
@@ -177,35 +180,30 @@ export async function asignarTickets(req, res) {
 
 export async function eliminarShow(req, res) {
   try {
-    const { id } = req.params;
+    const showId = parseInt(req.params.id);
     
     // Verificar que el show existe
     const showResult = await query(
       'SELECT * FROM shows WHERE id = $1',
-      [id]
+      [showId]
     );
     
     if (showResult.rows.length === 0) {
       return res.status(404).json({ error: 'Obra no encontrada' });
     }
     
-    // Verificar permisos: debe ser el creador o SUPER
     const show = showResult.rows[0];
-    if (req.user.role !== 'SUPER' && show.creado_por !== req.user.id) {
-      return res.status(403).json({ error: 'No tienes permiso para eliminar esta obra' });
-    }
     
     // Eliminar tickets asociados (por CASCADE debería hacerse automático)
-    // Pero lo hacemos explícito para estar seguros
-    await query('DELETE FROM tickets WHERE show_id = $1', [id]);
+    await query('DELETE FROM tickets WHERE show_id = $1', [showId]);
     
     // Eliminar el show
-    await query('DELETE FROM shows WHERE id = $1', [id]);
+    await query('DELETE FROM shows WHERE id = $1', [showId]);
     
     res.json({ 
       ok: true, 
       mensaje: 'Obra eliminada correctamente',
-      obra: show.nombre 
+      obra: show.obra 
     });
   } catch (error) {
     console.error('Error eliminando show:', error);

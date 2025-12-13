@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ActivityIndicator, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Picker } from '@react-native-picker/picker';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionCard from '../../components/SectionCard';
 import Toast from '../../components/Toast';
@@ -13,6 +14,7 @@ import {
   resetDirectorPassword,
   deleteDirector,
   listVendors,
+  createVendor,
   deleteVendor,
 } from '../../api';
 
@@ -21,8 +23,10 @@ export default function DirectorsScreen() {
   const [directors, setDirectors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [vendors, setVendors] = useState([]);
-  const [form, setForm] = useState({ nombre: '', cedula: '' });
-  const [saving, setSaving] = useState(false);
+  const [directorForm, setDirectorForm] = useState({ name: '', cedula: '', genero: 'masculino' });
+  const [actorForm, setActorForm] = useState({ name: '', cedula: '', genero: 'masculino' });
+  const [savingDirector, setSavingDirector] = useState(false);
+  const [savingActor, setSavingActor] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -31,8 +35,9 @@ export default function DirectorsScreen() {
         listDirectors(),
         listVendors(),
       ]);
-      setDirectors(dirs);
-      setVendors(actors);
+      // Ordenar alfabéticamente por nombre
+      setDirectors(dirs.sort((a, b) => a.name.localeCompare(b.name)));
+      setVendors(actors.sort((a, b) => a.name.localeCompare(b.name)));
     } finally {
       setLoading(false);
     }
@@ -42,28 +47,47 @@ export default function DirectorsScreen() {
     load();
   }, []);
 
-  const handleCreate = async () => {
-    if (!form.nombre || !form.cedula) {
+  const handleCreateDirector = async () => {
+    if (!directorForm.name || !directorForm.cedula) {
       showError('Completa nombre y cédula');
       return;
     }
-    setSaving(true);
+    setSavingDirector(true);
     try {
-      await createDirector(form);
-      setForm({ nombre: '', cedula: '' });
+      await createDirector(directorForm);
+      setDirectorForm({ name: '', cedula: '', genero: 'masculino' });
       load();
-      showSuccess('✨ Director creado con éxito (contraseña: 1234)');
+      showSuccess('✨ Director creado con éxito (contraseña: admin123)');
     } catch (error) {
       showError(error.message || 'No se pudo crear el director');
     } finally {
-      setSaving(false);
+      setSavingDirector(false);
+    }
+  };
+
+  const handleCreateActor = async () => {
+    if (!actorForm.name || !actorForm.cedula) {
+      showError('Completa nombre y cédula');
+      return;
+    }
+    setSavingActor(true);
+    try {
+      await createVendor(actorForm);
+      setActorForm({ name: '', cedula: '', genero: 'masculino' });
+      load();
+      const generoLabel = actorForm.genero === 'femenino' ? 'Actriz' : 'Actor';
+      showSuccess(`✨ ${generoLabel} creado con éxito (contraseña: admin123)`);
+    } catch (error) {
+      showError(error.message || 'No se pudo crear el actor/actriz');
+    } finally {
+      setSavingActor(false);
     }
   };
 
   const handleReset = async (cedula) => {
     Alert.alert(
       '🔐 Resetear contraseña',
-      `¿Querés restablecer la contraseña de ${cedula} a 1234?`,
+      `¿Querés restablecer la contraseña de ${cedula} a admin123?`,
       [
         { text: 'Cancelar', style: 'cancel' },
         {
@@ -81,10 +105,10 @@ export default function DirectorsScreen() {
     );
   };
 
-  const handleDeleteDirector = (cedula) => {
+  const handleDeleteDirector = (cedula, nombre) => {
     Alert.alert(
       '🗑️ Eliminar director',
-      `Se van a borrar las obras y funciones asignadas a ${cedula}. ¿Continuar?`,
+      `Se van a borrar las obras y funciones asignadas a ${nombre}. ¿Continuar?`,
       [
         { text: 'Cancelar', style: 'cancel' },
         {
@@ -104,10 +128,11 @@ export default function DirectorsScreen() {
     );
   };
 
-  const handleDeleteVendor = (cedula) => {
+  const handleDeleteActor = (cedula, nombre, genero) => {
+    const generoLabel = genero === 'femenino' ? 'actriz' : 'actor';
     Alert.alert(
-      '🗑️ Eliminar vendedor',
-      `El stock de ${cedula} volverá a dirección. ¿Confirmás?`,
+      `🗑️ Eliminar ${generoLabel}`,
+      `El stock de ${nombre} volverá a dirección. ¿Confirmás?`,
       [
         { text: 'Cancelar', style: 'cancel' },
         {
@@ -117,9 +142,9 @@ export default function DirectorsScreen() {
             try {
               await deleteVendor(cedula);
               load();
-              showSuccess('🗑️ Vendedor eliminado con éxito');
+              showSuccess(`🗑️ ${generoLabel === 'actriz' ? 'Actriz' : 'Actor'} eliminado con éxito`);
             } catch (error) {
-              showError(error.message || 'No se pudo eliminar el vendedor');
+              showError(error.message || `No se pudo eliminar el ${generoLabel}`);
             }
           },
         },
@@ -127,8 +152,14 @@ export default function DirectorsScreen() {
     );
   };
 
+  const getGeneroLabel = (genero) => {
+    if (genero === 'femenino') return '♀️';
+    if (genero === 'masculino') return '♂️';
+    return '⚧';
+  };
+
   return (
-    <ScreenContainer>
+    <ScreenContainer scrollable>
       <LinearGradient
         colors={['#8B0000', '#DC143C', '#8B0000']}
         start={{ x: 0, y: 0 }}
@@ -144,43 +175,60 @@ export default function DirectorsScreen() {
         </View>
       </LinearGradient>
       
+      {/* SECCIÓN DIRECTORES */}
       <SectionCard title="Crear director" subtitle="Cada director administra sus obras">
         <TextInput
           style={styles.input}
-          placeholder="Nombre"
+          placeholder="Nombre completo"
           placeholderTextColor={colors.textSoft}
-          value={form.nombre}
-          onChangeText={(nombre) => setForm((prev) => ({ ...prev, nombre }))}
+          value={directorForm.name}
+          onChangeText={(name) => setDirectorForm((prev) => ({ ...prev, name }))}
         />
         <TextInput
           style={styles.input}
-          placeholder="Cedula"
+          placeholder="Cédula"
           placeholderTextColor={colors.textSoft}
-          value={form.cedula}
-          onChangeText={(cedula) => setForm((prev) => ({ ...prev, cedula }))}
+          value={directorForm.cedula}
+          onChangeText={(cedula) => setDirectorForm((prev) => ({ ...prev, cedula }))}
           keyboardType="numeric"
         />
-        <TouchableOpacity style={styles.button} onPress={handleCreate} disabled={saving}>
-          {saving ? <ActivityIndicator color={colors.black} /> : <Text style={styles.buttonText}>Crear director</Text>}
+        <View style={styles.pickerContainer}>
+          <Text style={styles.pickerLabel}>Género:</Text>
+          <Picker
+            selectedValue={directorForm.genero}
+            onValueChange={(genero) => setDirectorForm((prev) => ({ ...prev, genero }))}
+            style={styles.picker}
+          >
+            <Picker.Item label="Masculino ♂️" value="masculino" />
+            <Picker.Item label="Femenino ♀️" value="femenino" />
+            <Picker.Item label="Otro ⚧" value="otro" />
+          </Picker>
+        </View>
+        <TouchableOpacity style={styles.button} onPress={handleCreateDirector} disabled={savingDirector}>
+          {savingDirector ? <ActivityIndicator color={colors.black} /> : <Text style={styles.buttonText}>Crear director</Text>}
         </TouchableOpacity>
       </SectionCard>
 
-      <SectionCard title="Directores activos" subtitle={`${directors.length} cuentas`}>
+      <SectionCard title="Directores" subtitle={`${directors.length} cuenta${directors.length !== 1 ? 's' : ''}`}>
         {loading ? (
           <ActivityIndicator color={colors.secondary} />
+        ) : directors.length === 0 ? (
+          <Text style={styles.empty}>Todavía no hay directores</Text>
         ) : (
           directors.map((dir) => (
             <View key={dir.cedula} style={styles.row}>
-              <View>
-                <Text style={styles.name}>{dir.nombre}</Text>
+              <View style={{flex: 1}}>
+                <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
+                  <Text style={styles.name}>{dir.name}</Text>
+                  <Text style={styles.genero}>{getGeneroLabel(dir.genero)}</Text>
+                </View>
                 <Text style={styles.meta}>{dir.cedula}</Text>
-                <Text style={styles.meta}>{dir.obras} obras /  {dir.funciones} funciones</Text>
               </View>
               <View style={styles.actionsRow}>
                 <TouchableOpacity onPress={() => handleReset(dir.cedula)} style={styles.secondaryButton}>
-                  <Text style={styles.secondaryText}>Reset pass</Text>
+                  <Text style={styles.secondaryText}>Reset</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleDeleteDirector(dir.cedula)} style={styles.dangerButton}>
+                <TouchableOpacity onPress={() => handleDeleteDirector(dir.cedula, dir.name)} style={styles.dangerButton}>
                   <Text style={styles.dangerText}>Eliminar</Text>
                 </TouchableOpacity>
               </View>
@@ -189,20 +237,56 @@ export default function DirectorsScreen() {
         )}
       </SectionCard>
 
-      <SectionCard title="Vendedores" subtitle={`${vendors.length} cuentas`}>
+      {/* SECCIÓN ACTORES/ACTRICES */}
+      <SectionCard title="Crear actor/actriz" subtitle="Los actores venden entradas">
+        <TextInput
+          style={styles.input}
+          placeholder="Nombre completo"
+          placeholderTextColor={colors.textSoft}
+          value={actorForm.name}
+          onChangeText={(name) => setActorForm((prev) => ({ ...prev, name }))}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Cédula"
+          placeholderTextColor={colors.textSoft}
+          value={actorForm.cedula}
+          onChangeText={(cedula) => setActorForm((prev) => ({ ...prev, cedula }))}
+          keyboardType="numeric"
+        />
+        <View style={styles.pickerContainer}>
+          <Text style={styles.pickerLabel}>Género:</Text>
+          <Picker
+            selectedValue={actorForm.genero}
+            onValueChange={(genero) => setActorForm((prev) => ({ ...prev, genero }))}
+            style={styles.picker}
+          >
+            <Picker.Item label="Masculino ♂️ (Actor)" value="masculino" />
+            <Picker.Item label="Femenino ♀️ (Actriz)" value="femenino" />
+            <Picker.Item label="Otro ⚧ (Actante)" value="otro" />
+          </Picker>
+        </View>
+        <TouchableOpacity style={styles.button} onPress={handleCreateActor} disabled={savingActor}>
+          {savingActor ? <ActivityIndicator color={colors.black} /> : <Text style={styles.buttonText}>Crear actor/actriz</Text>}
+        </TouchableOpacity>
+      </SectionCard>
+
+      <SectionCard title="Actores y actrices" subtitle={`${vendors.length} cuenta${vendors.length !== 1 ? 's' : ''}`}>
         {loading ? (
           <ActivityIndicator color={colors.secondary} />
         ) : vendors.length === 0 ? (
-          <Text style={styles.empty}>Todavia no tenes vendedores</Text>
+          <Text style={styles.empty}>Todavía no hay actores/actrices</Text>
         ) : (
           vendors.map((vendor) => (
             <View key={vendor.cedula} style={styles.row}>
-              <View>
-                <Text style={styles.name}>{vendor.nombre}</Text>
+              <View style={{flex: 1}}>
+                <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
+                  <Text style={styles.name}>{vendor.name}</Text>
+                  <Text style={styles.genero}>{getGeneroLabel(vendor.genero)}</Text>
+                </View>
                 <Text style={styles.meta}>{vendor.cedula}</Text>
-                <Text style={styles.meta}>Stock {vendor.stock} /  Vendidas {vendor.vendidas} /  Pagadas {vendor.pagadas}</Text>
               </View>
-              <TouchableOpacity onPress={() => handleDeleteVendor(vendor.cedula)} style={styles.dangerButton}>
+              <TouchableOpacity onPress={() => handleDeleteActor(vendor.cedula, vendor.name, vendor.genero)} style={styles.dangerButton}>
                 <Text style={styles.dangerText}>Eliminar</Text>
               </TouchableOpacity>
             </View>
@@ -222,19 +306,9 @@ export default function DirectorsScreen() {
 
 const styles = StyleSheet.create({
   headerGradient: {
-    marginHorizontal: -20,
-    marginTop: -20,
+    borderRadius: 20,
+    padding: 24,
     marginBottom: 20,
-    paddingTop: 20,
-    paddingHorizontal: 20,
-    paddingBottom: 24,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    shadowColor: '#8B0000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 8,
   },
   headerContent: {
     flexDirection: 'row',
@@ -242,78 +316,109 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 32,
-    fontWeight: '900',
-    color: '#FFD700',
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 4,
-    letterSpacing: 0.5,
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: colors.white,
   },
   headerSubtitle: {
     fontSize: 14,
-    color: '#FFF',
+    color: colors.white,
     opacity: 0.9,
     marginTop: 4,
-    fontWeight: '600',
   },
   input: {
     backgroundColor: colors.surface,
+    color: colors.text,
+    padding: 14,
     borderRadius: 12,
+    marginBottom: 12,
+    fontSize: 16,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: 12,
+  },
+  pickerContainer: {
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: 'hidden',
+  },
+  pickerLabel: {
     color: colors.text,
+    fontSize: 14,
+    paddingTop: 8,
+    paddingLeft: 14,
+    fontWeight: '600',
+  },
+  picker: {
+    color: colors.text,
+    backgroundColor: 'transparent',
   },
   button: {
     backgroundColor: colors.secondary,
-    paddingVertical: 14,
+    padding: 16,
     borderRadius: 12,
     alignItems: 'center',
   },
   buttonText: {
     color: colors.black,
-    fontWeight: '700',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 12,
+    alignItems: 'center',
+    paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+  },
+  name: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  genero: {
+    fontSize: 16,
+  },
+  meta: {
+    fontSize: 14,
+    color: colors.textMuted,
+    marginTop: 4,
   },
   actionsRow: {
     flexDirection: 'row',
     gap: 8,
   },
-  name: {
-    color: colors.white,
-    fontWeight: '700',
-  },
-  meta: {
-    color: colors.textMuted,
-    fontSize: 12,
-  },
   secondaryButton: {
+    backgroundColor: colors.surface,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 10,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.secondary,
+    borderColor: colors.border,
   },
   secondaryText: {
-    color: colors.secondary,
+    color: colors.text,
+    fontSize: 12,
     fontWeight: '600',
   },
   dangerButton: {
+    backgroundColor: colors.error + '20',
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: colors.error,
+    borderRadius: 8,
   },
   dangerText: {
     color: colors.error,
+    fontSize: 12,
     fontWeight: '600',
+  },
+  empty: {
+    color: colors.textMuted,
+    textAlign: 'center',
+    paddingVertical: 20,
+    fontStyle: 'italic',
   },
 });

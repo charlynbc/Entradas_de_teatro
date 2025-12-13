@@ -1,25 +1,38 @@
 import { query } from '../db/postgres.js';
 
-export async function createUser({ cedula, nombre, password, rol, requesterRole }) {
-  if (!cedula || !nombre || !password || !rol) {
+export async function createUser({ cedula, nombre, name, password, rol, role, requesterRole, genero }) {
+  const finalNombre = nombre || name;
+  const finalRol = rol || role;
+  const finalGenero = genero || 'otro';
+  
+  if (!cedula || !finalNombre || !password || !finalRol) {
     const error = new Error('cedula, nombre, password y rol son obligatorios');
     error.status = 400;
     throw error;
   }
 
-  if (!['admin', 'vendedor'].includes(rol)) {
-    const error = new Error('rol debe ser admin o vendedor');
+  // Normalizar rol a mayúsculas
+  const normalizedRole = finalRol.toUpperCase();
+  if (!['ADMIN', 'VENDEDOR', 'INVITADO'].includes(normalizedRole)) {
+    const error = new Error('rol debe ser ADMIN (director), VENDEDOR (actor) o INVITADO');
     error.status = 400;
     throw error;
   }
+  
+  // Solo el SUPER puede crear otros roles, excepto que ADMIN puede crear VENDEDORES
+  if (normalizedRole === 'SUPER') {
+    const error = new Error('No se puede crear otro usuario SUPER. Solo existe uno.');
+    error.status = 403;
+    throw error;
+  }
 
-  if (requesterRole === 'ADMIN' && rol === 'admin') {
+  if (requesterRole === 'ADMIN' && normalizedRole === 'ADMIN') {
     const error = new Error('Los directores solo pueden crear actores. Solo el Super Usuario puede crear directores.');
     error.status = 403;
     throw error;
   }
 
-  const existente = await query('SELECT id FROM users WHERE cedula = $1', [cedula]);
+  const existente = await query('SELECT cedula FROM users WHERE cedula = $1', [cedula]);
   if (existente.rows.length > 0) {
     const error = new Error('Ya existe un usuario con esa cédula');
     error.status = 400;
@@ -28,102 +41,148 @@ export async function createUser({ cedula, nombre, password, rol, requesterRole 
 
   const bcrypt = (await import('bcrypt')).default;
   const hashedPassword = await bcrypt.hash(password, 10);
-  const id = `${rol}_${cedula}`;
 
   const result = await query(
-    `INSERT INTO users (id, cedula, nombre, password, rol, created_at)
-     VALUES ($1, $2, $3, $4, $5, NOW())
-     RETURNING id, cedula, nombre, rol`,
-    [id, cedula, nombre, hashedPassword, rol]
+    `INSERT INTO users (cedula, name, password_hash, role, genero, active, created_at)
+     VALUES ($1, $2, $3, $4, $5, TRUE, NOW())
+     RETURNING cedula, name, role, genero`,
+    [cedula, finalNombre, hashedPassword, normalizedRole, finalGenero]
   );
 
   const user = result.rows[0];
   return {
-    id: user.id,
-    phone: user.cedula,
     cedula: user.cedula,
-    name: user.nombre,
-    role: rol.toUpperCase()
+    name: user.name,
+    role: user.role,
+    genero: user.genero
   };
 }
 
-export async function listUsers() {
-  const result = await query(
-    `SELECT id, cedula, nombre, rol, created_at
+export async function listUsers(roleFilter) {
+  let sql = `SELECT cedula, name, role, genero, created_at, active
      FROM users
-     WHERE rol IN ('admin', 'vendedor')
-     ORDER BY created_at DESC`
-  );
+     WHERE role IN ('ADMIN', 'VENDEDOR')`;
+  const params = [];
+  
+  if (roleFilter) {
+    sql += ` AND role = $1`;
+    params.push(roleFilter);
+  }
+  
+  sql += ` ORDER BY name ASC`;
+  
+  const result = await query(sql, params);
   return result.rows;
 }
 
 export async function listSellersWithStats() {
   const result = await query(`
       SELECT 
-        u.id,
         u.cedula,
-        u.nombre,
-        u.rol,
+        u.name,
+        u.role,
+        u.genero,
         COUNT(DISTINCT t.show_id) as total_shows,
-        COUNT(t.id) as total_tickets,
+        COUNT(t.code) as total_tickets,
         json_agg(DISTINCT jsonb_build_object(
           'show_id', s.id,
-          'show_nombre', s.nombre,
+          'show_obra', s.obra,
           'tickets_asignados', (
             SELECT COUNT(*) 
             FROM tickets t2 
-            WHERE t2.vendedor_id = u.id 
+            WHERE t2.vendedor_cedula = u.cedula 
             AND t2.show_id = s.id
           )
         )) FILTER (WHERE s.id IS NOT NULL) as shows
       FROM users u
-      LEFT JOIN tickets t ON t.vendedor_id = u.id
+      LEFT JOIN tickets t ON t.vendedor_cedula = u.cedula
       LEFT JOIN shows s ON s.id = t.show_id
-      WHERE u.rol = 'vendedor'
-      GROUP BY u.id, u.cedula, u.nombre, u.rol
-      ORDER BY u.nombre
+      WHERE u.role = 'VENDEDOR'
+      GROUP BY u.cedula, u.name, u.role
+      ORDER BY u.name
   `);
   return result.rows;
 }
 
-export async function deleteUserByFlexibleId(idOrCedula) {
-  const result = await query('SELECT * FROM users WHERE id = $1 OR cedula = $1', [idOrCedula]);
+export async function deleteUserByFlexibleId(idOrCedula, requesterRole) {
+  const result = await query('SELECT * FROM users WHERE cedula = $1', [idOrCedula]);
   if (result.rows.length === 0) {
     const error = new Error('Usuario no encontrado');
     error.status = 404;
     throw error;
   }
-  await query('DELETE FROM users WHERE id = $1', [result.rows[0].id]);
+  
+  const user = result.rows[0];
+  
+  // Verificar que no sea el super usuario
+  if (user.role === 'SUPER') {
+    const error = new Error('No se puede eliminar al Super Usuario');
+    error.status = 403;
+    throw error;
+  }
+  
+  // Solo SUPER puede eliminar ADMIN (directores)
+  if (user.role === 'ADMIN' && requesterRole !== 'SUPER') {
+    const error = new Error('Solo el Super Usuario puede eliminar directores');
+    error.status = 403;
+    throw error;
+  }
+  
+  // Primero eliminar o liberar todos los tickets del vendedor
+  // Cambiar vendedor_cedula a NULL para liberar los tickets
+  await query('UPDATE tickets SET vendedor_cedula = NULL, estado = $1 WHERE vendedor_cedula = $2', 
+    ['DISPONIBLE', user.cedula]);
+  
+  // Ahora eliminar el usuario
+  await query('DELETE FROM users WHERE cedula = $1', [user.cedula]);
+  return { ok: true };
+}
+
+export async function resetPasswordByFlexibleId(idOrCedula, newPassword) {
+  if (!newPassword) {
+    const error = new Error('Nueva contraseña requerida');
+    error.status = 400;
+    throw error;
+  }
+  const result = await query('SELECT * FROM users WHERE cedula = $1 OR phone = $1', [idOrCedula]);
+  if (result.rows.length === 0) {
+    const error = new Error('Usuario no encontrado');
+    error.status = 404;
+    throw error;
+  }
+  const bcrypt = (await import('bcrypt')).default;
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  await query('UPDATE users SET password_hash = $1 WHERE cedula = $2', [hashedPassword, result.rows[0].cedula]);
   return { ok: true };
 }
 
 export async function listMembers(currentRole) {
   const result = await query(
     `SELECT 
-        u.id,
         u.cedula,
-        u.nombre,
-        u.rol,
+        u.name,
+        u.role,
+        u.genero,
         u.created_at,
+        u.active,
         COUNT(DISTINCT t.show_id) as obras_activas,
         json_agg(DISTINCT jsonb_build_object(
           'show_id', s.id,
-          'show_nombre', s.nombre,
+          'show_obra', s.obra,
           'show_fecha', s.fecha
         )) FILTER (WHERE s.id IS NOT NULL) as obras
       FROM users u
-      LEFT JOIN tickets t ON t.vendedor_id = u.id AND t.estado != 'USADA'
+      LEFT JOIN tickets t ON t.vendedor_cedula = u.cedula AND t.estado != 'USADO'
       LEFT JOIN shows s ON s.id = t.show_id
-      WHERE u.rol != 'supremo' OR $1 = 'SUPER'
-      GROUP BY u.id, u.cedula, u.nombre, u.rol, u.created_at
+      WHERE u.role IN ('ADMIN', 'VENDEDOR')
+      GROUP BY u.cedula, u.name, u.role, u.genero, u.created_at, u.active
       ORDER BY 
-        CASE u.rol 
-          WHEN 'admin' THEN 1 
-          WHEN 'vendedor' THEN 2 
+        CASE u.role 
+          WHEN 'ADMIN' THEN 1 
+          WHEN 'VENDEDOR' THEN 2 
           ELSE 3 
         END,
-        u.nombre`,
-    [currentRole]
+        u.name`
   );
   return result.rows;
 }

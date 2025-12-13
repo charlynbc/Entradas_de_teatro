@@ -20,7 +20,9 @@ export default function MiembrosScreen({ navigation }) {
   const loadMiembros = async () => {
     try {
       const data = await listarMiembros();
-      setMiembros(data);
+      // Ordenar alfabéticamente por nombre
+      const sorted = data.sort((a, b) => a.name.localeCompare(b.name));
+      setMiembros(sorted);
     } catch (error) {
       showError('No se pudieron cargar los miembros');
       console.error(error);
@@ -29,12 +31,20 @@ export default function MiembrosScreen({ navigation }) {
     }
   };
 
-  const getRoleLabel = (rol) => {
+  const getGeneroLabel = (genero) => {
+    if (genero === 'femenino') return '♀️';
+    if (genero === 'masculino') return '♂️';
+    return '⚧';
+  };
+
+  const getRoleLabel = (rol, genero) => {
     switch (rol) {
       case 'admin':
         return 'Director';
       case 'vendedor':
-        return 'Actor/Vendedor';
+        if (genero === 'femenino') return 'Actriz';
+        if (genero === 'masculino') return 'Actor';
+        return 'Actante';
       case 'supremo':
         return 'Super Usuario';
       default:
@@ -63,15 +73,15 @@ export default function MiembrosScreen({ navigation }) {
         style={styles.miembroCard}
         onPress={() => {
           Alert.alert(
-            item.nombre,
-            `${getRoleLabel(item.rol)}\n\nObras activas: ${item.obras_activas || 0}\n\nCédula: ${item.cedula}`,
+            item.name,
+            `${getRoleLabel(item.rol, item.genero)}\n\nObras activas: ${item.obras_activas || 0}\n\nCédula: ${item.cedula}`,
             [
               {
                 text: 'Ver obras',
                 onPress: () => {
                   if (obras.length > 0) {
                     const obrasText = obras.map(o => `• ${o.show_nombre}`).join('\n');
-                    Alert.alert('Obras de ' + item.nombre, obrasText);
+                    Alert.alert('Obras de ' + item.name, obrasText);
                   } else {
                     Alert.alert('Sin obras', 'Este miembro no tiene obras asignadas actualmente');
                   }
@@ -87,8 +97,11 @@ export default function MiembrosScreen({ navigation }) {
             <Ionicons name={getRoleIcon(item.rol)} size={28} color={item.rol === 'admin' ? colors.secondary : colors.primary} />
           </View>
           <View style={styles.miembroInfo}>
-            <Text style={styles.miembroNombre}>{item.nombre}</Text>
-            <Text style={styles.miembroRol}>{getRoleLabel(item.rol)}</Text>
+            <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
+              <Text style={styles.miembroNombre}>{item.name}</Text>
+              <Text style={{fontSize: 16}}>{getGeneroLabel(item.genero)}</Text>
+            </View>
+            <Text style={styles.miembroRol}>{getRoleLabel(item.rol, item.genero)}</Text>
             {item.obras_activas > 0 && (
               <Text style={styles.miembroObras}>
                 {item.obras_activas} {item.obras_activas === 1 ? 'obra activa' : 'obras activas'}
@@ -133,7 +146,7 @@ export default function MiembrosScreen({ navigation }) {
       )}
 
       {actores.length > 0 && (
-        <SectionCard title="Actores/Vendedores" subtitle={`${actores.length} ${actores.length === 1 ? 'miembro' : 'miembros'}`}>
+        <SectionCard title="Actores y actrices" subtitle={`${actores.length} ${actores.length === 1 ? 'miembro' : 'miembros'}`}>
           {actores.map(item => (
             <View key={item.id}>
               {renderMiembro({ item })}

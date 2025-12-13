@@ -24,7 +24,7 @@ import { Ionicons } from '@expo/vector-icons';
 const { width } = Dimensions.get('window');
 
 const initialForm = {
-  nombre: '',
+  name: '',
   email: '',
   telefono: '',
   edad: '',
@@ -49,7 +49,7 @@ export default function ProfileScreen({ navigation }) {
         const data = await getMyProfile();
         setProfile(data);
         setForm({
-          nombre: data?.nombre || '',
+          name: data?.name || '',
           email: data?.email || '',
           telefono: data?.telefono || '',
           edad: data?.edad ? String(data.edad) : '',
@@ -245,7 +245,7 @@ export default function ProfileScreen({ navigation }) {
               <Image source={avatarSource} style={styles.avatar} />
             ) : (
               <View style={[styles.avatar, styles.avatarPlaceholder]}>
-                <Text style={styles.avatarInitial}>{(form.nombre || 'BT').slice(0, 2).toUpperCase()}</Text>
+                <Text style={styles.avatarInitial}>{(form.name || 'BT').slice(0, 2).toUpperCase()}</Text>
               </View>
             )}
             <View style={styles.cameraIconBadge}>
@@ -270,11 +270,11 @@ export default function ProfileScreen({ navigation }) {
       </SectionCard>
 
       <SectionCard title="Datos basicos">
-        {['nombre', 'email', 'telefono', 'edad'].map((field) => (
+        {['name', 'email', 'telefono', 'edad'].map((field) => (
           <TextInput
             key={field}
             style={styles.input}
-            placeholder={field === 'nombre' ? 'Nombre completo' : field === 'email' ? 'email@bacoteatro.com' : field === 'telefono' ? '+598 ...' : 'Edad'}
+            placeholder={field === 'name' ? 'Nombre completo' : field === 'email' ? 'email@bacoteatro.com' : field === 'telefono' ? '+598 ...' : 'Edad'}
             placeholderTextColor={colors.textSoft}
             value={form[field]}
             keyboardType={field === 'edad' ? 'numeric' : 'default'}

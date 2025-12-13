@@ -105,7 +105,7 @@ export default function ManualScreen({ navigation }) {
         </View>
 
         <Text style={styles.intro}>
-          Bienvenido, {user?.nombre}. Aquí tienes la guía rápida para usar la aplicación según tu rol.
+          Bienvenido, {user?.name}. Aquí tienes la guía rápida para usar la aplicación según tu rol.
         </Text>
 
         {content.map((section, index) => (

@@ -13,15 +13,14 @@ export async function login(req, res) {
       return res.status(404).json({ error: 'Usuario no existe' });
     }
     const user = result.rows[0];
-    if (!user.password) {
+    if (!user.password_hash) {
       return res.status(400).json({ error: 'Debe completar registro', requiresSetup: true, cedula: user.cedula });
     }
-    const valid = await comparePassword(password, user.password);
+    const valid = await comparePassword(password, user.password_hash);
     if (!valid) {
       return res.status(401).json({ error: 'Contraseña incorrecta' });
     }
-    const roleMap = { supremo: 'SUPER', admin: 'ADMIN', vendedor: 'VENDEDOR' };
-    const payload = { id: user.id, cedula: user.cedula, role: roleMap[user.rol] || user.rol, nombre: user.nombre };
+    const payload = { cedula: user.cedula, role: user.role, name: user.name };
     const token = generateToken(payload);
     res.json({ token, user: payload });
   } catch (error) {
@@ -43,13 +42,12 @@ export async function completarRegistro(req, res) {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
     const user = result.rows[0];
-    if (user.password) {
+    if (user.password_hash) {
       return res.status(400).json({ error: 'Usuario ya completó registro' });
     }
     const hashedPassword = await hashPassword(password);
-    await query('UPDATE users SET nombre = $1, password = $2, updated_at = NOW() WHERE cedula = $3', [nombre, hashedPassword, cedula]);
-    const roleMap = { supremo: 'SUPER', admin: 'ADMIN', vendedor: 'VENDEDOR' };
-    const payload = { id: user.id, cedula, role: roleMap[user.rol] || user.rol, nombre };
+    await query('UPDATE users SET name = $1, password_hash = $2 WHERE cedula = $3', [nombre, hashedPassword, cedula]);
+    const payload = { cedula, role: user.role, name: nombre };
     const token = generateToken(payload);
     res.json({ ok: true, token, user: payload });
   } catch (error) {

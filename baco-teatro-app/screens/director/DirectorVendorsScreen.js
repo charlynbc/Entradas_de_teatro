@@ -11,7 +11,7 @@ export default function DirectorVendorsScreen() {
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
-  const [form, setForm] = useState({ nombre: '', cedula: '', email: '', telefono: '' });
+  const [form, setForm] = useState({ name: '', cedula: '', email: '', telefono: '' });
   const [saving, setSaving] = useState(false);
 
   const load = async () => {
@@ -29,14 +29,14 @@ export default function DirectorVendorsScreen() {
   }, []);
 
   const handleCreate = async () => {
-    if (!form.nombre || !form.cedula) {
+    if (!form.name || !form.cedula) {
       Alert.alert('Falta información', 'El nombre y la cédula son obligatorios');
       return;
     }
     setSaving(true);
     try {
       await createVendor(form);
-      setForm({ nombre: '', cedula: '', email: '', telefono: '' });
+      setForm({ name: '', cedula: '', email: '', telefono: '' });
       setModalVisible(false);
       load();
       Alert.alert('Éxito', 'Vendedor registrado correctamente');
@@ -50,7 +50,7 @@ export default function DirectorVendorsScreen() {
   const handleDelete = (vendor) => {
     Alert.alert(
       'Eliminar vendedor',
-      `¿Estás seguro de eliminar a ${vendor.nombre}?`,
+      `¿Estás seguro de eliminar a ${vendor.name}? Sus tickets volverán a estar disponibles.`,
       [
         { text: 'Cancelar', style: 'cancel' },
         {
@@ -58,7 +58,7 @@ export default function DirectorVendorsScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await deleteVendor(vendor.id);
+              await deleteVendor(vendor.cedula || vendor.id);
               load();
             } catch (error) {
               Alert.alert('Error', error.message);
@@ -88,10 +88,10 @@ export default function DirectorVendorsScreen() {
           <View key={vendor.id} style={styles.card}>
             <View style={styles.cardHeader}>
               <View style={styles.avatarContainer}>
-                <Text style={styles.avatarText}>{vendor.nombre.substring(0, 2).toUpperCase()}</Text>
+                <Text style={styles.avatarText}>{vendor.name.substring(0, 2).toUpperCase()}</Text>
               </View>
               <View style={styles.infoContainer}>
-                <Text style={styles.name}>{vendor.nombre}</Text>
+                <Text style={styles.name}>{vendor.name}</Text>
                 <Text style={styles.detail}>C.I. {vendor.cedula}</Text>
                 {vendor.email && <Text style={styles.detail}>{vendor.email}</Text>}
               </View>
@@ -141,8 +141,8 @@ export default function DirectorVendorsScreen() {
               style={styles.input}
               placeholder="Ej: Juan Pérez"
               placeholderTextColor={colors.textSoft}
-              value={form.nombre}
-              onChangeText={(t) => setForm(prev => ({ ...prev, nombre: t }))}
+              value={form.name}
+              onChangeText={(t) => setForm(prev => ({ ...prev, name: t }))}
             />
 
             <Text style={styles.label}>Cédula (Usuario) *</Text>

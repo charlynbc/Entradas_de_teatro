@@ -8,13 +8,13 @@ function buildVendorSummary(tickets, users) {
   const summary = new Map();
 
   tickets.forEach(ticket => {
-    if (!ticket.vendedor_phone) return;
-    if (!summary.has(ticket.vendedor_phone)) {
-      const user = users.find(u => u.phone === ticket.vendedor_phone) || {};
-      summary.set(ticket.vendedor_phone, {
+    if (!ticket.vendedor_cedula) return;
+    if (!summary.has(ticket.vendedor_cedula)) {
+      const user = users.find(u => u.cedula === ticket.vendedor_cedula) || {};
+      summary.set(ticket.vendedor_cedula, {
         show_id: ticket.show_id,
-        vendedor_phone: ticket.vendedor_phone,
-        vendedor_nombre: user.name || ticket.vendedor_phone,
+        vendedor_cedula: ticket.vendedor_cedula,
+        vendedor_nombre: user.name || ticket.vendedor_cedula,
         asignados: 0,
         vendidos: 0,
         monto_reportado: 0,
@@ -22,7 +22,7 @@ function buildVendorSummary(tickets, users) {
       });
     }
 
-    const entry = summary.get(ticket.vendedor_phone);
+    const entry = summary.get(ticket.vendedor_cedula);
     if (STOCK_STATES.has(ticket.estado)) {
       entry.asignados += 1;
     }

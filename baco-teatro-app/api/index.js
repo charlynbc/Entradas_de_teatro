@@ -38,14 +38,14 @@ function requireRole(roles) {
 export async function login(credentials) {
   try {
     // Intenta login contra el backend real
-    const body = { phone: credentials.cedula, password: credentials.password };
+    const body = { cedula: credentials.cedula, password: credentials.password };
     const response = await request('/api/auth/login', { method: 'POST', body });
     
     const user = {
-      id: response.user.phone,
-      nombre: response.user.name,
+      id: response.user.cedula,
+      name: response.user.name,
       role: response.user.role,
-      email: response.user.phone + '@bacoteatro.com',
+      email: response.user.cedula + '@bacoteatro.com',
       avatar: 'https://ui-avatars.com/api/?name=' + encodeURIComponent(response.user.name)
     };
     
@@ -94,7 +94,8 @@ export async function updateMyProfile(payload) {
 export async function getSuperDashboard() {
   requireRole(['SUPER']);
   try {
-    const response = await request('/api/super/dashboard');
+    const token = currentSession.token;
+    const response = await request('/api/super/dashboard', { token });
     return response;
   } catch (error) {
     console.log('Backend no disponible, usando datos vacíos');
@@ -116,7 +117,8 @@ export async function getSuperDashboard() {
 export async function listDirectors() {
   requireRole(['SUPER']);
   try {
-    const response = await request('/api/usuarios?role=ADMIN');
+    const token = currentSession.token;
+    const response = await request('/api/usuarios?role=ADMIN', { token });
     return response;
   } catch (error) {
     console.log('Backend no disponible, retornando lista vacía');
@@ -127,14 +129,16 @@ export async function listDirectors() {
 export async function createDirector(payload) {
   requireRole(['SUPER']);
   try {
+    const token = currentSession.token;
     // SUPER crea admin (director)
-    const response = await request('/api/usuarios', { 
-      method: 'POST', 
+    const response = await request('/api/usuarios/directores', { 
+      method: 'POST',
+      token,
       body: {
         cedula: payload.cedula,
-        nombre: payload.nombre,
-        password: '1234', // Contraseña por defecto
-        rol: 'admin' // Director
+        name: payload.name,
+        genero: payload.genero || 'otro',
+        password: 'admin123' // Contraseña por defecto
       }
     });
     return response;
@@ -147,7 +151,12 @@ export async function createDirector(payload) {
 export async function resetDirectorPassword(cedula) {
   requireRole(['SUPER']);
   try {
-    const response = await request(`/api/usuarios/${cedula}/reset-password`, { method: 'POST' });
+    const token = currentSession.token;
+    const response = await request(`/api/usuarios/${cedula}/reset-password`, { 
+      method: 'POST',
+      token,
+      body: { newPassword: 'admin123' }
+    });
     return response;
   } catch (error) {
     console.error('Error reseteando contraseña:', error);
@@ -156,20 +165,29 @@ export async function resetDirectorPassword(cedula) {
 }
 
 export async function deleteDirector(cedula) {
+  console.log('[API] deleteDirector llamado con cedula:', cedula);
   requireRole(['SUPER']);
   try {
-    const response = await request('DELETE', `/users/${cedula}`);
+    const token = currentSession.token;
+    console.log('[API] Token presente:', !!token);
+    console.log('[API] Haciendo DELETE a:', `/api/usuarios/${cedula}`);
+    const response = await request(`/api/usuarios/${cedula}`, { 
+      method: 'DELETE',
+      token
+    });
+    console.log('[API] Respuesta exitosa:', response);
     return response;
   } catch (error) {
-    console.error('Error eliminando director:', error);
+    console.error('[API] Error eliminando director:', error);
     throw error;
   }
 }
 
 export async function listProductions() {
-  requireRole(['SUPER']);
+  requireRole(['SUPER', 'ADMIN']);
   try {
-    const response = await request('/api/obras');
+    const token = currentSession.token;
+    const response = await request('/api/shows', { token });
     return response;
   } catch (error) {
     console.log('Backend no disponible, retornando lista vacía');
@@ -178,9 +196,14 @@ export async function listProductions() {
 }
 
 export async function createProduction(payload) {
-  requireRole(['SUPER']);
+  requireRole(['SUPER', 'ADMIN']);
   try {
-    const response = await request('/api/obras', { method: 'POST', body: payload });
+    const token = currentSession.token;
+    const response = await request('/api/shows', { 
+      method: 'POST',
+      token,
+      body: payload 
+    });
     return response;
   } catch (error) {
     console.error('Error creando producción:', error);
@@ -191,7 +214,11 @@ export async function createProduction(payload) {
 export async function deleteProduction(id) {
   requireRole(['SUPER', 'ADMIN']);
   try {
-    const response = await request('DELETE', `/shows/${id}`);
+    const token = currentSession.token;
+    const response = await request(`/api/shows/${id}`, { 
+      method: 'DELETE',
+      token
+    });
     return response;
   } catch (error) {
     console.error('Error eliminando obra:', error);
@@ -202,7 +229,8 @@ export async function deleteProduction(id) {
 export async function listVendors() {
   requireRole(['SUPER', 'ADMIN']);
   try {
-    const response = await request('/api/usuarios/vendedores');
+    const token = currentSession.token;
+    const response = await request('/api/usuarios/vendedores', { token });
     return response;
   } catch (error) {
     console.error('Error listando vendedores:', error);
@@ -213,14 +241,16 @@ export async function listVendors() {
 export async function createVendor(payload) {
   requireRole(['SUPER', 'ADMIN']);
   try {
+    const token = currentSession.token;
     // ADMIN y SUPER pueden crear vendedor (actor)
-    const response = await request('/api/usuarios', { 
-      method: 'POST', 
+    const response = await request('/api/usuarios/actores', { 
+      method: 'POST',
+      token,
       body: {
         cedula: payload.cedula,
-        nombre: payload.nombre,
-        password: '1234', // Contraseña por defecto
-        rol: 'vendedor' // Actor/Vendedor
+        name: payload.name,
+        genero: payload.genero || 'otro',
+        password: 'admin123' // Contraseña por defecto
       }
     });
     return response;
@@ -231,39 +261,106 @@ export async function createVendor(payload) {
 }
 
 export async function getDirectorDashboard() {
-  const user = requireRole(['ADMIN']);
-  return mock.getDirectorDashboard(user.id);
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const token = currentSession.token;
+    const response = await request('/api/reportes/director', { token });
+    return response;
+  } catch (error) {
+    console.error('Error obteniendo dashboard director:', error);
+    return {
+      totals: { shows: 0, tickets: 0, sold: 0, revenue: 0 },
+      upcomingShows: [],
+      vendors: []
+    };
+  }
 }
 
 export async function listDirectorShows() {
-  const user = requireRole(['ADMIN']);
-  return mock.listDirectorShows(user.id);
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const token = currentSession.token;
+    const response = await request('/api/shows', { token });
+    return response;
+  } catch (error) {
+    console.error('Error listando funciones:', error);
+    return [];
+  }
 }
 
 export async function createShow(payload) {
-  const user = requireRole(['ADMIN']);
-  return mock.createShow(user.id, payload);
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const token = currentSession.token;
+    const response = await request('/api/shows', { 
+      method: 'POST',
+      token,
+      body: payload
+    });
+    return response;
+  } catch (error) {
+    console.error('Error creando función:', error);
+    throw error;
+  }
 }
 
 export async function assignTicketsToActor(payload) {
-  const user = requireRole(['ADMIN']);
-  return mock.assignTicketsToActor(user.id, payload);
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const token = currentSession.token;
+    // payload should have: showId, actorId (cedula), cantidad
+    const response = await request(`/api/shows/${payload.showId}/assign-tickets`, {
+      method: 'POST',
+      token,
+      body: {
+        vendedor_cedula: payload.actorId,
+        cantidad: payload.cantidad
+      }
+    });
+    return response;
+  } catch (error) {
+    console.error('Error asignando tickets:', error);
+    throw error;
+  }
 }
 
 export async function markTicketsAsPaid(payload) {
-  const user = requireRole(['ADMIN']);
-  return mock.markTicketsAsPaid(user.id, payload);
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const token = currentSession.token;
+    // payload should have: tickets (array of ticket codes)
+    // Marcar múltiples tickets como pagados
+    const promises = payload.tickets.map(code => 
+      request(`/api/tickets/${code}/marcar-pagado`, {
+        method: 'POST',
+        token
+      })
+    );
+    await Promise.all(promises);
+    return { ok: true, mensaje: 'Tickets marcados como pagados' };
+  } catch (error) {
+    console.error('Error marcando tickets como pagados:', error);
+    throw error;
+  }
 }
 
 export async function getDirectorReports() {
-  const user = requireRole(['ADMIN']);
-  return mock.getDirectorReports(user.id);
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const token = currentSession.token;
+    const response = await request('/api/reportes/director', { token });
+    return response;
+  } catch (error) {
+    console.error('Error obteniendo reportes:', error);
+    return { shows: [], totals: {} };
+  }
 }
 
 export async function validateTicket(code) {
-  requireRole(['ADMIN', 'SUPER']);
+  requireRole(['ADMIN', 'SUPER', 'VENDEDOR']);
   try {
-    const response = await request(`/api/tickets/validar/${code}`);
+    const token = currentSession.token;
+    const response = await request(`/api/tickets/validar/${code}`, { token });
     return {
       ok: response.ok,
       message: response.mensaje || response.error,
@@ -282,27 +379,55 @@ export async function validateTicket(code) {
 }
 
 export async function getActorStock() {
-  const user = requireRole(['VENDEDOR']);
-  return mock.getActorStock(user.id);
+  requireRole(['VENDEDOR', 'SUPER', 'ADMIN']);
+  try {
+    const token = currentSession.token;
+    const response = await request('/api/tickets/mis-tickets', { token });
+    return response;
+  } catch (error) {
+    console.error('Error obteniendo stock:', error);
+    return [];
+  }
 }
 
 export async function updateTicketStatus(payload) {
-  const user = requireRole(['VENDEDOR']);
-  return mock.updateTicketStatus(user.id, payload);
+  requireRole(['VENDEDOR', 'SUPER', 'ADMIN']);
+  try {
+    const token = currentSession.token;
+    // payload should have: code, estado
+    const response = await request(`/api/tickets/${payload.code}/estado`, {
+      method: 'PUT',
+      token,
+      body: { estado: payload.estado }
+    });
+    return response;
+  } catch (error) {
+    console.error('Error actualizando ticket:', error);
+    throw error;
+  }
 }
 
 export async function transferTicket(payload) {
-  const user = requireRole(['VENDEDOR']);
+  requireRole(['VENDEDOR', 'SUPER', 'ADMIN']);
+  // TODO: Implementar endpoint en backend
+  console.log('transferTicket - usando mock (no implementado en backend)');
+  const user = requireUser();
   return mock.transferTicket(user.id, payload);
 }
 
 export async function getActorTransfers() {
-  const user = requireRole(['VENDEDOR']);
+  requireRole(['VENDEDOR', 'SUPER', 'ADMIN']);
+  // TODO: Implementar endpoint en backend
+  console.log('getActorTransfers - usando mock (no implementado en backend)');
+  const user = requireUser();
   return mock.getActorTransfers(user.id);
 }
 
 export async function getActorHistory() {
-  const user = requireRole(['VENDEDOR']);
+  requireRole(['VENDEDOR', 'SUPER', 'ADMIN']);
+  // TODO: Implementar endpoint en backend
+  console.log('getActorHistory - usando mock (no implementado en backend)');
+  const user = requireUser();
   return mock.getActorHistory(user.id);
 }
 
@@ -311,12 +436,20 @@ export function getCurrentUser() {
 }
 
 export async function deleteVendor(cedula) {
+  console.log('[API] deleteVendor llamado con cedula:', cedula);
   requireRole(['SUPER', 'ADMIN']);
   try {
-    const response = await request('DELETE', `/users/${cedula}`);
+    const token = currentSession.token;
+    console.log('[API] Token presente:', !!token);
+    console.log('[API] Haciendo DELETE a:', `/api/usuarios/${cedula}`);
+    const response = await request(`/api/usuarios/${cedula}`, { 
+      method: 'DELETE',
+      token
+    });
+    console.log('[API] Respuesta exitosa:', response);
     return response;
   } catch (error) {
-    console.error('Error eliminando vendedor:', error);
+    console.error('[API] Error eliminando vendedor:', error);
     throw error;
   }
 }
@@ -324,29 +457,71 @@ export async function deleteVendor(cedula) {
 // --- New Features ---
 
 export async function createRehearsal(payload) {
-  requireRole(['ADMIN']);
-  return mock.createRehearsal(payload);
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const token = currentSession.token;
+    const response = await request('/api/ensayos', {
+      method: 'POST',
+      token,
+      body: payload
+    });
+    return response;
+  } catch (error) {
+    console.error('Error creando ensayo:', error);
+    throw error;
+  }
 }
 
 export async function listRehearsals() {
   requireUser();
-  return mock.listRehearsals();
+  try {
+    const token = currentSession.token;
+    const response = await request('/api/ensayos', { token });
+    return response;
+  } catch (error) {
+    console.error('Error listando ensayos:', error);
+    return [];
+  }
 }
 
 export async function deleteRehearsal(id) {
-  requireRole(['ADMIN']);
-  return mock.deleteRehearsal(id);
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const token = currentSession.token;
+    const response = await request(`/api/ensayos/${id}`, {
+      method: 'DELETE',
+      token
+    });
+    return response;
+  } catch (error) {
+    console.error('Error eliminando ensayo:', error);
+    throw error;
+  }
 }
 
 export async function getShowRehearsals(showId) {
   // Both Admin and Actors can see rehearsals
-  requireUser(); 
-  return mock.getShowRehearsals(showId);
+  requireUser();
+  try {
+    const token = currentSession.token;
+    const response = await request(`/api/ensayos?showId=${showId}`, { token });
+    return response;
+  } catch (error) {
+    console.error('Error obteniendo ensayos:', error);
+    return [];
+  }
 }
 
 export async function getActorSchedule() {
-  const user = requireRole(['VENDEDOR']);
-  return mock.getActorSchedule(user.id);
+  requireRole(['VENDEDOR', 'SUPER', 'ADMIN']);
+  try {
+    const token = currentSession.token;
+    const response = await request('/api/ensayos', { token });
+    return response;
+  } catch (error) {
+    console.error('Error obteniendo agenda:', error);
+    return [];
+  }
 }
 
 // Public endpoints (no auth required)
@@ -373,18 +548,37 @@ export async function getPublicShows() {
 }
 
 export async function getPublicShowDetails(showId) {
-  return mock.getPublicShowDetails(showId);
+  try {
+    const response = await request(`/api/shows/${showId}`);
+    return response;
+  } catch (error) {
+    console.error('Error obteniendo detalles:', error);
+    return null;
+  }
 }
 
 export async function guestReserveTicket(payload) {
-  return mock.guestReserveTicket(payload);
+  try {
+    const response = await request('/api/tickets/reservar', {
+      method: 'POST',
+      body: payload
+    });
+    return response;
+  } catch (error) {
+    console.error('Error reservando ticket:', error);
+    throw error;
+  }
 }
 
 // Reportes de obras
 export async function generarReporteObra(showId) {
   requireRole(['ADMIN', 'SUPER']);
   try {
-    const response = await request('POST', `/reportes-obras/generar/${showId}`);
+    const token = currentSession.token;
+    const response = await request(`/api/reportes-obras/generar/${showId}`, {
+      method: 'POST',
+      token
+    });
     return response;
   } catch (error) {
     console.error('Error generando reporte:', error);
@@ -395,7 +589,8 @@ export async function generarReporteObra(showId) {
 export async function listarReportesObras() {
   requireRole(['ADMIN', 'SUPER']);
   try {
-    const response = await request('GET', '/reportes-obras');
+    const token = currentSession.token;
+    const response = await request('/api/reportes-obras', { token });
     return response.reportes || [];
   } catch (error) {
     console.error('Error listando reportes:', error);
@@ -406,7 +601,8 @@ export async function listarReportesObras() {
 export async function obtenerReporteObra(reporteId) {
   requireRole(['ADMIN', 'SUPER']);
   try {
-    const response = await request('GET', `/reportes-obras/${reporteId}`);
+    const token = currentSession.token;
+    const response = await request(`/api/reportes-obras/${reporteId}`, { token });
     return response.reporte;
   } catch (error) {
     console.error('Error obteniendo reporte:', error);
@@ -417,7 +613,11 @@ export async function obtenerReporteObra(reporteId) {
 export async function eliminarReporteObra(reporteId) {
   requireRole(['ADMIN', 'SUPER']);
   try {
-    const response = await request('DELETE', `/reportes-obras/${reporteId}`);
+    const token = currentSession.token;
+    const response = await request(`/api/reportes-obras/${reporteId}`, {
+      method: 'DELETE',
+      token
+    });
     return response;
   } catch (error) {
     console.error('Error eliminando reporte:', error);
@@ -429,7 +629,12 @@ export async function eliminarReporteObra(reporteId) {
 export async function crearEnsayo(ensayoData) {
   requireRole(['ADMIN', 'SUPER']);
   try {
-    const response = await request('POST', '/ensayos', ensayoData);
+    const token = currentSession.token;
+    const response = await request('/api/ensayos', {
+      method: 'POST',
+      token,
+      body: ensayoData
+    });
     return response;
   } catch (error) {
     console.error('Error creando ensayo:', error);
@@ -440,7 +645,8 @@ export async function crearEnsayo(ensayoData) {
 export async function listarEnsayos() {
   requireUser();
   try {
-    const response = await request('GET', '/ensayos');
+    const token = currentSession.token;
+    const response = await request('/api/ensayos', { token });
     return response || [];
   } catch (error) {
     console.error('Error listando ensayos:', error);
@@ -451,7 +657,8 @@ export async function listarEnsayos() {
 export async function obtenerEnsayo(ensayoId) {
   requireUser();
   try {
-    const response = await request('GET', `/ensayos/${ensayoId}`);
+    const token = currentSession.token;
+    const response = await request(`/api/ensayos/${ensayoId}`, { token });
     return response;
   } catch (error) {
     console.error('Error obteniendo ensayo:', error);
@@ -462,7 +669,12 @@ export async function obtenerEnsayo(ensayoId) {
 export async function actualizarEnsayo(ensayoId, ensayoData) {
   requireRole(['ADMIN', 'SUPER']);
   try {
-    const response = await request('PUT', `/ensayos/${ensayoId}`, ensayoData);
+    const token = currentSession.token;
+    const response = await request(`/api/ensayos/${ensayoId}`, {
+      method: 'PUT',
+      token,
+      body: ensayoData
+    });
     return response;
   } catch (error) {
     console.error('Error actualizando ensayo:', error);
@@ -473,7 +685,11 @@ export async function actualizarEnsayo(ensayoId, ensayoData) {
 export async function eliminarEnsayo(ensayoId) {
   requireRole(['ADMIN', 'SUPER']);
   try {
-    const response = await request('DELETE', `/ensayos/${ensayoId}`);
+    const token = currentSession.token;
+    const response = await request(`/api/ensayos/${ensayoId}`, {
+      method: 'DELETE',
+      token
+    });
     return response;
   } catch (error) {
     console.error('Error eliminando ensayo:', error);
@@ -485,7 +701,8 @@ export async function eliminarEnsayo(ensayoId) {
 export async function listarMiembros() {
   requireUser();
   try {
-    const response = await request('GET', '/usuarios/miembros');
+    const token = currentSession.token;
+    const response = await request('/api/usuarios/miembros', { token });
     return response || [];
   } catch (error) {
     console.error('Error listando miembros:', error);
