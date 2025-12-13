@@ -39,6 +39,31 @@
             // Si es una ruta desconocida del frontend, redirigir a 404 teatral
             window.location.replace('/404');
           }
+
+          // Detectar fallos de red globales y llevar al 404 teatral
+          window.addEventListener('unhandledrejection', function(e) {
+            var msg = (e && e.reason && (e.reason.message || e.reason.toString())) || '';
+            if (typeof msg === 'string' && (msg.includes('Network request failed') || msg.includes('Tiempo de espera'))) {
+              // Evitar bucles: no redirigir si ya estamos en /404
+              if (window.location.pathname !== '/404') {
+                window.location.replace('/404');
+              }
+            }
+          });
+          window.addEventListener('error', function(e) {
+            var msg = (e && e.message) || '';
+            if (typeof msg === 'string' && (msg.includes('Network request failed') || msg.includes('Tiempo de espera'))) {
+              if (window.location.pathname !== '/404') {
+                window.location.replace('/404');
+              }
+            }
+          }, true);
+          // Offline -> 404 teatral
+          window.addEventListener('offline', function() {
+            if (window.location.pathname !== '/404') {
+              window.location.replace('/404');
+            }
+          });
         } catch (e) {
           // Ignorar errores de redirección
         }
