@@ -5,6 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { initializeDatabase } from './db/postgres.js';
 import { initSupremo } from './init-supremo.js';
+import { seedMinimo } from './seed-minimo-init.js';
 import authRoutes from './routes/auth.routes.js';
 import usersRoutes from './routes/users.routes.js';
 import showsRoutes from './routes/shows.routes.js';
@@ -47,9 +48,12 @@ async function startServer() {
     // Inicializar schema de base de datos
     await initializeDatabase();
     
-    // Inicializar usuario supremo si no existe (sin bloquear el inicio)
+    // Inicializar usuario supremo y datos mínimos (sin bloquear el inicio)
     initSupremo().catch(err => {
       console.error('⚠️  Error inicializando usuario supremo (no crítico):', err.message);
+    });
+    seedMinimo().catch(err => {
+      console.error('⚠️  Error aplicando seed mínimo (no crítico):', err.message);
     });
     
     // Rutas de la API
