@@ -1,5 +1,6 @@
 import express from 'express';
 import { query } from '../db/postgres.js';
+import { crearShow } from '../controllers/shows.controller.js';
 import { authenticate, requireRole } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
@@ -52,5 +53,8 @@ router.post('/limpiar-db', authenticate, requireRole(['SUPER']), async (req, res
     res.status(500).json({ error: error.message });
   }
 });
+
+// Crear show (SUPER o ADMIN)
+router.post('/crear-show', authenticate, requireRole('SUPER', 'ADMIN'), crearShow);
 
 export default router;

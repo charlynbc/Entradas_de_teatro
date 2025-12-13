@@ -4,6 +4,11 @@ import { authenticate, requireRole } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
+// Root: listado mínimo de reportes (placeholder)
+router.get('/', authenticate, requireRole('SUPER', 'ADMIN'), (req, res) => {
+	res.json([]);
+});
+
 // Dashboard super
 router.get('/super', authenticate, requireRole('SUPER'), dashboardSuper);
 
