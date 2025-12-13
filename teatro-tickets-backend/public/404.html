@@ -33,8 +33,8 @@
       box-shadow: inset 0 0 40px rgba(0,0,0,0.6);
       filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
     }
-    .curtain.left { left: 0; transform: translateX(-5%); }
-    .curtain.right { right: 0; transform: translateX(5%); }
+    .curtain.left { left: 0; transform: translateX(-15%); animation: openLeft 1.4s ease forwards; }
+    .curtain.right { right: 0; transform: translateX(15%); animation: openRight 1.4s ease forwards; }
     .tassle {
       position: absolute;
       top: 40%;
@@ -52,15 +52,21 @@
       padding: 24px 32px;
       border: 4px solid #d4af37;
       border-radius: 12px;
-      background: rgba(26, 15, 15, 0.85);
+      background:
+        radial-gradient(circle at center, rgba(212,175,55,0.18) 0%, rgba(212,175,55,0.06) 34%, rgba(26,15,15,0.85) 60%),
+        rgba(26, 15, 15, 0.85);
       box-shadow: 0 0 20px rgba(212, 175, 55, 0.35), inset 0 0 12px rgba(212, 175, 55, 0.25);
       max-width: 780px;
     }
     .title {
-      font-size: 44px;
+      font-size: 48px;
       letter-spacing: 1px;
       margin: 0 0 12px;
-      text-shadow: 0 2px 0 #7a5b17, 0 0 14px rgba(212, 175, 55, 0.45);
+      background: linear-gradient(180deg, #fff4d0 0%, #d4af37 30%, #b88a1e 65%, #8a6a18 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 2px 0 #7a5b17, 0 0 14px rgba(212, 175, 55, 0.35);
     }
     .subtitle {
       font-size: 20px;
@@ -93,11 +99,36 @@
       left: 0;
       right: 0;
       height: 8px;
-      background: repeating-linear-gradient(90deg, rgba(212,175,55,0.9) 0 14px, rgba(212,175,55,0.3) 14px 28px);
+      background: repeating-linear-gradient(90deg, rgba(212,175,55,0.95) 0 14px, rgba(212,175,55,0.28) 14px 28px);
       filter: blur(0.4px);
     }
     .lights::before { top: 0; }
     .lights::after { bottom: 0; }
+
+    /* Animaciones de cortinas */
+    @keyframes openLeft {
+      0% { transform: translateX(-15%); }
+      100% { transform: translateX(-5%); }
+    }
+    @keyframes openRight {
+      0% { transform: translateX(15%); }
+      100% { transform: translateX(5%); }
+    }
+
+    /* Foco de luz suave */
+    .spotlight {
+      position: absolute;
+      width: 50vmax;
+      height: 50vmax;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,241,176,0.15) 0%, rgba(255,241,176,0.06) 45%, rgba(0,0,0,0) 70%);
+      filter: blur(2px);
+      animation: breathe 4s ease-in-out infinite;
+    }
+    @keyframes breathe {
+      0%, 100% { transform: translateY(0); opacity: 0.9; }
+      50% { transform: translateY(-8px); opacity: 0.7; }
+    }
   </style>
 </head>
 <body>
@@ -106,6 +137,7 @@
     <div class="curtain right"></div>
     <div class="tassle left"></div>
     <div class="tassle right"></div>
+    <div class="spotlight"></div>
     <div class="marquee" role="alert" aria-live="polite">
       <h1 class="title">Cayó el elenco, vuelva más tarde</h1>
       <p class="subtitle">Error 404 · La función está suspendida momentáneamente.</p>
