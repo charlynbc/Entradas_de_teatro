@@ -58,12 +58,7 @@ async function startServer() {
     
     // Rutas de la API
     app.get('/api', (req, res) => {
-      res.json({
-        ok: true,
-        message: 'API Teatro Tickets - PostgreSQL',
-        version: '3.0.0',
-        docs: '/README'
-      });
+      res.json({ ok: true, name: 'Baco Teatro API', version: '3.0.0' });
     });
 
     app.get('/health', async (req, res) => {
