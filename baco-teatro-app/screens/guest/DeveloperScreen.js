@@ -24,177 +24,31 @@ export default function DeveloperScreen({ navigation }) {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.content}>
-        {/* Cortinas teatrales superior */}
-        <View style={styles.curtainTop}>
-          <View style={styles.curtainLeft} />
-          <View style={styles.curtainRight} />
-        </View>
-
-        {/* Header con spotlight */}
-        <LinearGradient
-          colors={['#FFD700', '#FFA500', '#FF8C00']}
-          style={styles.headerGradient}
-        >
-          <View style={styles.spotlightContainer}>
-            <View style={styles.spotlight}>
-              <MaterialCommunityIcons name="account-circle" size={80} color="#000" />
-            </View>
-          </View>
+        <LinearGradient colors={['#FFD700', '#FFA500']} style={styles.headerGradient}>
+          <MaterialCommunityIcons name="account-circle" size={80} color="#000" />
           <Text style={styles.name}>Carlos Barrios</Text>
-          <Text style={styles.role}>💻 Desarrollador Full Stack</Text>
-          <Text style={styles.tagline}>Creando experiencias digitales únicas</Text>
+          <Text style={styles.role}>Desarrollador</Text>
         </LinearGradient>
 
-        {/* Sección Sobre Mí */}
         <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <MaterialCommunityIcons name="drama-masks" size={24} color={colors.secondary} />
-            <Text style={styles.cardTitle}>Sobre el Desarrollador</Text>
-          </View>
-          <Text style={styles.bioText}>
-            Especialista en desarrollo web y móvil con pasión por crear soluciones 
-            digitales profesionales y escalables. Transformo ideas en aplicaciones 
-            funcionales y elegantes.
-          </Text>
+          <Text style={styles.bioText}>Construyo software claro y útil. Si te interesa colaborar, envíame un correo.</Text>
         </View>
 
-        {/* Botones de Redes Sociales Teatrales */}
-        <View style={styles.socialContainer}>
-          <TouchableOpacity style={styles.socialButton} onPress={openInstagram}>
-            <LinearGradient
-              colors={['#833AB4', '#FD1D1D', '#FCAF45']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.socialGradient}
-            >
-              <MaterialCommunityIcons name="instagram" size={32} color="#fff" />
-              <View style={styles.socialTextContainer}>
-                <Text style={styles.socialLabel}>Instagram</Text>
-                <Text style={styles.socialHandle}>@charly_nbc</Text>
-              </View>
-            </LinearGradient>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.socialButton} onPress={openLinkedIn}>
-            <LinearGradient
-              colors={['#0077B5', '#0e76a8']}
-              style={styles.socialGradient}
-            >
-              <Ionicons name="logo-linkedin" size={32} color="#fff" />
-              <View style={styles.socialTextContainer}>
-                <Text style={styles.socialLabel}>LinkedIn</Text>
-                <Text style={styles.socialHandle}>Ver perfil profesional</Text>
-              </View>
-            </LinearGradient>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.socialButton} onPress={openGitHub}>
-            <LinearGradient
-              colors={['#24292e', '#1a1d21']}
-              style={styles.socialGradient}
-            >
-              <Ionicons name="logo-github" size={32} color="#fff" />
-              <View style={styles.socialTextContainer}>
-                <Text style={styles.socialLabel}>GitHub</Text>
-                <Text style={styles.socialHandle}>Proyectos y código</Text>
-              </View>
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
-
-        {/* Servicios con iconos teatrales */}
-        <View style={styles.servicesCard}>
-          <View style={styles.cardHeader}>
-            <MaterialCommunityIcons name="briefcase" size={24} color={colors.secondary} />
-            <Text style={styles.cardTitle}>Servicios Profesionales</Text>
-          </View>
-          
-          <View style={styles.serviceItem}>
-            <LinearGradient
-              colors={['#4B0082', '#8A2BE2']}
-              style={styles.serviceIcon}
-            >
-              <MaterialCommunityIcons name="web" size={28} color="#FFD700" />
-            </LinearGradient>
-            <View style={styles.serviceTextContainer}>
-              <Text style={styles.serviceTitle}>Desarrollo Web & Móvil</Text>
-              <Text style={styles.serviceDesc}>Apps nativas y web responsivas</Text>
-            </View>
-          </View>
-
-          <View style={styles.serviceItem}>
-            <LinearGradient
-              colors={['#8B0000', '#DC143C']}
-              style={styles.serviceIcon}
-            >
-              <MaterialCommunityIcons name="database" size={28} color="#FFD700" />
-            </LinearGradient>
-            <View style={styles.serviceTextContainer}>
-              <Text style={styles.serviceTitle}>Backend & Bases de Datos</Text>
-              <Text style={styles.serviceDesc}>APIs RESTful y PostgreSQL</Text>
-            </View>
-          </View>
-
-          <View style={styles.serviceItem}>
-            <LinearGradient
-              colors={['#228B22', '#32CD32']}
-              style={styles.serviceIcon}
-            >
-              <MaterialCommunityIcons name="cloud-upload" size={28} color="#FFD700" />
-            </LinearGradient>
-            <View style={styles.serviceTextContainer}>
-              <Text style={styles.serviceTitle}>Deploy & Mantenimiento</Text>
-              <Text style={styles.serviceDesc}>Hosting, CI/CD y soporte</Text>
-            </View>
-          </View>
-
-          <View style={styles.serviceItem}>
-            <LinearGradient
-              colors={['#FF8C00', '#FFD700']}
-              style={styles.serviceIcon}
-            >
-              <MaterialCommunityIcons name="chart-line" size={28} color="#000" />
-            </LinearGradient>
-            <View style={styles.serviceTextContainer}>
-              <Text style={styles.serviceTitle}>Consultoría & Optimización</Text>
-              <Text style={styles.serviceDesc}>Mejora de rendimiento</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* CTA Contacto */}
         <TouchableOpacity style={styles.ctaButton} onPress={openEmail}>
-          <LinearGradient
-            colors={['#FFD700', '#FFA500', '#FFD700']}
-            style={styles.ctaGradient}
-          >
-            <MaterialCommunityIcons name="email-outline" size={28} color="#000" />
-            <Text style={styles.ctaText}>Contactar para Proyectos</Text>
+          <LinearGradient colors={['#FFD700', '#FFA500']} style={styles.ctaGradient}>
+            <MaterialCommunityIcons name="email-outline" size={24} color="#000" />
+            <Text style={styles.ctaText}>Enviar correo</Text>
           </LinearGradient>
         </TouchableOpacity>
 
-        {/* Botón Volver a Inicio - Teatral */}
-        <TouchableOpacity 
-          style={styles.backButton} 
-          onPress={() => navigation.navigate('GuestHome')}
-        >
-          <LinearGradient
-            colors={['#8B0000', '#DC143C', '#8B0000']}
-            style={styles.backGradient}
-          >
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate('GuestHome')}>
+          <LinearGradient colors={['#8B0000', '#DC143C']} style={styles.backGradient}>
             <View style={styles.backContent}>
-              <MaterialCommunityIcons name="home-variant" size={32} color="#FFD700" />
-              <Text style={styles.backText}>Volver al Inicio</Text>
-              <MaterialCommunityIcons name="arrow-left-circle" size={24} color="#FFD700" />
+              <MaterialCommunityIcons name="home-variant" size={28} color="#FFD700" />
+              <Text style={styles.backText}>Inicio</Text>
             </View>
           </LinearGradient>
         </TouchableOpacity>
-
-        {/* Footer decorativo */}
-        <View style={styles.footer}>
-          <MaterialCommunityIcons name="theater" size={24} color={colors.secondary} />
-          <Text style={styles.footerText}>Hecho con pasión por el código</Text>
-        </View>
       </View>
     </ScrollView>
   );
