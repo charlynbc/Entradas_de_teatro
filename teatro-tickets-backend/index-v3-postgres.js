@@ -98,16 +98,26 @@ async function startServer() {
     app.use('/api/ensayos', ensayosRoutes);
     app.use('/api/admin', adminRoutes);
 
-    // Servir frontend en producción
+    // Ruta explícita para pantalla 404 teatral
+    app.get('/404', (req, res) => {
+      return res.status(404).sendFile(path.join(PUBLIC_DIR, '404.html'));
+    });
+
+    // Servir frontend en producción (SPA) y caer en 404 teatral si no hay index
     app.use((req, res, next) => {
       const isApiRoute = req.path.startsWith('/api') || req.path.startsWith('/health');
       if (req.method !== 'GET' || isApiRoute) {
         return next();
       }
-      return res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
+      const indexPath = path.join(PUBLIC_DIR, 'index.html');
+      return res.sendFile(indexPath, (err) => {
+        if (err) {
+          return res.status(404).sendFile(path.join(PUBLIC_DIR, '404.html'));
+        }
+      });
     });
 
-    // Middleware para rutas no encontradas
+    // Middleware para rutas API no encontradas
     app.use((req, res, next) => {
       if (req.path.startsWith('/api')) {
         return res.status(404).json({ error: 'Ruta no encontrada' });
