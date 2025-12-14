@@ -156,7 +156,9 @@ export async function resetPasswordByFlexibleId(idOrCedula, newPassword) {
   return { ok: true };
 }
 
-export async function listMembers(currentRole) {
+// Listar todos los usuarios activos (incluye SUPER, ADMIN, VENDEDOR)
+export async function listAllMembers(currentRole) {
+  console.log('🔍 listAllMembers llamado - versión actualizada con SUPER incluido');
   const result = await query(
     `SELECT 
         u.cedula,
@@ -174,13 +176,14 @@ export async function listMembers(currentRole) {
       FROM users u
       LEFT JOIN tickets t ON t.vendedor_cedula = u.cedula AND t.estado != 'USADO'
       LEFT JOIN shows s ON s.id = t.show_id
-      WHERE u.role IN ('ADMIN', 'VENDEDOR')
+      WHERE u.active = true
       GROUP BY u.cedula, u.name, u.role, u.genero, u.created_at, u.active
       ORDER BY 
         CASE u.role 
-          WHEN 'ADMIN' THEN 1 
-          WHEN 'VENDEDOR' THEN 2 
-          ELSE 3 
+          WHEN 'SUPER' THEN 1
+          WHEN 'ADMIN' THEN 2 
+          WHEN 'VENDEDOR' THEN 3 
+          ELSE 4 
         END,
         u.name`
   );

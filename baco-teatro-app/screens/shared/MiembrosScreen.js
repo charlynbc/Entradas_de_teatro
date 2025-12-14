@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Alert, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionCard from '../../components/SectionCard';
@@ -39,12 +39,15 @@ export default function MiembrosScreen({ navigation }) {
 
   const getRoleLabel = (rol, genero) => {
     switch (rol) {
+      case 'ADMIN':
       case 'admin':
         return 'Director';
+      case 'VENDEDOR':
       case 'vendedor':
         if (genero === 'femenino') return 'Actriz';
         if (genero === 'masculino') return 'Actor';
         return 'Actante';
+      case 'SUPER':
       case 'supremo':
         return 'Super Usuario';
       default:
@@ -54,10 +57,13 @@ export default function MiembrosScreen({ navigation }) {
 
   const getRoleIcon = (rol) => {
     switch (rol) {
+      case 'ADMIN':
       case 'admin':
         return 'film-outline';
+      case 'VENDEDOR':
       case 'vendedor':
         return 'person-outline';
+      case 'SUPER':
       case 'supremo':
         return 'star-outline';
       default:
@@ -65,43 +71,71 @@ export default function MiembrosScreen({ navigation }) {
     }
   };
 
+  const getRoleColor = (rol) => {
+    switch (rol) {
+      case 'SUPER':
+      case 'supremo':
+        return '#FFD700'; // Dorado
+      case 'ADMIN':
+      case 'admin':
+        return colors.secondary;
+      case 'VENDEDOR':
+      case 'vendedor':
+        return colors.primary;
+      default:
+        return colors.textMuted;
+    }
+  };
+
+  const getAvatarSource = (rol, genero) => {
+    // Determinar imagen según rol y género
+    if (rol === 'SUPER' || rol === 'supremo') {
+      return { uri: 'https://api.dicebear.com/7.x/bottts/png?seed=super&backgroundColor=ffd700' };
+    }
+    if (rol === 'ADMIN' || rol === 'admin') {
+      return { uri: `https://api.dicebear.com/7.x/avataaars/png?seed=director&backgroundColor=8b5cf6` };
+    }
+    // Para actores/actrices
+    const seed = genero === 'femenino' ? 'actress' : genero === 'masculino' ? 'actor' : 'performer';
+    return { uri: `https://api.dicebear.com/7.x/avataaars/png?seed=${seed}&backgroundColor=ec4899` };
+  };
+
   const renderMiembro = ({ item }) => {
     const obras = JSON.parse(item.obras || '[]').filter(o => o.show_id);
+    const roleColor = getRoleColor(item.rol);
     
     return (
       <TouchableOpacity
         style={styles.miembroCard}
         onPress={() => {
-          Alert.alert(
-            item.name,
-            `${getRoleLabel(item.rol, item.genero)}\n\nObras activas: ${item.obras_activas || 0}\n\nCédula: ${item.cedula}`,
-            [
-              {
-                text: 'Ver obras',
-                onPress: () => {
-                  if (obras.length > 0) {
-                    const obrasText = obras.map(o => `• ${o.show_nombre}`).join('\n');
-                    Alert.alert('Obras de ' + item.name, obrasText);
-                  } else {
-                    Alert.alert('Sin obras', 'Este miembro no tiene obras asignadas actualmente');
-                  }
-                }
-              },
-              { text: 'Cerrar', style: 'cancel' }
-            ]
-          );
+          if (confirm(`${item.name}\n${getRoleLabel(item.rol, item.genero)}\n\nObras activas: ${item.obras_activas || 0}\nCédula: ${item.cedula}\n\n¿Ver obras?`)) {
+            if (obras.length > 0) {
+              const obrasText = obras.map(o => `• ${o.show_nombre}`).join('\n');
+              alert('Obras de ' + item.name + '\n\n' + obrasText);
+            } else {
+              alert('Este miembro no tiene obras asignadas actualmente');
+            }
+          }
         }}
       >
         <View style={styles.miembroHeader}>
-          <View style={[styles.iconContainer, { backgroundColor: item.rol === 'admin' ? colors.secondary + '20' : colors.primary + '20' }]}>
-            <Ionicons name={getRoleIcon(item.rol)} size={28} color={item.rol === 'admin' ? colors.secondary : colors.primary} />
+          <View style={styles.avatarContainer}>
+            <Image 
+              source={getAvatarSource(item.rol, item.genero)}
+              style={styles.avatar}
+            />
+            <View style={[styles.roleIconBadge, { backgroundColor: roleColor }]}>
+              <Ionicons name={getRoleIcon(item.rol)} size={14} color="white" />
+            </View>
           </View>
           <View style={styles.miembroInfo}>
             <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
               <Text style={styles.miembroNombre}>{item.name}</Text>
               <Text style={{fontSize: 16}}>{getGeneroLabel(item.genero)}</Text>
             </View>
-            <Text style={styles.miembroRol}>{getRoleLabel(item.rol, item.genero)}</Text>
+            <Text style={[styles.miembroRol, { color: roleColor }]}>
+              {getRoleLabel(item.rol, item.genero)}
+            </Text>
             {item.obras_activas > 0 && (
               <Text style={styles.miembroObras}>
                 {item.obras_activas} {item.obras_activas === 1 ? 'obra activa' : 'obras activas'}
@@ -124,21 +158,35 @@ export default function MiembrosScreen({ navigation }) {
     );
   }
 
-  // Separar directores y actores
-  const directores = miembros.filter(m => m.rol === 'admin');
-  const actores = miembros.filter(m => m.rol === 'vendedor');
+  // Separar por roles y ordenar alfabéticamente cada grupo
+  const superUsuarios = miembros.filter(m => m.rol === 'SUPER' || m.rol === 'supremo')
+    .sort((a, b) => a.name.localeCompare(b.name));
+  const directores = miembros.filter(m => m.rol === 'ADMIN' || m.rol === 'admin')
+    .sort((a, b) => a.name.localeCompare(b.name));
+  const actores = miembros.filter(m => m.rol === 'VENDEDOR' || m.rol === 'vendedor')
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <ScreenContainer>
       <View style={styles.header}>
-        <Text style={styles.title}>Miembros del Elenco</Text>
-        <Text style={styles.subtitle}>Directores y actores de Baco Teatro</Text>
+        <Text style={styles.title}>Todos los Usuarios</Text>
+        <Text style={styles.subtitle}>{miembros.length} usuarios registrados en la aplicación</Text>
       </View>
 
+      {superUsuarios.length > 0 && (
+        <SectionCard title="🌟 Super Usuarios" subtitle={`${superUsuarios.length} ${superUsuarios.length === 1 ? 'administrador' : 'administradores'} del sistema`}>
+          {superUsuarios.map(item => (
+            <View key={item.cedula || item.id}>
+              {renderMiembro({ item })}
+            </View>
+          ))}
+        </SectionCard>
+      )}
+
       {directores.length > 0 && (
-        <SectionCard title="Directores" subtitle={`${directores.length} ${directores.length === 1 ? 'director' : 'directores'}`}>
+        <SectionCard title="🎬 Directores" subtitle={`${directores.length} ${directores.length === 1 ? 'director' : 'directores'}`}>
           {directores.map(item => (
-            <View key={item.id}>
+            <View key={item.cedula || item.id}>
               {renderMiembro({ item })}
             </View>
           ))}
@@ -146,9 +194,9 @@ export default function MiembrosScreen({ navigation }) {
       )}
 
       {actores.length > 0 && (
-        <SectionCard title="Actores y actrices" subtitle={`${actores.length} ${actores.length === 1 ? 'miembro' : 'miembros'}`}>
+        <SectionCard title="🎭 Actores y actrices" subtitle={`${actores.length} ${actores.length === 1 ? 'miembro' : 'miembros'}`}>
           {actores.map(item => (
-            <View key={item.id}>
+            <View key={item.cedula || item.id}>
               {renderMiembro({ item })}
             </View>
           ))}
@@ -207,6 +255,31 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  avatarContainer: {
+    width: 56,
+    height: 56,
+    position: 'relative',
+  },
+  avatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.surface,
+    borderWidth: 2,
+    borderColor: colors.border,
+  },
+  roleIconBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'white',
   },
   miembroInfo: {
     flex: 1,

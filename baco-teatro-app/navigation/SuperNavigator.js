@@ -28,7 +28,7 @@ const Stack = createNativeStackNavigator();
 
 const iconMap = {
   Dashboard: 'speedometer-outline',
-  Directores: 'people-circle-outline',
+  'Crear usuario': 'person-add-outline',
   Producciones: 'color-palette-outline',
   Funciones: 'calendar-outline',
   'Mis Entradas': 'ticket-outline',
@@ -58,7 +58,7 @@ function SuperTabs() {
       })}
     >
       <Tab.Screen name="Dashboard" component={SuperDashboardScreen} />
-      <Tab.Screen name="Directores" component={DirectorsScreen} />
+      <Tab.Screen name="Crear usuario" component={DirectorsScreen} />
       <Tab.Screen name="Funciones" component={DirectorShowsScreen} />
       <Tab.Screen name="Mis Entradas" component={ActorStockScreen} options={{ title: 'Mis Entradas' }} />
       <Tab.Screen name="Miembros" component={MiembrosScreen} />

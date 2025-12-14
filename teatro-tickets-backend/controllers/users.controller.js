@@ -1,4 +1,4 @@
-import { createUser, listUsers, listSellersWithStats, deleteUserByFlexibleId, listMembers as listMembersSvc, resetPasswordByFlexibleId } from '../services/users.service.js';
+import { createUser, listUsers, listSellersWithStats, deleteUserByFlexibleId, listAllMembers as listMembersSvc, resetPasswordByFlexibleId } from '../services/users.service.js';
 
 export async function crearUsuario(req, res) {
   try {
@@ -48,11 +48,13 @@ export async function desactivarUsuario(req, res) {
   }
 }
 
-// Listar todos los miembros (excluye usuario supremo)
+// Listar todos los usuarios activos del sistema (incluye SUPER)
 export async function listarMiembros(req, res) {
   try {
+    console.log('✅ Controller listarMiembros llamado por usuario:', req.user.cedula);
     const { role } = req.user;
     const rows = await listMembersSvc(role);
+    console.log(`📋 listMembersSvc devolvió ${rows.length} miembros`);
     res.json(rows);
   } catch (error) {
     console.error('Error listando miembros:', error);

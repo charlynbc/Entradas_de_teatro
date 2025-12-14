@@ -23,10 +23,8 @@ export default function DirectorsScreen() {
   const [directors, setDirectors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [vendors, setVendors] = useState([]);
-  const [directorForm, setDirectorForm] = useState({ name: '', cedula: '', genero: 'masculino' });
-  const [actorForm, setActorForm] = useState({ name: '', cedula: '', genero: 'masculino' });
-  const [savingDirector, setSavingDirector] = useState(false);
-  const [savingActor, setSavingActor] = useState(false);
+  const [userForm, setUserForm] = useState({ name: '', cedula: '', genero: 'masculino', role: 'ADMIN' });
+  const [saving, setSaving] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -47,109 +45,67 @@ export default function DirectorsScreen() {
     load();
   }, []);
 
-  const handleCreateDirector = async () => {
-    if (!directorForm.name || !directorForm.cedula) {
+  const handleCreateUser = async () => {
+    if (!userForm.name || !userForm.cedula) {
       showError('Completa nombre y cédula');
       return;
     }
-    setSavingDirector(true);
+    setSaving(true);
     try {
-      await createDirector(directorForm);
-      setDirectorForm({ name: '', cedula: '', genero: 'masculino' });
+      if (userForm.role === 'ADMIN') {
+        await createDirector(userForm);
+        showSuccess('✨ Director creado con éxito (contraseña: admin123)');
+      } else {
+        await createVendor(userForm);
+        const generoLabel = userForm.genero === 'femenino' ? 'Actriz' : 'Actor';
+        showSuccess(`✨ ${generoLabel} creado con éxito (contraseña: admin123)`);
+      }
+      setUserForm({ name: '', cedula: '', genero: 'masculino', role: 'ADMIN' });
       load();
-      showSuccess('✨ Director creado con éxito (contraseña: admin123)');
     } catch (error) {
-      showError(error.message || 'No se pudo crear el director');
+      showError(error.message || 'No se pudo crear el usuario');
     } finally {
-      setSavingDirector(false);
-    }
-  };
-
-  const handleCreateActor = async () => {
-    if (!actorForm.name || !actorForm.cedula) {
-      showError('Completa nombre y cédula');
-      return;
-    }
-    setSavingActor(true);
-    try {
-      await createVendor(actorForm);
-      setActorForm({ name: '', cedula: '', genero: 'masculino' });
-      load();
-      const generoLabel = actorForm.genero === 'femenino' ? 'Actriz' : 'Actor';
-      showSuccess(`✨ ${generoLabel} creado con éxito (contraseña: admin123)`);
-    } catch (error) {
-      showError(error.message || 'No se pudo crear el actor/actriz');
-    } finally {
-      setSavingActor(false);
+      setSaving(false);
     }
   };
 
   const handleReset = async (cedula) => {
-    Alert.alert(
-      '🔐 Resetear contraseña',
-      `¿Querés restablecer la contraseña de ${cedula} a admin123?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Confirmar',
-          onPress: async () => {
-            try {
-              await resetDirectorPassword(cedula);
-              showSuccess('🔐 Contraseña reseteada con éxito');
-            } catch (error) {
-              showError('No se pudo resetear la contraseña');
-            }
-          },
-        },
-      ]
-    );
+    if (!confirm(`🔐 Resetear contraseña\n\n¿Querés restablecer la contraseña de ${cedula} a admin123?`)) {
+      return;
+    }
+    try {
+      await resetDirectorPassword(cedula);
+      showSuccess('🔐 Contraseña reseteada con éxito');
+    } catch (error) {
+      showError('No se pudo resetear la contraseña');
+    }
   };
 
-  const handleDeleteDirector = (cedula, nombre) => {
-    Alert.alert(
-      '🗑️ Eliminar director',
-      `Se van a borrar las obras y funciones asignadas a ${nombre}. ¿Continuar?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteDirector(cedula);
-              load();
-              showSuccess('🗑️ Director eliminado con éxito');
-            } catch (error) {
-              showError(error.message || 'No se pudo eliminar el director');
-            }
-          },
-        },
-      ]
-    );
+  const handleDeleteDirector = async (cedula, nombre) => {
+    if (!confirm(`🗑️ Eliminar director\n\nSe van a borrar las obras y funciones asignadas a ${nombre}. ¿Continuar?`)) {
+      return;
+    }
+    try {
+      await deleteDirector(cedula);
+      await load();
+      showSuccess('🗑️ Director eliminado con éxito');
+    } catch (error) {
+      showError(error.message || 'No se pudo eliminar el director');
+    }
   };
 
-  const handleDeleteActor = (cedula, nombre, genero) => {
+  const handleDeleteActor = async (cedula, nombre, genero) => {
     const generoLabel = genero === 'femenino' ? 'actriz' : 'actor';
-    Alert.alert(
-      `🗑️ Eliminar ${generoLabel}`,
-      `El stock de ${nombre} volverá a dirección. ¿Confirmás?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteVendor(cedula);
-              load();
-              showSuccess(`🗑️ ${generoLabel === 'actriz' ? 'Actriz' : 'Actor'} eliminado con éxito`);
-            } catch (error) {
-              showError(error.message || `No se pudo eliminar el ${generoLabel}`);
-            }
-          },
-        },
-      ]
-    );
+    if (!confirm(`🗑️ Eliminar ${generoLabel}\n\nEl stock de ${nombre} volverá a dirección. ¿Confirmás?`)) {
+      return;
+    }
+    try {
+      await deleteVendor(cedula);
+      await load();
+      showSuccess(`🗑️ ${generoLabel === 'actriz' ? 'Actriz' : 'Actor'} eliminado con éxito`);
+    } catch (error) {
+      showError(error.message || `No se pudo eliminar el ${generoLabel}`);
+    }
   };
 
   const getGeneroLabel = (genero) => {
@@ -175,28 +131,39 @@ export default function DirectorsScreen() {
         </View>
       </LinearGradient>
       
-      {/* SECCIÓN DIRECTORES */}
-      <SectionCard title="Crear director" subtitle="Cada director administra sus obras">
+      {/* CREAR USUARIO */}
+      <SectionCard title="Crear usuario" subtitle="Directores y actores del teatro">
+        <View style={styles.pickerContainer}>
+          <Text style={styles.pickerLabel}>Rol:</Text>
+          <Picker
+            selectedValue={userForm.role}
+            onValueChange={(role) => setUserForm((prev) => ({ ...prev, role }))}
+            style={styles.picker}
+          >
+            <Picker.Item label="🎬 Director" value="ADMIN" />
+            <Picker.Item label="🎭 Actor/Actriz" value="VENDEDOR" />
+          </Picker>
+        </View>
         <TextInput
           style={styles.input}
           placeholder="Nombre completo"
           placeholderTextColor={colors.textSoft}
-          value={directorForm.name}
-          onChangeText={(name) => setDirectorForm((prev) => ({ ...prev, name }))}
+          value={userForm.name}
+          onChangeText={(name) => setUserForm((prev) => ({ ...prev, name }))}
         />
         <TextInput
           style={styles.input}
           placeholder="Cédula"
           placeholderTextColor={colors.textSoft}
-          value={directorForm.cedula}
-          onChangeText={(cedula) => setDirectorForm((prev) => ({ ...prev, cedula }))}
+          value={userForm.cedula}
+          onChangeText={(cedula) => setUserForm((prev) => ({ ...prev, cedula }))}
           keyboardType="numeric"
         />
         <View style={styles.pickerContainer}>
           <Text style={styles.pickerLabel}>Género:</Text>
           <Picker
-            selectedValue={directorForm.genero}
-            onValueChange={(genero) => setDirectorForm((prev) => ({ ...prev, genero }))}
+            selectedValue={userForm.genero}
+            onValueChange={(genero) => setUserForm((prev) => ({ ...prev, genero }))}
             style={styles.picker}
           >
             <Picker.Item label="Masculino ♂️" value="masculino" />
@@ -204,8 +171,12 @@ export default function DirectorsScreen() {
             <Picker.Item label="Otro ⚧" value="otro" />
           </Picker>
         </View>
-        <TouchableOpacity style={styles.button} onPress={handleCreateDirector} disabled={savingDirector}>
-          {savingDirector ? <ActivityIndicator color={colors.black} /> : <Text style={styles.buttonText}>Crear director</Text>}
+        <TouchableOpacity style={styles.button} onPress={handleCreateUser} disabled={saving}>
+          {saving ? <ActivityIndicator color={colors.black} /> : (
+            <Text style={styles.buttonText}>
+              {userForm.role === 'ADMIN' ? 'Crear director' : 'Crear actor/actriz'}
+            </Text>
+          )}
         </TouchableOpacity>
       </SectionCard>
 
@@ -235,40 +206,6 @@ export default function DirectorsScreen() {
             </View>
           ))
         )}
-      </SectionCard>
-
-      {/* SECCIÓN ACTORES/ACTRICES */}
-      <SectionCard title="Crear actor/actriz" subtitle="Los actores venden entradas">
-        <TextInput
-          style={styles.input}
-          placeholder="Nombre completo"
-          placeholderTextColor={colors.textSoft}
-          value={actorForm.name}
-          onChangeText={(name) => setActorForm((prev) => ({ ...prev, name }))}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Cédula"
-          placeholderTextColor={colors.textSoft}
-          value={actorForm.cedula}
-          onChangeText={(cedula) => setActorForm((prev) => ({ ...prev, cedula }))}
-          keyboardType="numeric"
-        />
-        <View style={styles.pickerContainer}>
-          <Text style={styles.pickerLabel}>Género:</Text>
-          <Picker
-            selectedValue={actorForm.genero}
-            onValueChange={(genero) => setActorForm((prev) => ({ ...prev, genero }))}
-            style={styles.picker}
-          >
-            <Picker.Item label="Masculino ♂️ (Actor)" value="masculino" />
-            <Picker.Item label="Femenino ♀️ (Actriz)" value="femenino" />
-            <Picker.Item label="Otro ⚧ (Actante)" value="otro" />
-          </Picker>
-        </View>
-        <TouchableOpacity style={styles.button} onPress={handleCreateActor} disabled={savingActor}>
-          {savingActor ? <ActivityIndicator color={colors.black} /> : <Text style={styles.buttonText}>Crear actor/actriz</Text>}
-        </TouchableOpacity>
       </SectionCard>
 
       <SectionCard title="Actores y actrices" subtitle={`${vendors.length} cuenta${vendors.length !== 1 ? 's' : ''}`}>
@@ -352,8 +289,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   picker: {
-    color: colors.text,
+    color: '#000000',
     backgroundColor: 'transparent',
+    fontWeight: '600',
   },
   button: {
     backgroundColor: colors.secondary,
