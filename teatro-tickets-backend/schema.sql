@@ -11,7 +11,9 @@ CREATE TABLE users (
   created_at    TIMESTAMP NOT NULL DEFAULT NOW(),
   active        BOOLEAN NOT NULL DEFAULT TRUE,
   -- agregado para relacionar tickets con vendedores
-  phone         VARCHAR(20)
+  phone         VARCHAR(20),
+  -- género del usuario (masculino, femenino, otro)
+  genero        VARCHAR(20) DEFAULT 'otro'
 );
 
 -- Índice único opcional para phone si se usa como identificador de login
