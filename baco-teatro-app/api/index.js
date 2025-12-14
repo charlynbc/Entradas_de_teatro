@@ -711,3 +711,121 @@ export async function listarMiembros() {
     throw error;
   }
 }
+
+// ============================================
+// GRUPOS (Sistema de clases de teatro)
+// ============================================
+
+export async function crearGrupo(payload) {
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const token = currentSession.token;
+    const response = await request('/api/grupos', {
+      method: 'POST',
+      token,
+      body: payload
+    });
+    return response;
+  } catch (error) {
+    console.error('Error creando grupo:', error);
+    throw error;
+  }
+}
+
+export async function listarGrupos() {
+  requireUser();
+  try {
+    const token = currentSession.token;
+    const response = await request('/api/grupos', { token });
+    return response || [];
+  } catch (error) {
+    console.error('Error listando grupos:', error);
+    throw error;
+  }
+}
+
+export async function obtenerGrupo(grupoId) {
+  requireUser();
+  try {
+    const token = currentSession.token;
+    const response = await request(`/api/grupos/${grupoId}`, { token });
+    return response;
+  } catch (error) {
+    console.error('Error obteniendo grupo:', error);
+    throw error;
+  }
+}
+
+export async function actualizarGrupo(grupoId, payload) {
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const token = currentSession.token;
+    const response = await request(`/api/grupos/${grupoId}`, {
+      method: 'PUT',
+      token,
+      body: payload
+    });
+    return response;
+  } catch (error) {
+    console.error('Error actualizando grupo:', error);
+    throw error;
+  }
+}
+
+export async function agregarMiembroGrupo(grupoId, miembroCedula) {
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const token = currentSession.token;
+    const response = await request(`/api/grupos/${grupoId}/miembros`, {
+      method: 'POST',
+      token,
+      body: { miembro_cedula: miembroCedula }
+    });
+    return response;
+  } catch (error) {
+    console.error('Error agregando miembro al grupo:', error);
+    throw error;
+  }
+}
+
+export async function eliminarMiembroGrupo(grupoId, miembroCedula) {
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const token = currentSession.token;
+    const response = await request(`/api/grupos/${grupoId}/miembros/${miembroCedula}`, {
+      method: 'DELETE',
+      token
+    });
+    return response;
+  } catch (error) {
+    console.error('Error eliminando miembro del grupo:', error);
+    throw error;
+  }
+}
+
+export async function archivarGrupo(grupoId) {
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const token = currentSession.token;
+    const response = await request(`/api/grupos/${grupoId}/archivar`, {
+      method: 'POST',
+      token
+    });
+    return response;
+  } catch (error) {
+    console.error('Error archivando grupo:', error);
+    throw error;
+  }
+}
+
+export async function listarActoresDisponibles(grupoId) {
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const token = currentSession.token;
+    const response = await request(`/api/grupos/${grupoId}/actores-disponibles`, { token });
+    return response || [];
+  } catch (error) {
+    console.error('Error listando actores disponibles:', error);
+    throw error;
+  }
+}

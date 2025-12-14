@@ -156,12 +156,96 @@ FROM shows s
 LEFT JOIN tickets t ON t.show_id = s.id
 GROUP BY s.id, s.obra, s.fecha, s.capacidad, s.base_price;
 
+-- 6. GRUPOS (para clases de teatro)
+CREATE TABLE grupos (
+  id                SERIAL PRIMARY KEY,
+  nombre            VARCHAR(200) NOT NULL,
+  descripcion       TEXT,
+  director_cedula   VARCHAR(20) NOT NULL REFERENCES users(cedula),  -- creador y director del grupo
+  
+  -- Horario fijo de clases (NO se puede cambiar)
+  dia_semana        VARCHAR(20) NOT NULL CHECK (dia_semana IN ('Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo')),
+  hora_inicio       TIME NOT NULL,
+  
+  -- Período del grupo
+  fecha_inicio      DATE NOT NULL,
+  fecha_fin         DATE NOT NULL,
+  
+  -- Obra que trabajarán
+  obra_a_realizar   VARCHAR(200),
+  
+  -- Estado
+  estado            VARCHAR(20) NOT NULL CHECK (estado IN ('ACTIVO', 'ARCHIVADO')) DEFAULT 'ACTIVO',
+  
+  created_at        TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at        TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_grupos_director ON grupos(director_cedula);
+CREATE INDEX idx_grupos_estado ON grupos(estado);
+CREATE INDEX idx_grupos_fecha_fin ON grupos(fecha_fin);
+
+-- 7. MIEMBROS DE GRUPOS (relación many-to-many)
+CREATE TABLE grupo_miembros (
+  id              SERIAL PRIMARY KEY,
+  grupo_id        INT NOT NULL REFERENCES grupos(id) ON DELETE CASCADE,
+  miembro_cedula  VARCHAR(20) NOT NULL REFERENCES users(cedula),
+  
+  fecha_ingreso   TIMESTAMP NOT NULL DEFAULT NOW(),
+  fecha_salida    TIMESTAMP,           -- NULL si sigue activo
+  activo          BOOLEAN NOT NULL DEFAULT TRUE,
+  
+  UNIQUE(grupo_id, miembro_cedula)     -- Un miembro no puede estar duplicado en un grupo
+);
+
+CREATE INDEX idx_grupo_miembros_grupo ON grupo_miembros(grupo_id);
+CREATE INDEX idx_grupo_miembros_miembro ON grupo_miembros(miembro_cedula);
+CREATE INDEX idx_grupo_miembros_activo ON grupo_miembros(activo);
+
+-- 8. VISTA: Grupos con información completa
+CREATE VIEW v_grupos_completos AS
+SELECT
+  g.id,
+  g.nombre,
+  g.descripcion,
+  g.director_cedula,
+  u.name AS director_nombre,
+  g.dia_semana,
+  g.hora_inicio,
+  g.fecha_inicio,
+  g.fecha_fin,
+  g.obra_a_realizar,
+  g.estado,
+  g.created_at,
+  g.updated_at,
+  
+  -- Contar miembros activos
+  COUNT(gm.id) FILTER (WHERE gm.activo = TRUE) AS miembros_activos,
+  
+  -- Lista de miembros activos
+  json_agg(
+    json_build_object(
+      'cedula', um.cedula,
+      'nombre', um.name,
+      'genero', um.genero,
+      'fecha_ingreso', gm.fecha_ingreso
+    ) ORDER BY um.name
+  ) FILTER (WHERE gm.activo = TRUE) AS miembros
+  
+FROM grupos g
+JOIN users u ON u.cedula = g.director_cedula
+LEFT JOIN grupo_miembros gm ON gm.grupo_id = g.id
+LEFT JOIN users um ON um.cedula = gm.miembro_cedula
+GROUP BY g.id, g.nombre, g.descripcion, g.director_cedula, u.name, 
+         g.dia_semana, g.hora_inicio, g.fecha_inicio, g.fecha_fin, 
+         g.obra_a_realizar, g.estado, g.created_at, g.updated_at;
+
 -- ========================================
 -- COMENTARIOS PARA ENTENDER EL FLUJO
 -- ========================================
 
 /*
-FLUJO COMPLETO:
+FLUJO COMPLETO TICKETS:
 
 1. ADMIN crea función (show)
    └─> Se generan N tickets con estado DISPONIBLE
@@ -197,4 +281,38 @@ ESTADOS CLAVE:
   
 - PAGADO + aprobada_por_admin=true
   => "Ya recibí el dinero, ticket listo para usar"
+*/
+
+/*
+FLUJO COMPLETO GRUPOS:
+
+1. DIRECTOR o SUPER crea grupo
+   └─> Se llena: nombre, día_semana, hora_inicio, fecha_inicio, fecha_fin, obra_a_realizar
+   └─> director_cedula = cedula del creador
+   └─> estado = ACTIVO
+
+2. DIRECTOR agrega miembros (actores/actrices)
+   └─> Se crea registro en grupo_miembros
+   └─> activo = TRUE
+   └─> fecha_ingreso = NOW()
+
+3. DIRECTOR puede:
+   ✅ Agregar/eliminar miembros
+   ✅ Cambiar obra_a_realizar
+   ✅ Ver lista de miembros
+   ❌ NO puede cambiar dia_semana ni hora_inicio (horario fijo)
+
+4. Cuando pasa fecha_fin:
+   └─> El grupo pasa a ARCHIVADO automáticamente
+   └─> Los miembros pueden ver histórico
+
+PERMISOS:
+- SUPER: puede crear grupos, ver todos, modificar cualquiera
+- ADMIN (Director): puede crear grupos, ver los suyos, modificar solo los que creó
+- VENDEDOR (Actor/Actriz): puede ver grupos donde es miembro
+
+ARCHIVADO:
+- Un grupo archivado mantiene su historial
+- No se pueden agregar nuevos miembros
+- Se puede consultar para ver qué obra trabajaron
 */
