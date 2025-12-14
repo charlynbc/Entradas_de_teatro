@@ -163,7 +163,8 @@ export async function listAllMembers(currentRole) {
     `SELECT 
         u.cedula,
         u.name,
-        u.role,
+        u.phone,
+        u.role as rol,
         u.genero,
         u.created_at,
         u.active,
@@ -177,7 +178,7 @@ export async function listAllMembers(currentRole) {
       LEFT JOIN tickets t ON t.vendedor_phone = u.phone AND t.estado != 'USADO'
       LEFT JOIN shows s ON s.id = t.show_id
       WHERE u.active = true
-      GROUP BY u.cedula, u.name, u.role, u.genero, u.created_at, u.active
+      GROUP BY u.cedula, u.name, u.phone, u.role, u.genero, u.created_at, u.active
       ORDER BY 
         CASE u.role 
           WHEN 'SUPER' THEN 1
