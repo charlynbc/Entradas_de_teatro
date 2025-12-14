@@ -136,7 +136,7 @@ export async function asignarTickets(req, res) {
       return res.status(404).json({ error: 'Función no encontrada' });
     }
 
-    // Verificar que el vendedor existe
+    // Verificar que el vendedor existe (buscar por cedula pero usar phone para FK)
     const vendedorResult = await query(
       'SELECT * FROM users WHERE cedula = $1 AND role = $2 AND active = TRUE',
       [vendedor_cedula, 'VENDEDOR']
@@ -158,13 +158,13 @@ export async function asignarTickets(req, res) {
       });
     }
 
-    // Asignar tickets al vendedor
+    // Asignar tickets al vendedor usando phone (FK)
     const codes = disponiblesResult.rows.map(t => t.code);
     await query(
       `UPDATE tickets 
-       SET estado = 'STOCK_VENDEDOR', vendedor_cedula = $1, reservado_at = NOW() 
+       SET estado = 'STOCK_VENDEDOR', vendedor_phone = $1, reservado_at = NOW() 
        WHERE code = ANY($2::text[])`,
-      [vendedor_cedula, codes]
+      [vendedor.phone, codes]
     );
 
     res.json({

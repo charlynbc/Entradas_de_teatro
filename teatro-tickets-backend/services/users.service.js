@@ -90,12 +90,12 @@ export async function listSellersWithStats() {
           'tickets_asignados', (
             SELECT COUNT(*) 
             FROM tickets t2 
-            WHERE t2.vendedor_cedula = u.cedula 
+            WHERE t2.vendedor_phone = u.phone 
             AND t2.show_id = s.id
           )
         )) FILTER (WHERE s.id IS NOT NULL) as shows
       FROM users u
-      LEFT JOIN tickets t ON t.vendedor_cedula = u.cedula
+      LEFT JOIN tickets t ON t.vendedor_phone = u.phone
       LEFT JOIN shows s ON s.id = t.show_id
       WHERE u.role = 'VENDEDOR'
       GROUP BY u.cedula, u.name, u.role
@@ -129,9 +129,9 @@ export async function deleteUserByFlexibleId(idOrCedula, requesterRole) {
   }
   
   // Primero eliminar o liberar todos los tickets del vendedor
-  // Cambiar vendedor_cedula a NULL para liberar los tickets
-  await query('UPDATE tickets SET vendedor_cedula = NULL, estado = $1 WHERE vendedor_cedula = $2', 
-    ['DISPONIBLE', user.cedula]);
+  // Cambiar vendedor_phone a NULL para liberar los tickets
+  await query('UPDATE tickets SET vendedor_phone = NULL, estado = $1 WHERE vendedor_phone = $2', 
+    ['DISPONIBLE', user.phone]);
   
   // Ahora eliminar el usuario
   await query('DELETE FROM users WHERE cedula = $1', [user.cedula]);
@@ -174,7 +174,7 @@ export async function listAllMembers(currentRole) {
           'show_fecha', s.fecha
         )) FILTER (WHERE s.id IS NOT NULL) as obras
       FROM users u
-      LEFT JOIN tickets t ON t.vendedor_cedula = u.cedula AND t.estado != 'USADO'
+      LEFT JOIN tickets t ON t.vendedor_phone = u.phone AND t.estado != 'USADO'
       LEFT JOIN shows s ON s.id = t.show_id
       WHERE u.active = true
       GROUP BY u.cedula, u.name, u.role, u.genero, u.created_at, u.active
