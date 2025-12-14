@@ -73,27 +73,29 @@ export default function DirectorShowsScreen({ navigation }) {
     }
   };
 
-  const handleDeleteShow = (show) => {
-    Alert.alert(
-      '🗑️ Eliminar Obra',
-      `¿Estás seguro de eliminar "${show.obra}"? Esto borrará todos los tickets asociados.`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteProduction(show.id);
-              load();
-              showSuccess('🗑️ Obra eliminada con éxito');
-            } catch (error) {
-              showError(error.message || 'No se pudo eliminar la obra');
-            }
-          },
-        },
-      ]
-    );
+  const handleDeleteShow = async (show) => {
+    const confirmed = Platform.OS === 'web' 
+      ? window.confirm(`🗑️ Eliminar Obra\n\n¿Estás seguro de eliminar "${show.obra}"? Esto borrará todos los tickets asociados.`)
+      : await new Promise((resolve) => {
+          Alert.alert(
+            '🗑️ Eliminar Obra',
+            `¿Estás seguro de eliminar "${show.obra}"? Esto borrará todos los tickets asociados.`,
+            [
+              { text: 'Cancelar', style: 'cancel', onPress: () => resolve(false) },
+              { text: 'Eliminar', style: 'destructive', onPress: () => resolve(true) },
+            ]
+          );
+        });
+    
+    if (!confirmed) return;
+    
+    try {
+      await deleteProduction(show.id);
+      load();
+      showSuccess('🗑️ Obra eliminada con éxito');
+    } catch (error) {
+      showError(error.message || 'No se pudo eliminar la obra');
+    }
   };
 
   const onDateChange = (event, selectedDate) => {
@@ -172,8 +174,12 @@ export default function DirectorShowsScreen({ navigation }) {
                 />
               </TouchableOpacity>
               <TouchableOpacity 
-                onPress={() => handleDeleteShow(show)}
+                onPress={() => {
+                  console.log('Botón eliminar presionado para show:', show.id, show.obra);
+                  handleDeleteShow(show);
+                }}
                 style={styles.deleteButton}
+                activeOpacity={0.6}
               >
                 <Ionicons name="trash-outline" size={20} color={colors.error} />
               </TouchableOpacity>
@@ -662,5 +668,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.error + '40',
+    minWidth: 44,
+    minHeight: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

@@ -28,15 +28,12 @@ export async function initSupremo() {
 
     // Hash del password
     const hashedPassword = await bcrypt.hash(password, 10);
-    
-    // Generar ID único
-    const id = `supremo_${Date.now()}`;
 
-    // Insertar usuario supremo
+    // Insertar usuario supremo (usando estructura correcta de schema.sql)
     await query(
-      `INSERT INTO users (id, cedula, nombre, password, rol, created_at, updated_at) 
-       VALUES ($1, $2, $3, $4, $5, NOW(), NOW())`,
-      [id, cedula, nombre, hashedPassword, rol]
+      `INSERT INTO users (cedula, name, role, password_hash, phone, created_at, active) 
+       VALUES ($1, $2, $3, $4, $5, NOW(), TRUE)`,
+      [cedula, nombre, 'SUPER', hashedPassword, cedula]
     );
 
     console.log('✅ Usuario supremo creado exitosamente!');
@@ -46,18 +43,17 @@ export async function initSupremo() {
     // Crear usuarios base para pruebas (director y vendedor)
     console.log('🔍 Verificando usuarios base (director y vendedor)...');
     const baseUsers = [
-      { cedula: '48376668', nombre: 'Admin Sistema', rol: 'admin', password: 'admin123' },
-      { cedula: '48376667', nombre: 'Vendedor Base', rol: 'vendedor', password: 'admin123' }
+      { cedula: '48376668', nombre: 'Admin Sistema', rol: 'ADMIN', password: 'admin123' },
+      { cedula: '48376667', nombre: 'Vendedor Base', rol: 'VENDEDOR', password: 'admin123' }
     ];
     for (const u of baseUsers) {
       const exists = await query('SELECT 1 FROM users WHERE cedula = $1', [u.cedula]);
       if (exists.rows.length === 0) {
-        const id = `${u.rol}_${Date.now()}_${u.cedula}`;
         const hashed = await bcrypt.hash(u.password, 10);
         await query(
-          `INSERT INTO users (id, cedula, nombre, password, rol, created_at, updated_at)
-           VALUES ($1, $2, $3, $4, $5, NOW(), NOW())`,
-          [id, u.cedula, u.nombre, hashed, u.rol]
+          `INSERT INTO users (cedula, name, role, password_hash, phone, created_at, active)
+           VALUES ($1, $2, $3, $4, $5, NOW(), TRUE)`,
+          [u.cedula, u.nombre, u.rol, hashed, u.cedula]
         );
         console.log(`✅ Usuario ${u.rol} creado: ${u.cedula}`);
       } else {

@@ -212,13 +212,15 @@ export async function createProduction(payload) {
 }
 
 export async function deleteProduction(id) {
-  requireRole(['SUPER', 'ADMIN']);
   try {
+    requireRole(['SUPER', 'ADMIN']);
     const token = currentSession.token;
+    console.log('Eliminando show con ID:', id, 'Token:', token ? 'presente' : 'ausente');
     const response = await request(`/api/shows/${id}`, { 
       method: 'DELETE',
       token
     });
+    console.log('Show eliminado exitosamente:', response);
     return response;
   } catch (error) {
     console.error('Error eliminando obra:', error);

@@ -31,6 +31,16 @@ app.use('/assets/node_modules/@expo/vector-icons/build/vendor/react-native-vecto
   express.static(path.join(PUBLIC_DIR, 'fonts'))
 );
 
+// Deshabilitar caché en desarrollo
+app.use((req, res, next) => {
+  if (process.env.NODE_ENV === 'development') {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+  }
+  next();
+});
+
 app.use(express.static(PUBLIC_DIR));
 
 // Inicializar base de datos al arrancar
