@@ -15,10 +15,10 @@ import {
  */
 export async function crearGrupo(req, res) {
   try {
-    const { cedula, rol } = req.user;
+    const { cedula, role } = req.user;
 
     // Solo SUPER y ADMIN pueden crear grupos
-    if (rol !== 'SUPER' && rol !== 'ADMIN') {
+    if (role !== 'SUPER' && role !== 'ADMIN') {
       return res.status(403).json({ error: 'No tienes permiso para crear grupos' });
     }
 
@@ -70,8 +70,8 @@ export async function crearGrupo(req, res) {
  */
 export async function listarGrupos(req, res) {
   try {
-    const { cedula, rol } = req.user;
-    const grupos = await listGruposSvc(cedula, rol);
+    const { cedula, role } = req.user;
+    const grupos = await listGruposSvc(cedula, role);
     res.json(grupos);
   } catch (error) {
     console.error('Error listando grupos:', error);
@@ -85,10 +85,10 @@ export async function listarGrupos(req, res) {
  */
 export async function obtenerGrupo(req, res) {
   try {
-    const { cedula, rol } = req.user;
+    const { cedula, role } = req.user;
     const { id } = req.params;
 
-    const grupo = await getGrupoByIdSvc(parseInt(id), cedula, rol);
+    const grupo = await getGrupoByIdSvc(parseInt(id), cedula, role);
 
     if (!grupo) {
       return res.status(404).json({ error: 'Grupo no encontrado o sin permiso' });
@@ -107,7 +107,7 @@ export async function obtenerGrupo(req, res) {
  */
 export async function actualizarGrupo(req, res) {
   try {
-    const { cedula, rol } = req.user;
+    const { cedula, role } = req.user;
     const { id } = req.params;
     const updates = req.body;
 
@@ -127,7 +127,7 @@ export async function actualizarGrupo(req, res) {
  */
 export async function agregarMiembro(req, res) {
   try {
-    const { cedula, rol } = req.user;
+    const { cedula, role } = req.user;
     const { id } = req.params;
     const { miembro_cedula } = req.body;
 
@@ -135,7 +135,7 @@ export async function agregarMiembro(req, res) {
       return res.status(400).json({ error: 'Falta miembro_cedula' });
     }
 
-    const miembro = await addMiembroSvc(parseInt(id), miembro_cedula, cedula, rol);
+    const miembro = await addMiembroSvc(parseInt(id), miembro_cedula, cedula, role);
 
     console.log(`✅ Miembro agregado al grupo ${id}`);
     res.json(miembro);
@@ -151,10 +151,10 @@ export async function agregarMiembro(req, res) {
  */
 export async function eliminarMiembro(req, res) {
   try {
-    const { cedula, rol } = req.user;
+    const { cedula, role } = req.user;
     const { id, miembroCedula } = req.params;
 
-    const miembro = await removeMiembroSvc(parseInt(id), miembroCedula, cedula, rol);
+    const miembro = await removeMiembroSvc(parseInt(id), miembroCedula, cedula, role);
 
     console.log(`✅ Miembro eliminado del grupo ${id}`);
     res.json({ message: 'Miembro eliminado exitosamente', miembro });
@@ -170,10 +170,10 @@ export async function eliminarMiembro(req, res) {
  */
 export async function archivarGrupo(req, res) {
   try {
-    const { cedula, rol } = req.user;
+    const { cedula, role } = req.user;
     const { id } = req.params;
 
-    const grupo = await archivarGrupoSvc(parseInt(id), cedula, rol);
+    const grupo = await archivarGrupoSvc(parseInt(id), cedula, role);
 
     console.log(`🗄️  Grupo archivado: ${grupo.nombre}`);
     res.json(grupo);

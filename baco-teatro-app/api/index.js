@@ -829,3 +829,15 @@ export async function listarActoresDisponibles(grupoId) {
     throw error;
   }
 }
+
+export async function listarEnsayosGrupo(grupoId) {
+  requireUser();
+  try {
+    const token = currentSession.token;
+    const response = await request(`/api/ensayos/grupo/${grupoId}`, { token });
+    return response || [];
+  } catch (error) {
+    console.error('Error listando ensayos del grupo:', error);
+    throw error;
+  }
+}

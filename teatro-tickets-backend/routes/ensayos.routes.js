@@ -5,7 +5,8 @@ import {
   listarEnsayos,
   obtenerEnsayo,
   actualizarEnsayo,
-  eliminarEnsayo
+  eliminarEnsayo,
+  listarEnsayosGrupo
 } from '../controllers/ensayos.controller.js';
 
 const router = express.Router();
@@ -18,6 +19,9 @@ router.post('/', requireRole('ADMIN', 'SUPER'), crearEnsayo);
 
 // Listar ensayos (todos los usuarios autenticados)
 router.get('/', listarEnsayos);
+
+// Listar ensayos de un grupo específico
+router.get('/grupo/:grupoId', listarEnsayosGrupo);
 
 // Obtener ensayo específico
 router.get('/:id', obtenerEnsayo);

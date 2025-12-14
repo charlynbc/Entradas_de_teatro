@@ -240,6 +240,45 @@ GROUP BY g.id, g.nombre, g.descripcion, g.director_cedula, u.name,
          g.dia_semana, g.hora_inicio, g.fecha_inicio, g.fecha_fin, 
          g.obra_a_realizar, g.estado, g.created_at, g.updated_at;
 
+-- 9. ENSAYOS (vinculados a grupos)
+CREATE TABLE ensayos_generales (
+  id              SERIAL PRIMARY KEY,
+  grupo_id        INT REFERENCES grupos(id) ON DELETE CASCADE,  -- Grupo que ensaya
+  titulo          VARCHAR(200) NOT NULL,
+  fecha           TIMESTAMP NOT NULL,
+  hora_fin        TIME,                         -- Hora de finalización del ensayo
+  lugar           VARCHAR(200) NOT NULL,
+  descripcion     TEXT,
+  director_id     INT,                          -- ID del director (legacy, usar grupo.director_cedula)
+  actores_ids     TEXT,                         -- JSON array de IDs (legacy)
+  created_at      TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_ensayos_grupo ON ensayos_generales(grupo_id);
+CREATE INDEX idx_ensayos_fecha ON ensayos_generales(fecha);
+
+-- 10. VISTA: Ensayos con información completa del grupo
+CREATE VIEW v_ensayos_completos AS
+SELECT 
+  e.id,
+  e.grupo_id,
+  e.titulo,
+  e.fecha,
+  e.hora_fin,
+  e.lugar,
+  e.descripcion,
+  e.created_at,
+  g.nombre as grupo_nombre,
+  g.director_cedula as grupo_director_cedula,
+  g.director_nombre as grupo_director_nombre,
+  g.dia_semana as grupo_dia_semana,
+  g.obra_a_realizar as grupo_obra,
+  g.miembros_activos,
+  g.miembros as grupo_miembros
+FROM ensayos_generales e
+LEFT JOIN v_grupos_completos g ON g.id = e.grupo_id
+ORDER BY e.fecha DESC, e.hora_fin DESC;
+
 -- ========================================
 -- COMENTARIOS PARA ENTENDER EL FLUJO
 -- ========================================
