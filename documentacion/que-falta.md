@@ -1,6 +1,12 @@
 # Qué falta (pendientes y roadmap)
 
-Estado general: base estable (snapshot 02/12). A continuación, mejoras sugeridas y tareas pendientes.
+Estado general: base estable (snapshot 14/12). A continuación, mejoras sugeridas y tareas pendientes.
+
+## ✅ Completado recientemente (14/12)
+- Fix botón eliminar funciones en React Native Web (Alert.alert → window.confirm)
+- Headers anti-caché para desarrollo
+- Actualización credenciales usuario supremo (48376669/Teamomama91)
+- Mejoras en estilos y debugging de eliminación de shows
 
 ## Alto impacto
 - Backups automáticos de PostgreSQL (programados y verificados).

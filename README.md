@@ -43,8 +43,8 @@ El sistema se entrega **completamente virgen** con solo:
 
 ### Usuario Supremo Inicial
 
-- **Email:** `admin@bacoteatro.com`
-- **Password:** `admin123`
+- **Cédula:** `48376669`
+- **Password:** `Teamomama91`
 - **Rol:** Supremo
 
 ⚠️ **IMPORTANTE:** Cambiar la contraseña inmediatamente después del primer acceso.

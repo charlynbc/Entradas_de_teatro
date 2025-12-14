@@ -13,7 +13,9 @@ Backend para sistema de gestión de entradas de teatro.
 ## Stack
 
 - Node.js + Express
-- Base de datos en memoria (migraremos a PostgreSQL)
+- PostgreSQL (base de datos)
+- JWT para autenticación
+- bcrypt para hashing de contraseñas
 
 ## Instalación
 
@@ -93,11 +95,25 @@ POST /api/tickets/:code/validate
 - `PAGADO`: Ticket pagado, listo para validar
 - `USADO`: Ticket ya validado en la puerta
 
+## Credenciales Iniciales
+
+### Usuario Supremo
+- **Cédula:** `48376669`
+- **Password:** `Teamomama91`
+- **Rol:** SUPER
+
+⚠️ Cambiar inmediatamente en producción.
+
 ## Deploy en Render
 
 1. Conectar repositorio a Render
 2. Configurar como Web Service
 3. Build Command: `npm install`
+4. Variables de entorno:
+   - `DATABASE_URL`: URL de PostgreSQL
+   - `JWT_SECRET`: Secret para tokens JWT
+   - `NODE_ENV`: `production`
+5. Para build con frontend: usar script `build-for-render.sh` en baco-teatro-app
 4. Start Command: `npm start`
 5. Render asignará automáticamente el PORT
 
