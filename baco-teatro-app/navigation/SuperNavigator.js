@@ -21,6 +21,10 @@ import MiembrosScreen from '../screens/shared/MiembrosScreen';
 import EnsayosGeneralesScreen from '../screens/shared/EnsayosGeneralesScreen';
 import ProfileScreen from '../screens/shared/ProfileScreen';
 import ManualScreen from '../screens/shared/ManualScreen';
+import GruposScreen from '../screens/director/GruposScreen';
+import GrupoDetailScreen from '../screens/director/GrupoDetailScreen';
+import CrearEnsayoScreen from '../screens/director/CrearEnsayoScreen';
+import EnsayosScreen from '../screens/director/EnsayosScreen';
 import colors from '../theme/colors';
 
 const Tab = createBottomTabNavigator();
@@ -33,6 +37,7 @@ const iconMap = {
   Funciones: 'calendar-outline',
   'Mis Entradas': 'ticket-outline',
   Miembros: 'people-outline',
+  Grupos: 'people-circle-outline',
   Ensayos: 'time-outline',
   Reportes: 'bar-chart-outline',
   Perfil: 'person-circle-outline',
@@ -62,7 +67,8 @@ function SuperTabs() {
       <Tab.Screen name="Funciones" component={DirectorShowsScreen} />
       <Tab.Screen name="Mis Entradas" component={ActorStockScreen} options={{ title: 'Mis Entradas' }} />
       <Tab.Screen name="Miembros" component={MiembrosScreen} />
-      <Tab.Screen name="Ensayos" component={EnsayosGeneralesScreen} />
+      <Tab.Screen name="Grupos" component={GruposScreen} />
+      <Tab.Screen name="Ensayos" component={EnsayosScreen} />
       <Tab.Screen name="Perfil" component={ProfileScreen} />
     </Tab.Navigator>
   );
@@ -125,6 +131,16 @@ export default function SuperNavigator() {
         name="Manual" 
         component={ManualScreen}
         options={{ headerShown: true, title: 'Manual de Usuario' }}
+      />
+      <Stack.Screen 
+        name="GrupoDetail" 
+        component={GrupoDetailScreen} 
+        options={{ headerShown: true, title: 'Detalle del Grupo' }}
+      />
+      <Stack.Screen 
+        name="CrearEnsayo" 
+        component={CrearEnsayoScreen} 
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );
