@@ -306,6 +306,22 @@ export async function createShow(payload) {
   }
 }
 
+export async function updateShow(showId, payload) {
+  requireRole(['ADMIN', 'SUPER', 'DIRECTOR']);
+  try {
+    const token = currentSession.token;
+    const response = await request(`/api/shows/${showId}`, { 
+      method: 'PATCH',
+      token,
+      body: payload
+    });
+    return response;
+  } catch (error) {
+    console.error('Error actualizando función:', error);
+    throw error;
+  }
+}
+
 export async function assignTicketsToActor(payload) {
   requireRole(['ADMIN', 'SUPER']);
   try {

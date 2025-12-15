@@ -57,11 +57,12 @@ export async function crearShow(req, res) {
     }
 
     // Crear el show en PostgreSQL
+    const foto_url = req.body.foto_url || null;
     const showResult = await query(
-      `INSERT INTO shows (obra_id, obra, fecha, lugar, capacidad, base_price) 
-       VALUES ($1, $2, $3, $4, $5, $6) 
+      `INSERT INTO shows (obra_id, obra, fecha, lugar, capacidad, base_price, foto_url) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7) 
        RETURNING *`,
-      [obra_id || null, obra, fecha, lugar || 'Teatro Principal', capacidadNum, basePriceNum]
+      [obra_id || null, obra, fecha, lugar || 'Teatro Principal', capacidadNum, basePriceNum, foto_url]
     );
 
     const show = showResult.rows[0];
@@ -217,7 +218,7 @@ export async function eliminarShow(req, res) {
     );
     
     if (showResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Obra no encontrada' });
+      return res.status(404).json({ error: 'Función no encontrada' });
     }
     
     const show = showResult.rows[0];
@@ -230,11 +231,100 @@ export async function eliminarShow(req, res) {
     
     res.json({ 
       ok: true, 
-      mensaje: 'Obra eliminada correctamente',
+      mensaje: 'Función eliminada correctamente',
       obra: show.obra 
     });
   } catch (error) {
     console.error('Error eliminando show:', error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
+export async function updateShow(req, res) {
+  try {
+    const showId = parseInt(req.params.id);
+    const { obra, fecha, lugar, capacidad, base_price, foto_url } = req.body;
+    const { cedula: userCedula, role: userRole } = req.user;
+
+    // Verificar que el show existe y obtener permisos
+    const showResult = await query(
+      'SELECT s.*, o.grupo_id, g.director_cedula FROM shows s LEFT JOIN obras o ON o.id = s.obra_id LEFT JOIN grupos g ON g.id = o.grupo_id WHERE s.id = $1',
+      [showId]
+    );
+
+    if (showResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Función no encontrada' });
+    }
+
+    const show = showResult.rows[0];
+
+    // Si tiene obra_id asociada, verificar permisos
+    if (show.obra_id) {
+      const { grupo_id, director_cedula } = show;
+
+      if (userRole !== 'SUPER' && director_cedula !== userCedula) {
+        const coDirectorResult = await query(
+          'SELECT id FROM grupo_miembros WHERE grupo_id = $1 AND miembro_cedula = $2 AND rol_en_grupo = $3 AND activo = TRUE',
+          [grupo_id, userCedula, 'DIRECTOR']
+        );
+
+        if (coDirectorResult.rows.length === 0) {
+          return res.status(403).json({ 
+            error: 'No tienes permisos para modificar esta función. Solo el director del grupo o SUPER pueden hacerlo.' 
+          });
+        }
+      }
+    } else if (userRole !== 'SUPER') {
+      // Funciones sin obra_id solo las puede modificar SUPER
+      return res.status(403).json({ error: 'Solo SUPER puede modificar funciones sin obra asociada' });
+    }
+
+    // Construir la consulta UPDATE dinámicamente
+    const updates = [];
+    const values = [];
+    let paramCount = 1;
+
+    if (obra !== undefined) {
+      updates.push(`obra = $${paramCount++}`);
+      values.push(obra);
+    }
+    if (fecha !== undefined) {
+      updates.push(`fecha = $${paramCount++}`);
+      values.push(fecha);
+    }
+    if (lugar !== undefined) {
+      updates.push(`lugar = $${paramCount++}`);
+      values.push(lugar);
+    }
+    if (capacidad !== undefined) {
+      updates.push(`capacidad = $${paramCount++}`);
+      values.push(Number(capacidad));
+    }
+    if (base_price !== undefined) {
+      updates.push(`base_price = $${paramCount++}`);
+      values.push(Number(base_price));
+    }
+    if (foto_url !== undefined) {
+      updates.push(`foto_url = $${paramCount++}`);
+      values.push(foto_url);
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ error: 'No hay campos para actualizar' });
+    }
+
+    values.push(showId);
+    const updateQuery = `UPDATE shows SET ${updates.join(', ')} WHERE id = $${paramCount} RETURNING *`;
+
+    const result = await query(updateQuery, values);
+
+    res.json({
+      ok: true,
+      show: result.rows[0],
+      mensaje: 'Función actualizada correctamente'
+    });
+  } catch (error) {
+    console.error('Error actualizando show:', error);
     res.status(500).json({ error: error.message });
   }
 }

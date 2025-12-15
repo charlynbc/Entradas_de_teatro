@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ActivityIndicator, Modal, Platform } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ActivityIndicator, Modal, Platform, Image } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionCard from '../../components/SectionCard';
 import ShowCard from '../../components/ShowCard';
@@ -13,7 +14,7 @@ import colors from '../../theme/colors';
 import { listDirectorShows, createShow, assignTicketsToActor, deleteProduction } from '../../api';
 import { Ionicons } from '@expo/vector-icons';
 
-const initialShow = { obra: '', fecha: new Date(), lugar: '', capacidad: '', base_price: '' };
+const initialShow = { obra: '', fecha: new Date(), lugar: '', capacidad: '', base_price: '', foto_url: null };
 const initialAssign = { showId: '', actorId: '', cantidad: '' };
 
 export default function DirectorShowsScreen({ navigation, route }) {
@@ -24,6 +25,7 @@ export default function DirectorShowsScreen({ navigation, route }) {
   const [showForm, setShowForm] = useState(initialShow);
   const [modalVisible, setModalVisible] = useState(false);
   const [obraIdFromRoute, setObraIdFromRoute] = useState(null);
+  const [copiarFotoPrimeraFuncion, setCopiarFotoPrimeraFuncion] = useState(false);
   
   // Date Picker states
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -37,6 +39,31 @@ export default function DirectorShowsScreen({ navigation, route }) {
       setModalVisible(true);
     }
   }, [route?.params]);
+
+  const handleSelectFoto = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permiso denegado', 'Necesitamos permisos para acceder a tu galería de fotos');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [16, 9],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        setShowForm({ ...showForm, foto_url: result.assets[0].uri });
+        setCopiarFotoPrimeraFuncion(false); // Si selecciona foto, desactiva el checkbox
+      }
+    } catch (error) {
+      console.error('Error seleccionando foto:', error);
+      showError('Error al seleccionar la foto');
+    }
+  };
 
   const load = async () => {
     setLoading(true);
@@ -65,6 +92,18 @@ export default function DirectorShowsScreen({ navigation, route }) {
       // Format date to string for API
       const fechaStr = showForm.fecha.toISOString();
       
+      // Determinar foto_url
+      let fotoFinal = showForm.foto_url;
+      
+      // Si está marcado "copiar foto de primera función" y hay obra_id
+      if (copiarFotoPrimeraFuncion && obraIdFromRoute) {
+        // Buscar primera función de esta obra que tenga foto
+        const primeraFuncionConFoto = shows.find(s => s.obra_id === obraIdFromRoute && s.foto_url);
+        if (primeraFuncionConFoto) {
+          fotoFinal = primeraFuncionConFoto.foto_url;
+        }
+      }
+      
       await createShow({
         obra_id: obraIdFromRoute || null,
         obra: showForm.obra,
@@ -72,9 +111,11 @@ export default function DirectorShowsScreen({ navigation, route }) {
         lugar: showForm.lugar,
         capacidad: Number(showForm.capacidad),
         base_price: Number(showForm.base_price) || 0,
+        foto_url: fotoFinal,
       });
       setShowForm(initialShow);
       setObraIdFromRoute(null);
+      setCopiarFotoPrimeraFuncion(false);
       setModalVisible(false);
       load();
       showSuccess('✨ Función creada y tickets generados con éxito');
@@ -104,7 +145,7 @@ export default function DirectorShowsScreen({ navigation, route }) {
     try {
       await deleteProduction(show.id);
       load();
-      showSuccess('🗑️ Obra eliminada con éxito');
+      showSuccess('🗑️ Función eliminada con éxito');
     } catch (error) {
       showError(error.message || 'No se pudo eliminar la obra');
     }
@@ -392,6 +433,45 @@ export default function DirectorShowsScreen({ navigation, route }) {
               </View>
             </View>
 
+            <Text style={styles.label}>Foto de la Función</Text>
+            <TouchableOpacity 
+              style={styles.fotoButton}
+              onPress={handleSelectFoto}
+            >
+              {showForm.foto_url ? (
+                <View style={styles.fotoPreviewContainer}>
+                  <Image source={{ uri: showForm.foto_url }} style={styles.fotoPreview} />
+                  <Text style={styles.fotoButtonText}>Cambiar foto</Text>
+                </View>
+              ) : (
+                <>
+                  <MaterialCommunityIcons name="camera-plus" size={32} color={colors.secondary} />
+                  <Text style={styles.fotoButtonText}>Seleccionar foto (opcional)</Text>
+                </>
+              )}
+            </TouchableOpacity>
+
+            {obraIdFromRoute && (
+              <TouchableOpacity 
+                style={styles.checkboxContainer}
+                onPress={() => {
+                  setCopiarFotoPrimeraFuncion(!copiarFotoPrimeraFuncion);
+                  if (!copiarFotoPrimeraFuncion) {
+                    setShowForm({ ...showForm, foto_url: null });
+                  }
+                }}
+              >
+                <MaterialCommunityIcons 
+                  name={copiarFotoPrimeraFuncion ? "checkbox-marked" : "checkbox-blank-outline"} 
+                  size={24} 
+                  color={copiarFotoPrimeraFuncion ? colors.secondary : colors.textSoft} 
+                />
+                <Text style={styles.checkboxLabel}>
+                  Copiar foto de la primera función de esta obra
+                </Text>
+              </TouchableOpacity>
+            )}
+
             <View style={styles.modalButtons}>
               <TouchableOpacity 
                 style={[styles.modalButton, styles.cancelButton]} 
@@ -581,6 +661,47 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginBottom: 6,
     fontWeight: '600',
+  },
+  fotoButton: {
+    backgroundColor: colors.surface,
+    borderWidth: 2,
+    borderColor: colors.secondary + '40',
+    borderRadius: 12,
+    borderStyle: 'dashed',
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    minHeight: 120,
+  },
+  fotoPreviewContainer: {
+    alignItems: 'center',
+    width: '100%',
+  },
+  fotoPreview: {
+    width: '100%',
+    height: 160,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  fotoButtonText: {
+    color: colors.text,
+    marginTop: 8,
+    fontSize: 14,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    padding: 12,
+    backgroundColor: colors.surface + '80',
+    borderRadius: 8,
+  },
+  checkboxLabel: {
+    color: colors.text,
+    fontSize: 14,
+    marginLeft: 8,
+    flex: 1,
   },
   modalButtons: {
     flexDirection: 'row',
