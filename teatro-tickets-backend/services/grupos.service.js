@@ -169,24 +169,27 @@ export async function addMiembroToGrupo(grupoId, miembroCedula, userCedula, user
     throw new Error('No se pueden agregar miembros a un grupo archivado');
   }
 
-  // Verificar que el miembro sea VENDEDOR (actor/actriz)
+  // Verificar que el miembro sea VENDEDOR o ADMIN
   const miembro = await query(`SELECT role FROM users WHERE cedula = $1 AND active = true`, [miembroCedula]);
   if (miembro.rows.length === 0) {
     throw new Error('Usuario no encontrado o inactivo');
   }
 
-  if (miembro.rows[0].role !== 'VENDEDOR') {
-    throw new Error('Solo se pueden agregar actores/actrices (VENDEDOR) al grupo');
+  if (miembro.rows[0].role !== 'VENDEDOR' && miembro.rows[0].role !== 'ADMIN') {
+    throw new Error('Solo se pueden agregar actores/actrices (VENDEDOR) o directores (ADMIN) al grupo');
   }
+
+  // Determinar rol en el grupo: DIRECTOR si es ADMIN, ACTOR si es VENDEDOR
+  const rolEnGrupo = miembro.rows[0].role === 'ADMIN' ? 'DIRECTOR' : 'ACTOR';
 
   // Insertar o reactivar miembro
   const result = await query(
-    `INSERT INTO grupo_miembros (grupo_id, miembro_cedula, activo, fecha_ingreso)
-     VALUES ($1, $2, TRUE, NOW())
+    `INSERT INTO grupo_miembros (grupo_id, miembro_cedula, rol_en_grupo, activo, fecha_ingreso)
+     VALUES ($1, $2, $3, TRUE, NOW())
      ON CONFLICT (grupo_id, miembro_cedula) 
-     DO UPDATE SET activo = TRUE, fecha_ingreso = NOW(), fecha_salida = NULL
+     DO UPDATE SET rol_en_grupo = $3, activo = TRUE, fecha_ingreso = NOW(), fecha_salida = NULL
      RETURNING *`,
-    [grupoId, miembroCedula]
+    [grupoId, miembroCedula, rolEnGrupo]
   );
 
   return result.rows[0];
@@ -259,20 +262,20 @@ export async function archivarGruposVencidos() {
 }
 
 /**
- * Listar actores/actrices disponibles para agregar al grupo
+ * Listar actores/actrices y directores disponibles para agregar al grupo
  * (excluye los que ya son miembros activos)
  */
 export async function listActoresDisponibles(grupoId) {
   const result = await query(
-    `SELECT u.cedula, u.name, u.genero, u.phone
+    `SELECT u.cedula, u.name, u.role, u.genero, u.phone
      FROM users u
-     WHERE u.role = 'VENDEDOR' 
+     WHERE (u.role = 'VENDEDOR' OR u.role = 'ADMIN')
        AND u.active = TRUE
        AND u.cedula NOT IN (
          SELECT miembro_cedula FROM grupo_miembros 
          WHERE grupo_id = $1 AND activo = TRUE
        )
-     ORDER BY u.name`,
+     ORDER BY u.role DESC, u.name`,
     [grupoId]
   );
 

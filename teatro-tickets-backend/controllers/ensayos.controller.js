@@ -1,39 +1,52 @@
 import { query } from '../db/postgres.js';
 
-// Crear ensayo para un grupo
+// Crear ensayo para una obra
 export const crearEnsayo = async (req, res) => {
   try {
-    const { grupo_id, titulo, fecha, hora_fin, lugar, descripcion } = req.body;
+    const { obra_id, titulo, fecha, hora_fin, lugar, descripcion } = req.body;
     const { cedula: userCedula, role: userRole } = req.user;
 
-    if (!grupo_id || !titulo || !fecha || !lugar) {
-      return res.status(400).json({ error: 'grupo_id, título, fecha y lugar son requeridos' });
+    if (!obra_id || !titulo || !fecha || !lugar) {
+      return res.status(400).json({ error: 'obra_id, título, fecha y lugar son requeridos' });
     }
 
-    // Verificar que el grupo existe y que el usuario tiene permiso
-    const grupoResult = await query(
-      'SELECT director_cedula FROM grupos WHERE id = $1',
-      [grupo_id]
+    // Verificar que la obra existe y que el usuario tiene permiso
+    const obraResult = await query(
+      `SELECT o.grupo_id, g.director_cedula 
+       FROM obras o 
+       JOIN grupos g ON g.id = o.grupo_id 
+       WHERE o.id = $1`,
+      [obra_id]
     );
 
-    if (grupoResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Grupo no encontrado' });
+    if (obraResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Obra no encontrada' });
     }
 
-    // Solo el director del grupo o SUPER puede crear ensayos
-    if (userRole !== 'SUPER' && grupoResult.rows[0].director_cedula !== userCedula) {
-      return res.status(403).json({ error: 'Solo el director del grupo puede crear ensayos' });
+    const { grupo_id, director_cedula } = obraResult.rows[0];
+
+    // Solo el director del grupo, co-directores, o SUPER pueden crear ensayos
+    if (userRole !== 'SUPER' && director_cedula !== userCedula) {
+      // Verificar si es co-director
+      const coDirectorResult = await query(
+        'SELECT id FROM grupo_miembros WHERE grupo_id = $1 AND miembro_cedula = $2 AND rol_en_grupo = $3 AND activo = TRUE',
+        [grupo_id, userCedula, 'DIRECTOR']
+      );
+
+      if (coDirectorResult.rows.length === 0) {
+        return res.status(403).json({ error: 'Solo los directores del grupo pueden crear ensayos' });
+      }
     }
 
     const result = await query(
       `INSERT INTO ensayos_generales 
-       (grupo_id, titulo, fecha, hora_fin, lugar, descripcion, created_at) 
+       (obra_id, titulo, fecha, hora_fin, lugar, descripcion, created_at) 
        VALUES ($1, $2, $3, $4, $5, $6, NOW()) 
        RETURNING *`,
-      [grupo_id, titulo, fecha, hora_fin || null, lugar, descripcion || '']
+      [obra_id, titulo, fecha, hora_fin || null, lugar, descripcion || '']
     );
 
-    console.log(`✅ Ensayo creado para grupo \${grupo_id}: \${titulo}`);
+    console.log(`✅ Ensayo creado para obra ${obra_id}: ${titulo}`);
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Error creando ensayo:', error);

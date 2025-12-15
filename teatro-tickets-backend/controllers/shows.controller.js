@@ -18,7 +18,8 @@ async function generarQR(code) {
 
 export async function crearShow(req, res) {
   try {
-    const { obra, fecha, lugar, capacidad, base_price } = req.body;
+    const { obra_id, obra, fecha, lugar, capacidad, base_price } = req.body;
+    const { cedula: userCedula, role: userRole } = req.user;
     const capacidadNum = Number(capacidad);
     const basePriceNum = Number(base_price);
 
@@ -28,12 +29,39 @@ export async function crearShow(req, res) {
       });
     }
 
+    // Si se proporciona obra_id, verificar permisos
+    if (obra_id) {
+      const obraResult = await query(
+        `SELECT o.grupo_id, g.director_cedula 
+         FROM obras o 
+         JOIN grupos g ON g.id = o.grupo_id 
+         WHERE o.id = $1`,
+        [obra_id]
+      );
+
+      if (obraResult.rows.length > 0) {
+        const { grupo_id, director_cedula } = obraResult.rows[0];
+
+        // Verificar permisos: director, co-director, o SUPER
+        if (userRole !== 'SUPER' && director_cedula !== userCedula) {
+          const coDirectorResult = await query(
+            'SELECT id FROM grupo_miembros WHERE grupo_id = $1 AND miembro_cedula = $2 AND rol_en_grupo = $3 AND activo = TRUE',
+            [grupo_id, userCedula, 'DIRECTOR']
+          );
+
+          if (coDirectorResult.rows.length === 0) {
+            return res.status(403).json({ error: 'Solo los directores del grupo pueden crear funciones para esta obra' });
+          }
+        }
+      }
+    }
+
     // Crear el show en PostgreSQL
     const showResult = await query(
-      `INSERT INTO shows (obra, fecha, lugar, capacidad, base_price) 
-       VALUES ($1, $2, $3, $4, $5) 
+      `INSERT INTO shows (obra_id, obra, fecha, lugar, capacidad, base_price) 
+       VALUES ($1, $2, $3, $4, $5, $6) 
        RETURNING *`,
-      [obra, fecha, lugar || 'Teatro Principal', capacidadNum, basePriceNum]
+      [obra_id || null, obra, fecha, lugar || 'Teatro Principal', capacidadNum, basePriceNum]
     );
 
     const show = showResult.rows[0];

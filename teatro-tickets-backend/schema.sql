@@ -25,10 +25,11 @@ INSERT INTO users (cedula, name, role, password_hash, phone, active) VALUES
   ('48376669', 'Super Usuario', 'SUPER', '$2b$10$ZXH8vT/SpnVBDGDjj3L7M.7BKMCuQC19V5Ieou0Rv25KTk3lHIT1e', '48376669', TRUE)
 ON CONFLICT (cedula) DO UPDATE SET role = 'SUPER', password_hash = '$2b$10$ZXH8vT/SpnVBDGDjj3L7M.7BKMCuQC19V5Ieou0Rv25KTk3lHIT1e';
 
--- 2. FUNCIONES (shows)
+-- 2. FUNCIONES (shows vinculados a obras)
 CREATE TABLE shows (
   id           SERIAL PRIMARY KEY,
-  obra         VARCHAR(200) NOT NULL,
+  obra_id      INT REFERENCES obras(id) ON DELETE SET NULL,  -- Vinculado a obra del grupo
+  obra         VARCHAR(200) NOT NULL,                         -- Nombre de la obra
   fecha        TIMESTAMP NOT NULL,
   lugar        VARCHAR(200),
   capacidad    INT NOT NULL,
@@ -37,6 +38,7 @@ CREATE TABLE shows (
 );
 
 CREATE INDEX idx_shows_fecha ON shows(fecha);
+CREATE INDEX idx_shows_obra_id ON shows(obra_id);
 
 -- 3. TICKETS
 CREATE TABLE tickets (
@@ -185,11 +187,12 @@ CREATE INDEX idx_grupos_director ON grupos(director_cedula);
 CREATE INDEX idx_grupos_estado ON grupos(estado);
 CREATE INDEX idx_grupos_fecha_fin ON grupos(fecha_fin);
 
--- 7. MIEMBROS DE GRUPOS (relación many-to-many)
+-- 7. MIEMBROS DE GRUPOS (relación many-to-many, incluye directores)
 CREATE TABLE grupo_miembros (
   id              SERIAL PRIMARY KEY,
   grupo_id        INT NOT NULL REFERENCES grupos(id) ON DELETE CASCADE,
   miembro_cedula  VARCHAR(20) NOT NULL REFERENCES users(cedula),
+  rol_en_grupo    VARCHAR(20) NOT NULL CHECK (rol_en_grupo IN ('DIRECTOR', 'ACTOR')) DEFAULT 'ACTOR',
   
   fecha_ingreso   TIMESTAMP NOT NULL DEFAULT NOW(),
   fecha_salida    TIMESTAMP,           -- NULL si sigue activo
@@ -240,43 +243,82 @@ GROUP BY g.id, g.nombre, g.descripcion, g.director_cedula, u.name,
          g.dia_semana, g.hora_inicio, g.fecha_inicio, g.fecha_fin, 
          g.obra_a_realizar, g.estado, g.created_at, g.updated_at;
 
--- 9. ENSAYOS (vinculados a grupos)
+-- 9. OBRAS (creadas por grupos)
+CREATE TABLE obras (
+  id              SERIAL PRIMARY KEY,
+  grupo_id        INT NOT NULL REFERENCES grupos(id) ON DELETE CASCADE,
+  nombre          VARCHAR(200) NOT NULL,
+  descripcion     TEXT,
+  autor           VARCHAR(200),
+  genero          VARCHAR(100),
+  duracion_aprox  INT,                          -- Duración en minutos
+  estado          VARCHAR(20) NOT NULL CHECK (estado IN ('EN_DESARROLLO', 'LISTA', 'ARCHIVADA')) DEFAULT 'EN_DESARROLLO',
+  created_at      TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at      TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_obras_grupo ON obras(grupo_id);
+CREATE INDEX idx_obras_estado ON obras(estado);
+
+-- 10. ENSAYOS (vinculados a obras)
 CREATE TABLE ensayos_generales (
   id              SERIAL PRIMARY KEY,
-  grupo_id        INT REFERENCES grupos(id) ON DELETE CASCADE,  -- Grupo que ensaya
+  obra_id         INT NOT NULL REFERENCES obras(id) ON DELETE CASCADE,
   titulo          VARCHAR(200) NOT NULL,
   fecha           TIMESTAMP NOT NULL,
-  hora_fin        TIME,                         -- Hora de finalización del ensayo
+  hora_fin        TIME,
   lugar           VARCHAR(200) NOT NULL,
   descripcion     TEXT,
-  director_id     INT,                          -- ID del director (legacy, usar grupo.director_cedula)
-  actores_ids     TEXT,                         -- JSON array de IDs (legacy)
   created_at      TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_ensayos_grupo ON ensayos_generales(grupo_id);
+CREATE INDEX idx_ensayos_obra ON ensayos_generales(obra_id);
 CREATE INDEX idx_ensayos_fecha ON ensayos_generales(fecha);
 
--- 10. VISTA: Ensayos con información completa del grupo
+-- 11. VISTA: Obras con información del grupo
+CREATE VIEW v_obras_completas AS
+SELECT
+  o.id,
+  o.grupo_id,
+  o.nombre,
+  o.descripcion,
+  o.autor,
+  o.genero,
+  o.duracion_aprox,
+  o.estado,
+  o.created_at,
+  o.updated_at,
+  g.nombre as grupo_nombre,
+  g.director_cedula,
+  g.director_nombre,
+  g.dia_semana as grupo_dia_semana,
+  g.hora_inicio as grupo_hora_inicio,
+  g.miembros_activos
+FROM obras o
+LEFT JOIN v_grupos_completos g ON g.id = o.grupo_id;
+
+-- 12. VISTA: Ensayos con información completa (obra + grupo)
 CREATE VIEW v_ensayos_completos AS
 SELECT 
   e.id,
-  e.grupo_id,
+  e.obra_id,
   e.titulo,
   e.fecha,
   e.hora_fin,
   e.lugar,
   e.descripcion,
   e.created_at,
+  o.nombre as obra_nombre,
+  o.grupo_id,
   g.nombre as grupo_nombre,
   g.director_cedula as grupo_director_cedula,
   g.director_nombre as grupo_director_nombre,
   g.dia_semana as grupo_dia_semana,
-  g.obra_a_realizar as grupo_obra,
   g.miembros_activos,
   g.miembros as grupo_miembros
 FROM ensayos_generales e
-LEFT JOIN v_grupos_completos g ON g.id = e.grupo_id
+LEFT JOIN obras o ON o.id = e.obra_id
+LEFT JOIN v_grupos_completos g ON g.id = o.grupo_id
 ORDER BY e.fecha DESC, e.hora_fin DESC;
 
 -- ========================================
