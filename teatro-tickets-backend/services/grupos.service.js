@@ -341,7 +341,7 @@ export async function listGruposFinalizados(userCedula, userRole) {
     JOIN users u ON u.cedula = g.director_cedula
     LEFT JOIN grupo_miembros gm ON gm.grupo_id = g.id
     LEFT JOIN obras o ON o.grupo_id = g.id
-    LEFT JOIN ensayos e ON e.grupo_id = g.id
+    LEFT JOIN v_ensayos_completos e ON e.grupo_id = g.id
     WHERE g.estado = 'FINALIZADO'
   `;
 
@@ -412,7 +412,7 @@ export async function generarPDFGrupo(grupoId, userCedula, userRole, res) {
     `SELECT COUNT(*) as total_ensayos,
             MIN(fecha) as primer_ensayo,
             MAX(fecha) as ultimo_ensayo
-     FROM ensayos
+     FROM v_ensayos_completos
      WHERE grupo_id = $1`,
     [grupoId]
   );
