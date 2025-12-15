@@ -16,6 +16,7 @@ import ensayosRoutes from './routes/ensayos.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import gruposRoutes from './routes/grupos.routes.js';
 import obrasRoutes from './routes/obras.routes.js';
+import uploadRoutes from './routes/upload.routes.js';
 import { readData } from './utils/dataStore.js';
 
 const app = express();
@@ -106,6 +107,7 @@ async function startServer() {
     app.use('/api/admin', adminRoutes);
     app.use('/api/grupos', gruposRoutes);
     app.use('/api/obras', obrasRoutes);
+    app.use('/api/upload', uploadRoutes);
 
     // Ruta explícita para pantalla 404 teatral
     app.get('/404', (req, res) => {

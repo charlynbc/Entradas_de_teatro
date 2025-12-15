@@ -322,6 +322,34 @@ export async function updateShow(showId, payload) {
   }
 }
 
+export async function uploadImage(imageUri, filename) {
+  requireUser();
+  try {
+    const token = currentSession.token;
+    
+    // Convertir URI a base64 si es necesario
+    let base64Image = imageUri;
+    if (!imageUri.startsWith('data:image')) {
+      // Si es una URI local, necesitamos convertirla a base64
+      // Por ahora asumimos que ya viene en base64
+      throw new Error('La imagen debe estar en formato base64');
+    }
+    
+    const response = await request('/api/upload/image', {
+      method: 'POST',
+      token,
+      body: {
+        image: base64Image,
+        filename: filename || 'imagen'
+      }
+    });
+    return response;
+  } catch (error) {
+    console.error('Error subiendo imagen:', error);
+    throw error;
+  }
+}
+
 export async function assignTicketsToActor(payload) {
   requireRole(['ADMIN', 'SUPER']);
   try {
