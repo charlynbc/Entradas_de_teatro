@@ -16,7 +16,9 @@ import {
   eliminarMiembroGrupo,
   crearObra,
   actualizarObra,
-  eliminarObra
+  eliminarObra,
+  listDirectorShows,
+  getSession
 } from '../../api';
 import colors from '../../theme/colors';
 
@@ -26,6 +28,7 @@ export default function GrupoDetailScreen({ route, navigation }) {
 
   const [grupo, setGrupo] = useState(null);
   const [obras, setObras] = useState([]);
+  const [funciones, setFunciones] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   
   // Modales
@@ -41,12 +44,16 @@ export default function GrupoDetailScreen({ route, navigation }) {
 
   const cargarDatos = useCallback(async () => {
     try {
-      const [grupoData, obrasData] = await Promise.all([
+      const [grupoData, obrasData, funcionesData] = await Promise.all([
         obtenerGrupo(grupoId),
-        listarObrasPorGrupo(grupoId)
+        listarObrasPorGrupo(grupoId),
+        listDirectorShows() // Traemos todas las funciones
       ]);
       setGrupo(grupoData);
       setObras(obrasData);
+      // Filtrar solo las funciones de este grupo
+      const funcionesDelGrupo = funcionesData.filter(f => f.grupo_id === grupoId);
+      setFunciones(funcionesDelGrupo);
     } catch (error) {
       showError(error.message || 'Error al cargar datos');
     }
@@ -457,6 +464,82 @@ export default function GrupoDetailScreen({ route, navigation }) {
               <TouchableOpacity style={styles.emptyButton} onPress={handleCrearObra}>
                 <Text style={styles.emptyButtonText}>Crear Primera Obra</Text>
               </TouchableOpacity>
+            </View>
+          )}
+        </View>
+
+        {/* Funciones del Grupo */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionTitleRow}>
+              <MaterialCommunityIcons name="ticket" size={24} color={colors.primary} />
+              <Text style={styles.sectionTitle}>Funciones</Text>
+            </View>
+            {grupo?.director_cedula === getSession().user?.id && (
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => {
+                  // Navegar a crear función pre-llenando la obra si hay alguna
+                  const obraParaFuncion = obras.find(o => o.estado === 'LISTA') || obras[0];
+                  navigation.navigate('DirectorShows', {
+                    obraId: obraParaFuncion?.id,
+                    obraNombre: obraParaFuncion?.nombre,
+                    grupoId: grupoId
+                  });
+                }}
+              >
+                <Ionicons name="add-circle" size={24} color={colors.primary} />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {funciones.length > 0 ? (
+            funciones.map((funcion) => (
+              <TouchableOpacity
+                key={funcion.id}
+                style={styles.funcionCard}
+                onPress={() => navigation.navigate('DirectorShowDetail', { showId: funcion.id })}
+              >
+                <LinearGradient
+                  colors={[colors.surface, colors.surfaceAlt]}
+                  style={styles.obraCardGradient}
+                >
+                  <View style={styles.obraHeader}>
+                    <Text style={styles.obraNombre}>{funcion.obra}</Text>
+                    <View style={styles.estadoBadge}>
+                      <Text style={styles.estadoText}>
+                        {funcion.capacidad} entradas
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.obraMeta}>
+                    <View style={styles.obraMetaItem}>
+                      <MaterialCommunityIcons name="calendar" size={14} color={colors.textMuted} />
+                      <Text style={styles.obraMetaText}>
+                        {new Date(funcion.fecha).toLocaleDateString()}
+                      </Text>
+                    </View>
+                    <View style={styles.obraMetaItem}>
+                      <MaterialCommunityIcons name="map-marker" size={14} color={colors.textMuted} />
+                      <Text style={styles.obraMetaText}>{funcion.lugar || 'Teatro Principal'}</Text>
+                    </View>
+                  </View>
+                </LinearGradient>
+              </TouchableOpacity>
+            ))
+          ) : (
+            <View style={styles.emptyState}>
+              <MaterialCommunityIcons name="ticket" size={48} color={colors.textMuted} />
+              <Text style={styles.emptyText}>No hay funciones programadas</Text>
+              {grupo?.director_cedula === getSession().user?.id && (
+                <TouchableOpacity 
+                  style={styles.emptyButton} 
+                  onPress={() => navigation.navigate('DirectorShows', { grupoId })}
+                >
+                  <Text style={styles.emptyButtonText}>Crear Primera Función</Text>
+                </TouchableOpacity>
+              )}
             </View>
           )}
         </View>
@@ -895,6 +978,11 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   obraCard: {
+    marginBottom: 12,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  funcionCard: {
     marginBottom: 12,
     borderRadius: 16,
     overflow: 'hidden',

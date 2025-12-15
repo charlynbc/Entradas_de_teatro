@@ -54,30 +54,12 @@ export const crearEnsayo = async (req, res) => {
   }
 };
 
-// Listar ensayos
+// Listar ensayos - TODOS los ensayos del teatro (filtro en frontend)
 export const listarEnsayos = async (req, res) => {
   try {
-    const { cedula: userCedula, role: userRole } = req.user;
-    let ensayos;
-
-    if (userRole === 'SUPER') {
-      ensayos = await query('SELECT * FROM v_ensayos_completos ORDER BY fecha ASC, hora_fin ASC');
-    } else if (userRole === 'ADMIN') {
-      ensayos = await query(
-        `SELECT * FROM v_ensayos_completos 
-         WHERE grupo_director_cedula = $1 
-         ORDER BY fecha ASC, hora_fin ASC`,
-        [userCedula]
-      );
-    } else {
-      ensayos = await query(
-        `SELECT DISTINCT e.* FROM v_ensayos_completos e
-         JOIN grupo_miembros gm ON gm.grupo_id = e.grupo_id
-         WHERE gm.miembro_cedula = $1 AND gm.activo = TRUE
-         ORDER BY e.fecha ASC, e.hora_fin ASC`,
-        [userCedula]
-      );
-    }
+    // Traer TODOS los ensayos con información de grupo
+    // El filtro "solo mis ensayos" se hace en el frontend
+    const ensayos = await query('SELECT * FROM v_ensayos_completos ORDER BY fecha ASC, hora_fin ASC');
 
     res.json(ensayos.rows);
   } catch (error) {
