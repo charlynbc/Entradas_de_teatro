@@ -34,6 +34,7 @@ CREATE TABLE shows (
   lugar        VARCHAR(200),
   capacidad    INT NOT NULL,
   base_price   NUMERIC(10,2) NOT NULL,   -- precio base por entrada
+  foto_url     TEXT,                      -- Foto específica de esta función
   created_at   TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
@@ -178,6 +179,9 @@ CREATE TABLE grupos (
   
   -- Estado
   estado            VARCHAR(20) NOT NULL CHECK (estado IN ('ACTIVO', 'ARCHIVADO')) DEFAULT 'ACTIVO',
+  
+  -- Foto del grupo (elenco)
+  foto_url          TEXT,
   
   created_at        TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at        TIMESTAMP NOT NULL DEFAULT NOW()

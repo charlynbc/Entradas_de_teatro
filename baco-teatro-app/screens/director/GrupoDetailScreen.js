@@ -1,370 +1,720 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Modal, Platform, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, RefreshControl, Alert, Modal, TextInput, Image, Platform } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as ImagePicker from 'expo-image-picker';
 import ScreenContainer from '../../components/ScreenContainer';
-import SectionCard from '../../components/SectionCard';
 import Toast from '../../components/Toast';
 import { useToast } from '../../hooks/useToast';
 import { 
   obtenerGrupo, 
-  listarActoresDisponibles, 
-  agregarMiembroGrupo, 
-  eliminarMiembroGrupo,
+  listarObrasPorGrupo, 
+  actualizarGrupo, 
   archivarGrupo,
-  listarObrasPorGrupo
+  listarActoresDisponibles,
+  agregarMiembroGrupo,
+  eliminarMiembroGrupo,
+  crearObra,
+  actualizarObra,
+  eliminarObra
 } from '../../api';
 import colors from '../../theme/colors';
 
 export default function GrupoDetailScreen({ route, navigation }) {
   const { grupoId } = route.params;
   const { toast, showSuccess, showError, hideToast } = useToast();
-  
+
   const [grupo, setGrupo] = useState(null);
   const [obras, setObras] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+  
+  // Modales
+  const [modalEditGrupo, setModalEditGrupo] = useState(false);
+  const [modalAddMiembro, setModalAddMiembro] = useState(false);
+  const [modalEditObra, setModalEditObra] = useState(false);
+  
+  // Formularios
+  const [formGrupo, setFormGrupo] = useState({});
+  const [formObra, setFormObra] = useState({});
   const [actoresDisponibles, setActoresDisponibles] = useState([]);
-  const [loading, setLoading] = useState(true);
-  
-  const [modalAddMember, setModalAddMember] = useState(false);
-  
-  const [ensayoForm, setEnsayoForm] = useState({
-    titulo: '',
-    fecha: '',
-    hora_fin: '',
-    lugar: 'Sala Baco Teatro',
-    descripcion: ''
-  });
+  const [selectedActor, setSelectedActor] = useState('');
+
+  const cargarDatos = useCallback(async () => {
+    try {
+      const [grupoData, obrasData] = await Promise.all([
+        obtenerGrupo(grupoId),
+        listarObrasPorGrupo(grupoId)
+      ]);
+      setGrupo(grupoData);
+      setObras(obrasData);
+    } catch (error) {
+      showError(error.message || 'Error al cargar datos');
+    }
+  }, [grupoId]);
 
   useEffect(() => {
     cargarDatos();
-  }, []);
+  }, [cargarDatos]);
 
-  const cargarDatos = async () => {
-    try {
-      const [grupoData, obrasData, actoresData] = await Promise.all([
-        obtenerGrupo(grupoId),
-        listarObrasPorGrupo(grupoId),
-        listarActoresDisponibles(grupoId)
-      ]);
-      
-      setGrupo(grupoData);
-      setObras(obrasData);
-      setActoresDisponibles(actoresData);
-    } catch (error) {
-      showError('Error al cargar datos del grupo');
-      navigation.goBack();
-    } finally {
-      setLoading(false);
-    }
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await cargarDatos();
+    setRefreshing(false);
   };
 
-  const handleAgregarMiembro = async (actorCedula) => {
+  const handleEditarGrupo = () => {
+    setFormGrupo({
+      nombre: grupo.nombre,
+      descripcion: grupo.descripcion || '',
+      fecha_inicio: grupo.fecha_inicio,
+      fecha_fin: grupo.fecha_fin,
+      obra_a_realizar: grupo.obra_a_realizar || ''
+    });
+    setModalEditGrupo(true);
+  };
+
+  const handleGuardarGrupo = async () => {
     try {
-      await agregarMiembroGrupo(grupoId, actorCedula);
-      showSuccess('Miembro agregado al grupo');
-      setModalAddMember(false);
+      await actualizarGrupo(grupoId, formGrupo);
+      showSuccess('Grupo actualizado');
+      setModalEditGrupo(false);
       cargarDatos();
     } catch (error) {
-      showError(error.message || 'Error al agregar miembro');
+      showError(error.message || 'Error al actualizar');
     }
   };
 
-  const handleEliminarMiembro = async (actorCedula) => {
-    if (!confirm('¿Eliminar este miembro del grupo?')) return;
-    
+  const handleEliminarGrupo = () => {
+    Alert.alert(
+      '⚠️ Eliminar Grupo',
+      `¿Estás seguro de archivar "${grupo.nombre}"? Esta acción se puede revertir.`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Archivar',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await archivarGrupo(grupoId);
+              showSuccess('Grupo archivado');
+              navigation.goBack();
+            } catch (error) {
+              showError(error.message || 'Error al archivar');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const handleAgregarMiembro = async () => {
+    const actores = await listarActoresDisponibles(grupoId);
+    setActoresDisponibles(actores);
+    setModalAddMiembro(true);
+  };
+
+  const handleConfirmarAgregarMiembro = async () => {
+    if (!selectedActor) {
+      showError('Selecciona un actor/director');
+      return;
+    }
     try {
-      await eliminarMiembroGrupo(grupoId, actorCedula);
-      showSuccess('Miembro eliminado del grupo');
+      await agregarMiembroGrupo(grupoId, selectedActor);
+      showSuccess('Miembro agregado');
+      setModalAddMiembro(false);
+      setSelectedActor('');
       cargarDatos();
     } catch (error) {
-      showError(error.message || 'Error al eliminar miembro');
+      showError(error.message || 'Error al agregar');
     }
   };
 
-  const handleArchivarGrupo = async () => {
-    if (!confirm('¿Archivar este grupo? No se podrán crear más ensayos.')) return;
-    
-    try {
-      await archivarGrupo(grupoId);
-      showSuccess('Grupo archivado');
-      navigation.goBack();
-    } catch (error) {
-      showError(error.message || 'Error al archivar grupo');
-    }
+  const handleEliminarMiembro = (miembro) => {
+    Alert.alert(
+      '⚠️ Eliminar Miembro',
+      `¿Remover a ${miembro.nombre} del grupo?`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await eliminarMiembroGrupo(grupoId, miembro.cedula);
+              showSuccess('Miembro eliminado');
+              cargarDatos();
+            } catch (error) {
+              showError(error.message || 'Error al eliminar');
+            }
+          }
+        }
+      ]
+    );
   };
 
   const handleCrearObra = () => {
-    navigation.navigate('CrearObra', { 
-      grupoId,
+    navigation.navigate('CrearObra', {
+      grupoId: grupo.id,
       grupoNombre: grupo.nombre
     });
   };
 
-  if (loading) {
+  const handleEditarObra = (obra) => {
+    setFormObra({
+      id: obra.id,
+      nombre: obra.nombre,
+      descripcion: obra.descripcion || '',
+      autor: obra.autor || '',
+      genero: obra.genero || '',
+      duracion_aprox: obra.duracion_aprox?.toString() || ''
+    });
+    setModalEditObra(true);
+  };
+
+  const handleGuardarObra = async () => {
+    try {
+      await actualizarObra(formObra.id, {
+        nombre: formObra.nombre,
+        descripcion: formObra.descripcion,
+        autor: formObra.autor,
+        genero: formObra.genero,
+        duracion_aprox: formObra.duracion_aprox ? parseInt(formObra.duracion_aprox) : null
+      });
+      showSuccess('Obra actualizada');
+      setModalEditObra(false);
+      cargarDatos();
+    } catch (error) {
+      showError(error.message || 'Error al actualizar');
+    }
+  };
+
+  const handleEliminarObra = (obra) => {
+    Alert.alert(
+      '⚠️ Eliminar Obra',
+      `¿Estás seguro de eliminar "${obra.nombre}"? Esto eliminará todos sus ensayos y funciones.`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await eliminarObra(obra.id);
+              showSuccess('Obra eliminada');
+              cargarDatos();
+            } catch (error) {
+              showError(error.message || 'Error al eliminar');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const handleSelectFoto = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      // TODO: Subir imagen y actualizar foto_url
+      showSuccess('Foto seleccionada (subida pendiente)');
+    }
+  };
+
+  if (!grupo) {
     return (
-      <ScreenContainer scrollable={false}>
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.loadingText}>Cargando grupo...</Text>
+      <ScreenContainer>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Cargando...</Text>
         </View>
       </ScreenContainer>
     );
   }
 
-  if (!grupo) return null;
-
-  const miembros = grupo.miembros || [];
-  const grupoActivo = grupo.estado === 'ACTIVO';
-
   return (
     <ScreenContainer>
-      {/* Header del Grupo */}
-      <View style={styles.headerCard}>
-        <LinearGradient
-          colors={[colors.primary, colors.primary + 'DD']}
-          style={styles.headerGradient}
-        >
-          <View style={styles.headerContent}>
-            <View style={styles.headerIconContainer}>
-              <MaterialCommunityIcons name="account-group" size={48} color="white" />
-            </View>
-            <View style={styles.headerInfo}>
-              <Text style={styles.headerTitle}>{grupo.nombre}</Text>
-              <View style={styles.headerMeta}>
-                <View style={styles.headerMetaItem}>
-                  <Ionicons name="calendar" size={16} color="white" />
-                  <Text style={styles.headerMetaText}>{grupo.dia_semana}</Text>
-                </View>
-                <View style={styles.headerMetaItem}>
-                  <Ionicons name="time" size={16} color="white" />
-                  <Text style={styles.headerMetaText}>{grupo.hora_inicio?.substring(0, 5)}</Text>
-                </View>
-              </View>
-            </View>
-            <View style={[styles.estadoBadge, { backgroundColor: grupoActivo ? colors.success : colors.textMuted }]}>
-              <Text style={styles.estadoText}>{grupo.estado}</Text>
-            </View>
-          </View>
-
-          {grupo.descripcion && (
-            <Text style={styles.headerDescription}>{grupo.descripcion}</Text>
-          )}
-
-          {grupo.obra_a_realizar && (
-            <View style={styles.obraContainer}>
-              <MaterialCommunityIcons name="drama-masks" size={18} color="white" />
-              <Text style={styles.obraText}>{grupo.obra_a_realizar}</Text>
-            </View>
-          )}
-
-          <View style={styles.fechasContainer}>
-            <View style={styles.fechaItem}>
-              <Text style={styles.fechaLabel}>Inicio</Text>
-              <Text style={styles.fechaValue}>{grupo.fecha_inicio}</Text>
-            </View>
-            <View style={styles.fechaDivider} />
-            <View style={styles.fechaItem}>
-              <Text style={styles.fechaLabel}>Fin</Text>
-              <Text style={styles.fechaValue}>{grupo.fecha_fin}</Text>
-            </View>
-          </View>
-        </LinearGradient>
-      </View>
-
-      {/* Botones de Acción */}
-      {grupoActivo && (
-        <View style={styles.actionsContainer}>
-          <TouchableOpacity
-            style={[styles.actionButton, styles.primaryActionButton]}
-            onPress={handleCrearObra}
-          >
-            <LinearGradient
-              colors={[colors.secondary, colors.secondary + 'DD']}
-              style={styles.actionButtonGradient}
-            >
-              <Ionicons name="add-circle" size={20} color="white" />
-              <Text style={styles.actionButtonText}>Crear Obra</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.actionButton, styles.secondaryActionButton]}
-            onPress={() => setModalAddMember(true)}
-          >
-            <MaterialCommunityIcons name="account-plus" size={20} color={colors.primary} />
-            <Text style={styles.secondaryActionText}>Agregar Miembro</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* Miembros del Grupo */}
-      <SectionCard
-        title={
-          <View style={styles.sectionHeader}>
-            <MaterialCommunityIcons name="account-multiple" size={22} color={colors.primary} />
-            <Text style={styles.sectionTitle}>Miembros</Text>
-            <View style={styles.countBadge}>
-              <Text style={styles.countText}>{miembros.length}</Text>
-            </View>
-          </View>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
         }
       >
-        {miembros.length === 0 ? (
-          <View style={styles.emptySection}>
-            <MaterialCommunityIcons name="account-off-outline" size={48} color={colors.textMuted} />
-            <Text style={styles.emptyText}>No hay miembros en este grupo</Text>
-          </View>
-        ) : (
-          miembros.map((miembro, index) => (
-            <View key={index} style={styles.miembroItem}>
-              <View style={styles.miembroInfo}>
-                <View style={styles.avatarPlaceholder}>
-                  <Text style={styles.avatarText}>
-                    {miembro.nombre?.charAt(0) || '?'}
-                  </Text>
-                </View>
-                <View style={styles.miembroDetails}>
-                  <Text style={styles.miembroNombre}>{miembro.nombre}</Text>
-                  <Text style={styles.miembroCedula}>CI: {miembro.cedula}</Text>
-                </View>
-              </View>
-              
-              {grupoActivo && (
-                <TouchableOpacity
-                  style={styles.removeButton}
-                  onPress={() => handleEliminarMiembro(miembro.cedula)}
-                >
-                  <Ionicons name="close-circle" size={24} color={colors.error} />
-                </TouchableOpacity>
-              )}
-            </View>
-          ))
-        )}
-      </SectionCard>
-
-      {/* Obras del Grupo */}
-      <SectionCard
-        title={
-          <View style={styles.sectionHeader}>
-            <MaterialCommunityIcons name="drama-masks" size={22} color={colors.secondary} />
-            <Text style={styles.sectionTitle}>Obras del Grupo</Text>
-            <View style={[styles.countBadge, { backgroundColor: colors.secondary + '20' }]}>
-              <Text style={[styles.countText, { color: colors.secondary }]}>{obras.length}</Text>
-            </View>
-          </View>
-        }
-      >
-        {obras.length === 0 ? (
-          <View style={styles.emptySection}>
-            <MaterialCommunityIcons name="drama-masks" size={48} color={colors.textMuted} />
-            <Text style={styles.emptyText}>No hay obras creadas</Text>
-            {grupoActivo && (
-              <TouchableOpacity
-                style={styles.emptyButton}
-                onPress={handleCrearObra}
-              >
-                <Text style={styles.emptyButtonText}>Crear Primera Obra</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        ) : (
-          obras.map((obra) => (
+        {/* Header con Foto del Grupo */}
+        <View style={styles.header}>
+          <LinearGradient
+            colors={colors.gradientPrimary}
+            style={styles.headerGradient}
+          >
             <TouchableOpacity
-              key={obra.id}
-              style={styles.obraItem}
-              onPress={() => navigation.navigate('ObraDetail', { obraId: obra.id })}
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
             >
-              <View style={styles.obraHeader}>
-                <Text style={styles.obraNombre}>{obra.nombre}</Text>
-                <View style={[
-                  styles.estadoBadge,
-                  { backgroundColor: obra.estado === 'LISTA' ? colors.success + '20' : 
-                                     obra.estado === 'ARCHIVADA' ? colors.textMuted + '20' : 
-                                     colors.warning + '20' }
-                ]}>
-                  <Text style={[
-                    styles.estadoText,
-                    { color: obra.estado === 'LISTA' ? colors.success : 
-                             obra.estado === 'ARCHIVADA' ? colors.textMuted : 
-                             colors.warning }
-                  ]}>
-                    {obra.estado === 'EN_DESARROLLO' ? 'En desarrollo' : 
-                     obra.estado === 'LISTA' ? 'Lista' : 'Archivada'}
-                  </Text>
-                </View>
-              </View>
-              {obra.descripcion && (
-                <Text style={styles.obraDescripcion} numberOfLines={2}>{obra.descripcion}</Text>
-              )}
-              {obra.autor && (
-                <View style={styles.obraMeta}>
-                  <MaterialCommunityIcons name="pencil" size={14} color={colors.textMuted} />
-                  <Text style={styles.obraMetaText}>{obra.autor}</Text>
+              <Ionicons name="arrow-back" size={24} color="white" />
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.fotoGrupo}
+              onPress={handleSelectFoto}
+            >
+              {grupo.foto_url ? (
+                <Image source={{ uri: grupo.foto_url }} style={styles.fotoGrupoImage} />
+              ) : (
+                <View style={styles.fotoGrupoPlaceholder}>
+                  <MaterialCommunityIcons name="camera-plus" size={40} color="white" />
+                  <Text style={styles.fotoGrupoText}>Agregar foto del elenco</Text>
                 </View>
               )}
             </TouchableOpacity>
-          ))
+
+            <View style={styles.headerInfo}>
+              <Text style={styles.grupoNombre}>{grupo.nombre}</Text>
+              <View style={styles.headerMeta}>
+                <View style={styles.metaItem}>
+                  <Ionicons name="calendar" size={16} color={colors.accent} />
+                  <Text style={styles.metaText}>{grupo.dia_semana} • {grupo.hora_inicio}</Text>
+                </View>
+                <View style={styles.metaItem}>
+                  <Ionicons name="people" size={16} color={colors.accent} />
+                  <Text style={styles.metaText}>{grupo.miembros?.length || 0} miembros</Text>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.headerActions}>
+              <TouchableOpacity style={styles.iconButton} onPress={handleEditarGrupo}>
+                <Ionicons name="create-outline" size={24} color={colors.accent} />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.iconButton} onPress={handleEliminarGrupo}>
+                <Ionicons name="archive-outline" size={24} color={colors.error} />
+              </TouchableOpacity>
+            </View>
+          </LinearGradient>
+        </View>
+
+        {/* Descripción */}
+        {grupo.descripcion && (
+          <View style={styles.section}>
+            <Text style={styles.descripcion}>{grupo.descripcion}</Text>
+          </View>
         )}
-      </SectionCard>
 
-      {/* Archivar Grupo */}
-      {grupoActivo && (
-        <TouchableOpacity
-          style={styles.archivarButton}
-          onPress={handleArchivarGrupo}
-        >
-          <MaterialCommunityIcons name="archive" size={20} color={colors.error} />
-          <Text style={styles.archivarText}>Archivar Grupo</Text>
-        </TouchableOpacity>
-      )}
+        {/* Miembros del Elenco */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionTitleRow}>
+              <MaterialCommunityIcons name="account-group" size={24} color={colors.secondary} />
+              <Text style={styles.sectionTitle}>Elenco</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={handleAgregarMiembro}
+            >
+              <Ionicons name="add-circle" size={24} color={colors.secondary} />
+            </TouchableOpacity>
+          </View>
 
-      {/* Modal Agregar Miembro */}
+          {grupo.miembros && grupo.miembros.length > 0 ? (
+            grupo.miembros.map((miembro, index) => (
+              <View key={index} style={styles.miembroCard}>
+                <View style={styles.miembroInfo}>
+                  <View style={styles.miembroAvatar}>
+                    <MaterialCommunityIcons 
+                      name={miembro.rol_en_grupo === 'DIRECTOR' ? 'star' : 'account'} 
+                      size={24} 
+                      color={miembro.rol_en_grupo === 'DIRECTOR' ? colors.accent : colors.secondary} 
+                    />
+                  </View>
+                  <View style={styles.miembroTexto}>
+                    <Text style={styles.miembroNombre}>{miembro.nombre}</Text>
+                    <Text style={styles.miembroRol}>
+                      {miembro.rol_en_grupo === 'DIRECTOR' ? '⭐ Director' : 'Actor/Actriz'}
+                    </Text>
+                  </View>
+                </View>
+                {miembro.cedula !== grupo.director_cedula && (
+                  <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={() => handleEliminarMiembro(miembro)}
+                  >
+                    <Ionicons name="trash-outline" size={20} color={colors.error} />
+                  </TouchableOpacity>
+                )}
+              </View>
+            ))
+          ) : (
+            <View style={styles.emptyState}>
+              <MaterialCommunityIcons name="account-off" size={48} color={colors.textMuted} />
+              <Text style={styles.emptyText}>No hay miembros agregados</Text>
+            </View>
+          )}
+        </View>
+
+        {/* Obras del Grupo */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionTitleRow}>
+              <MaterialCommunityIcons name="drama-masks" size={24} color={colors.primary} />
+              <Text style={styles.sectionTitle}>Obras</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={handleCrearObra}
+            >
+              <Ionicons name="add-circle" size={24} color={colors.primary} />
+            </TouchableOpacity>
+          </View>
+
+          {obras.length > 0 ? (
+            obras.map((obra) => (
+              <TouchableOpacity
+                key={obra.id}
+                style={styles.obraCard}
+                onPress={() => navigation.navigate('ObraDetail', { obraId: obra.id })}
+              >
+                <LinearGradient
+                  colors={[colors.surface, colors.surfaceAlt]}
+                  style={styles.obraCardGradient}
+                >
+                  <View style={styles.obraHeader}>
+                    <Text style={styles.obraNombre}>{obra.nombre}</Text>
+                    <View style={[
+                      styles.estadoBadge,
+                      { backgroundColor: 
+                        obra.estado === 'LISTA' ? colors.success + '30' :
+                        obra.estado === 'ARCHIVADA' ? colors.textMuted + '30' :
+                        colors.warning + '30'
+                      }
+                    ]}>
+                      <Text style={[
+                        styles.estadoText,
+                        { color:
+                          obra.estado === 'LISTA' ? colors.success :
+                          obra.estado === 'ARCHIVADA' ? colors.textMuted :
+                          colors.warning
+                        }
+                      ]}>
+                        {obra.estado === 'LISTA' ? 'Lista' : 
+                         obra.estado === 'ARCHIVADA' ? 'Archivada' : 
+                         'En Desarrollo'}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {obra.descripcion && (
+                    <Text style={styles.obraDescripcion} numberOfLines={2}>
+                      {obra.descripcion}
+                    </Text>
+                  )}
+
+                  <View style={styles.obraMeta}>
+                    {obra.autor && (
+                      <View style={styles.obraMetaItem}>
+                        <MaterialCommunityIcons name="pencil" size={14} color={colors.textMuted} />
+                        <Text style={styles.obraMetaText}>{obra.autor}</Text>
+                      </View>
+                    )}
+                    {obra.genero && (
+                      <View style={styles.obraMetaItem}>
+                        <MaterialCommunityIcons name="theater" size={14} color={colors.textMuted} />
+                        <Text style={styles.obraMetaText}>{obra.genero}</Text>
+                      </View>
+                    )}
+                  </View>
+
+                  <View style={styles.obraActions}>
+                    <TouchableOpacity
+                      style={styles.obraActionButton}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        handleEditarObra(obra);
+                      }}
+                    >
+                      <Ionicons name="create-outline" size={18} color={colors.secondary} />
+                      <Text style={styles.obraActionText}>Editar</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.obraActionButton}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        handleEliminarObra(obra);
+                      }}
+                    >
+                      <Ionicons name="trash-outline" size={18} color={colors.error} />
+                      <Text style={[styles.obraActionText, { color: colors.error }]}>Eliminar</Text>
+                    </TouchableOpacity>
+                  </View>
+                </LinearGradient>
+              </TouchableOpacity>
+            ))
+          ) : (
+            <View style={styles.emptyState}>
+              <MaterialCommunityIcons name="drama-masks" size={48} color={colors.textMuted} />
+              <Text style={styles.emptyText}>No hay obras creadas</Text>
+              <TouchableOpacity style={styles.emptyButton} onPress={handleCrearObra}>
+                <Text style={styles.emptyButtonText}>Crear Primera Obra</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      </ScrollView>
+
+      {/* Modal Editar Grupo */}
       <Modal
+        visible={modalEditGrupo}
         animationType="slide"
         transparent={true}
-        visible={modalAddMember}
-        onRequestClose={() => setModalAddMember(false)}
+        onRequestClose={() => setModalEditGrupo(false)}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Agregar Miembro</Text>
-              <TouchableOpacity onPress={() => setModalAddMember(false)}>
+              <Text style={styles.modalTitle}>Editar Grupo</Text>
+              <TouchableOpacity onPress={() => setModalEditGrupo(false)}>
                 <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
 
             <ScrollView style={styles.modalBody}>
-              {actoresDisponibles.length === 0 ? (
-                <View style={styles.emptyModal}>
-                  <MaterialCommunityIcons name="account-off" size={48} color={colors.textMuted} />
-                  <Text style={styles.emptyModalText}>
-                    No hay actores disponibles para agregar
-                  </Text>
-                </View>
-              ) : (
-                actoresDisponibles.map((actor) => (
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Nombre del Grupo *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={formGrupo.nombre}
+                  onChangeText={(text) => setFormGrupo({ ...formGrupo, nombre: text })}
+                  placeholder="Nombre del grupo"
+                  placeholderTextColor={colors.textMuted}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Descripción</Text>
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  value={formGrupo.descripcion}
+                  onChangeText={(text) => setFormGrupo({ ...formGrupo, descripcion: text })}
+                  placeholder="Descripción del grupo"
+                  placeholderTextColor={colors.textMuted}
+                  multiline
+                  numberOfLines={4}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Obra a Realizar</Text>
+                <TextInput
+                  style={styles.input}
+                  value={formGrupo.obra_a_realizar}
+                  onChangeText={(text) => setFormGrupo({ ...formGrupo, obra_a_realizar: text })}
+                  placeholder="Obra que trabajarán"
+                  placeholderTextColor={colors.textMuted}
+                />
+              </View>
+
+              <View style={styles.infoBox}>
+                <Ionicons name="information-circle" size={20} color={colors.info} />
+                <Text style={styles.infoText}>
+                  El día y hora de clases NO se pueden modificar después de crear el grupo.
+                </Text>
+              </View>
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity
+                style={[styles.button, styles.buttonSecondary]}
+                onPress={() => setModalEditGrupo(false)}
+              >
+                <Text style={styles.buttonSecondaryText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.button, styles.buttonPrimary]}
+                onPress={handleGuardarGrupo}
+              >
+                <LinearGradient
+                  colors={colors.gradientPrimary}
+                  style={styles.buttonGradient}
+                >
+                  <Text style={styles.buttonPrimaryText}>Guardar</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal Agregar Miembro */}
+      <Modal
+        visible={modalAddMiembro}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setModalAddMiembro(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Agregar Miembro</Text>
+              <TouchableOpacity onPress={() => setModalAddMiembro(false)}>
+                <Ionicons name="close" size={24} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.modalBody}>
+              <Text style={styles.label}>Seleccionar Actor/Director</Text>
+              <ScrollView style={styles.actoresList}>
+                {actoresDisponibles.map((actor) => (
                   <TouchableOpacity
                     key={actor.cedula}
-                    style={styles.actorItem}
-                    onPress={() => handleAgregarMiembro(actor.cedula)}
+                    style={[
+                      styles.actorItem,
+                      selectedActor === actor.cedula && styles.actorItemSelected
+                    ]}
+                    onPress={() => setSelectedActor(actor.cedula)}
                   >
+                    <MaterialCommunityIcons 
+                      name={actor.role === 'ADMIN' ? 'star' : 'account'} 
+                      size={24} 
+                      color={selectedActor === actor.cedula ? colors.accent : colors.textMuted} 
+                    />
                     <View style={styles.actorInfo}>
-                      <View style={styles.avatarPlaceholder}>
-                        <Text style={styles.avatarText}>
-                          {actor.nombre?.charAt(0) || '?'}
-                        </Text>
-                      </View>
-                      <View>
-                        <Text style={styles.actorNombre}>{actor.nombre}</Text>
-                        <Text style={styles.actorCedula}>CI: {actor.cedula}</Text>
-                      </View>
+                      <Text style={[
+                        styles.actorNombre,
+                        selectedActor === actor.cedula && styles.actorNombreSelected
+                      ]}>
+                        {actor.nombre}
+                      </Text>
+                      <Text style={styles.actorRol}>
+                        {actor.role === 'ADMIN' ? 'Director' : 'Actor/Actriz'}
+                      </Text>
                     </View>
-                    <Ionicons name="add-circle" size={28} color={colors.primary} />
+                    {selectedActor === actor.cedula && (
+                      <Ionicons name="checkmark-circle" size={24} color={colors.success} />
+                    )}
                   </TouchableOpacity>
-                ))
-              )}
+                ))}
+              </ScrollView>
+            </View>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity
+                style={[styles.button, styles.buttonSecondary]}
+                onPress={() => setModalAddMiembro(false)}
+              >
+                <Text style={styles.buttonSecondaryText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.button, styles.buttonPrimary]}
+                onPress={handleConfirmarAgregarMiembro}
+              >
+                <LinearGradient
+                  colors={colors.gradientSecondary}
+                  style={styles.buttonGradient}
+                >
+                  <Text style={styles.buttonPrimaryText}>Agregar</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal Editar Obra */}
+      <Modal
+        visible={modalEditObra}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setModalEditObra(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Editar Obra</Text>
+              <TouchableOpacity onPress={() => setModalEditObra(false)}>
+                <Ionicons name="close" size={24} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalBody}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Nombre de la Obra *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={formObra.nombre}
+                  onChangeText={(text) => setFormObra({ ...formObra, nombre: text })}
+                  placeholder="Nombre de la obra"
+                  placeholderTextColor={colors.textMuted}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Descripción</Text>
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  value={formObra.descripcion}
+                  onChangeText={(text) => setFormObra({ ...formObra, descripcion: text })}
+                  placeholder="Sinopsis"
+                  placeholderTextColor={colors.textMuted}
+                  multiline
+                  numberOfLines={4}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Autor</Text>
+                <TextInput
+                  style={styles.input}
+                  value={formObra.autor}
+                  onChangeText={(text) => setFormObra({ ...formObra, autor: text })}
+                  placeholder="Autor de la obra"
+                  placeholderTextColor={colors.textMuted}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Género</Text>
+                <TextInput
+                  style={styles.input}
+                  value={formObra.genero}
+                  onChangeText={(text) => setFormObra({ ...formObra, genero: text })}
+                  placeholder="Drama, Comedia, etc."
+                  placeholderTextColor={colors.textMuted}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Duración (minutos)</Text>
+                <TextInput
+                  style={styles.input}
+                  value={formObra.duracion_aprox}
+                  onChangeText={(text) => setFormObra({ ...formObra, duracion_aprox: text })}
+                  placeholder="120"
+                  placeholderTextColor={colors.textMuted}
+                  keyboardType="numeric"
+                />
+              </View>
             </ScrollView>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity
+                style={[styles.button, styles.buttonSecondary]}
+                onPress={() => setModalEditObra(false)}
+              >
+                <Text style={styles.buttonSecondaryText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.button, styles.buttonPrimary]}
+                onPress={handleGuardarObra}
+              >
+                <LinearGradient
+                  colors={[colors.primary, colors.primaryDark]}
+                  style={styles.buttonGradient}
+                >
+                  <Text style={styles.buttonPrimaryText}>Guardar</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -380,21 +730,20 @@ export default function GrupoDetailScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  center: {
+  loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
   loadingText: {
-    marginTop: 12,
     fontSize: 16,
     color: colors.textMuted,
   },
-  headerCard: {
+  header: {
     marginBottom: 20,
     borderRadius: 20,
     overflow: 'hidden',
-    elevation: 4,
+    elevation: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
@@ -403,182 +752,117 @@ const styles = StyleSheet.create({
   headerGradient: {
     padding: 20,
   },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 12,
-  },
-  headerIconContainer: {
-    width: 70,
-    height: 70,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  backButton: {
+    width: 40,
+    height: 40,
     borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.3)',
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 15,
+  },
+  fotoGrupo: {
+    width: '100%',
+    height: 180,
+    borderRadius: 12,
+    marginBottom: 15,
+    overflow: 'hidden',
+  },
+  fotoGrupoImage: {
+    width: '100%',
+    height: '100%',
+  },
+  fotoGrupoPlaceholder: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 10,
+  },
+  fotoGrupoText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
   },
   headerInfo: {
-    flex: 1,
+    marginBottom: 15,
   },
-  headerTitle: {
-    fontSize: 22,
+  grupoNombre: {
+    fontSize: 28,
     fontWeight: 'bold',
     color: 'white',
-    marginBottom: 6,
+    marginBottom: 10,
   },
   headerMeta: {
     flexDirection: 'row',
-    gap: 16,
+    gap: 15,
   },
-  headerMetaItem: {
+  metaItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
   },
-  headerMetaText: {
+  metaText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: 'white',
+    color: 'rgba(255,255,255,0.9)',
+    fontWeight: '500',
   },
-  estadoBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  estadoText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: 'white',
-  },
-  headerDescription: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.9)',
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  obraContainer: {
+  headerActions: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 12,
-    marginBottom: 16,
-    alignSelf: 'flex-start',
+    gap: 10,
   },
-  obraText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: 'white',
-  },
-  fechasContainer: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    borderRadius: 12,
-    padding: 12,
-  },
-  fechaItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  fechaLabel: {
-    fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.7)',
-    marginBottom: 4,
-  },
-  fechaValue: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: 'white',
-  },
-  fechaDivider: {
-    width: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    marginHorizontal: 12,
-  },
-  actionsContainer: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 20,
-  },
-  actionButton: {
-    flex: 1,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  primaryActionButton: {
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-  },
-  actionButtonGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  iconButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0,0,0,0.3)',
     justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 14,
-  },
-  actionButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: 'white',
-  },
-  secondaryActionButton: {
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
+  },
+  section: {
+    marginBottom: 30,
+  },
+  descripcion: {
+    fontSize: 15,
+    color: colors.text,
+    lineHeight: 22,
     backgroundColor: colors.surface,
-    borderWidth: 2,
-    borderColor: colors.primary,
-    paddingVertical: 14,
-  },
-  secondaryActionText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.primary,
+    padding: 16,
+    borderRadius: 12,
   },
   sectionHeader: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8,
+    marginBottom: 16,
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 20,
+    fontWeight: 'bold',
     color: colors.text,
-    flex: 1,
   },
-  countBadge: {
-    backgroundColor: colors.primary + '20',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  countText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.primary,
-  },
-  emptySection: {
+  addButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 32,
   },
-  emptyText: {
-    fontSize: 14,
-    color: colors.textMuted,
-    marginTop: 12,
-  },
-  miembroItem: {
+  miembroCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border + '40',
+    backgroundColor: colors.surface,
+    padding: 14,
+    borderRadius: 12,
+    marginBottom: 10,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.secondary,
   },
   miembroInfo: {
     flexDirection: 'row',
@@ -586,20 +870,15 @@ const styles = StyleSheet.create({
     gap: 12,
     flex: 1,
   },
-  avatarPlaceholder: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.primary + '30',
+  miembroAvatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: colors.surfaceAlt,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  avatarText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.primary,
-  },
-  miembroDetails: {
+  miembroTexto: {
     flex: 1,
   },
   miembroNombre: {
@@ -607,95 +886,114 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text,
   },
-  miembroCedula: {
+  miembroRol: {
     fontSize: 13,
     color: colors.textMuted,
     marginTop: 2,
   },
-  removeButton: {
-    padding: 4,
+  deleteButton: {
+    padding: 8,
   },
-  obraItem: {
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border + '40',
+  obraCard: {
+    marginBottom: 12,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  obraCardGradient: {
+    padding: 16,
   },
   obraHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 6,
+    alignItems: 'flex-start',
+    marginBottom: 10,
   },
   obraNombre: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: colors.text,
     flex: 1,
-    marginRight: 8,
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginRight: 10,
+  },
+  estadoBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+  },
+  estadoText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   obraDescripcion: {
     fontSize: 14,
     color: colors.textMuted,
-    marginBottom: 6,
     lineHeight: 20,
+    marginBottom: 10,
   },
   obraMeta: {
     flexDirection: 'row',
+    gap: 15,
+    marginBottom: 12,
+  },
+  obraMetaItem: {
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 5,
   },
   obraMetaText: {
     fontSize: 13,
     color: colors.textMuted,
   },
-  emptyButton: {
-    backgroundColor: colors.secondary,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 16,
-    marginTop: 12,
+  obraActions: {
+    flexDirection: 'row',
+    gap: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
-  emptyButtonText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  archivarButton: {
+  obraActionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: colors.error + '10',
-    borderWidth: 1,
-    borderColor: colors.error,
-    borderRadius: 12,
-    paddingVertical: 14,
-    marginTop: 12,
+    gap: 6,
   },
-  archivarText: {
-    fontSize: 16,
+  obraActionText: {
+    fontSize: 14,
     fontWeight: '600',
-    color: colors.error,
+    color: colors.secondary,
   },
-  
-  // Modal
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 40,
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+  },
+  emptyText: {
+    fontSize: 15,
+    color: colors.textMuted,
+    marginTop: 12,
+    marginBottom: 16,
+  },
+  emptyButton: {
+    backgroundColor: colors.secondary + '20',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+  emptyButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.secondary,
+  },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: 'rgba(0,0,0,0.7)',
     justifyContent: 'flex-end',
   },
   modalContent: {
     backgroundColor: colors.background,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    maxHeight: '70%',
-    ...Platform.select({
-      web: {
-        maxWidth: 600,
-        marginHorizontal: 'auto',
-        width: '100%',
-      },
-    }),
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: '90%',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -706,35 +1004,71 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
     color: colors.text,
   },
   modalBody: {
     padding: 20,
+    maxHeight: 400,
   },
-  emptyModal: {
-    alignItems: 'center',
-    paddingVertical: 40,
+  inputGroup: {
+    marginBottom: 20,
   },
-  emptyModalText: {
-    fontSize: 14,
-    color: colors.textMuted,
-    marginTop: 12,
-    textAlign: 'center',
+  label: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 16,
+    color: colors.text,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  textArea: {
+    height: 100,
+    textAlignVertical: 'top',
+  },
+  infoBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    backgroundColor: colors.info + '15',
+    padding: 14,
+    borderRadius: 12,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.info,
+  },
+  infoText: {
+    flex: 1,
+    fontSize: 13,
+    color: colors.text,
+    lineHeight: 18,
+  },
+  actoresList: {
+    maxHeight: 300,
   },
   actorItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border + '40',
+    gap: 12,
+    backgroundColor: colors.surface,
+    padding: 14,
+    borderRadius: 12,
+    marginBottom: 10,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  actorItemSelected: {
+    borderColor: colors.accent,
+    backgroundColor: colors.accent + '15',
   },
   actorInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
     flex: 1,
   },
   actorNombre: {
@@ -742,9 +1076,52 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text,
   },
-  actorCedula: {
+  actorNombreSelected: {
+    color: colors.accent,
+  },
+  actorRol: {
     fontSize: 13,
     color: colors.textMuted,
     marginTop: 2,
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    gap: 12,
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  button: {
+    flex: 1,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  buttonSecondary: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  buttonSecondaryText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  buttonPrimary: {
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  buttonGradient: {
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  buttonPrimaryText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'white',
   },
 });
