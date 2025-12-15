@@ -202,32 +202,3 @@ export const eliminarEnsayo = async (req, res) => {
 };
 
 // Listar ensayos de un grupo específico
-export const listarEnsayosGrupo = async (req, res) => {
-  try {
-    const { grupoId } = req.params;
-    const { cedula: userCedula, role: userRole } = req.user;
-
-    if (userRole !== 'SUPER') {
-      const permisoCheck = await query(
-        `SELECT 1 FROM grupos WHERE id = $1 AND director_cedula = $2
-         UNION
-         SELECT 1 FROM grupo_miembros WHERE grupo_id = $1 AND miembro_cedula = $2 AND activo = TRUE`,
-        [grupoId, userCedula]
-      );
-
-      if (permisoCheck.rows.length === 0) {
-        return res.status(403).json({ error: 'No tienes permiso para ver los ensayos de este grupo' });
-      }
-    }
-
-    const ensayos = await query(
-      'SELECT * FROM v_ensayos_completos WHERE grupo_id = $1 ORDER BY fecha ASC, hora_fin ASC',
-      [grupoId]
-    );
-
-    res.json(ensayos.rows);
-  } catch (error) {
-    console.error('Error listando ensayos del grupo:', error);
-    res.status(500).json({ error: error.message });
-  }
-};

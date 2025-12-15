@@ -1,42 +1,43 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import ScreenContainer from '../../components/ScreenContainer';
 import Toast from '../../components/Toast';
 import { useToast } from '../../hooks/useToast';
-import { crearEnsayo } from '../../api';
+import { crearObra } from '../../api';
 import colors from '../../theme/colors';
 
-export default function CrearEnsayoScreen({ route, navigation }) {
-  const { obraId, obraNombre, grupoId } = route.params;
+export default function CrearObraScreen({ route, navigation }) {
+  const { grupoId, grupoNombre } = route.params;
   const { toast, showSuccess, showError, hideToast } = useToast();
   
   const [formData, setFormData] = useState({
-    titulo: '',
-    fecha: '',
-    hora_fin: '',
-    lugar: 'Sala Baco Teatro',
-    descripcion: ''
+    nombre: '',
+    descripcion: '',
+    autor: '',
+    genero: '',
+    duracion_aprox: ''
   });
 
   const handleCrear = async () => {
-    if (!formData.titulo || !formData.fecha || !formData.hora_fin) {
-      showError('Completa los campos obligatorios');
+    if (!formData.nombre) {
+      showError('El nombre de la obra es obligatorio');
       return;
     }
 
     try {
       const payload = {
-        obra_id: obraId,
-        ...formData
+        grupo_id: grupoId,
+        ...formData,
+        duracion_aprox: formData.duracion_aprox ? parseInt(formData.duracion_aprox) : null
       };
       
-      await crearEnsayo(payload);
-      showSuccess('Ensayo creado exitosamente');
+      await crearObra(payload);
+      showSuccess('Obra creada exitosamente');
       navigation.goBack();
     } catch (error) {
-      showError(error.message || 'Error al crear ensayo');
+      showError(error.message || 'Error al crear obra');
     }
   };
 
@@ -53,76 +54,26 @@ export default function CrearEnsayoScreen({ route, navigation }) {
           </TouchableOpacity>
           
           <View style={styles.headerInfo}>
-            <Text style={styles.title}>Nuevo Ensayo</Text>
+            <Text style={styles.title}>Nueva Obra</Text>
             <View style={styles.grupoTag}>
-              <MaterialCommunityIcons name="drama-masks" size={16} color={colors.secondary} />
-              <Text style={styles.obraNombre}>{obraNombre}</Text>
+              <MaterialCommunityIcons name="account-group" size={16} color={colors.primary} />
+              <Text style={styles.grupoNombre}>{grupoNombre}</Text>
             </View>
           </View>
         </View>
 
         {/* Form */}
         <View style={styles.form}>
-          {/* Título */}
+          {/* Nombre */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Título del Ensayo *</Text>
+            <Text style={styles.label}>Nombre de la Obra *</Text>
             <View style={styles.inputContainer}>
-              <MaterialCommunityIcons name="calendar-text" size={20} color={colors.textMuted} />
+              <MaterialCommunityIcons name="drama-masks" size={20} color={colors.textMuted} />
               <TextInput
                 style={styles.input}
-                value={formData.titulo}
-                onChangeText={(text) => setFormData({ ...formData, titulo: text })}
-                placeholder="Ej: Ensayo de inicio - Esperando a Godot"
-                placeholderTextColor={colors.textMuted}
-              />
-            </View>
-          </View>
-
-          {/* Fecha */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Fecha del Ensayo *</Text>
-            <View style={styles.inputContainer}>
-              <Ionicons name="calendar" size={20} color={colors.textMuted} />
-              <TextInput
-                style={styles.input}
-                value={formData.fecha}
-                onChangeText={(text) => setFormData({ ...formData, fecha: text })}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={colors.textMuted}
-                {...Platform.select({
-                  web: { type: 'date' }
-                })}
-              />
-            </View>
-            <Text style={styles.helperText}>Selecciona la fecha del ensayo</Text>
-          </View>
-
-          {/* Hora Fin */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Hora de Finalización *</Text>
-            <View style={styles.inputContainer}>
-              <Ionicons name="time" size={20} color={colors.textMuted} />
-              <TextInput
-                style={styles.input}
-                value={formData.hora_fin}
-                onChangeText={(text) => setFormData({ ...formData, hora_fin: text })}
-                placeholder="23:30"
-                placeholderTextColor={colors.textMuted}
-              />
-            </View>
-            <Text style={styles.helperText}>Formato: HH:MM (24 horas)</Text>
-          </View>
-
-          {/* Lugar */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Lugar del Ensayo</Text>
-            <View style={styles.inputContainer}>
-              <Ionicons name="location" size={20} color={colors.textMuted} />
-              <TextInput
-                style={styles.input}
-                value={formData.lugar}
-                onChangeText={(text) => setFormData({ ...formData, lugar: text })}
-                placeholder="Sala Baco Teatro"
+                value={formData.nombre}
+                onChangeText={(text) => setFormData({ ...formData, nombre: text })}
+                placeholder="Ej: Esperando a Godot"
                 placeholderTextColor={colors.textMuted}
               />
             </View>
@@ -142,7 +93,7 @@ export default function CrearEnsayoScreen({ route, navigation }) {
                 style={[styles.input, styles.textArea]}
                 value={formData.descripcion}
                 onChangeText={(text) => setFormData({ ...formData, descripcion: text })}
-                placeholder="Detalles del ensayo (escenas a trabajar, objetivos, etc.)"
+                placeholder="Sinopsis de la obra"
                 placeholderTextColor={colors.textMuted}
                 multiline
                 numberOfLines={5}
@@ -150,11 +101,57 @@ export default function CrearEnsayoScreen({ route, navigation }) {
             </View>
           </View>
 
+          {/* Autor */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Autor</Text>
+            <View style={styles.inputContainer}>
+              <MaterialCommunityIcons name="pencil" size={20} color={colors.textMuted} />
+              <TextInput
+                style={styles.input}
+                value={formData.autor}
+                onChangeText={(text) => setFormData({ ...formData, autor: text })}
+                placeholder="Ej: Samuel Beckett"
+                placeholderTextColor={colors.textMuted}
+              />
+            </View>
+          </View>
+
+          {/* Género */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Género</Text>
+            <View style={styles.inputContainer}>
+              <MaterialCommunityIcons name="theater" size={20} color={colors.textMuted} />
+              <TextInput
+                style={styles.input}
+                value={formData.genero}
+                onChangeText={(text) => setFormData({ ...formData, genero: text })}
+                placeholder="Ej: Drama, Comedia, Tragedia"
+                placeholderTextColor={colors.textMuted}
+              />
+            </View>
+          </View>
+
+          {/* Duración */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Duración Aproximada (minutos)</Text>
+            <View style={styles.inputContainer}>
+              <Ionicons name="time-outline" size={20} color={colors.textMuted} />
+              <TextInput
+                style={styles.input}
+                value={formData.duracion_aprox}
+                onChangeText={(text) => setFormData({ ...formData, duracion_aprox: text })}
+                placeholder="120"
+                placeholderTextColor={colors.textMuted}
+                keyboardType="numeric"
+              />
+            </View>
+          </View>
+
           {/* Info Box */}
           <View style={styles.infoBox}>
-            <Ionicons name="information-circle" size={20} color={colors.secondary} />
+            <MaterialCommunityIcons name="information" size={20} color={colors.secondary} />
             <Text style={styles.infoText}>
-              El ensayo se creará para la obra "{obraNombre}".
+              La obra será creada en estado "En desarrollo". Desde aquí podrás crear ensayos y funciones.
             </Text>
           </View>
 
@@ -175,8 +172,8 @@ export default function CrearEnsayoScreen({ route, navigation }) {
                 colors={[colors.secondary, colors.secondary + 'DD']}
                 style={styles.createButtonGradient}
               >
-                <Ionicons name="add-circle" size={20} color="white" />
-                <Text style={styles.createButtonText}>Crear Ensayo</Text>
+                <MaterialCommunityIcons name="drama-masks" size={20} color="white" />
+                <Text style={styles.createButtonText}>Crear Obra</Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>
@@ -221,16 +218,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: colors.secondary + '15',
+    backgroundColor: colors.primary + '15',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
     alignSelf: 'flex-start',
   },
-  obraNombre: {
+  grupoNombre: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.secondary,
+    color: colors.primary,
   },
   form: {
     gap: 20,
@@ -262,11 +259,6 @@ const styles = StyleSheet.create({
   textArea: {
     height: 100,
     textAlignVertical: 'top',
-  },
-  helperText: {
-    fontSize: 13,
-    color: colors.textMuted,
-    marginLeft: 4,
   },
   infoBox: {
     flexDirection: 'row',

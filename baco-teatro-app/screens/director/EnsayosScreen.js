@@ -77,10 +77,10 @@ export default function EnsayosScreen({ navigation }) {
         <Text style={styles.ensayoTitulo}>{ensayo.titulo}</Text>
 
         {/* Obra */}
-        {ensayo.grupo_obra && (
+        {ensayo.obra_nombre && (
           <View style={styles.obraContainer}>
             <MaterialCommunityIcons name="drama-masks" size={16} color={colors.secondary} />
-            <Text style={styles.obraText} numberOfLines={1}>{ensayo.grupo_obra}</Text>
+            <Text style={styles.obraText} numberOfLines={1}>{ensayo.obra_nombre}</Text>
           </View>
         )}
 

@@ -12,7 +12,7 @@ import {
   agregarMiembroGrupo, 
   eliminarMiembroGrupo,
   archivarGrupo,
-  listarEnsayosGrupo
+  listarObrasPorGrupo
 } from '../../api';
 import colors from '../../theme/colors';
 
@@ -21,12 +21,11 @@ export default function GrupoDetailScreen({ route, navigation }) {
   const { toast, showSuccess, showError, hideToast } = useToast();
   
   const [grupo, setGrupo] = useState(null);
-  const [ensayos, setEnsayos] = useState([]);
+  const [obras, setObras] = useState([]);
   const [actoresDisponibles, setActoresDisponibles] = useState([]);
   const [loading, setLoading] = useState(true);
   
   const [modalAddMember, setModalAddMember] = useState(false);
-  const [modalCreateEnsayo, setModalCreateEnsayo] = useState(false);
   
   const [ensayoForm, setEnsayoForm] = useState({
     titulo: '',
@@ -42,14 +41,14 @@ export default function GrupoDetailScreen({ route, navigation }) {
 
   const cargarDatos = async () => {
     try {
-      const [grupoData, ensayosData, actoresData] = await Promise.all([
+      const [grupoData, obrasData, actoresData] = await Promise.all([
         obtenerGrupo(grupoId),
-        listarEnsayosGrupo(grupoId),
+        listarObrasPorGrupo(grupoId),
         listarActoresDisponibles(grupoId)
       ]);
       
       setGrupo(grupoData);
-      setEnsayos(ensayosData);
+      setObras(obrasData);
       setActoresDisponibles(actoresData);
     } catch (error) {
       showError('Error al cargar datos del grupo');
@@ -94,11 +93,10 @@ export default function GrupoDetailScreen({ route, navigation }) {
     }
   };
 
-  const handleCrearEnsayo = () => {
-    navigation.navigate('CrearEnsayo', { 
+  const handleCrearObra = () => {
+    navigation.navigate('CrearObra', { 
       grupoId,
-      grupoNombre: grupo.nombre,
-      lugarDefault: 'Sala Baco Teatro'
+      grupoNombre: grupo.nombre
     });
   };
 
@@ -178,14 +176,14 @@ export default function GrupoDetailScreen({ route, navigation }) {
         <View style={styles.actionsContainer}>
           <TouchableOpacity
             style={[styles.actionButton, styles.primaryActionButton]}
-            onPress={handleCrearEnsayo}
+            onPress={handleCrearObra}
           >
             <LinearGradient
               colors={[colors.secondary, colors.secondary + 'DD']}
               style={styles.actionButtonGradient}
             >
               <Ionicons name="add-circle" size={20} color="white" />
-              <Text style={styles.actionButtonText}>Crear Ensayo</Text>
+              <Text style={styles.actionButtonText}>Crear Obra</Text>
             </LinearGradient>
           </TouchableOpacity>
 
@@ -244,53 +242,66 @@ export default function GrupoDetailScreen({ route, navigation }) {
         )}
       </SectionCard>
 
-      {/* Ensayos del Grupo */}
+      {/* Obras del Grupo */}
       <SectionCard
         title={
           <View style={styles.sectionHeader}>
-            <MaterialCommunityIcons name="calendar-check" size={22} color={colors.secondary} />
-            <Text style={styles.sectionTitle}>Ensayos Programados</Text>
+            <MaterialCommunityIcons name="drama-masks" size={22} color={colors.secondary} />
+            <Text style={styles.sectionTitle}>Obras del Grupo</Text>
             <View style={[styles.countBadge, { backgroundColor: colors.secondary + '20' }]}>
-              <Text style={[styles.countText, { color: colors.secondary }]}>{ensayos.length}</Text>
+              <Text style={[styles.countText, { color: colors.secondary }]}>{obras.length}</Text>
             </View>
           </View>
         }
       >
-        {ensayos.length === 0 ? (
+        {obras.length === 0 ? (
           <View style={styles.emptySection}>
-            <MaterialCommunityIcons name="calendar-blank-outline" size={48} color={colors.textMuted} />
-            <Text style={styles.emptyText}>No hay ensayos programados</Text>
+            <MaterialCommunityIcons name="drama-masks" size={48} color={colors.textMuted} />
+            <Text style={styles.emptyText}>No hay obras creadas</Text>
+            {grupoActivo && (
+              <TouchableOpacity
+                style={styles.emptyButton}
+                onPress={handleCrearObra}
+              >
+                <Text style={styles.emptyButtonText}>Crear Primera Obra</Text>
+              </TouchableOpacity>
+            )}
           </View>
         ) : (
-          ensayos.map((ensayo) => (
+          obras.map((obra) => (
             <TouchableOpacity
-              key={ensayo.id}
-              style={styles.ensayoItem}
-              onPress={() => navigation.navigate('EnsayoDetail', { ensayoId: ensayo.id })}
+              key={obra.id}
+              style={styles.obraItem}
+              onPress={() => navigation.navigate('ObraDetail', { obraId: obra.id })}
             >
-              <View style={styles.ensayoHeader}>
-                <Text style={styles.ensayoTitulo}>{ensayo.titulo}</Text>
-              </View>
-              <View style={styles.ensayoMeta}>
-                <View style={styles.ensayoMetaItem}>
-                  <Ionicons name="calendar" size={14} color={colors.textMuted} />
-                  <Text style={styles.ensayoMetaText}>
-                    {new Date(ensayo.fecha).toLocaleDateString('es-ES')}
+              <View style={styles.obraHeader}>
+                <Text style={styles.obraNombre}>{obra.nombre}</Text>
+                <View style={[
+                  styles.estadoBadge,
+                  { backgroundColor: obra.estado === 'LISTA' ? colors.success + '20' : 
+                                     obra.estado === 'ARCHIVADA' ? colors.textMuted + '20' : 
+                                     colors.warning + '20' }
+                ]}>
+                  <Text style={[
+                    styles.estadoText,
+                    { color: obra.estado === 'LISTA' ? colors.success : 
+                             obra.estado === 'ARCHIVADA' ? colors.textMuted : 
+                             colors.warning }
+                  ]}>
+                    {obra.estado === 'EN_DESARROLLO' ? 'En desarrollo' : 
+                     obra.estado === 'LISTA' ? 'Lista' : 'Archivada'}
                   </Text>
                 </View>
-                <View style={styles.ensayoMetaItem}>
-                  <Ionicons name="time" size={14} color={colors.textMuted} />
-                  <Text style={styles.ensayoMetaText}>
-                    {grupo.hora_inicio?.substring(0, 5)} - {ensayo.hora_fin?.substring(0, 5)}
-                  </Text>
-                </View>
-                {ensayo.lugar && (
-                  <View style={styles.ensayoMetaItem}>
-                    <Ionicons name="location" size={14} color={colors.textMuted} />
-                    <Text style={styles.ensayoMetaText}>{ensayo.lugar}</Text>
-                  </View>
-                )}
               </View>
+              {obra.descripcion && (
+                <Text style={styles.obraDescripcion} numberOfLines={2}>{obra.descripcion}</Text>
+              )}
+              {obra.autor && (
+                <View style={styles.obraMeta}>
+                  <MaterialCommunityIcons name="pencil" size={14} color={colors.textMuted} />
+                  <Text style={styles.obraMetaText}>{obra.autor}</Text>
+                </View>
+              )}
             </TouchableOpacity>
           ))
         )}
@@ -604,32 +615,50 @@ const styles = StyleSheet.create({
   removeButton: {
     padding: 4,
   },
-  ensayoItem: {
-    paddingVertical: 12,
+  obraItem: {
+    paddingVertical: 14,
     borderBottomWidth: 1,
     borderBottomColor: colors.border + '40',
   },
-  ensayoHeader: {
+  obraHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 6,
   },
-  ensayoTitulo: {
-    fontSize: 16,
+  obraNombre: {
+    fontSize: 17,
     fontWeight: '600',
     color: colors.text,
+    flex: 1,
+    marginRight: 8,
   },
-  ensayoMeta: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
+  obraDescripcion: {
+    fontSize: 14,
+    color: colors.textMuted,
+    marginBottom: 6,
+    lineHeight: 20,
   },
-  ensayoMetaItem: {
+  obraMeta: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
   },
-  ensayoMetaText: {
+  obraMetaText: {
     fontSize: 13,
     color: colors.textMuted,
+  },
+  emptyButton: {
+    backgroundColor: colors.secondary,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 16,
+    marginTop: 12,
+  },
+  emptyButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
   },
   archivarButton: {
     flexDirection: 'row',

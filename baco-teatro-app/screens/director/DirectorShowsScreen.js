@@ -16,17 +16,27 @@ import { Ionicons } from '@expo/vector-icons';
 const initialShow = { obra: '', fecha: new Date(), lugar: '', capacidad: '', base_price: '' };
 const initialAssign = { showId: '', actorId: '', cantidad: '' };
 
-export default function DirectorShowsScreen({ navigation }) {
+export default function DirectorShowsScreen({ navigation, route }) {
   const { toast, showSuccess, showError, hideToast } = useToast();
   const [shows, setShows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [showForm, setShowForm] = useState(initialShow);
   const [modalVisible, setModalVisible] = useState(false);
+  const [obraIdFromRoute, setObraIdFromRoute] = useState(null);
   
   // Date Picker states
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+
+  // Pre-fill form if navigated from ObraDetail
+  useEffect(() => {
+    if (route?.params?.obraId && route?.params?.obraNombre) {
+      setObraIdFromRoute(route.params.obraId);
+      setShowForm({ ...initialShow, obra: route.params.obraNombre });
+      setModalVisible(true);
+    }
+  }, [route?.params]);
 
   const load = async () => {
     setLoading(true);
@@ -56,6 +66,7 @@ export default function DirectorShowsScreen({ navigation }) {
       const fechaStr = showForm.fecha.toISOString();
       
       await createShow({
+        obra_id: obraIdFromRoute || null,
         obra: showForm.obra,
         fecha: fechaStr,
         lugar: showForm.lugar,
@@ -63,6 +74,7 @@ export default function DirectorShowsScreen({ navigation }) {
         base_price: Number(showForm.base_price) || 0,
       });
       setShowForm(initialShow);
+      setObraIdFromRoute(null);
       setModalVisible(false);
       load();
       showSuccess('✨ Función creada y tickets generados con éxito');

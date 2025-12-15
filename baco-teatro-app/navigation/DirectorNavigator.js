@@ -21,6 +21,8 @@ import MiembrosScreen from '../screens/shared/MiembrosScreen';
 import EnsayosGeneralesScreen from '../screens/shared/EnsayosGeneralesScreen';
 import GruposScreen from '../screens/director/GruposScreen';
 import GrupoDetailScreen from '../screens/director/GrupoDetailScreen';
+import ObraDetailScreen from '../screens/director/ObraDetailScreen';
+import CrearObraScreen from '../screens/director/CrearObraScreen';
 import CrearEnsayoScreen from '../screens/director/CrearEnsayoScreen';
 import EnsayosScreen from '../screens/director/EnsayosScreen';
 import colors from '../theme/colors';
@@ -138,6 +140,16 @@ export default function DirectorNavigator() {
         name="GrupoDetail" 
         component={GrupoDetailScreen} 
         options={{ headerShown: true, title: 'Detalle del Grupo' }}
+      />
+      <Stack.Screen 
+        name="ObraDetail" 
+        component={ObraDetailScreen} 
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen 
+        name="CrearObra" 
+        component={CrearObraScreen} 
+        options={{ headerShown: false }}
       />
       <Stack.Screen 
         name="CrearEnsayo" 

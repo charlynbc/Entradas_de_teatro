@@ -7,15 +7,29 @@ Sistema completo de gestión y venta de entradas para teatro con diseño teatral
 Toda la documentación funcional, técnica y operativa está centralizada en:
  - [documentacion/README.md](documentacion/README.md)
  - Guía de tareas de VS Code: [./.vscode/README.md](.vscode/README.md)
- Migración 2025-12-12 (users.phone + FK tickets): ver `documentacion/deploy/MIGRACION-2025-12-12-phone-fk.md`
+ - **NUEVA Arquitectura Grupos → Obras → Ensayos/Funciones:** [docs/ARQUITECTURA-GRUPOS-OBRAS.md](docs/ARQUITECTURA-GRUPOS-OBRAS.md)
+ - Migración 2025-12-12 (users.phone + FK tickets): ver `documentacion/deploy/MIGRACION-2025-12-12-phone-fk.md`
 Incluye guía de entorno, deploy en Render, manuales, arquitectura y reportes de testing.
 
 ## 🚀 Características
 
+### Sistema de Gestión Teatral Completo
+- 🎭 **Grupos Teatrales** - Gestión de compañías con directores y actores
+- 📚 **Obras** - Administración de trabajos teatrales (EN_DESARROLLO → LISTA → ARCHIVADA)
+- 🎵 **Ensayos** - Programación de ensayos por obra
+- 🎪 **Funciones** - Creación de presentaciones públicas
+- 👥 **Co-directores** - Permite colaboración entre directores
+- 🎯 **Permisos por rol** - SUPER, ADMIN (Director), VENDEDOR (Actor), INVITADO
+
+### Venta y Distribución
+- 🎫 **Venta de entradas** con generación de PDF y QR
+- 📧 **Envío por Email** y WhatsApp
+- 💳 **Distribución de tickets** entre actores/vendedores
+- 📊 **Reportes de ventas** por obra y vendedor
+
+### Experiencia de Usuario
 - ✨ **Sistema virgen** - Se entrega sin datos precargados
 - 👤 **Usuario supremo** inicial para configuración
-- 🎫 **Venta de entradas** con generación de PDF
-- 📧 **Envío por Email** y WhatsApp
 - 🎨 **Diseño teatral** profesional y responsive
 - 📱 **Optimizado para móviles**
 

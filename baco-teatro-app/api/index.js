@@ -830,14 +830,102 @@ export async function listarActoresDisponibles(grupoId) {
   }
 }
 
-export async function listarEnsayosGrupo(grupoId) {
+// ==================== OBRAS ====================
+
+export async function crearObra(payload) {
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const token = currentSession.token;
+    const response = await request('/api/obras', {
+      method: 'POST',
+      token,
+      body: payload
+    });
+    return response;
+  } catch (error) {
+    console.error('Error creando obra:', error);
+    throw error;
+  }
+}
+
+export async function listarObras() {
   requireUser();
   try {
     const token = currentSession.token;
-    const response = await request(`/api/ensayos/grupo/${grupoId}`, { token });
+    const response = await request('/api/obras', { token });
     return response || [];
   } catch (error) {
-    console.error('Error listando ensayos del grupo:', error);
+    console.error('Error listando obras:', error);
+    throw error;
+  }
+}
+
+export async function listarObrasPorGrupo(grupoId) {
+  requireUser();
+  try {
+    const token = currentSession.token;
+    const response = await request(`/api/obras/grupo/${grupoId}`, { token });
+    return response || [];
+  } catch (error) {
+    console.error('Error listando obras del grupo:', error);
+    throw error;
+  }
+}
+
+export async function obtenerObra(obraId) {
+  requireUser();
+  try {
+    const token = currentSession.token;
+    const response = await request(`/api/obras/${obraId}`, { token });
+    return response;
+  } catch (error) {
+    console.error('Error obteniendo obra:', error);
+    throw error;
+  }
+}
+
+export async function actualizarObra(obraId, payload) {
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const token = currentSession.token;
+    const response = await request(`/api/obras/${obraId}`, {
+      method: 'PUT',
+      token,
+      body: payload
+    });
+    return response;
+  } catch (error) {
+    console.error('Error actualizando obra:', error);
+    throw error;
+  }
+}
+
+export async function eliminarObra(obraId) {
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const token = currentSession.token;
+    const response = await request(`/api/obras/${obraId}`, {
+      method: 'DELETE',
+      token
+    });
+    return response;
+  } catch (error) {
+    console.error('Error eliminando obra:', error);
+    throw error;
+  }
+}
+
+export async function archivarObra(obraId) {
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const token = currentSession.token;
+    const response = await request(`/api/obras/${obraId}/archivar`, {
+      method: 'POST',
+      token
+    });
+    return response;
+  } catch (error) {
+    console.error('Error archivando obra:', error);
     throw error;
   }
 }
