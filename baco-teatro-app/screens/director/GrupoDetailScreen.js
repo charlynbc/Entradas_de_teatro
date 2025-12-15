@@ -45,6 +45,13 @@ export default function GrupoDetailScreen({ route, navigation }) {
   const [selectedActor, setSelectedActor] = useState('');
   const [formFinalizarGrupo, setFormFinalizarGrupo] = useState({ conclusion: '', puntuacion: '' });
 
+  // Helper para verificar si el usuario puede editar el grupo
+  const puedeEditarGrupo = useCallback(() => {
+    const session = getSession();
+    if (!grupo) return false;
+    return session.user?.role === 'SUPER' || grupo.director_cedula === session.user?.id;
+  }, [grupo]);
+
   const cargarDatos = useCallback(async () => {
     try {
       const [grupoData, obrasData, funcionesData] = await Promise.all([
@@ -291,14 +298,17 @@ export default function GrupoDetailScreen({ route, navigation }) {
 
             <TouchableOpacity 
               style={styles.fotoGrupo}
-              onPress={handleSelectFoto}
+              onPress={puedeEditarGrupo() ? handleSelectFoto : null}
+              disabled={!puedeEditarGrupo()}
             >
               {grupo.foto_url ? (
                 <Image source={{ uri: grupo.foto_url }} style={styles.fotoGrupoImage} />
               ) : (
                 <View style={styles.fotoGrupoPlaceholder}>
                   <MaterialCommunityIcons name="camera-plus" size={40} color="white" />
-                  <Text style={styles.fotoGrupoText}>Agregar foto del elenco</Text>
+                  <Text style={styles.fotoGrupoText}>
+                    {puedeEditarGrupo() ? 'Agregar foto del elenco' : 'Foto del elenco'}
+                  </Text>
                 </View>
               )}
             </TouchableOpacity>
@@ -317,17 +327,19 @@ export default function GrupoDetailScreen({ route, navigation }) {
               </View>
             </View>
 
-            <View style={styles.headerActions}>
-              <TouchableOpacity style={styles.iconButton} onPress={handleEditarGrupo}>
-                <Ionicons name="create-outline" size={24} color={colors.accent} />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.iconButton} onPress={() => setModalFinalizarGrupo(true)}>
-                <MaterialCommunityIcons name="clipboard-check" size={24} color="#4CAF50" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.iconButton} onPress={handleEliminarGrupo}>
-                <Ionicons name="archive-outline" size={24} color={colors.error} />
-              </TouchableOpacity>
-            </View>
+            {puedeEditarGrupo() && (
+              <View style={styles.headerActions}>
+                <TouchableOpacity style={styles.iconButton} onPress={handleEditarGrupo}>
+                  <Ionicons name="create-outline" size={24} color={colors.accent} />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.iconButton} onPress={() => setModalFinalizarGrupo(true)}>
+                  <MaterialCommunityIcons name="clipboard-check" size={24} color="#4CAF50" />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.iconButton} onPress={handleEliminarGrupo}>
+                  <Ionicons name="archive-outline" size={24} color={colors.error} />
+                </TouchableOpacity>
+              </View>
+            )}
           </LinearGradient>
         </View>
 
@@ -504,7 +516,7 @@ export default function GrupoDetailScreen({ route, navigation }) {
               <MaterialCommunityIcons name="ticket" size={24} color={colors.primary} />
               <Text style={styles.sectionTitle}>Funciones</Text>
             </View>
-            {grupo?.director_cedula === getSession().user?.id && (
+            {puedeEditarGrupo() && (
               <TouchableOpacity
                 style={styles.addButton}
                 onPress={() => {
@@ -561,7 +573,7 @@ export default function GrupoDetailScreen({ route, navigation }) {
             <View style={styles.emptyState}>
               <MaterialCommunityIcons name="ticket" size={48} color={colors.textMuted} />
               <Text style={styles.emptyText}>No hay funciones programadas</Text>
-              {grupo?.director_cedula === getSession().user?.id && (
+              {puedeEditarGrupo() && (
                 <TouchableOpacity 
                   style={styles.emptyButton} 
                   onPress={() => navigation.navigate('DirectorShows', { grupoId })}
