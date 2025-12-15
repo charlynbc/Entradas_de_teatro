@@ -330,6 +330,9 @@ export default function GruposScreen({ navigation }) {
                         onChangeText={(text) => setFormData({ ...formData, fecha_inicio: text })}
                         placeholder="YYYY-MM-DD"
                         placeholderTextColor={colors.textMuted}
+                        {...Platform.select({
+                          web: { type: 'date' }
+                        })}
                       />
                     </View>
                   </View>
@@ -344,6 +347,9 @@ export default function GruposScreen({ navigation }) {
                         onChangeText={(text) => setFormData({ ...formData, fecha_fin: text })}
                         placeholder="YYYY-MM-DD"
                         placeholderTextColor={colors.textMuted}
+                        {...Platform.select({
+                          web: { type: 'date' }
+                        })}
                       />
                     </View>
                   </View>

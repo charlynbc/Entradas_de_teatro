@@ -89,9 +89,12 @@ export default function CrearEnsayoScreen({ route, navigation }) {
                 onChangeText={(text) => setFormData({ ...formData, fecha: text })}
                 placeholder="YYYY-MM-DD"
                 placeholderTextColor={colors.textMuted}
+                {...Platform.select({
+                  web: { type: 'date' }
+                })}
               />
             </View>
-            <Text style={styles.helperText}>Formato: 2026-01-15</Text>
+            <Text style={styles.helperText}>Selecciona la fecha del ensayo</Text>
           </View>
 
           {/* Hora Fin */}
