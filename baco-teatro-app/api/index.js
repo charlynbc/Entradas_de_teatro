@@ -322,6 +322,54 @@ export async function updateShow(showId, payload) {
   }
 }
 
+export async function cerrarFuncion(showId, payload) {
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const token = currentSession.token;
+    const response = await request(`/api/shows/${showId}/cerrar`, { 
+      method: 'POST',
+      token,
+      body: payload // { conclusion_director, puntuacion }
+    });
+    return response;
+  } catch (error) {
+    console.error('Error cerrando función:', error);
+    throw error;
+  }
+}
+
+export async function listarFuncionesConcluideas() {
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const token = currentSession.token;
+    const response = await request('/api/shows/concluidas', { token });
+    return response.shows || [];
+  } catch (error) {
+    console.error('Error listando funciones concluidas:', error);
+    return [];
+  }
+}
+
+export async function descargarPDFFuncion(showId) {
+  requireRole(['ADMIN', 'SUPER']);
+  const token = currentSession.token;
+  const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+  const url = `${API_URL}/api/shows/${showId}/pdf`;
+  
+  // Para web, abrimos en nueva ventana
+  if (typeof window !== 'undefined') {
+    const a = document.createElement('a');
+    a.href = url + `?token=${token}`;
+    a.target = '_blank';
+    a.download = `funcion-${showId}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+  
+  return { ok: true, url };
+}
+
 export async function uploadImage(imageUri, filename) {
   requireUser();
   try {
@@ -872,6 +920,54 @@ export async function listarActoresDisponibles(grupoId) {
     console.error('Error listando actores disponibles:', error);
     throw error;
   }
+}
+
+export async function finalizarGrupo(grupoId, payload) {
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const token = currentSession.token;
+    const response = await request(`/api/grupos/${grupoId}/finalizar`, {
+      method: 'POST',
+      token,
+      body: payload // { conclusion, puntuacion }
+    });
+    return response;
+  } catch (error) {
+    console.error('Error finalizando grupo:', error);
+    throw error;
+  }
+}
+
+export async function listarGruposFinalizados() {
+  requireRole(['ADMIN', 'SUPER']);
+  try {
+    const token = currentSession.token;
+    const response = await request('/api/grupos/finalizados/lista', { token });
+    return response || [];
+  } catch (error) {
+    console.error('Error listando grupos finalizados:', error);
+    return [];
+  }
+}
+
+export async function descargarPDFGrupo(grupoId) {
+  requireRole(['ADMIN', 'SUPER']);
+  const token = currentSession.token;
+  const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+  const url = `${API_URL}/api/grupos/${grupoId}/pdf`;
+  
+  // Para web, abrimos en nueva ventana
+  if (typeof window !== 'undefined') {
+    const a = document.createElement('a');
+    a.href = url + `?token=${token}`;
+    a.target = '_blank';
+    a.download = `grupo-${grupoId}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+  
+  return { ok: true, url };
 }
 
 // ==================== OBRAS ====================

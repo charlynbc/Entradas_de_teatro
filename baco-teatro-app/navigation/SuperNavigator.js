@@ -27,6 +27,8 @@ import ObraDetailScreen from '../screens/director/ObraDetailScreen';
 import CrearObraScreen from '../screens/director/CrearObraScreen';
 import CrearEnsayoScreen from '../screens/director/CrearEnsayoScreen';
 import EnsayosScreen from '../screens/director/EnsayosScreen';
+import FuncionesConcluidasScreen from '../screens/director/FuncionesConcluidasScreen';
+import GruposFinalizadosScreen from '../screens/director/GruposFinalizadosScreen';
 import colors from '../theme/colors';
 
 const Tab = createBottomTabNavigator();
@@ -152,6 +154,16 @@ export default function SuperNavigator() {
       <Stack.Screen 
         name="CrearEnsayo" 
         component={CrearEnsayoScreen} 
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen 
+        name="FuncionesConcluideas" 
+        component={FuncionesConcluidasScreen} 
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen 
+        name="GruposFinalizados" 
+        component={GruposFinalizadosScreen} 
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

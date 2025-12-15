@@ -281,3 +281,239 @@ export async function listActoresDisponibles(grupoId) {
 
   return result.rows;
 }
+
+/**
+ * Finalizar grupo con conclusión y puntuación
+ */
+export async function finalizarGrupo(grupoId, userCedula, userRole, data) {
+  const { conclusion, puntuacion } = data;
+
+  // Verificar que el grupo existe
+  const grupoResult = await query(
+    'SELECT * FROM grupos WHERE id = $1',
+    [grupoId]
+  );
+
+  if (grupoResult.rows.length === 0) {
+    throw new Error('Grupo no encontrado');
+  }
+
+  const grupo = grupoResult.rows[0];
+
+  // Verificar permisos (director o SUPER)
+  if (userRole !== 'SUPER' && grupo.director_cedula !== userCedula) {
+    throw new Error('No tienes permiso para finalizar este grupo');
+  }
+
+  // Validar puntuación
+  if (puntuacion && (puntuacion < 1 || puntuacion > 10)) {
+    throw new Error('La puntuación debe estar entre 1 y 10');
+  }
+
+  // Actualizar grupo
+  const result = await query(
+    `UPDATE grupos 
+     SET estado = 'FINALIZADO',
+         conclusion = $1,
+         puntuacion = $2,
+         fecha_finalizacion = NOW(),
+         updated_at = NOW()
+     WHERE id = $3
+     RETURNING *`,
+    [conclusion, puntuacion, grupoId]
+  );
+
+  return result.rows[0];
+}
+
+/**
+ * Listar grupos finalizados
+ */
+export async function listGruposFinalizados(userCedula, userRole) {
+  let sqlQuery = `
+    SELECT 
+      g.*,
+      u.name as director_nombre,
+      COUNT(DISTINCT gm.miembro_cedula) as total_miembros,
+      COUNT(DISTINCT o.id) as total_obras,
+      COUNT(DISTINCT e.id) as total_ensayos
+    FROM grupos g
+    JOIN users u ON u.cedula = g.director_cedula
+    LEFT JOIN grupo_miembros gm ON gm.grupo_id = g.id
+    LEFT JOIN obras o ON o.grupo_id = g.id
+    LEFT JOIN ensayos e ON e.grupo_id = g.id
+    WHERE g.estado = 'FINALIZADO'
+  `;
+
+  const params = [];
+  
+  // Si no es SUPER, solo ver sus grupos
+  if (userRole !== 'SUPER') {
+    sqlQuery += ' AND g.director_cedula = $1';
+    params.push(userCedula);
+  }
+
+  sqlQuery += `
+    GROUP BY g.id, u.name
+    ORDER BY g.fecha_finalizacion DESC
+  `;
+
+  const result = await query(sqlQuery, params);
+  return result.rows;
+}
+
+/**
+ * Generar PDF de informe de grupo finalizado
+ */
+export async function generarPDFGrupo(grupoId, userCedula, userRole, res) {
+  const PDFDocument = (await import('pdfkit')).default;
+
+  // Obtener información del grupo
+  const grupoResult = await query(
+    `SELECT g.*, u.name as director_nombre
+     FROM grupos g
+     JOIN users u ON u.cedula = g.director_cedula
+     WHERE g.id = $1`,
+    [grupoId]
+  );
+
+  if (grupoResult.rows.length === 0) {
+    throw new Error('Grupo no encontrado');
+  }
+
+  const grupo = grupoResult.rows[0];
+
+  // Verificar permisos
+  if (userRole !== 'SUPER' && grupo.director_cedula !== userCedula) {
+    throw new Error('No tienes permiso para ver este informe');
+  }
+
+  // Obtener miembros
+  const miembrosResult = await query(
+    `SELECT u.name, u.cedula, u.genero, gm.rol_en_grupo, gm.fecha_ingreso
+     FROM grupo_miembros gm
+     JOIN users u ON u.cedula = gm.miembro_cedula
+     WHERE gm.grupo_id = $1
+     ORDER BY gm.rol_en_grupo DESC, u.name`,
+    [grupoId]
+  );
+
+  // Obtener obras
+  const obrasResult = await query(
+    `SELECT nombre, descripcion, created_at
+     FROM obras
+     WHERE grupo_id = $1
+     ORDER BY created_at`,
+    [grupoId]
+  );
+
+  // Obtener estadísticas de ensayos
+  const ensayosResult = await query(
+    `SELECT COUNT(*) as total_ensayos,
+            MIN(fecha) as primer_ensayo,
+            MAX(fecha) as ultimo_ensayo
+     FROM ensayos
+     WHERE grupo_id = $1`,
+    [grupoId]
+  );
+
+  const ensayosStats = ensayosResult.rows[0];
+
+  // Crear PDF
+  const doc = new PDFDocument({ size: 'A4', margin: 50 });
+  
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `attachment; filename=grupo-${grupoId}-${grupo.nombre}.pdf`);
+  
+  doc.pipe(res);
+
+  // Título
+  doc.fontSize(20).fillColor('#8B0000').text('🎭 INFORME DE GRUPO FINALIZADO', { align: 'center' });
+  doc.moveDown();
+
+  // Información general
+  doc.fontSize(16).fillColor('#000').text('Información General', { underline: true });
+  doc.moveDown(0.5);
+  doc.fontSize(12);
+  doc.text(`Nombre: ${grupo.nombre}`);
+  doc.text(`Director: ${grupo.director_nombre}`);
+  doc.text(`Descripción: ${grupo.descripcion || 'Sin descripción'}`);
+  doc.text(`Día de clase: ${grupo.dia_semana} a las ${grupo.hora_inicio}`);
+  doc.text(`Período: ${new Date(grupo.fecha_inicio).toLocaleDateString('es-UY')} - ${new Date(grupo.fecha_fin).toLocaleDateString('es-UY')}`);
+  doc.text(`Obra trabajada: ${grupo.obra_a_realizar || 'No especificada'}`);
+  doc.moveDown();
+
+  // Estadísticas de ensayos
+  doc.fontSize(16).fillColor('#000').text('Estadísticas de Ensayos', { underline: true });
+  doc.moveDown(0.5);
+  doc.fontSize(12);
+  doc.text(`Total de ensayos: ${ensayosStats.total_ensayos || 0}`);
+  if (ensayosStats.primer_ensayo) {
+    doc.text(`Primer ensayo: ${new Date(ensayosStats.primer_ensayo).toLocaleDateString('es-UY')}`);
+  }
+  if (ensayosStats.ultimo_ensayo) {
+    doc.text(`Último ensayo: ${new Date(ensayosStats.ultimo_ensayo).toLocaleDateString('es-UY')}`);
+  }
+  doc.moveDown();
+
+  // Obras realizadas
+  doc.fontSize(16).fillColor('#000').text('Obras Realizadas', { underline: true });
+  doc.moveDown(0.5);
+  doc.fontSize(12);
+  if (obrasResult.rows.length > 0) {
+    obrasResult.rows.forEach((obra, index) => {
+      doc.text(`${index + 1}. ${obra.nombre}`);
+      if (obra.descripcion) {
+        doc.fontSize(10).fillColor('#666').text(`   ${obra.descripcion}`);
+        doc.fontSize(12).fillColor('#000');
+      }
+    });
+  } else {
+    doc.text('No se registraron obras');
+  }
+  doc.moveDown();
+
+  // Miembros del grupo
+  doc.fontSize(16).fillColor('#000').text('Miembros del Grupo', { underline: true });
+  doc.moveDown(0.5);
+  doc.fontSize(12);
+  if (miembrosResult.rows.length > 0) {
+    miembrosResult.rows.forEach((miembro, index) => {
+      doc.text(
+        `${index + 1}. ${miembro.name} (${miembro.rol_en_grupo}) - ${miembro.genero}`
+      );
+    });
+  } else {
+    doc.text('No hay miembros registrados');
+  }
+  doc.moveDown();
+
+  // Conclusión
+  if (grupo.conclusion) {
+    doc.fontSize(16).fillColor('#000').text('Conclusión del Director', { underline: true });
+    doc.moveDown(0.5);
+    doc.fontSize(12);
+    doc.text(grupo.conclusion, { align: 'justify' });
+    doc.moveDown();
+  }
+
+  // Puntuación
+  if (grupo.puntuacion) {
+    doc.fontSize(16).fillColor('#000').text('Puntuación del Año', { underline: true });
+    doc.moveDown(0.5);
+    doc.fontSize(12);
+    doc.text(`${grupo.puntuacion}/10`, { align: 'center' });
+    doc.moveDown();
+  }
+
+  // Fecha de finalización
+  if (grupo.fecha_finalizacion) {
+    doc.fontSize(10).fillColor('#666');
+    doc.text(
+      `Grupo finalizado el: ${new Date(grupo.fecha_finalizacion).toLocaleString('es-UY')}`,
+      { align: 'right' }
+    );
+  }
+
+  doc.end();
+}

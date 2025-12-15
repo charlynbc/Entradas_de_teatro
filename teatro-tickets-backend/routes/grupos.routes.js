@@ -8,7 +8,10 @@ import {
   agregarMiembro,
   eliminarMiembro,
   archivarGrupo,
-  listarActoresDisponibles
+  listarActoresDisponibles,
+  finalizarGrupo,
+  listarGruposFinalizados,
+  generarPDFGrupo
 } from '../controllers/grupos.controller.js';
 
 const router = express.Router();
@@ -19,6 +22,7 @@ router.use(authenticate);
 // CRUD básico de grupos
 router.post('/', crearGrupo);                          // Crear grupo
 router.get('/', listarGrupos);                         // Listar grupos
+router.get('/finalizados/lista', listarGruposFinalizados);  // Listar grupos finalizados
 router.get('/:id', obtenerGrupo);                      // Obtener grupo específico
 router.put('/:id', actualizarGrupo);                   // Actualizar grupo
 
@@ -27,7 +31,9 @@ router.post('/:id/miembros', agregarMiembro);          // Agregar miembro al gru
 router.delete('/:id/miembros/:miembroCedula', eliminarMiembro);  // Eliminar miembro del grupo
 router.get('/:id/actores-disponibles', listarActoresDisponibles); // Listar actores disponibles
 
-// Archivar grupo
+// Archivar y finalizar grupo
 router.post('/:id/archivar', archivarGrupo);           // Archivar grupo manualmente
+router.post('/:id/finalizar', finalizarGrupo);         // Finalizar grupo con conclusión
+router.get('/:id/pdf', generarPDFGrupo);               // Generar PDF de grupo finalizado
 
 export default router;

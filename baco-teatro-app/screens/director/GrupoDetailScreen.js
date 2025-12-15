@@ -18,7 +18,8 @@ import {
   actualizarObra,
   eliminarObra,
   listDirectorShows,
-  getSession
+  getSession,
+  finalizarGrupo
 } from '../../api';
 import colors from '../../theme/colors';
 
@@ -35,12 +36,14 @@ export default function GrupoDetailScreen({ route, navigation }) {
   const [modalEditGrupo, setModalEditGrupo] = useState(false);
   const [modalAddMiembro, setModalAddMiembro] = useState(false);
   const [modalEditObra, setModalEditObra] = useState(false);
+  const [modalFinalizarGrupo, setModalFinalizarGrupo] = useState(false);
   
   // Formularios
   const [formGrupo, setFormGrupo] = useState({});
   const [formObra, setFormObra] = useState({});
   const [actoresDisponibles, setActoresDisponibles] = useState([]);
   const [selectedActor, setSelectedActor] = useState('');
+  const [formFinalizarGrupo, setFormFinalizarGrupo] = useState({ conclusion: '', puntuacion: '' });
 
   const cargarDatos = useCallback(async () => {
     try {
@@ -112,6 +115,29 @@ export default function GrupoDetailScreen({ route, navigation }) {
         }
       ]
     );
+  };
+
+  const handleFinalizarGrupo = async () => {
+    if (!formFinalizarGrupo.conclusion) {
+      showError('Debes agregar una conclusión');
+      return;
+    }
+    if (!formFinalizarGrupo.puntuacion || formFinalizarGrupo.puntuacion < 1 || formFinalizarGrupo.puntuacion > 10) {
+      showError('La puntuación debe ser entre 1 y 10');
+      return;
+    }
+
+    try {
+      await finalizarGrupo(grupoId, {
+        conclusion: formFinalizarGrupo.conclusion,
+        puntuacion: parseInt(formFinalizarGrupo.puntuacion)
+      });
+      showSuccess('Grupo finalizado correctamente');
+      setModalFinalizarGrupo(false);
+      navigation.navigate('GruposFinalizados');
+    } catch (error) {
+      showError(error.message || 'Error al finalizar grupo');
+    }
   };
 
   const handleAgregarMiembro = async () => {
@@ -294,6 +320,9 @@ export default function GrupoDetailScreen({ route, navigation }) {
             <View style={styles.headerActions}>
               <TouchableOpacity style={styles.iconButton} onPress={handleEditarGrupo}>
                 <Ionicons name="create-outline" size={24} color={colors.accent} />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.iconButton} onPress={() => setModalFinalizarGrupo(true)}>
+                <MaterialCommunityIcons name="clipboard-check" size={24} color="#4CAF50" />
               </TouchableOpacity>
               <TouchableOpacity style={styles.iconButton} onPress={handleEliminarGrupo}>
                 <Ionicons name="archive-outline" size={24} color={colors.error} />
@@ -795,6 +824,77 @@ export default function GrupoDetailScreen({ route, navigation }) {
                   style={styles.buttonGradient}
                 >
                   <Text style={styles.buttonPrimaryText}>Guardar</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal Finalizar Grupo */}
+      <Modal
+        visible={modalFinalizarGrupo}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setModalFinalizarGrupo(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>✅ Finalizar Grupo</Text>
+              <TouchableOpacity onPress={() => setModalFinalizarGrupo(false)}>
+                <Ionicons name="close" size={24} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalBody}>
+              <Text style={styles.modalSubtitle}>
+                Finalizar el grupo "{grupo?.nombre}" marcará el cierre del año.
+              </Text>
+
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Puntuación del Año (1-10) *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={formFinalizarGrupo.puntuacion}
+                  onChangeText={(text) => setFormFinalizarGrupo({ ...formFinalizarGrupo, puntuacion: text })}
+                  placeholder="8"
+                  placeholderTextColor={colors.textMuted}
+                  keyboardType="numeric"
+                />
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Conclusión del Año *</Text>
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  value={formFinalizarGrupo.conclusion}
+                  onChangeText={(text) => setFormFinalizarGrupo({ ...formFinalizarGrupo, conclusion: text })}
+                  placeholder="Escribe tus conclusiones sobre el año del grupo: aspectos positivos, áreas de mejora, logros alcanzados..."
+                  placeholderTextColor={colors.textMuted}
+                  multiline
+                  numberOfLines={6}
+                  textAlignVertical="top"
+                />
+              </View>
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity
+                style={[styles.button, styles.buttonSecondary]}
+                onPress={() => setModalFinalizarGrupo(false)}
+              >
+                <Text style={styles.buttonSecondaryText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.button, styles.buttonPrimary]}
+                onPress={handleFinalizarGrupo}
+              >
+                <LinearGradient
+                  colors={['#4CAF50', '#2E7D32']}
+                  style={styles.buttonGradient}
+                >
+                  <Text style={styles.buttonPrimaryText}>Finalizar Grupo</Text>
                 </LinearGradient>
               </TouchableOpacity>
             </View>

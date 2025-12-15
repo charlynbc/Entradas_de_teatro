@@ -1,4 +1,5 @@
 import QRCode from 'qrcode';
+import PDFDocument from 'pdfkit';
 import { generateTicketCode } from '../utils/generateCode.js';
 import { readData, writeData, nextId } from '../utils/dataStore.js';
 import { query } from '../db/postgres.js';
@@ -111,8 +112,12 @@ export async function crearShow(req, res) {
 
 export async function listarShows(req, res) {
   try {
-    const result = await query(
-      `SELECT 
+    // Si no hay token, solo mostrar funciones ACTIVAS
+    // Si hay token (director/super), mostrar todas las activas
+    const showOnlyActive = !req.user || req.user.role === 'INVITADO';
+    
+    let sqlQuery = `
+      SELECT 
         s.*, 
         o.nombre as obra_nombre,
         g.nombre as grupo_nombre, 
@@ -120,9 +125,19 @@ export async function listarShows(req, res) {
         g.id as grupo_id
        FROM shows s 
        LEFT JOIN obras o ON o.id = s.obra_id
-       LEFT JOIN grupos g ON g.id = o.grupo_id 
-       ORDER BY s.fecha DESC`
-    );
+       LEFT JOIN grupos g ON g.id = o.grupo_id
+    `;
+    
+    if (showOnlyActive) {
+      sqlQuery += ` WHERE s.estado = 'ACTIVA'`;
+    } else {
+      // Directores y SUPER ven todas las activas (no las concluidas a menos que sea endpoint específico)
+      sqlQuery += ` WHERE s.estado = 'ACTIVA'`;
+    }
+    
+    sqlQuery += ` ORDER BY s.fecha DESC`;
+    
+    const result = await query(sqlQuery);
     res.json(result.rows);
   } catch (error) {
     console.error('Error listando shows:', error);
@@ -334,6 +349,254 @@ export async function updateShow(req, res) {
     });
   } catch (error) {
     console.error('Error actualizando show:', error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
+// Cerrar función (marcarla como concluida con conclusión y puntuación)
+export async function cerrarFuncion(req, res) {
+  try {
+    const { showId } = req.params;
+    const { conclusion_director, puntuacion } = req.body;
+    const { cedula: userCedula, role: userRole } = req.user;
+
+    // Verificar que la función existe
+    const showResult = await query(
+      `SELECT s.*, o.grupo_id, g.director_cedula 
+       FROM shows s
+       LEFT JOIN obras o ON o.id = s.obra_id
+       LEFT JOIN grupos g ON g.id = o.grupo_id
+       WHERE s.id = $1`,
+      [showId]
+    );
+
+    if (showResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Función no encontrada' });
+    }
+
+    const show = showResult.rows[0];
+
+    // Verificar permisos (solo director del grupo o SUPER)
+    if (userRole !== 'SUPER' && show.director_cedula !== userCedula) {
+      return res.status(403).json({ error: 'No tienes permisos para cerrar esta función' });
+    }
+
+    // Verificar que no esté ya concluida
+    if (show.estado === 'CONCLUIDA') {
+      return res.status(400).json({ error: 'La función ya está concluida' });
+    }
+
+    // Validar puntuación
+    if (puntuacion && (puntuacion < 1 || puntuacion > 10)) {
+      return res.status(400).json({ error: 'La puntuación debe estar entre 1 y 10' });
+    }
+
+    // Actualizar función
+    const result = await query(
+      `UPDATE shows 
+       SET estado = 'CONCLUIDA', 
+           conclusion_director = $1, 
+           puntuacion = $2,
+           fecha_conclusion = NOW()
+       WHERE id = $3
+       RETURNING *`,
+      [conclusion_director, puntuacion, showId]
+    );
+
+    res.json({
+      ok: true,
+      show: result.rows[0],
+      mensaje: 'Función cerrada exitosamente'
+    });
+  } catch (error) {
+    console.error('Error cerrando función:', error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
+// Generar PDF de función concluida
+export async function generarPDFFuncion(req, res) {
+  try {
+    const { showId } = req.params;
+    const { cedula: userCedula, role: userRole } = req.user;
+
+    // Obtener información completa de la función
+    const showResult = await query(
+      `SELECT s.*, 
+              o.nombre as obra_nombre, 
+              g.nombre as grupo_nombre, 
+              g.director_cedula,
+              u.name as director_nombre
+       FROM shows s
+       LEFT JOIN obras o ON o.id = s.obra_id
+       LEFT JOIN grupos g ON g.id = o.grupo_id
+       LEFT JOIN users u ON u.cedula = g.director_cedula
+       WHERE s.id = $1`,
+      [showId]
+    );
+
+    if (showResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Función no encontrada' });
+    }
+
+    const show = showResult.rows[0];
+
+    // Verificar permisos
+    if (userRole !== 'SUPER' && show.director_cedula !== userCedula) {
+      return res.status(403).json({ error: 'No tienes permisos para ver este informe' });
+    }
+
+    // Obtener estadísticas de tickets
+    const statsResult = await query(
+      `SELECT 
+        COUNT(*) as total_tickets,
+        COUNT(*) FILTER (WHERE estado IN ('PAGADO', 'USADO')) as vendidas,
+        COUNT(*) FILTER (WHERE estado = 'USADO') as usadas,
+        COUNT(*) FILTER (WHERE estado = 'DISPONIBLE') as disponibles,
+        SUM(CASE WHEN estado IN ('PAGADO', 'USADO') THEN COALESCE(precio, $2) ELSE 0 END) as recaudacion
+       FROM tickets
+       WHERE show_id = $1`,
+      [showId, show.base_price]
+    );
+
+    const stats = statsResult.rows[0];
+
+    // Obtener elenco (vendedores que tuvieron tickets)
+    const elencoResult = await query(
+      `SELECT DISTINCT u.name, u.cedula, u.genero,
+              COUNT(t.code) FILTER (WHERE t.estado IN ('PAGADO', 'USADO')) as tickets_vendidos,
+              SUM(CASE WHEN t.estado IN ('PAGADO', 'USADO') THEN COALESCE(t.precio, $2) ELSE 0 END) as monto_vendido
+       FROM tickets t
+       JOIN users u ON u.phone = t.vendedor_phone
+       WHERE t.show_id = $1 AND t.vendedor_phone IS NOT NULL
+       GROUP BY u.name, u.cedula, u.genero
+       ORDER BY u.name`,
+      [showId, show.base_price]
+    );
+
+    // Crear PDF
+    const doc = new PDFDocument({ size: 'A4', margin: 50 });
+    
+    // Headers para descarga
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=funcion-${showId}-${show.obra}.pdf`);
+    
+    doc.pipe(res);
+
+    // Título
+    doc.fontSize(20).fillColor('#8B0000').text('🎭 INFORME DE FUNCIÓN CONCLUIDA', { align: 'center' });
+    doc.moveDown();
+
+    // Información de la función
+    doc.fontSize(16).fillColor('#000').text('Información General', { underline: true });
+    doc.moveDown(0.5);
+    doc.fontSize(12);
+    doc.text(`Obra: ${show.obra_nombre || show.obra}`);
+    doc.text(`Grupo: ${show.grupo_nombre || 'Sin grupo'}`);
+    doc.text(`Director: ${show.director_nombre || 'Desconocido'}`);
+    doc.text(`Fecha: ${new Date(show.fecha).toLocaleString('es-UY')}`);
+    doc.text(`Lugar: ${show.lugar || 'No especificado'}`);
+    doc.text(`Capacidad: ${show.capacidad}`);
+    doc.text(`Precio base: $${Number(show.base_price).toFixed(2)}`);
+    doc.moveDown();
+
+    // Estadísticas de entradas
+    doc.fontSize(16).fillColor('#000').text('Estadísticas de Entradas', { underline: true });
+    doc.moveDown(0.5);
+    doc.fontSize(12);
+    doc.text(`Total generadas: ${stats.total_tickets}`);
+    doc.text(`Vendidas: ${stats.vendidas} (${((stats.vendidas / show.capacidad) * 100).toFixed(1)}%)`);
+    doc.text(`Usadas: ${stats.usadas}`);
+    doc.text(`Disponibles: ${stats.disponibles}`);
+    doc.text(`Recaudación total: $${Number(stats.recaudacion || 0).toFixed(2)}`);
+    doc.moveDown();
+
+    // Elenco
+    doc.fontSize(16).fillColor('#000').text('Elenco y Ventas', { underline: true });
+    doc.moveDown(0.5);
+    doc.fontSize(12);
+    
+    if (elencoResult.rows.length > 0) {
+      elencoResult.rows.forEach((actor, index) => {
+        doc.text(
+          `${index + 1}. ${actor.name} (${actor.genero}) - ${actor.tickets_vendidos} entradas - $${Number(actor.monto_vendido || 0).toFixed(2)}`
+        );
+      });
+    } else {
+      doc.text('No hay información de elenco disponible');
+    }
+    doc.moveDown();
+
+    // Conclusión del director
+    if (show.conclusion_director) {
+      doc.fontSize(16).fillColor('#000').text('Conclusión del Director', { underline: true });
+      doc.moveDown(0.5);
+      doc.fontSize(12);
+      doc.text(show.conclusion_director, { align: 'justify' });
+      doc.moveDown();
+    }
+
+    // Puntuación
+    if (show.puntuacion) {
+      doc.fontSize(16).fillColor('#000').text('Puntuación', { underline: true });
+      doc.moveDown(0.5);
+      doc.fontSize(12);
+      doc.text(`${show.puntuacion}/10`, { align: 'center' });
+      doc.moveDown();
+    }
+
+    // Fecha de conclusión
+    if (show.fecha_conclusion) {
+      doc.fontSize(10).fillColor('#666');
+      doc.text(`Función concluida el: ${new Date(show.fecha_conclusion).toLocaleString('es-UY')}`, { align: 'right' });
+    }
+
+    // Finalizar PDF
+    doc.end();
+
+  } catch (error) {
+    console.error('Error generando PDF:', error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
+// Listar funciones concluidas
+export async function listarFuncionesConcluideas(req, res) {
+  try {
+    const { cedula: userCedula, role: userRole } = req.user;
+
+    let sqlQuery = `
+      SELECT 
+        s.*, 
+        o.nombre as obra_nombre,
+        g.nombre as grupo_nombre, 
+        g.director_cedula,
+        g.id as grupo_id,
+        u.name as director_nombre
+      FROM shows s 
+      LEFT JOIN obras o ON o.id = s.obra_id
+      LEFT JOIN grupos g ON g.id = o.grupo_id 
+      LEFT JOIN users u ON u.cedula = g.director_cedula
+      WHERE s.estado = 'CONCLUIDA'
+    `;
+
+    // Si no es SUPER, solo ver sus funciones
+    const params = [];
+    if (userRole !== 'SUPER') {
+      sqlQuery += ` AND g.director_cedula = $1`;
+      params.push(userCedula);
+    }
+
+    sqlQuery += ` ORDER BY s.fecha_conclusion DESC`;
+
+    const result = await query(sqlQuery, params);
+
+    res.json({
+      ok: true,
+      shows: result.rows
+    });
+  } catch (error) {
+    console.error('Error listando funciones concluidas:', error);
     res.status(500).json({ error: error.message });
   }
 }

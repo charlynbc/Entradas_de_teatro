@@ -197,3 +197,63 @@ export async function listarActoresDisponibles(req, res) {
     res.status(500).json({ error: 'Error al listar actores disponibles' });
   }
 }
+
+/**
+ * Cerrar/Finalizar grupo con conclusión y puntuación
+ * POST /api/grupos/:id/finalizar
+ */
+export async function finalizarGrupo(req, res) {
+  try {
+    const { id } = req.params;
+    const { conclusion, puntuacion } = req.body;
+    const { cedula, role } = req.user;
+
+    const { finalizarGrupo: finalizarGrupoSvc } = await import('../services/grupos.service.js');
+    
+    const grupo = await finalizarGrupoSvc(parseInt(id), cedula, role, {
+      conclusion,
+      puntuacion
+    });
+
+    console.log(`✅ Grupo finalizado: ${grupo.nombre} por ${req.user.name}`);
+    res.json(grupo);
+  } catch (error) {
+    console.error('Error finalizando grupo:', error);
+    res.status(400).json({ error: error.message || 'Error al finalizar grupo' });
+  }
+}
+
+/**
+ * Listar grupos finalizados
+ * GET /api/grupos/finalizados
+ */
+export async function listarGruposFinalizados(req, res) {
+  try {
+    const { cedula, role } = req.user;
+    const { listGruposFinalizados: listGruposFinalizadosSvc } = await import('../services/grupos.service.js');
+    
+    const grupos = await listGruposFinalizadosSvc(cedula, role);
+    res.json(grupos);
+  } catch (error) {
+    console.error('Error listando grupos finalizados:', error);
+    res.status(500).json({ error: 'Error al listar grupos finalizados' });
+  }
+}
+
+/**
+ * Generar PDF/informe de grupo finalizado
+ * GET /api/grupos/:id/pdf
+ */
+export async function generarPDFGrupo(req, res) {
+  try {
+    const { id } = req.params;
+    const { cedula, role } = req.user;
+
+    const { generarPDFGrupo: generarPDFGrupoSvc } = await import('../services/grupos.service.js');
+    
+    await generarPDFGrupoSvc(parseInt(id), cedula, role, res);
+  } catch (error) {
+    console.error('Error generando PDF de grupo:', error);
+    res.status(500).json({ error: error.message || 'Error al generar PDF' });
+  }
+}

@@ -92,6 +92,20 @@ export default function SuperDashboardScreen({ navigation }) {
             <Ionicons name="color-palette-outline" size={32} color={colors.secondary} />
             <Text style={styles.quickActionText}>Producciones</Text>
           </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.quickAction}
+            onPress={() => navigation.navigate('FuncionesConcluideas')}
+          >
+            <Ionicons name="checkmark-circle-outline" size={32} color="#4CAF50" />
+            <Text style={styles.quickActionText}>Concluidas</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.quickAction}
+            onPress={() => navigation.navigate('GruposFinalizados')}
+          >
+            <Ionicons name="archive-outline" size={32} color="#FF9800" />
+            <Text style={styles.quickActionText}>Finalizados</Text>
+          </TouchableOpacity>
         </View>
       </SectionCard>
 

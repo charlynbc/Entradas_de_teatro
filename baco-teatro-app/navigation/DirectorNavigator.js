@@ -11,6 +11,8 @@ import DirectorReportsScreen from '../screens/director/DirectorReportsScreen';
 import DirectorReportsObrasScreen from '../screens/director/DirectorReportsObrasScreen';
 import DirectorVendorsScreen from '../screens/director/DirectorVendorsScreen';
 import DirectorRehearsalsScreen from '../screens/director/DirectorRehearsalsScreen';
+import FuncionesConcluidasScreen from '../screens/director/FuncionesConcluidasScreen';
+import GruposFinalizadosScreen from '../screens/director/GruposFinalizadosScreen';
 // Importar pantallas de vendedor (actor) para que director pueda usarlas
 import ActorStockScreen from '../screens/actor/ActorStockScreen';
 import ActorTransferScreen from '../screens/actor/ActorTransferScreen';
@@ -154,6 +156,16 @@ export default function DirectorNavigator() {
       <Stack.Screen 
         name="CrearEnsayo" 
         component={CrearEnsayoScreen} 
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen 
+        name="FuncionesConcluideas" 
+        component={FuncionesConcluidasScreen} 
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen 
+        name="GruposFinalizados" 
+        component={GruposFinalizadosScreen} 
         options={{ headerShown: false }}
       />
     </Stack.Navigator>
