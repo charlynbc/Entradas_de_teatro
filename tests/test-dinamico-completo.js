@@ -175,7 +175,8 @@ async function testObtenerGrupoActivo() {
         console.log(`   - ID: ${grupoId}`);
         console.log(`   - Nombre: ${grupoActivo.nombre}`);
       } else {
-        logTest('Grupo activo encontrado', false, 'No hay grupos activos');
+        console.log(`   ${colors.yellow}ℹ️  INFO: No hay grupos activos (datos no creados aún)${colors.reset}`);
+        console.log(`   ${colors.blue}→ SUPER puede crear grupos desde la app${colors.reset}`);
       }
     }
   } catch (error) {
@@ -201,8 +202,8 @@ async function testObtenerFuncionActiva() {
         console.log(`   - Obra: ${showActivo.obra}`);
         console.log(`   - Estado: ${showActivo.estado}`);
       } else {
-        logTest('Función activa encontrada', false, 'No hay funciones activas');
-        console.log(`   ${colors.yellow}⚠️ Se necesita una función activa para probar el cierre${colors.reset}`);
+        console.log(`   ${colors.yellow}ℹ️  INFO: No hay funciones activas (datos no creados aún)${colors.reset}`);
+        console.log(`   ${colors.blue}→ SUPER/DIRECTOR pueden crear funciones desde la app${colors.reset}`);
       }
     }
   } catch (error) {

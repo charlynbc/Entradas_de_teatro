@@ -1,16 +1,35 @@
 # Costos y licenciamiento (estimaciones 2025)
 
+## Sistema Implementado: Baco Teatro
+
+Sistema completo de gestión de teatro con:
+- ✅ Gestión de usuarios (SUPER, DIRECTOR, VENDEDOR, ADMIN, INVITADO)
+- ✅ Gestión de grupos teatrales con directores
+- ✅ Gestión de ensayos con asistencia
+- ✅ Gestión de obras por grupo
+- ✅ Gestión de funciones (shows) con entradas
+- ✅ Sistema de tickets con QR
+- ✅ Transferencias de entradas entre usuarios
+- ✅ Cierre de funciones con evaluación y PDF
+- ✅ Finalización de grupos con conclusión y PDF
+- ✅ Reportes y estadísticas completas
+- ✅ Frontend React Native Web (multiplataforma)
+- ✅ Backend Node.js + Express + PostgreSQL
+- ✅ Sistema de fotos para grupos y funciones
+
 Estas cifras son orientativas y dependen del uso y el proveedor.
 
 ## Costos de operación (mensual)
-- Hosting Backend (Render):
+- Hosting Backend (Render/Railway/Fly.io):
   - Plan Starter/Basic: ~US$7–15
   - Plan con autoescalado: ~US$25–50
-- Base de Datos PostgreSQL (Render):
+- Base de Datos PostgreSQL (Render/Neon/Supabase):
   - Starter: ~US$7–15
   - Standard (mayor RAM/almacenamiento): ~US$25–50
+- Almacenamiento de fotos (S3/Cloudinary):
+  - Gratis hasta ~5GB o ~US$5–15/mes
 - Dominio (anual): ~US$10–20 (prorrateado: ~US$1–2/mes)
-- Correo transaccional (SendGrid/Mailgun):
+- Correo transaccional (SendGrid/Mailgun) - opcional:
   - Gratis limitado o ~US$15–35 (según volumen)
 - WhatsApp Business API (opcional):
   - Meta fees + proveedor (Twilio/360Dialog), puede variar US$25–100+
@@ -19,11 +38,78 @@ Ejemplo OPEX mensual (bajo uso): US$25–60
 Ejemplo OPEX mensual (uso medio): US$60–150
 
 ## Precio de venta actual (propuesta)
-- Básico (one‑off): US$1,500–3,500 — entrega del sistema como está, instalación inicial y 1 ronda de ajustes menores.
-- Mantenimiento: US$49–149/mes — hosting básico, monitoreo simple, parches menores y soporte por email.
-- Pro (one‑off): US$3,500–6,500 — incluye ajustes de marca, reportes y flujos pulidos + handoff completo.
-- SaaS: US$99–249/mes por organización — sin fee inicial o con onboarding reducido (US$300–900).
-- Nota: si se integra WhatsApp Business API, emailing transaccional a escala o autoescalado, sumar OPEX (ver secciones arriba).
+
+### Sistema Completo Implementado
+El sistema incluye:
+- Gestión completa de usuarios con 5 roles
+- Sistema de grupos teatrales con directores
+- Gestión de ensayos y asistencia
+- Gestión de obras y funciones
+- Emisión de tickets con QR
+- Transferencias de entradas
+- Cierre de funciones con evaluación (1-10) y PDF
+- Finalización de grupos con conclusión y PDF
+- Reportes estadísticos completos
+- Frontend multiplataforma (Web/iOS/Android)
+- Sistema de fotos para grupos y funciones
+
+### Modalidades de Venta
+
+**Licencia Única (On-Premise)**
+- Básico (one-off): US$3,500–5,500
+  - Sistema completo implementado
+  - Instalación en servidor del cliente
+  - Capacitación de 4 horas
+  - 30 días de soporte post-instalación
+  - 1 ronda de ajustes menores
+
+**Licencia + Mantenimiento**
+- Instalación: US$3,500–5,500
+- Mantenimiento: US$99–199/mes
+  - Hosting y base de datos incluidos
+  - Backups automáticos diarios
+  - Monitoreo 24/7
+  - Parches de seguridad
+  - Soporte por email (48h respuesta)
+  - 2 horas/mes de ajustes incluidas
+
+**Plan Pro (Empresarial)**
+- Instalación: US$6,500–10,000
+  - Personalización de marca (colores, logos)
+  - Reportes personalizados adicionales
+  - Integración WhatsApp Business API
+  - Capacitación extendida (8 horas)
+  - Handoff completo con documentación
+- Mantenimiento Pro: US$249–399/mes
+  - Todo lo del plan básico
+  - Soporte prioritario (24h respuesta)
+  - 8 horas/mes de desarrollo incluidas
+  - SLA 99.5% uptime
+
+**SaaS Multi-Tenant**
+- Sin fee inicial o setup reducido: US$500–1,200
+- Por organización: US$149–299/mes
+  - Hasta 10 grupos teatrales
+  - Hasta 100 usuarios
+  - 50GB almacenamiento de fotos
+  - Reportes estándar
+  - Soporte por email
+- Organización Plus: US$399–599/mes
+  - Grupos ilimitados
+  - Usuarios ilimitados
+  - 200GB almacenamiento
+  - Reportes personalizados
+  - Soporte prioritario
+  - WhatsApp Business API incluido
+
+**Servicios Adicionales**
+- Integración WhatsApp: US$800–1,500 (one-time)
+- Migración de datos: US$500–2,000 (según volumen)
+- Capacitación adicional: US$120–180/hora
+- Desarrollo de features custom: US$80–150/hora
+- Consultoría técnica: US$100–200/hora
+
+Nota: Si se integra WhatsApp Business API, emailing transaccional a escala o autoescalado, sumar OPEX correspondiente (ver secciones arriba).
 
 ## Costos de puesta en marcha (one-off)
 - Setup e infraestructura (provisión Render, DB, dominios, CI/CD): 6–12 horas
