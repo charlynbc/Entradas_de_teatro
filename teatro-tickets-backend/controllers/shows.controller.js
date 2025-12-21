@@ -112,23 +112,24 @@ export async function crearShow(req, res) {
 
 export async function listarShows(req, res) {
   try {
-    // Si no hay token, solo mostrar funciones ACTIVAS
+    // Si no hay token, solo mostrar funciones activas
     // Si hay token (director/super), mostrar todas las activas
     const showOnlyActive = !req.user || req.user.role === 'INVITADO';
     
     let sqlQuery = `
-      SELECT s.*
+      SELECT s.*, o.nombre as obra_nombre, o.descripcion as obra_descripcion
       FROM shows s
+      LEFT JOIN obras o ON o.id = s.obra_id
     `;
     
     if (showOnlyActive) {
-      sqlQuery += ` WHERE s.estado = 'ACTIVA'`;
+      sqlQuery += ` WHERE s.estado = 'activa'`;
     } else {
       // Directores y SUPER ven todas las activas (no las concluidas a menos que sea endpoint específico)
-      sqlQuery += ` WHERE s.estado = 'ACTIVA'`;
+      sqlQuery += ` WHERE s.estado = 'activa'`;
     }
     
-    sqlQuery += ` ORDER BY s.fecha_hora DESC`;
+    sqlQuery += ` ORDER BY s.fecha_hora ASC`;
     
     const result = await query(sqlQuery);
     res.json(result.rows);
@@ -552,8 +553,10 @@ export async function listarFuncionesConcluideas(req, res) {
     const { cedula: userCedula, role: userRole } = req.user;
 
     let sqlQuery = `
-      SELECT s.*
+      SELECT s.*, o.nombre as obra_nombre, o.grupo_id, g.nombre as grupo_nombre, g.director_cedula
       FROM shows s
+      LEFT JOIN obras o ON o.id = s.obra_id
+      LEFT JOIN grupos g ON g.id = o.grupo_id
       WHERE s.estado = 'CONCLUIDA'
     `;
 
@@ -564,7 +567,7 @@ export async function listarFuncionesConcluideas(req, res) {
       params.push(userCedula);
     }
 
-    sqlQuery += ` ORDER BY s.fecha_conclusion DESC`;
+    sqlQuery += ` ORDER BY s.fecha_hora DESC`;
 
     const result = await query(sqlQuery, params);
 

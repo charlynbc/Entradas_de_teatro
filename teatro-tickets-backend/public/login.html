@@ -247,29 +247,22 @@
                     throw new Error(data.error || 'Error al iniciar sesión');
                 }
                 
-                // Guardar token en localStorage
+                // Guardar sesión en el formato que espera la app Expo
+                const session = {
+                    token: data.token,
+                    user: data.user
+                };
+                
+                // Guardar en localStorage con la clave que espera la app
+                localStorage.setItem('baco:session', JSON.stringify(session));
+                
+                // También guardar individualmente por compatibilidad
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('user', JSON.stringify(data.user));
                 
-                // Redireccionar según el rol
-                const role = data.user.role.toLowerCase();
-                
-                switch(role) {
-                    case 'supremo':
-                    case 'super':
-                    case 'admin':
-                        window.location.href = '/admin-dashboard.html';
-                        break;
-                    case 'director':
-                        window.location.href = '/director-dashboard.html';
-                        break;
-                    case 'actor':
-                    case 'vendedor':
-                        window.location.href = '/vendedor-dashboard.html';
-                        break;
-                    default:
-                        window.location.href = '/';
-                }
+                // Redireccionar a la aplicación principal
+                // La app detectará automáticamente el rol del usuario desde el token
+                window.location.href = '/app.html';
                 
             } catch (error) {
                 console.error('Error:', error);

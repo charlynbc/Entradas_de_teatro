@@ -49,11 +49,15 @@ export async function listGrupos(userCedula, userRole) {
     `;
     params = [userCedula];
   } else {
-    // VENDEDOR ve grupos donde es miembro
+    // ACTOR u otro rol: ve grupos donde es miembro
     sqlQuery = `
-      SELECT DISTINCT g.* FROM v_grupos_completos g
-      JOIN grupo_miembros gm ON gm.grupo_id = g.id
-      WHERE gm.miembro_cedula = $1
+      SELECT g.* 
+      FROM v_grupos_completos g
+      WHERE g.id IN (
+        SELECT gm.grupo_id 
+        FROM grupo_miembros gm 
+        WHERE gm.miembro_cedula = $1 AND gm.activo = TRUE
+      )
       ORDER BY g.estado ASC, g.fecha_inicio DESC
     `;
     params = [userCedula];
@@ -355,7 +359,7 @@ export async function listGruposFinalizados(userCedula, userRole) {
 
   sqlQuery += `
     GROUP BY g.id, u.name
-    ORDER BY g.fecha_finalizacion DESC
+    ORDER BY g.fecha_fin DESC
   `;
 
   const result = await query(sqlQuery, params);

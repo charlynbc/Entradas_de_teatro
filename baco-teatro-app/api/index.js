@@ -38,14 +38,14 @@ function requireRole(roles) {
 export async function login(credentials) {
   try {
     // Intenta login contra el backend real
-    const body = { phone: credentials.cedula, password: credentials.password };
+    const body = { cedula: credentials.cedula, password: credentials.password };
     const response = await request('/api/auth/login', { method: 'POST', body });
     
     const user = {
-      id: response.user.phone,
+      id: response.user.cedula,
       nombre: response.user.name,
       role: response.user.role,
-      email: response.user.phone + '@bacoteatro.com',
+      email: response.user.cedula + '@bacoteatro.com',
       avatar: 'https://ui-avatars.com/api/?name=' + encodeURIComponent(response.user.name)
     };
     
