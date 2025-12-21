@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Funciones - Baco Teatro</title>
+    <link rel="stylesheet" href="/css/baco-landing.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <!-- Botón Volver al Inicio -->
+    <a href="/" class="back-to-home">
+        <i class="fas fa-home"></i>
+        <span>Volver al Inicio</span>
+    </a>
+
+    <!-- Navigation -->
+    <nav class="main-nav">
+        <div class="container">
+            <div class="nav-brand" onclick="window.location.href='/'">
+                <img src="/images/logo-baco.svg" alt="Baco Teatro" class="logo">
+                <span class="brand-text">BACO TEATRO</span>
+            </div>
+            <div class="nav-menu" id="navMenu">
+                <a href="/" class="nav-link">Inicio</a>
+                <a href="/funciones.html" class="nav-link active">Funciones</a>
+                <a href="/sobre-baco.html" class="nav-link">Sobre Baco</a>
+                <a href="/guia.html" class="nav-link">Cómo Usar</a>
+                <a href="/desarrollador.html" class="nav-link">Desarrollador</a>
+                <button class="btn-login" onclick="window.location.href='/login.html'">
+                    <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                </button>
+            </div>
+            <button class="nav-toggle" id="navToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Funciones del Día -->
+    <section id="funciones-hoy" class="funciones-hoy">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-calendar-day"></i>
+                    Funciones de Hoy
+                </h2>
+                <p class="section-subtitle">Las presentaciones de hoy, <span id="fecha-hoy"></span></p>
+            </div>
+            <div id="funciones-hoy-grid" class="funciones-grid">
+                <!-- Se cargarán dinámicamente -->
+                <div class="no-funciones">
+                    <i class="fas fa-theater-masks"></i>
+                    <h3>🎭 Cargando la cartelera...</h3>
+                    <p>Un momento mientras preparamos el escenario</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Próximas Funciones -->
+    <section id="proximas" class="proximas-funciones">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-calendar-alt"></i>
+                    Próximas Funciones
+                </h2>
+                <p class="section-subtitle">Descubre nuestras próximas presentaciones</p>
+            </div>
+            <div id="proximas-grid" class="funciones-grid">
+                <!-- Se cargarán dinámicamente -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <img src="/images/logo-baco.svg" alt="Baco Teatro" class="footer-logo">
+                    <p>Baco Teatro Uruguay</p>
+                    <p class="footer-slogan">Donde el arte cobra vida</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Navegación</h4>
+                    <a href="/">Inicio</a>
+                    <a href="/funciones.html">Funciones</a>
+                    <a href="/sobre-baco.html">Sobre Baco</a>
+                    <a href="/guia.html">Cómo Usar</a>
+                    <a href="/desarrollador.html">Desarrollador</a>
+                </div>
+                <div class="footer-contact">
+                    <h4>Contacto</h4>
+                    <p><i class="fas fa-phone"></i> 099 893 748</p>
+                    <p><i class="fab fa-whatsapp"></i> +598 94 687 473</p>
+                    <p><i class="fas fa-envelope"></i> bacoteatro.uy@gmail.com</p>
+                    <div class="footer-social">
+                        <a href="https://www.instagram.com/bacoteatro" target="_blank">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="https://www.facebook.com/BACO.TEATRO.URUGUAY" target="_blank">
+                            <i class="fab fa-facebook"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Baco Teatro Uruguay. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal de Detalle de Función -->
+    <div id="funcionModal" class="modal">
+        <div class="modal-content modal-large">
+            <button class="modal-close" onclick="closeFuncionModal()">
+                <i class="fas fa-times"></i>
+            </button>
+            <div id="funcionModalContent">
+                <!-- Se cargará dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Reserva -->
+    <div id="reservaModal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeReservaModal()">
+                <i class="fas fa-times"></i>
+            </button>
+            <div id="reservaModalContent">
+                <!-- Se cargará dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/baco-landing.js"></script>
+</body>
+</html>

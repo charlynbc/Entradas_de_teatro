@@ -1,15 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, Modal, TextInput, Linking, Platform } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionCard from '../../components/SectionCard';
 import TicketStatusPill from '../../components/TicketStatusPill';
-import Toast from '../../components/Toast';
-import { useToast } from '../../hooks/useToast';
 import colors from '../../theme/colors';
 import { getActorStock, updateTicketStatus } from '../../api';
 import DailyQuote from '../../components/DailyQuote';
@@ -23,7 +20,6 @@ if (Platform.OS === 'web') {
 }
 
 export default function ActorStockScreen() {
-  const { toast, showSuccess, showError, showWarning, hideToast } = useToast();
   const [stock, setStock] = useState([]);
   const [loading, setLoading] = useState(true);
   
@@ -89,9 +85,8 @@ export default function ActorStockScreen() {
       });
       setModalVisible(false);
       load();
-      showSuccess('✅ Ticket actualizado con éxito');
     } catch (error) {
-      showError(error.message || 'No se pudo actualizar el ticket');
+      Alert.alert('Error', error.message || 'No se pudo actualizar');
     } finally {
       setProcessing(false);
     }
@@ -100,7 +95,7 @@ export default function ActorStockScreen() {
   const confirmModal = async () => {
     if (modalMode === 'SHARE') {
       if (!buyerPhone) {
-        showError('Ingresá el número de teléfono para registrar el envío');
+        Alert.alert('Falta teléfono', 'Ingresa el número para registrar el envío');
         return;
       }
 
@@ -383,7 +378,7 @@ export default function ActorStockScreen() {
         if (Platform.OS === 'web') {
           // Web-specific: Generate PDF using html2canvas + jsPDF with Iframe isolation
           if (!jsPDF || !html2canvas) {
-            showError('Librerías de PDF no cargadas. Intentá de nuevo en unos segundos.');
+            Alert.alert('Error', 'Librerías de PDF no cargadas. Intenta de nuevo en unos segundos.');
             return;
           }
 
@@ -445,23 +440,10 @@ export default function ActorStockScreen() {
 
           if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
             try {
-              const whatsappMessage = `🎭 *¡Tu entrada está lista!*\n\n` +
-                `✨ *${selectedShowName}*\n` +
-                `📅 ${new Date(selectedTicket.showDate).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}\n` +
-                `🕐 ${new Date(selectedTicket.showDate).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })} hs\n` +
-                `📍 ${selectedTicket.lugar || 'Ver en la entrada'}\n\n` +
-                `🎟️ *Código:* ${selectedTicket.code}\n` +
-                `💰 *Precio:* $${selectedTicket.precio}\n\n` +
-                `📎 Encontrarás tu entrada adjunta en PDF.\n` +
-                `🔍 Presenta el código QR en la entrada del teatro.\n\n` +
-                `🎬 *Baco Teatro* - 25 años de historia\n` +
-                `_Dirigido por Gustavo Bouzas y Horacio Nieves_\n\n` +
-                `¡Te esperamos! 🌟`;
-
               await navigator.share({
                 files: [pdfFile],
-                title: '🎭 Entrada Baco Teatro',
-                text: whatsappMessage
+                title: 'Entrada Baco Teatro',
+                text: `Aquí tienes tu entrada para ${selectedShowName}.`
               });
             } catch (shareError) {
               console.log('Share cancelled or failed', shareError);
@@ -469,7 +451,7 @@ export default function ActorStockScreen() {
           } else {
             // Fallback to download
             pdf.save(`Entrada_${selectedTicket.code}.pdf`);
-            showSuccess('💾 Entrada descargada con éxito');
+            Alert.alert('Descarga iniciada', 'El PDF se ha descargado. Puedes compartirlo desde tus descargas.');
           }
 
         } else {
@@ -482,7 +464,7 @@ export default function ActorStockScreen() {
         }
       } catch (error) {
         console.error(error);
-        showError('No se pudo generar el PDF: ' + error.message);
+        Alert.alert('Error', 'No se pudo generar el PDF: ' + error.message);
       } finally {
         setProcessing(false);
         setModalVisible(false);
@@ -509,21 +491,6 @@ export default function ActorStockScreen() {
 
   return (
     <ScreenContainer>
-      <LinearGradient
-        colors={['#4B0082', '#8B008B', '#9370DB']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.headerGradient}
-      >
-        <View style={styles.headerContent}>
-          <View>
-            <Text style={styles.headerTitle}>🎫 Mi Stock</Text>
-            <Text style={styles.headerSubtitle}>Gestión de entradas</Text>
-          </View>
-          <MaterialCommunityIcons name="ticket-confirmation" size={48} color="#FFD700" />
-        </View>
-      </LinearGradient>
-      
       <DailyQuote variant="card" />
       {stock.map((group) => (
         <SectionCard
@@ -649,69 +616,25 @@ export default function ActorStockScreen() {
           </View>
         </View>
       </Modal>
-      
-      <Toast 
-        visible={toast.visible} 
-        message={toast.message} 
-        type={toast.type}
-        onHide={hideToast}
-      />
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  headerGradient: {
-    marginHorizontal: -20,
-    marginTop: -20,
-    marginBottom: 20,
-    paddingTop: 20,
-    paddingHorizontal: 20,
-    paddingBottom: 24,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    shadowColor: '#4B0082',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 32,
-    fontWeight: '900',
-    color: '#FFD700',
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 4,
-    letterSpacing: 0.5,
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: '#FFF',
-    opacity: 0.9,
-    marginTop: 4,
-    fontWeight: '600',
-  },
   ticketRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 14,
+    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
-    minHeight: 70,
   },
-  ticketCode: { color: colors.white, fontWeight: '700', fontSize: 15 },
-  meta: { color: colors.textMuted, fontSize: 13, marginTop: 2 },
-  buyerInfo: { color: colors.secondary, fontSize: 13, fontStyle: 'italic', marginTop: 2 },
-  ticketActions: { alignItems: 'flex-end', gap: 10, justifyContent: 'center' },
-  actionsRow: { flexDirection: 'row', gap: 14, alignItems: 'center' },
-  iconButton: { padding: 6, borderRadius: 8, backgroundColor: colors.surface },
+  ticketCode: { color: colors.white, fontWeight: '700' },
+  meta: { color: colors.textMuted, fontSize: 12 },
+  buyerInfo: { color: colors.secondary, fontSize: 12, fontStyle: 'italic' },
+  ticketActions: { alignItems: 'flex-end', gap: 8 },
+  actionsRow: { flexDirection: 'row', gap: 12, alignItems: 'center' },
+  iconButton: { padding: 4 },
   actionText: { color: colors.secondary, fontWeight: '600' },
   empty: { color: colors.textSoft, textAlign: 'center', marginTop: 40 },
   
@@ -769,11 +692,9 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     flex: 1,
-    padding: 16,
-    borderRadius: 14,
+    padding: 14,
+    borderRadius: 12,
     alignItems: 'center',
-    minHeight: 50,
-    justifyContent: 'center',
   },
   cancelButton: {
     backgroundColor: 'transparent',
@@ -790,6 +711,5 @@ const styles = StyleSheet.create({
   saveButtonText: {
     color: colors.black,
     fontWeight: 'bold',
-    fontSize: 15,
   },
 });

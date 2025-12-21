@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de Usuarios - Teatro{% endblock %}
+
+{% block content %}
+<h2>Gestión de Usuarios</h2>
+
+<a href="/admin" class="btn btn-secondary" style="margin-bottom: 20px;">← Volver</a>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Email</th>
+                <th>Teléfono</th>
+                <th>Rol</th>
+                <th>Fecha Registro</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for usuario in usuarios %}
+            <tr>
+                <td>{{ usuario.id }}</td>
+                <td>{{ usuario.nombre }}</td>
+                <td>{{ usuario.email }}</td>
+                <td>{{ usuario.telefono or '-' }}</td>
+                <td>
+                    <span style="background: 
+                        {% if usuario.rol == 'superuser' %}#dc3545
+                        {% elif usuario.rol == 'director' %}#007bff
+                        {% elif usuario.rol == 'actor' %}#28a745
+                        {% else %}#6c757d{% endif %}; 
+                        color: white; padding: 3px 8px; border-radius: 3px; font-size: 0.85rem;">
+                        {{ usuario.rol }}
+                    </span>
+                </td>
+                <td>{{ usuario.created_at }}</td>
+                <td>
+                    <select onchange="cambiarRol({{ usuario.id }}, this.value)" style="padding: 5px;">
+                        <option value="">Cambiar rol...</option>
+                        <option value="cliente">Cliente</option>
+                        <option value="actor">Actor</option>
+                        <option value="director">Director</option>
+                        <option value="admin">Admin</option>
+                        <option value="superuser">Super Usuario</option>
+                    </select>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+function cambiarRol(userId, nuevoRol) {
+    if (nuevoRol && confirm('¿Cambiar el rol de este usuario a ' + nuevoRol + '?')) {
+        window.location.href = '/admin/usuario/cambiar-rol/' + userId + '/' + nuevoRol;
+    }
+}
+</script>
+{% endblock %}

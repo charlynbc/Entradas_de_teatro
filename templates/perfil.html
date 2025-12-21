@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Mi Perfil - Teatro{% endblock %}
+
+{% block content %}
+<h2>Mi Perfil</h2>
+
+<div class="card">
+    <h3>Información Personal</h3>
+    <p><strong>Nombre:</strong> {{ usuario.nombre }}</p>
+    <p><strong>Email:</strong> {{ usuario.email }}</p>
+    <p><strong>Teléfono:</strong> {{ usuario.telefono or 'No especificado' }}</p>
+    <p><strong>Rol:</strong> {{ usuario.rol }}</p>
+    <p><strong>Miembro desde:</strong> {{ usuario.created_at }}</p>
+</div>
+
+<div class="card">
+    <h3>Mis Compras</h3>
+    {% if ventas %}
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Evento</th>
+                    <th>Fecha Evento</th>
+                    <th>Cantidad</th>
+                    <th>Total</th>
+                    <th>Fecha Compra</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for venta in ventas %}
+                <tr>
+                    <td>#{{ venta.id }}</td>
+                    <td>{{ venta.evento_nombre }}</td>
+                    <td>{{ venta.fecha }} {{ venta.hora }}</td>
+                    <td>{{ venta.cantidad }}</td>
+                    <td>${{ "%.2f"|format(venta.total) }}</td>
+                    <td>{{ venta.fecha_compra }}</td>
+                    <td><a href="/confirmacion/{{ venta.id }}" class="btn btn-small">Ver Detalles</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No has realizado ninguna compra todavía.</p>
+        <a href="/" class="btn">Ver Eventos Disponibles</a>
+    {% endif %}
+</div>
+{% endblock %}

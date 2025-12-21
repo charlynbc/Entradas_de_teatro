@@ -3,73 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Baco Teatro - Entradas</title>
-    <link rel="stylesheet" href="/css/styles.css">
+    <title>Baco Teatro Uruguay - Inicio</title>
+    <link rel="stylesheet" href="/css/main-index.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
-    <header class="main-header">
-        <div class="container">
-            <div class="logo-container">
-                <i class="fas fa-masks-theater logo-icon"></i>
-                <h1>BACO TEATRO</h1>
-            </div>
-            <nav class="main-nav">
-                <a href="#eventos" class="nav-link"><i class="fas fa-calendar-alt"></i> Eventos</a>
-                <a href="#nosotros" class="nav-link"><i class="fas fa-users"></i> Nosotros</a>
-                <a href="#contacto" class="nav-link"><i class="fas fa-envelope"></i> Contacto</a>
-            </nav>
+    <div class="main-container">
+        <!-- Logo de Baco Teatro -->
+        <div class="logo-container">
+            <img src="/images/logo-baco.svg" alt="Baco Teatro" class="main-logo">
         </div>
-    </header>
 
-    <main>
-        <section class="hero">
-            <div class="hero-content">
-                <h2>Bienvenido a Baco Teatro</h2>
-                <p>Disfruta de las mejores obras teatrales</p>
-                <a href="#eventos" class="btn-primary"><i class="fas fa-ticket-alt"></i> Ver Eventos</a>
+        <!-- Título Principal -->
+        <div class="title-container">
+            <h1 class="main-title">BACO TEATRO</h1>
+            <p class="main-subtitle">Donde el arte cobra vida</p>
+        </div>
+
+        <!-- Frase del Día -->
+        <div class="quote-container">
+            <div class="quote-content">
+                <i class="fas fa-quote-left quote-icon"></i>
+                <p class="quote-text" id="quoteText">Cargando frase...</p>
+                <p class="quote-author" id="quoteAuthor">- Autor</p>
             </div>
-        </section>
+        </div>
 
-        <section id="eventos" class="eventos-section">
-            <div class="container">
-                <h2 class="section-title"><i class="fas fa-theater-masks"></i> Próximos Eventos</h2>
-                <div id="eventos-grid" class="eventos-grid">
-                    <!-- Los eventos se cargarán dinámicamente -->
+        <!-- Menú de Navegación -->
+        <nav class="main-navigation">
+            <a href="/funciones.html" class="nav-button">
+                <div class="button-icon">
+                    <i class="fas fa-calendar-alt"></i>
                 </div>
-            </div>
-        </section>
-
-        <section id="nosotros" class="about-section">
-            <div class="container">
-                <h2 class="section-title"><i class="fas fa-info-circle"></i> Sobre Nosotros</h2>
-                <p>Baco Teatro es un espacio dedicado a las artes escénicas, donde podrás disfrutar de las mejores producciones teatrales.</p>
-            </div>
-        </section>
-
-        <section id="contacto" class="contact-section">
-            <div class="container">
-                <h2 class="section-title"><i class="fas fa-phone"></i> Contacto</h2>
-                <div class="contact-info">
-                    <p><i class="fas fa-map-marker-alt"></i> Dirección del teatro</p>
-                    <p><i class="fas fa-envelope"></i> contacto@bacoteatro.com</p>
-                    <p><i class="fas fa-phone"></i> +54 11 1234-5678</p>
+                <div class="button-text">
+                    <h3>Funciones</h3>
+                    <p>Ver todas las funciones disponibles</p>
                 </div>
-            </div>
-        </section>
-    </main>
+            </a>
 
-    <footer class="main-footer">
-        <div class="container">
-            <p>&copy; 2024 Baco Teatro. Todos los derechos reservados.</p>
+            <a href="/sobre-baco.html" class="nav-button">
+                <div class="button-icon">
+                    <i class="fas fa-masks-theater"></i>
+                </div>
+                <div class="button-text">
+                    <h3>Sobre Baco</h3>
+                    <p>Conoce nuestra historia y misión</p>
+                </div>
+            </a>
+
+            <a href="/guia.html" class="nav-button">
+                <div class="button-icon">
+                    <i class="fas fa-question-circle"></i>
+                </div>
+                <div class="button-text">
+                    <h3>Cómo Reservar</h3>
+                    <p>Guía para reservar tu entrada</p>
+                </div>
+            </a>
+
+            <a href="/desarrollador.html" class="nav-button">
+                <div class="button-icon">
+                    <i class="fas fa-code"></i>
+                </div>
+                <div class="button-text">
+                    <h3>Desarrollador</h3>
+                    <p>Información del sistema</p>
+                </div>
+            </a>
+
+            <button class="nav-button login-button" onclick="window.location.href='/login.html'">
+                <div class="button-icon">
+                    <i class="fas fa-sign-in-alt"></i>
+                </div>
+                <div class="button-text">
+                    <h3>Iniciar Sesión</h3>
+                    <p>Acceso para el equipo</p>
+                </div>
+            </button>
+        </nav>
+
+        <!-- Footer -->
+        <footer class="main-footer">
+            <p>&copy; 2025 Baco Teatro Uruguay</p>
             <div class="social-links">
-                <a href="#" class="social-link"><i class="fab fa-facebook"></i></a>
-                <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
-                <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                <a href="https://www.instagram.com/bacoteatro" target="_blank" title="Instagram">
+                    <i class="fab fa-instagram"></i>
+                </a>
+                <a href="https://www.facebook.com/BACO.TEATRO.URUGUAY" target="_blank" title="Facebook">
+                    <i class="fab fa-facebook"></i>
+                </a>
             </div>
-        </div>
-    </footer>
+        </footer>
+    </div>
 
-    <script src="/js/main.js"></script>
+    <script>
+        // Frases teatrales aleatorias
+        const quotes = [
+            { text: "El teatro es poesía que se sale del libro para hacerse humana.", author: "Federico García Lorca" },
+            { text: "Actuar es vivir.", author: "Konstantin Stanislavski" },
+            { text: "El teatro es el arte de mirarnos a nosotros mismos.", author: "Augusto Boal" },
+            { text: "La vida es puro teatro, pero no tiene ensayos.", author: "Charles Chaplin" },
+            { text: "El teatro es la primera invención del ser humano y es el instrumento que le permite crear la realidad.", author: "Ariane Mnouchkine" },
+            { text: "En el teatro, como en la vida, lo importante no es lo que se dice sino lo que se calla.", author: "Harold Pinter" },
+            { text: "El teatro no puede desaparecer porque es el único arte donde la humanidad se enfrenta a sí misma.", author: "Arthur Miller" },
+            { text: "El buen teatro hace pensar, el gran teatro hace sentir.", author: "Peter Brook" },
+            { text: "Actuar es una cuestión de absorber las emociones de otras personas y de proyectar las propias.", author: "Marlon Brando" },
+            { text: "El teatro es el arte de crear la vida sobre el escenario.", author: "Bertolt Brecht" },
+            { text: "No hay teatro sin transformación.", author: "Jerzy Grotowski" },
+            { text: "El teatro es la expresión más completa del arte.", author: "Antonin Artaud" },
+            { text: "En el escenario, la verdad es lo único que importa.", author: "Sanford Meisner" },
+            { text: "El teatro es donde vamos a escuchar las historias que no nos atrevemos a contar.", author: "Anna Deavere Smith" },
+            { text: "Un actor sin técnica es como un automóvil sin motor.", author: "Stella Adler" }
+        ];
+
+        // Función para mostrar una frase aleatoria
+        function showRandomQuote() {
+            const randomIndex = Math.floor(Math.random() * quotes.length);
+            const quote = quotes[randomIndex];
+            document.getElementById('quoteText').textContent = quote.text;
+            document.getElementById('quoteAuthor').textContent = `— ${quote.author}`;
+        }
+
+        // Mostrar frase al cargar la página
+        showRandomQuote();
+    </script>
 </body>
 </html>
+

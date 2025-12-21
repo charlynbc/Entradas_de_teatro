@@ -3,15 +3,12 @@ import { Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionCard from '../../components/SectionCard';
 import TransferTimeline from '../../components/TransferTimeline';
-import Toast from '../../components/Toast';
-import { useToast } from '../../hooks/useToast';
 import colors from '../../theme/colors';
 import { transferTicket, getActorTransfers } from '../../api';
 
 const initialForm = { ticketCode: '', destino: '', motivo: '' };
 
 export default function ActorTransferScreen() {
-  const { toast, showSuccess, showError, hideToast } = useToast();
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState([]);
@@ -33,7 +30,7 @@ export default function ActorTransferScreen() {
 
   const handleTransfer = async () => {
     if (!form.ticketCode || !form.destino) {
-      showError('Ingresá código y cédula destino');
+      Alert.alert('Falta info', 'Ingresá código y cédula destino');
       return;
     }
     setLoading(true);
@@ -41,9 +38,9 @@ export default function ActorTransferScreen() {
       await transferTicket(form);
       setForm(initialForm);
       loadHistory();
-      showSuccess('⚡ Transferencia registrada con éxito');
+      Alert.alert('Transferencia registrada', 'Quedó registrada en el historial');
     } catch (error) {
-      showError(error.message || 'No se pudo transferir el ticket');
+      Alert.alert('Error', error.message || 'No se pudo transferir');
     } finally {
       setLoading(false);
     }
@@ -75,13 +72,6 @@ export default function ActorTransferScreen() {
           <TransferTimeline events={history} />
         )}
       </SectionCard>
-      
-      <Toast 
-        visible={toast.visible} 
-        message={toast.message} 
-        type={toast.type}
-        onHide={hideToast}
-      />
     </ScreenContainer>
   );
 }

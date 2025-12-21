@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Modal, Tex
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionCard from '../../components/SectionCard';
 import colors from '../../theme/colors';
-import { listVendors, assignTicketsToActor, markTicketsAsPaid, listDirectorShows, generarReporteObra } from '../../api'; // We might need a specific getShowDetails
+import { listVendors, assignTicketsToActor, markTicketsAsPaid, listDirectorShows } from '../../api'; // We might need a specific getShowDetails
 import { Ionicons } from '@expo/vector-icons';
 
 export default function DirectorShowDetailScreen({ route, navigation }) {
@@ -74,7 +74,7 @@ export default function DirectorShowDetailScreen({ route, navigation }) {
         actorId: selectedActor.cedula || selectedActor.id, // Handle different ID fields if any
         cantidad: Number(amount)
       });
-      Alert.alert('Éxito', `Se asignaron ${amount} entradas a ${selectedActor.name}`);
+      Alert.alert('Éxito', `Se asignaron ${amount} entradas a ${selectedActor.nombre}`);
       setModalVisible(false);
       loadData(); // Reload data instead of going back
     } catch (error) {
@@ -100,7 +100,7 @@ export default function DirectorShowDetailScreen({ route, navigation }) {
   const handleCollect = async (actor) => {
     Alert.alert(
       'Confirmar Cobro',
-      `¿Marcar como PAGADAS todas las entradas vendidas por ${actor.name}?`,
+      `¿Marcar como PAGADAS todas las entradas vendidas por ${actor.nombre}?`,
       [
         { text: 'Cancelar', style: 'cancel' },
         {
@@ -125,44 +125,13 @@ export default function DirectorShowDetailScreen({ route, navigation }) {
     );
   };
 
-  const handleGenerarReporte = () => {
-    Alert.alert(
-      'Generar Reporte',
-      `¿Generar reporte final de "${currentShow.obra}"? Esto incluirá todas las estadísticas de ventas y vendedores.`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Generar',
-          onPress: async () => {
-            try {
-              setLoading(true);
-              await generarReporteObra(currentShow.id);
-              Alert.alert(
-                'Reporte Generado',
-                'El reporte se ha generado correctamente. Puedes verlo en la sección "Reportes de Obras".',
-                [
-                  { text: 'Ver Reportes', onPress: () => navigation.navigate('DirectorReportsObras') },
-                  { text: 'Cerrar', style: 'cancel' }
-                ]
-              );
-            } catch (error) {
-              Alert.alert('Error', error.message || 'No se pudo generar el reporte');
-            } finally {
-              setLoading(false);
-            }
-          }
-        }
-      ]
-    );
-  };
-
   const renderActorStat = (actor) => {
     if (!actor) return null;
     return (
       <View key={actor.id} style={styles.actorCard}>
         <View style={styles.actorHeader}>
           <View style={styles.actorInfo}>
-            <Text style={styles.actorName}>{actor.name || 'Actor'}</Text>
+            <Text style={styles.actorName}>{actor.nombre || 'Actor'}</Text>
             <Text style={styles.actorId}>ID: {actor.id}</Text>
           </View>
           <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -254,15 +223,6 @@ export default function DirectorShowDetailScreen({ route, navigation }) {
         <Text style={styles.emptyText}>Aún no hay actores asignados a esta función.</Text>
       )}
 
-      <TouchableOpacity 
-        style={styles.reporteButton}
-        onPress={handleGenerarReporte}
-        disabled={loading}
-      >
-        <Ionicons name="document-text" size={20} color={colors.secondary} />
-        <Text style={styles.reporteButtonText}>Generar Reporte Final</Text>
-      </TouchableOpacity>
-
       {/* Modal Assign Tickets */}
       <Modal
         transparent={true}
@@ -273,7 +233,7 @@ export default function DirectorShowDetailScreen({ route, navigation }) {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Asignar Entradas</Text>
-            <Text style={styles.modalSubtitle}>Para: {selectedActor?.name}</Text>
+            <Text style={styles.modalSubtitle}>Para: {selectedActor?.nombre}</Text>
             
             <Text style={styles.label}>Cantidad</Text>
             <TextInput
@@ -313,7 +273,7 @@ export default function DirectorShowDetailScreen({ route, navigation }) {
               keyExtractor={item => item.cedula}
               renderItem={({ item }) => (
                 <TouchableOpacity style={styles.vendorItem} onPress={() => handleAddActor(item)}>
-                  <Text style={styles.vendorName}>{item.name}</Text>
+                  <Text style={styles.vendorName}>{item.nombre}</Text>
                   <Ionicons name="add-circle-outline" size={24} color={colors.secondary} />
                 </TouchableOpacity>
               )}
@@ -536,23 +496,5 @@ const styles = StyleSheet.create({
   },
   closeText: {
     color: colors.textMuted,
-  },
-  reporteButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: 10,
-    padding: 16,
-    marginTop: 20,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: colors.secondary + '60',
-    gap: 10,
-  },
-  reporteButtonText: {
-    color: colors.secondary,
-    fontWeight: '700',
-    fontSize: 16,
-  },
+  }
 });

@@ -11,7 +11,7 @@ export default function DirectorVendorsScreen() {
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
-  const [form, setForm] = useState({ name: '', cedula: '', email: '', telefono: '' });
+  const [form, setForm] = useState({ nombre: '', cedula: '', email: '', telefono: '' });
   const [saving, setSaving] = useState(false);
 
   const load = async () => {
@@ -29,14 +29,14 @@ export default function DirectorVendorsScreen() {
   }, []);
 
   const handleCreate = async () => {
-    if (!form.name || !form.cedula) {
+    if (!form.nombre || !form.cedula) {
       Alert.alert('Falta información', 'El nombre y la cédula son obligatorios');
       return;
     }
     setSaving(true);
     try {
       await createVendor(form);
-      setForm({ name: '', cedula: '', email: '', telefono: '' });
+      setForm({ nombre: '', cedula: '', email: '', telefono: '' });
       setModalVisible(false);
       load();
       Alert.alert('Éxito', 'Vendedor registrado correctamente');
@@ -50,7 +50,7 @@ export default function DirectorVendorsScreen() {
   const handleDelete = (vendor) => {
     Alert.alert(
       'Eliminar vendedor',
-      `¿Estás seguro de eliminar a ${vendor.name}? Sus tickets volverán a estar disponibles.`,
+      `¿Estás seguro de eliminar a ${vendor.nombre}?`,
       [
         { text: 'Cancelar', style: 'cancel' },
         {
@@ -58,7 +58,7 @@ export default function DirectorVendorsScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await deleteVendor(vendor.cedula || vendor.id);
+              await deleteVendor(vendor.id);
               load();
             } catch (error) {
               Alert.alert('Error', error.message);
@@ -86,42 +86,17 @@ export default function DirectorVendorsScreen() {
       ) : (
         vendors.map((vendor) => (
           <View key={vendor.id} style={styles.card}>
-            <View style={styles.cardHeader}>
-              <View style={styles.avatarContainer}>
-                <Text style={styles.avatarText}>{vendor.name.substring(0, 2).toUpperCase()}</Text>
-              </View>
-              <View style={styles.infoContainer}>
-                <Text style={styles.name}>{vendor.name}</Text>
-                <Text style={styles.detail}>C.I. {vendor.cedula}</Text>
-                {vendor.email && <Text style={styles.detail}>{vendor.email}</Text>}
-              </View>
-              <TouchableOpacity onPress={() => handleDelete(vendor)} style={styles.deleteButton}>
-                <Ionicons name="trash-outline" size={20} color={colors.error} />
-              </TouchableOpacity>
+            <View style={styles.avatarContainer}>
+              <Text style={styles.avatarText}>{vendor.nombre.substring(0, 2).toUpperCase()}</Text>
             </View>
-            
-            {/* Obras asignadas */}
-            {vendor.shows && vendor.shows.length > 0 && vendor.shows[0].show_id && (
-              <View style={styles.showsContainer}>
-                <Text style={styles.showsTitle}>Obras asignadas:</Text>
-                {vendor.shows.map((show, idx) => (
-                  show.show_id && (
-                    <View key={idx} style={styles.showItem}>
-                      <Ionicons name="ticket-outline" size={16} color={colors.secondary} />
-                      <Text style={styles.showName}>{show.show_nombre}</Text>
-                      <Text style={styles.showTickets}>({show.tickets_asignados} tickets)</Text>
-                    </View>
-                  )
-                ))}
-              </View>
-            )}
-            
-            {/* Sin obras asignadas */}
-            {(!vendor.shows || vendor.shows.length === 0 || !vendor.shows[0].show_id) && (
-              <View style={styles.noShowsContainer}>
-                <Text style={styles.noShowsText}>Sin obras asignadas</Text>
-              </View>
-            )}
+            <View style={styles.infoContainer}>
+              <Text style={styles.name}>{vendor.nombre}</Text>
+              <Text style={styles.detail}>C.I. {vendor.id}</Text>
+              {vendor.email && <Text style={styles.detail}>{vendor.email}</Text>}
+            </View>
+            <TouchableOpacity onPress={() => handleDelete(vendor)} style={styles.deleteButton}>
+              <Ionicons name="trash-outline" size={20} color={colors.error} />
+            </TouchableOpacity>
           </View>
         ))
       )}
@@ -141,8 +116,8 @@ export default function DirectorVendorsScreen() {
               style={styles.input}
               placeholder="Ej: Juan Pérez"
               placeholderTextColor={colors.textSoft}
-              value={form.name}
-              onChangeText={(t) => setForm(prev => ({ ...prev, name: t }))}
+              value={form.nombre}
+              onChangeText={(t) => setForm(prev => ({ ...prev, nombre: t }))}
             />
 
             <Text style={styles.label}>Cédula (Usuario) *</Text>
@@ -234,17 +209,14 @@ const styles = StyleSheet.create({
     marginTop: 40,
   },
   card: {
+    flexDirection: 'row',
     backgroundColor: colors.surface,
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.border,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
   },
   avatarContainer: {
     width: 40,
@@ -273,46 +245,6 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     padding: 8,
-  },
-  showsContainer: {
-    backgroundColor: colors.background,
-    borderRadius: 8,
-    padding: 12,
-    marginTop: 8,
-  },
-  showsTitle: {
-    color: colors.secondary,
-    fontSize: 12,
-    fontWeight: '600',
-    marginBottom: 8,
-    textTransform: 'uppercase',
-  },
-  showItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 4,
-    gap: 8,
-  },
-  showName: {
-    color: colors.text,
-    fontSize: 14,
-    flex: 1,
-  },
-  showTickets: {
-    color: colors.textMuted,
-    fontSize: 12,
-  },
-  noShowsContainer: {
-    backgroundColor: colors.background,
-    borderRadius: 8,
-    padding: 12,
-    marginTop: 8,
-    alignItems: 'center',
-  },
-  noShowsText: {
-    color: colors.textMuted,
-    fontSize: 12,
-    fontStyle: 'italic',
   },
   modalOverlay: {
     flex: 1,

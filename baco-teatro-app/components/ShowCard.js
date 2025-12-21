@@ -1,28 +1,13 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import colors from '../theme/colors';
 import TicketStatusPill from './TicketStatusPill';
-import { LinearGradient } from 'expo-linear-gradient';
 
 export default function ShowCard({ show, footer, children }) {
   return (
     <View style={styles.card}>
-      {show.foto_url && (
-        <View style={styles.imageContainer}>
-          <Image 
-            source={{ uri: show.foto_url }} 
-            style={styles.image}
-            resizeMode="cover"
-          />
-          <LinearGradient
-            colors={['transparent', colors.surface + 'CC', colors.surface]}
-            style={styles.imageGradient}
-          />
-        </View>
-      )}
-      
       <View style={styles.header}>
-        <View style={{ flex: 1 }}>
+        <View>
           <Text style={styles.title}>{show.obra}</Text>
           <Text style={styles.meta}>{new Date(show.fecha).toLocaleString()}</Text>
           {show.lugar ? <Text style={styles.meta}>{show.lugar}</Text> : null}
@@ -32,7 +17,7 @@ export default function ShowCard({ show, footer, children }) {
         </View>
       </View>
 
-      {children && <View style={styles.content}>{children}</View>}
+      {children}
 
       {footer ? <View style={styles.footer}>{footer}</View> : null}
     </View>
@@ -43,36 +28,15 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.surface,
     borderRadius: 18,
+    padding: 16,
     borderWidth: 1,
     borderColor: colors.border,
-    overflow: 'hidden',
-  },
-  imageContainer: {
-    width: '100%',
-    height: 160,
-    position: 'relative',
-  },
-  image: {
-    width: '100%',
-    height: '100%',
-  },
-  imageGradient: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 80,
+    gap: 10,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: 12,
-    padding: 16,
-    paddingTop: 12,
-  },
-  content: {
-    paddingHorizontal: 16,
-    paddingBottom: 6,
   },
   title: {
     color: colors.white,
@@ -98,7 +62,5 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.border,
     paddingTop: 10,
-    paddingHorizontal: 16,
-    paddingBottom: 16,
   },
 });

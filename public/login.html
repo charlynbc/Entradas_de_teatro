@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - Baco Teatro</title>
+    <link rel="stylesheet" href="/css/baco-landing.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .login-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, var(--primary-dark) 100%);
+        }
+        
+        .login-container {
+            max-width: 900px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(244, 140, 6, 0.3);
+            border-radius: 20px;
+            padding: 50px 40px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .login-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .login-header img {
+            width: 120px;
+            margin-bottom: 20px;
+        }
+        
+        .login-header h1 {
+            font-size: 2.5rem;
+            color: var(--secondary);
+            margin-bottom: 10px;
+        }
+        
+        .login-header p {
+            color: #fff;
+            opacity: 0.8;
+            font-size: 1.1rem;
+        }
+        
+        .login-roles {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .role-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(244, 140, 6, 0.3);
+            border-radius: 15px;
+            padding: 35px 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: white;
+            display: block;
+        }
+        
+        .role-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--secondary);
+            background: rgba(244, 140, 6, 0.1);
+            box-shadow: 0 10px 30px rgba(244, 140, 6, 0.3);
+        }
+        
+        .role-card i {
+            font-size: 3.5rem;
+            color: var(--secondary);
+            margin-bottom: 20px;
+        }
+        
+        .role-card h3 {
+            font-size: 1.5rem;
+            color: var(--secondary);
+            margin-bottom: 10px;
+        }
+        
+        .role-card p {
+            color: #fff;
+            opacity: 0.7;
+            font-size: 0.95rem;
+        }
+        
+        .login-note {
+            background: rgba(244, 140, 6, 0.1);
+            border-left: 4px solid var(--secondary);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+        }
+        
+        .login-note i {
+            color: var(--secondary);
+            margin-right: 10px;
+        }
+        
+        .login-note p {
+            color: #fff;
+            opacity: 0.9;
+            margin: 0;
+        }
+        
+        .back-link {
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        .back-link a {
+            color: var(--secondary);
+            text-decoration: none;
+            font-size: 1.1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-link a:hover {
+            color: var(--accent);
+            transform: translateX(-5px);
+        }
+    </style>
+</head>
+<body>
+    <div class="login-page">
+        <div class="login-container">
+            <div class="login-header">
+                <img src="/images/logo-baco.svg" alt="Baco Teatro">
+                <h1>Iniciar Sesión</h1>
+                <p>Sistema de gestión para el equipo de Baco Teatro</p>
+            </div>
+            
+            <div class="login-roles">
+                <a href="/api/auth/login?role=director" class="role-card">
+                    <i class="fas fa-user-tie"></i>
+                    <h3>Director</h3>
+                    <p>Gestión de obras y equipo</p>
+                </a>
+                
+                <a href="/api/auth/login?role=actor" class="role-card">
+                    <i class="fas fa-theater-masks"></i>
+                    <h3>Actor/Actriz</h3>
+                    <p>Venta de entradas</p>
+                </a>
+                
+                <a href="/api/auth/login?role=super" class="role-card">
+                    <i class="fas fa-crown"></i>
+                    <h3>Super Usuario</h3>
+                    <p>Administración total</p>
+                </a>
+            </div>
+
+            <div class="login-note">
+                <i class="fas fa-info-circle"></i>
+                <strong>¿Eres invitado?</strong> No necesitas iniciar sesión. Explora las funciones disponibles y reserva tu entrada directamente desde la página principal.
+            </div>
+
+            <div class="back-link">
+                <a href="/">
+                    <i class="fas fa-arrow-left"></i>
+                    Volver al Inicio
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

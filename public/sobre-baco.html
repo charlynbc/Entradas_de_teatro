@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sobre Baco Teatro - Historia y Misión</title>
+    <link rel="stylesheet" href="/css/baco-landing.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <!-- Botón Volver al Inicio -->
+    <a href="/" class="back-to-home">
+        <i class="fas fa-home"></i>
+        <span>Volver al Inicio</span>
+    </a>
+
+    <!-- Navigation -->
+    <nav class="main-nav">
+        <div class="container">
+            <div class="nav-brand" onclick="window.location.href='/'">
+                <img src="/images/logo-baco.svg" alt="Baco Teatro" class="logo">
+                <span class="brand-text">BACO TEATRO</span>
+            </div>
+            <div class="nav-menu" id="navMenu">
+                <a href="/" class="nav-link">Inicio</a>
+                <a href="/funciones.html" class="nav-link">Funciones</a>
+                <a href="/sobre-baco.html" class="nav-link active">Sobre Baco</a>
+                <a href="/guia.html" class="nav-link">Cómo Usar</a>
+                <a href="/desarrollador.html" class="nav-link">Desarrollador</a>
+                <button class="btn-login" onclick="window.location.href='/login.html'">
+                    <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                </button>
+            </div>
+            <button class="nav-toggle" id="navToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Sobre Baco Teatro -->
+    <section id="sobre-baco" class="sobre-baco" style="padding-top: 120px;">
+        <div class="container">
+            <div class="sobre-content">
+                <div class="sobre-text">
+                    <h2 class="section-title">
+                        <i class="fas fa-masks-theater"></i>
+                        Sobre Baco Teatro
+                    </h2>
+                    <p class="lead">Baco Teatro es un espacio teatral uruguayo dedicado a las artes escénicas, donde la pasión por la actuación se encuentra con la búsqueda constante de la excelencia artística.</p>
+                    
+                    <p>Fundado con el compromiso de llevar el teatro a nuevas audiencias, Baco Teatro se ha consolidado como un referente en la formación actoral y la producción de obras que desafían, emocionan y transforman.</p>
+                    
+                    <div class="sobre-features">
+                        <div class="feature">
+                            <i class="fas fa-users"></i>
+                            <h3>Clases Presenciales</h3>
+                            <p>Formación actoral profesional con directores experimentados</p>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-theater-masks"></i>
+                            <h3>Producciones Originales</h3>
+                            <p>Montajes teatrales de alta calidad artística</p>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-heart"></i>
+                            <h3>Comunidad Artística</h3>
+                            <p>Un espacio de encuentro para amantes del teatro</p>
+                        </div>
+                    </div>
+
+                    <div class="sobre-contact">
+                        <h3>Contacto</h3>
+                        <div class="contact-items">
+                            <a href="tel:099893748" class="contact-item">
+                                <i class="fas fa-phone"></i>
+                                <span>099 893 748</span>
+                            </a>
+                            <a href="https://wa.me/59894687473" target="_blank" class="contact-item">
+                                <i class="fab fa-whatsapp"></i>
+                                <span>+598 94 687 473</span>
+                            </a>
+                            <a href="mailto:bacoteatro.uy@gmail.com" class="contact-item">
+                                <i class="fas fa-envelope"></i>
+                                <span>bacoteatro.uy@gmail.com</span>
+                            </a>
+                            <a href="https://www.instagram.com/bacoteatro" target="_blank" class="contact-item">
+                                <i class="fab fa-instagram"></i>
+                                <span>@bacoteatro</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="sobre-image">
+                    <img src="/images/logo-baco.svg" alt="Baco Teatro Logo">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <img src="/images/logo-baco.svg" alt="Baco Teatro" class="footer-logo">
+                    <p>Baco Teatro Uruguay</p>
+                    <p class="footer-slogan">Donde el arte cobra vida</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Navegación</h4>
+                    <a href="/">Inicio</a>
+                    <a href="/funciones.html">Funciones</a>
+                    <a href="/sobre-baco.html">Sobre Baco</a>
+                    <a href="/guia.html">Cómo Usar</a>
+                    <a href="/desarrollador.html">Desarrollador</a>
+                </div>
+                <div class="footer-contact">
+                    <h4>Contacto</h4>
+                    <p><i class="fas fa-phone"></i> 099 893 748</p>
+                    <p><i class="fab fa-whatsapp"></i> +598 94 687 473</p>
+                    <p><i class="fas fa-envelope"></i> bacoteatro.uy@gmail.com</p>
+                    <div class="footer-social">
+                        <a href="https://www.instagram.com/bacoteatro" target="_blank">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="https://www.facebook.com/BACO.TEATRO.URUGUAY" target="_blank">
+                            <i class="fab fa-facebook"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Baco Teatro Uruguay. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Toggle móvil menu
+        document.getElementById('navToggle')?.addEventListener('click', function() {
+            document.getElementById('navMenu')?.classList.toggle('active');
+        });
+    </script>
+</body>
+</html>

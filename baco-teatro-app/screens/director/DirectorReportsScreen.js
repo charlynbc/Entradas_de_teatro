@@ -37,7 +37,7 @@ export default function DirectorReportsScreen() {
         {(data?.actors || []).map((actor) => (
           <View key={actor.id} style={styles.actorRow}>
             <View>
-              <Text style={styles.actorName}>{actor.name}</Text>
+              <Text style={styles.actorName}>{actor.nombre}</Text>
               <Text style={styles.meta}>Vendidas {actor.vendidas} · Pagadas {actor.pagadas}</Text>
             </View>
             <View style={{ alignItems: 'flex-end' }}>

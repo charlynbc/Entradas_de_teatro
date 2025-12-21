@@ -128,7 +128,7 @@ export async function listarShows(req, res) {
       sqlQuery += ` WHERE s.estado = 'ACTIVA'`;
     }
     
-    sqlQuery += ` ORDER BY s.fecha DESC`;
+    sqlQuery += ` ORDER BY s.fecha_hora DESC`;
     
     const result = await query(sqlQuery);
     res.json(result.rows);
