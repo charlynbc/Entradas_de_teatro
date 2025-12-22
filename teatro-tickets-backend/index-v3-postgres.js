@@ -20,7 +20,7 @@ import uploadRoutes from './routes/upload.routes.js';
 import { readData } from './utils/dataStore.js';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 3000;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const PUBLIC_DIR = path.join(__dirname, 'public');
@@ -43,6 +43,14 @@ app.use((req, res, next) => {
   }
   next();
 });
+
+// Expo Web chunks: si faltan, NO caer al fallback SPA (devolver 404 real)
+app.use(
+  '/_expo',
+  express.static(path.join(PUBLIC_DIR, '_expo'), {
+    fallthrough: false,
+  })
+);
 
 app.use(express.static(PUBLIC_DIR));
 
@@ -118,6 +126,11 @@ async function startServer() {
     app.use((req, res, next) => {
       const isApiRoute = req.path.startsWith('/api') || req.path.startsWith('/health');
       if (req.method !== 'GET' || isApiRoute) {
+        return next();
+      }
+
+      // No interceptar requests a assets (js/css/png/etc.) ni a Expo chunks
+      if (req.path.startsWith('/_expo') || path.extname(req.path)) {
         return next();
       }
       const indexPath = path.join(PUBLIC_DIR, 'index.html');
