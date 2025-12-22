@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ActivityIndicator, Platform } from 'react-native';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionCard from '../../components/SectionCard';
 import colors from '../../theme/colors';
@@ -18,6 +18,30 @@ export default function DirectorsScreen() {
   const [vendors, setVendors] = useState([]);
   const [form, setForm] = useState({ nombre: '', cedula: '' });
   const [saving, setSaving] = useState(false);
+
+  // Helper para mostrar confirmaciones en web y mobile
+  const showConfirmation = async (title, message, onConfirm) => {
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm(`${title}\n\n${message}`);
+      if (confirmed) {
+        await onConfirm();
+      }
+    } else {
+      Alert.alert(title, message, [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Confirmar', onPress: onConfirm, style: 'destructive' },
+      ]);
+    }
+  };
+
+  // Helper para mostrar alertas
+  const showAlert = (title, message) => {
+    if (Platform.OS === 'web') {
+      alert(`${title}\n\n${message}`);
+    } else {
+      Alert.alert(title, message);
+    }
+  };
 
   const load = async () => {
     setLoading(true);
@@ -39,7 +63,7 @@ export default function DirectorsScreen() {
 
   const handleCreate = async () => {
     if (!form.nombre || !form.cedula) {
-      Alert.alert('Falta info', 'Completa nombre y cedula');
+      showAlert('Falta info', 'Completa nombre y cedula');
       return;
     }
     setSaving(true);
@@ -47,74 +71,58 @@ export default function DirectorsScreen() {
       await createDirector(form);
       setForm({ nombre: '', cedula: '' });
       load();
-      Alert.alert('Listo', 'Director creado con contrasena 1234');
+      showAlert('Listo', 'Director creado con contrasena 1234');
     } catch (error) {
-      Alert.alert('Error', error.message || 'No se pudo crear');
+      showAlert('Error', error.message || 'No se pudo crear');
     } finally {
       setSaving(false);
     }
   };
 
   const handleReset = async (cedula) => {
-    Alert.alert(
+    showConfirmation(
       'Resetear contrasena',
       `Queres restablecer la contrasena de ${cedula} a 1234?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Confirmar',
-          onPress: async () => {
-            await resetDirectorPassword(cedula);
-            Alert.alert('Hecho', 'Contrasena reseteada');
-          },
-        },
-      ]
+      async () => {
+        try {
+          await resetDirectorPassword(cedula);
+          showAlert('Hecho', 'Contrasena reseteada');
+        } catch (error) {
+          showAlert('Error', error.message || 'No se pudo resetear');
+        }
+      }
     );
   };
 
   const handleDeleteDirector = (cedula) => {
-    Alert.alert(
-        'Eliminar director',
-        `Se van a borrar las obras y funciones asignadas a ${cedula}. Continuar?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteDirector(cedula);
-              load();
-              Alert.alert('Listo', 'Director eliminado');
-            } catch (error) {
-              Alert.alert('Error', error.message || 'No se pudo eliminar');
-            }
-          },
-        },
-      ]
+    showConfirmation(
+      'Eliminar director',
+      `Se van a borrar las obras y funciones asignadas a ${cedula}. Continuar?`,
+      async () => {
+        try {
+          await deleteDirector(cedula);
+          load();
+          showAlert('Listo', 'Director eliminado');
+        } catch (error) {
+          showAlert('Error', error.message || 'No se pudo eliminar');
+        }
+      }
     );
   };
 
   const handleDeleteVendor = (cedula) => {
-    Alert.alert(
-        'Eliminar vendedor',
-        `El stock de ${cedula} volvera a direccion. Confirmas?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteVendor(cedula);
-              load();
-              Alert.alert('Listo', 'Vendedor eliminado');
-            } catch (error) {
-              Alert.alert('Error', error.message || 'No se pudo eliminar');
-            }
-          },
-        },
-      ]
+    showConfirmation(
+      'Eliminar vendedor',
+      `El stock de ${cedula} volvera a direccion. Confirmas?`,
+      async () => {
+        try {
+          await deleteVendor(cedula);
+          load();
+          showAlert('Listo', 'Vendedor eliminado');
+        } catch (error) {
+          showAlert('Error', error.message || 'No se pudo eliminar');
+        }
+      }
     );
   };
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ActivityIndicator, Modal, Platform } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator, Modal, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import ScreenContainer from '../../components/ScreenContainer';
@@ -7,12 +7,14 @@ import SectionCard from '../../components/SectionCard';
 import ShowCard from '../../components/ShowCard';
 import colors from '../../theme/colors';
 import { listDirectorShows, createShow, assignTicketsToActor } from '../../api';
+import { useAlert } from '../../hooks/useAlert';
 import { Ionicons } from '@expo/vector-icons';
 
 const initialShow = { obra: '', fecha: new Date(), lugar: '', capacidad: '', base_price: '' };
 const initialAssign = { showId: '', actorId: '', cantidad: '' };
 
 export default function DirectorShowsScreen({ navigation }) {
+  const { showAlert } = useAlert();
   const [shows, setShows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -42,7 +44,7 @@ export default function DirectorShowsScreen({ navigation }) {
 
   const handleCreateShow = async () => {
     if (!showForm.obra || !showForm.lugar || !showForm.capacidad) {
-      Alert.alert('Falta info', 'Completa obra, lugar y capacidad');
+      showAlert('Falta info', 'Completa obra, lugar y capacidad');
       return;
     }
     setCreating(true);
@@ -60,9 +62,9 @@ export default function DirectorShowsScreen({ navigation }) {
       setShowForm(initialShow);
       setModalVisible(false);
       load();
-      Alert.alert('Listo', 'Función creada y tickets generados');
+      showAlert('Listo', 'Función creada y tickets generados');
     } catch (error) {
-      Alert.alert('Error', error.message || 'No se pudo crear la función');
+      showAlert('Error', error.message || 'No se pudo crear la función');
     } finally {
       setCreating(false);
     }

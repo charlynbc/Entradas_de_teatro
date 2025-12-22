@@ -112,24 +112,18 @@ export async function crearShow(req, res) {
 
 export async function listarShows(req, res) {
   try {
-    // Si no hay token, solo mostrar funciones activas
-    // Si hay token (director/super), mostrar todas las activas
-    const showOnlyActive = !req.user || req.user.role === 'INVITADO';
+    // Adaptado al schema simple: shows tiene 'obra' (string) y 'fecha' (timestamp)
+    // No hay tabla 'obras' relacionada por FK en este schema simplificado
     
     let sqlQuery = `
-      SELECT s.*, o.nombre as obra_nombre, o.descripcion as obra_descripcion
+      SELECT s.*, s.obra as obra_nombre, s.fecha as fecha_hora
       FROM shows s
-      LEFT JOIN obras o ON o.id = s.obra_id
     `;
     
-    if (showOnlyActive) {
-      sqlQuery += ` WHERE s.estado = 'activa'`;
-    } else {
-      // Directores y SUPER ven todas las activas (no las concluidas a menos que sea endpoint específico)
-      sqlQuery += ` WHERE s.estado = 'activa'`;
-    }
+    // En este schema no veo columna 'estado', asumimos que todas las futuras son activas
+    sqlQuery += ` WHERE s.fecha >= NOW() - INTERVAL '1 day'`;
     
-    sqlQuery += ` ORDER BY s.fecha_hora ASC`;
+    sqlQuery += ` ORDER BY s.fecha ASC`;
     
     const result = await query(sqlQuery);
     res.json(result.rows);

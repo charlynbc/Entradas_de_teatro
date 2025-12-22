@@ -5,7 +5,11 @@ import {
   listarEnsayos,
   obtenerEnsayo,
   actualizarEnsayo,
-  eliminarEnsayo
+  eliminarEnsayo,
+  registrarAsistencia,
+  obtenerAsistencias,
+  obtenerHistorialMiembro,
+  obtenerResumenGrupo
 } from '../controllers/ensayos.controller.js';
 
 const router = express.Router();
@@ -27,5 +31,19 @@ router.put('/:id', requireRole('ADMIN', 'SUPER'), actualizarEnsayo);
 
 // Eliminar ensayo (solo creador o super)
 router.delete('/:id', requireRole('ADMIN', 'SUPER'), eliminarEnsayo);
+
+// === ASISTENCIAS ===
+
+// Registrar asistencia a ensayo (solo directores)
+router.post('/:id/asistencia', requireRole('ADMIN', 'SUPER'), registrarAsistencia);
+
+// Obtener todas las asistencias de un ensayo
+router.get('/:id/asistencias', obtenerAsistencias);
+
+// Obtener historial de asistencias de un miembro
+router.get('/miembro/:cedula/historial', obtenerHistorialMiembro);
+
+// Obtener resumen de asistencias por grupo
+router.get('/grupo/:grupo_id/resumen', obtenerResumenGrupo);
 
 export default router;

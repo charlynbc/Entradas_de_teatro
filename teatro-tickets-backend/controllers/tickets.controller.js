@@ -83,3 +83,112 @@ export async function validarTicket(req, res) {
     res.status(500).json({ ok: false, error: 'Error validando ticket' });
   }
 }
+
+// Reservar ticket (vendedor pone nombre del comprador)
+export async function reservarTicket(req, res) {
+  try {
+    const { code } = req.params;
+    const { comprador_nombre, comprador_contacto } = req.body;
+    const vendedorPhone = req.user.phone || req.user.cedula;
+
+    if (!comprador_nombre) {
+      return res.status(400).json({ error: 'Nombre del comprador es obligatorio' });
+    }
+
+    // Verificar que el ticket existe y pertenece al vendedor
+    const result = await query(
+      'SELECT * FROM tickets WHERE code = $1 AND vendedor_phone = $2',
+      [code, vendedorPhone]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Ticket no encontrado o no le pertenece' });
+    }
+
+    const ticket = result.rows[0];
+
+    // Solo se puede reservar si está en STOCK_VENDEDOR
+    if (ticket.estado !== 'STOCK_VENDEDOR') {
+      return res.status(400).json({ 
+        error: `No se puede reservar. Estado actual: ${ticket.estado}` 
+      });
+    }
+
+    // Actualizar a RESERVADO
+    await query(
+      `UPDATE tickets 
+       SET estado = $1, 
+           comprador_nombre = $2, 
+           comprador_contacto = $3,
+           reservado_at = NOW()
+       WHERE code = $4`,
+      ['RESERVADO', comprador_nombre, comprador_contacto, code]
+    );
+
+    const updated = await query('SELECT * FROM tickets WHERE code = $1', [code]);
+
+    res.json({ 
+      ok: true, 
+      message: 'Ticket reservado exitosamente',
+      ticket: updated.rows[0]
+    });
+  } catch (error) {
+    console.error('Error reservarTicket:', error);
+    res.status(500).json({ error: 'Error reservando ticket' });
+  }
+}
+
+// Reportar venta (vendedor indica que cobró)
+export async function reportarVenta(req, res) {
+  try {
+    const { code } = req.params;
+    const { precio, medio_pago } = req.body;
+    const vendedorPhone = req.user.phone || req.user.cedula;
+
+    if (!precio) {
+      return res.status(400).json({ error: 'El precio es obligatorio' });
+    }
+
+    // Verificar que el ticket existe y pertenece al vendedor
+    const result = await query(
+      'SELECT t.*, s.base_price FROM tickets t JOIN shows s ON s.id = t.show_id WHERE t.code = $1 AND t.vendedor_phone = $2',
+      [code, vendedorPhone]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Ticket no encontrado o no le pertenece' });
+    }
+
+    const ticket = result.rows[0];
+
+    // Solo se puede reportar si está RESERVADO o STOCK_VENDEDOR
+    if (ticket.estado !== 'RESERVADO' && ticket.estado !== 'STOCK_VENDEDOR') {
+      return res.status(400).json({ 
+        error: `No se puede reportar venta. Estado actual: ${ticket.estado}` 
+      });
+    }
+
+    // Actualizar a REPORTADA_VENDIDA
+    await query(
+      `UPDATE tickets 
+       SET estado = $1, 
+           precio = $2,
+           medio_pago = $3,
+           reportada_por_vendedor = TRUE,
+           reportada_at = NOW()
+       WHERE code = $4`,
+      ['REPORTADA_VENDIDA', precio, medio_pago || 'efectivo', code]
+    );
+
+    const updated = await query('SELECT * FROM tickets WHERE code = $1', [code]);
+
+    res.json({ 
+      ok: true, 
+      message: 'Venta reportada exitosamente. Pendiente de aprobación del admin.',
+      ticket: updated.rows[0]
+    });
+  } catch (error) {
+    console.error('Error reportarVenta:', error);
+    res.status(500).json({ error: 'Error reportando venta' });
+  }
+}

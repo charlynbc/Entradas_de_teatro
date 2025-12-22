@@ -17,13 +17,14 @@ import adminRoutes from './routes/admin.routes.js';
 import gruposRoutes from './routes/grupos.routes.js';
 import obrasRoutes from './routes/obras.routes.js';
 import uploadRoutes from './routes/upload.routes.js';
-import { readData } from './utils/dataStore.js';
+// import { readData } from './utils/dataStore.js'; // REMOVED: Not used and causing issues
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const PUBLIC_DIR = path.join(__dirname, 'public');
+const FRONTEND_DIR = path.join(__dirname, '../frontend');
 
 // Middlewares
 app.use(cors());
@@ -52,6 +53,7 @@ app.use(
   })
 );
 
+app.use(express.static(FRONTEND_DIR));
 app.use(express.static(PUBLIC_DIR));
 
 // Inicializar base de datos al arrancar
@@ -84,16 +86,18 @@ async function startServer() {
 
     app.get('/health', async (req, res) => {
       try {
-        const data = await readData();
+        // const data = await readData();
         res.json({
           status: 'ok',
           storage: 'postgresql',
           database: process.env.DATABASE_URL ? 'connected' : 'not configured',
+          /*
           totals: {
             users: data.users.length,
             shows: data.shows.length,
             tickets: data.tickets.length
           }
+          */
         });
       } catch (error) {
         console.error('Healthcheck error:', error);
@@ -133,10 +137,14 @@ async function startServer() {
       if (req.path.startsWith('/_expo') || path.extname(req.path)) {
         return next();
       }
-      const indexPath = path.join(PUBLIC_DIR, 'index.html');
+      // Intentar servir el index.html del frontend primero
+      const indexPath = path.join(FRONTEND_DIR, 'index.html');
       return res.sendFile(indexPath, (err) => {
         if (err) {
-          return res.status(404).sendFile(path.join(PUBLIC_DIR, '404.html'));
+          // Si falla, intentar con el del backend public (por si acaso)
+          return res.sendFile(path.join(PUBLIC_DIR, 'backend-info.html'), (err2) => {
+             if (err2) return res.status(404).sendFile(path.join(PUBLIC_DIR, '404.html'));
+          });
         }
       });
     });

@@ -3,10 +3,13 @@ let entradaCompradaId = null;
 // Obtener la URL base de la API
 function getApiBaseUrl() {
     const hostname = window.location.hostname;
-    if (hostname.includes('github.dev')) {
-        return window.location.origin.replace('-3000.', '-5000.');
+    // En Codespaces, el puerto 3000 se mapea a una URL específica
+    if (hostname.includes('github.dev') || hostname.includes('app.github.dev')) {
+        // Si estamos en el puerto 3000, usamos la misma URL
+        return window.location.origin;
     }
-    return 'http://localhost:5000';
+    // En local, usamos el puerto 3000
+    return 'http://localhost:3000';
 }
 
 const API_BASE_URL = getApiBaseUrl();
@@ -18,7 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function cargarObras() {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/obras`);
+        // Usamos /api/shows que es el endpoint público del nuevo backend
+        const response = await fetch(`${API_BASE_URL}/api/shows`);
         const obras = await response.json();
         renderObras(obras);
     } catch (error) {
@@ -36,19 +40,23 @@ function renderObras(obras) {
         return;
     }
     
-    container.innerHTML = obras.map(obra => `
+    container.innerHTML = obras.map(obra => {
+        const fecha = new Date(obra.fecha_hora);
+        const hora = fecha.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+        
+        return `
         <div class="evento-card">
-            <h3><i class="fas fa-theater-masks"></i> ${obra.nombre}</h3>
-            <p><strong><i class="far fa-calendar"></i> Función:</strong> ${new Date(obra.fecha).toLocaleDateString('es-AR')}</p>
-            <p><strong><i class="far fa-clock"></i> Horario:</strong> ${obra.hora}</p>
-            <p><strong><i class="fas fa-couch"></i> Localidad:</strong> ${obra.localidad}</p>
-            <p><strong><i class="fas fa-dollar-sign"></i> Precio:</strong> $${obra.precio}</p>
-            <p><strong><i class="fas fa-ticket-alt"></i> Disponibles:</strong> ${obra.entradasDisponibles}</p>
+            <h3><i class="fas fa-theater-masks"></i> ${obra.obra_nombre || 'Obra sin título'}</h3>
+            <p><strong><i class="far fa-calendar"></i> Función:</strong> ${fecha.toLocaleDateString('es-AR')}</p>
+            <p><strong><i class="far fa-clock"></i> Horario:</strong> ${hora} hs</p>
+            <p><strong><i class="fas fa-couch"></i> Lugar:</strong> ${obra.lugar}</p>
+            <p><strong><i class="fas fa-dollar-sign"></i> Precio:</strong> $${obra.base_price}</p>
+            <p><strong><i class="fas fa-ticket-alt"></i> Capacidad:</strong> ${obra.capacidad}</p>
             <button onclick="comprarEntrada('${obra.id}')" class="btn-teatro">
                 <i class="fas fa-shopping-cart"></i> Reservar Butaca
             </button>
         </div>
-    `).join('');
+    `}).join('');
 }
 
 function mostrarMensajeVacio() {
@@ -69,40 +77,13 @@ function mostrarMensajeVacio() {
 }
 
 async function comprarEntrada(obraId) {
+    alert('La venta online está momentáneamente deshabilitada. Por favor, contacte a un vendedor o adquiera su entrada en boletería.');
+    return;
+    /*
     const nombre = prompt('Ingrese su nombre:');
     if (!nombre) return;
-
-    const email = prompt('Ingrese su email:');
-    if (!email) return;
-
-    const cantidad = prompt('¿Cuántas entradas desea comprar?', '1');
-    if (!cantidad || cantidad < 1) return;
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/comprar`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                obraId,
-                nombre,
-                email,
-                cantidad: parseInt(cantidad)
-            })
-        });
-
-        const data = await response.json();
-
-        if (data.entrada) {
-            mostrarModalDescarga(data.entrada.id);
-        } else {
-            alert(data.error || 'Error al realizar la compra');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Error al procesar la compra');
-    }
+    ...
+    */
 }
 
 // Funciones del modal

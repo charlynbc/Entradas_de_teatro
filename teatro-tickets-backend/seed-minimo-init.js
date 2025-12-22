@@ -50,19 +50,21 @@ export async function seedMinimo() {
     // Crear show mínimo si no existe ninguno
     const shows = await query('SELECT COUNT(*)::int AS c FROM shows');
     if (shows.rows[0].c === 0) {
+      // Adaptado al schema actual: obra (string), fecha (timestamp), capacidad, base_price
       const showResult = await query(
-        `INSERT INTO shows (obra_id, nombre, fecha_hora, lugar, precio, cupos_totales, cupos_disponibles)
-         VALUES ($1, $2, NOW() + INTERVAL '7 days', $3, $4, $5, $6)
+        `INSERT INTO shows (obra, fecha, lugar, capacidad, base_price)
+         VALUES ($1, NOW() + INTERVAL '7 days', $2, $3, $4)
          RETURNING id`,
-        [obraId, 'Función de Prueba', 'Teatro Principal', 500, 10, 10]
+        ['Baco', 'Teatro Principal', 100, 500]
       );
       const showId = showResult.rows[0].id;
       
       // Crear un ticket de prueba
+      // Adaptado al schema actual: code, show_id, estado, vendedor_phone
       await query(
-        `INSERT INTO tickets (show_id, cedula_invitado, nombre_invitado, whatsapp_invitado, vendedor_phone, monto_recaudado, estado)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [showId, '99999999', 'Invitado de Prueba', '099999999', '099111111', 500, 'reservado']
+        `INSERT INTO tickets (code, show_id, estado, vendedor_phone)
+         VALUES ($1, $2, $3, $4)`,
+        ['T-PRUEBA-001', showId, 'STOCK_VENDEDOR', '48376669']
       );
       console.log('✅ Seed: show mínimo creado con ticket de prueba');
     } else {

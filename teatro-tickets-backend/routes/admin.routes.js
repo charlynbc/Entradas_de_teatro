@@ -1,9 +1,19 @@
 import express from 'express';
 import { query } from '../db/postgres.js';
 import { crearShow } from '../controllers/shows.controller.js';
+import { aprobarVenta, rechazarVenta, listarVentasPendientes } from '../controllers/admin.controller.js';
 import { authenticate, requireRole } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
+
+// Aprobar venta(s) - Admin confirma recepción de dinero
+router.post('/aprobar-venta', authenticate, requireRole('ADMIN', 'SUPER'), aprobarVenta);
+
+// Rechazar venta - Admin rechaza venta reportada
+router.post('/rechazar-venta', authenticate, requireRole('ADMIN', 'SUPER'), rechazarVenta);
+
+// Listar ventas pendientes de aprobación
+router.get('/ventas-pendientes', authenticate, requireRole('ADMIN', 'SUPER'), listarVentasPendientes);
 
 // Solo accesible por usuario SUPER
 router.post('/limpiar-db', authenticate, requireRole(['SUPER']), async (req, res) => {

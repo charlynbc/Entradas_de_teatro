@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ActivityIndicator, Platform } from 'react-native';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionCard from '../../components/SectionCard';
 import colors from '../../theme/colors';
@@ -27,7 +27,11 @@ export default function ProductionsScreen() {
 
   const handleCreate = async () => {
     if (!form.titulo) {
-      Alert.alert('Falta título', 'Ingresá el nombre de la obra');
+      if (Platform.OS === 'web') {
+        alert('Falta título\n\nIngresá el nombre de la obra');
+      } else {
+        Alert.alert('Falta título', 'Ingresá el nombre de la obra');
+      }
       return;
     }
     setSaving(true);
@@ -36,7 +40,11 @@ export default function ProductionsScreen() {
       setForm({ titulo: '', descripcion: '', color: form.color });
       load();
     } catch (error) {
-      Alert.alert('Error', error.message || 'No se pudo crear la obra');
+      if (Platform.OS === 'web') {
+        alert(`Error\n\n${error.message || 'No se pudo crear la obra'}`);
+      } else {
+        Alert.alert('Error', error.message || 'No se pudo crear la obra');
+      }
     } finally {
       setSaving(false);
     }

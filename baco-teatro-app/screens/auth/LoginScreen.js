@@ -6,7 +6,6 @@ import {
   TextInput, 
   TouchableOpacity, 
   ActivityIndicator, 
-  Alert, 
   Platform, 
   Animated, 
   Dimensions,
@@ -19,6 +18,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
+import { useAlert } from '../../hooks/useAlert';
 import colors from '../../theme/colors';
 import DailyQuote from '../../components/DailyQuote';
 
@@ -37,6 +37,7 @@ const KeyboardDismissWrapper = ({ children }) => {
 
 export default function LoginScreen({ navigation }) {
   const { login, loading } = useAuth();
+  const { showAlert } = useAlert();
   const [cedula, setCedula] = useState('');
   const [password, setPassword] = useState('');
   
@@ -94,13 +95,13 @@ export default function LoginScreen({ navigation }) {
 
   const handleSubmit = async () => {
     if (!cedula || !password) {
-      Alert.alert('¡Atención!', 'Por favor ingresá tu cédula y contraseña para entrar a función.');
+      showAlert('¡Atención!', 'Por favor ingresá tu cédula y contraseña para entrar a función.');
       return;
     }
     try {
       await login({ cedula, password });
     } catch (error) {
-      Alert.alert('Error de acceso', error.message || 'Credenciales inválidas. Intentalo de nuevo.');
+      showAlert('Error de acceso', error.message || 'Credenciales inválidas. Intentalo de nuevo.');
     }
   };
 
