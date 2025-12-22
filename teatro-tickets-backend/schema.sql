@@ -28,7 +28,6 @@ ON CONFLICT (cedula) DO UPDATE SET role = 'SUPER', password_hash = '$2b$10$ZXH8v
 -- 2. FUNCIONES (shows vinculados a obras)
 CREATE TABLE shows (
   id           SERIAL PRIMARY KEY,
-  obra_id      INT REFERENCES obras(id) ON DELETE SET NULL,  -- Vinculado a obra del grupo
   obra         VARCHAR(200) NOT NULL,                         -- Nombre de la obra
   fecha        TIMESTAMP NOT NULL,
   lugar        VARCHAR(200),
@@ -39,7 +38,6 @@ CREATE TABLE shows (
 );
 
 CREATE INDEX idx_shows_fecha ON shows(fecha);
-CREATE INDEX idx_shows_obra_id ON shows(obra_id);
 
 -- 3. TICKETS
 CREATE TABLE tickets (

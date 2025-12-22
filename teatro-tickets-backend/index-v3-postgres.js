@@ -62,12 +62,12 @@ async function startServer() {
     await initializeDatabase();
     
     // Inicializar usuario supremo y datos mínimos (sin bloquear el inicio)
-    initSupremo().catch(err => {
-      console.error('⚠️  Error inicializando usuario supremo (no crítico):', err.message);
-    });
-    seedMinimo().catch(err => {
-      console.error('⚠️  Error aplicando seed mínimo (no crítico):', err.message);
-    });
+    // initSupremo().catch(err => {
+    //   console.error('⚠️  Error inicializando usuario supremo (no crítico):', err.message);
+    // });
+    // seedMinimo().catch(err => {
+    //   console.error('⚠️  Error aplicando seed mínimo (no crítico):', err.message);
+    // });
     
     // Rutas de la API
     app.get('/api', (req, res) => {

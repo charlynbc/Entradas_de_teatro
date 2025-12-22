@@ -20,10 +20,10 @@ async function seed() {
     );
     const showId = showRes.rows[0].id;
 
-    // Crear ticket de prueba y asignarlo al vendedor 48376667
+    // Crear ticket de prueba y asignarlo al vendedor 48376669
     await client.query(
       "INSERT INTO tickets (code, show_id, estado, vendedor_phone, precio) VALUES ($1, $2, $3, $4, $5)",
-      ['T-TEST-0001', showId, 'STOCK_VENDEDOR', '48376667', 1000]
+      ['T-TEST-0001', showId, 'STOCK_VENDEDOR', '48376669', 1000]
     );
 
     await client.query('COMMIT');
