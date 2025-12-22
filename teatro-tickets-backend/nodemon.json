@@ -1,0 +1,27 @@
+{
+  "watch": [
+    "*.js",
+    "controllers/",
+    "routes/",
+    "services/",
+    "middleware/",
+    "config/",
+    "utils/"
+  ],
+  "ignore": [
+    "node_modules/",
+    "public/",
+    "logs/",
+    "*.log",
+    "*.md",
+    "test/",
+    "tests/",
+    "scripts/"
+  ],
+  "ext": "js,json",
+  "exec": "node index-v3-postgres.js",
+  "env": {
+    "NODE_ENV": "development"
+  },
+  "delay": "1000"
+}

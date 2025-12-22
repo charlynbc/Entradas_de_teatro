@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Baco Teatro - Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #12090D;
+            color: #F5F1ED;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .title {
+            color: #F48C06;
+            font-size: 2.5em;
+            margin-bottom: 1em;
+        }
+        .api-test {
+            background: #1a1a1a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left: 4px solid #F48C06;
+        }
+        .button {
+            background: #F48C06;
+            color: #12090D;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .button:hover {
+            background: #E07B00;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background: #2d5a2d;
+            color: #90ee90;
+        }
+        .error {
+            background: #5a2d2d;
+            color: #ffb3b3;
+        }
+        pre {
+            background: #000;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">🎭 Sistema Baco Teatro</h1>
+        <p>Testing de APIs y funcionalidad del backend</p>
+
+        <div class="api-test">
+            <h3>📊 Health Check</h3>
+            <button class="button" onclick="testHealth()">Probar Health API</button>
+            <div id="health-status"></div>
+        </div>
+
+        <div class="api-test">
+            <h3>🎪 Funciones Públicas</h3>
+            <button class="button" onclick="testShows()">Cargar Funciones</button>
+            <div id="shows-status"></div>
+        </div>
+
+        <div class="api-test">
+            <h3>🔐 Login Test</h3>
+            <button class="button" onclick="testLogin()">Login Usuario Super</button>
+            <div id="login-status"></div>
+        </div>
+
+        <div class="api-test">
+            <h3>👥 Grupos y Ensayos</h3>
+            <button class="button" onclick="testGroups()">Cargar Grupos</button>
+            <button class="button" onclick="testEnsayos()">Cargar Ensayos</button>
+            <div id="groups-status"></div>
+        </div>
+
+        <div style="margin-top: 40px;">
+            <a href="/app.html" class="button">🚀 Abrir App React Native</a>
+            <a href="/" class="button">🏠 Frontend Principal</a>
+        </div>
+    </div>
+
+    <script>
+        let userToken = null;
+
+        async function apiCall(url, options = {}) {
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(userToken && { 'Authorization': `Bearer ${userToken}` }),
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                throw error;
+            }
+        }
+
+        function showStatus(elementId, success, message, data = null) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `
+                <div class="status ${success ? 'success' : 'error'}">
+                    ${message}
+                </div>
+                ${data ? `<pre>${JSON.stringify(data, null, 2)}</pre>` : ''}
+            `;
+        }
+
+        async function testHealth() {
+            try {
+                const data = await apiCall('/api/health');
+                showStatus('health-status', true, 
+                    `✅ Servidor funcionando | BD: ${data.database} | Usuarios: ${data.totals.users} | Shows: ${data.totals.shows}`, 
+                    data);
+            } catch (error) {
+                showStatus('health-status', false, `❌ Error: ${error.message}`);
+            }
+        }
+
+        async function testShows() {
+            try {
+                const data = await apiCall('/api/shows');
+                showStatus('shows-status', true, 
+                    `✅ ${data.length} funciones cargadas`, 
+                    data);
+            } catch (error) {
+                showStatus('shows-status', false, `❌ Error: ${error.message}`);
+            }
+        }
+
+        async function testLogin() {
+            try {
+                const data = await apiCall('/api/auth/login', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        cedula: '48376669',
+                        password: 'Teamomama91'
+                    })
+                });
+                userToken = data.token;
+                showStatus('login-status', true, 
+                    `✅ Login exitoso | Role: ${data.user.role} | Usuario: ${data.user.name}`, 
+                    { user: data.user, token: data.token.substring(0, 20) + '...' });
+            } catch (error) {
+                showStatus('login-status', false, `❌ Error: ${error.message}`);
+            }
+        }
+
+        async function testGroups() {
+            try {
+                if (!userToken) {
+                    throw new Error('Necesitas hacer login primero');
+                }
+                const data = await apiCall('/api/grupos');
+                showStatus('groups-status', true, 
+                    `✅ ${data.length} grupos encontrados`, 
+                    data);
+            } catch (error) {
+                showStatus('groups-status', false, `❌ Error: ${error.message}`);
+            }
+        }
+
+        async function testEnsayos() {
+            try {
+                if (!userToken) {
+                    throw new Error('Necesitas hacer login primero');
+                }
+                const data = await apiCall('/api/ensayos');
+                showStatus('groups-status', true, 
+                    `✅ ${data.length} ensayos encontrados`, 
+                    data);
+            } catch (error) {
+                showStatus('groups-status', false, `❌ Error: ${error.message}`);
+            }
+        }
+
+        // Test inicial automático
+        setTimeout(testHealth, 1000);
+    </script>
+</body>
+</html>
