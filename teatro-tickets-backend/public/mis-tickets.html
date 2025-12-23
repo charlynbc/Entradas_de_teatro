@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎫 Mis Tickets - Baco Teatro</title>
+    <link rel="stylesheet" href="/css/teatro-theme.css">
+</head>
+<body>
+    <!-- 🎭 Navbar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="dashboard.html" class="navbar-logo">
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKsAAACrCAYAAAAZ69KzAAAACXBIWXMAAAsTAAALEwEAmpwYAAADrElEQVR4nO3dMW4bMRSE4X+RwlcI0KYJcgXfIEBOkStQaY6QzjdI6yNQ6a6Q0lcwUPgGKX2FdLlBiqxgGDAGN1rZ1PL7gAUWWxBafJwZkhxJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJ0ma+APf0TQTEVPCpAAAAAElFTkSuQmCC" alt="Baco Teatro" class="logo-img">
+                <span class="logo-text">Baco Teatro</span>
+            </a>
+            <ul class="navbar-menu">
+                <li><a href="dashboard.html">📊 Dashboard</a></li>
+                <li><a href="grupos.html">👥 Grupos</a></li>
+                <li><a href="obras.html">📚 Obras</a></li>
+                <li><a href="ensayos.html">🎵 Ensayos</a></li>
+                <li><a href="funciones.html">🎪 Funciones</a></li>
+                <li><a href="mis-tickets.html">🎫 Mis Tickets</a></li>
+            </ul>
+            <div id="user-info"></div>
+        </div>
+    </nav>
+
+    <!-- 🎫 Mis Tickets -->
+    <div class="container">
+        <section class="hero fade-in-up">
+            <h1>🎫 Mis Tickets</h1>
+            <p>Gestiona las entradas asignadas</p>
+        </section>
+
+        <!-- Filtros -->
+        <div class="form-container" style="max-width: 100%;">
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <div class="form-group" style="flex: 1; min-width: 200px;">
+                    <label>Estado</label>
+                    <select id="filter-estado" onchange="filterTickets()">
+                        <option value="">Todos</option>
+                        <option value="STOCK_VENDEDOR">En Stock</option>
+                        <option value="RESERVADO">Reservados</option>
+                        <option value="REPORTADA_VENDIDA">Reportados</option>
+                        <option value="PAGADO">Pagados</option>
+                        <option value="USADO">Usados</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de tickets -->
+        <div class="table-container">
+            <h2 style="color: var(--baco-dorado); margin-bottom: 1.5rem;">
+                📋 Lista de Entradas
+            </h2>
+            <table id="tickets-table">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Función</th>
+                        <th>Comprador</th>
+                        <th>Precio</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tickets-body">
+                    <tr>
+                        <td colspan="6" style="text-align: center;">Cargando tickets...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal para reservar -->
+    <div id="modal-reservar" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center;">
+        <div class="form-container" style="max-width: 500px; margin: 0;">
+            <h2 style="color: var(--baco-dorado); margin-bottom: 1.5rem;">
+                Reservar Ticket
+            </h2>
+            <form id="form-reservar" onsubmit="handleReservar(event)">
+                <input type="hidden" id="reservar-code">
+                <div class="form-group">
+                    <label>Nombre del Comprador</label>
+                    <input type="text" id="reservar-nombre" required>
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                        Reservar
+                    </button>
+                    <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="closeModal('modal-reservar')">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para reportar venta -->
+    <div id="modal-reportar" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center;">
+        <div class="form-container" style="max-width: 500px; margin: 0;">
+            <h2 style="color: var(--baco-dorado); margin-bottom: 1.5rem;">
+                Reportar Venta
+            </h2>
+            <form id="form-reportar" onsubmit="handleReportar(event)">
+                <input type="hidden" id="reportar-code">
+                <div class="form-group">
+                    <label>Precio de Venta</label>
+                    <input type="number" id="reportar-precio" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>Método de Pago</label>
+                    <select id="reportar-metodo" required>
+                        <option value="efectivo">Efectivo</option>
+                        <option value="transferencia">Transferencia</option>
+                        <option value="tarjeta">Tarjeta</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                        Reportar Venta
+                    </button>
+                    <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="closeModal('modal-reportar')">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 🎭 Footer -->
+    <footer class="footer">
+        <p>🎭 <strong>Baco Teatro</strong> | Gestión de Tickets</p>
+    </footer>
+
+    <script src="/js/app.js"></script>
+    <script>
+        let allTickets = [];
+
+        async function loadTickets() {
+            if (!checkAuth()) return;
+
+            showLoading();
+            const data = await getMisTickets();
+            hideLoading();
+
+            if (data && data.tickets) {
+                allTickets = data.tickets;
+                displayTickets(allTickets);
+            } else {
+                document.getElementById('tickets-body').innerHTML = `
+                    <tr><td colspan="6" style="text-align: center;">No tienes tickets asignados</td></tr>
+                `;
+            }
+        }
+
+        function displayTickets(tickets) {
+            const tbody = document.getElementById('tickets-body');
+            
+            if (tickets.length === 0) {
+                tbody.innerHTML = `
+                    <tr><td colspan="6" style="text-align: center;">No hay tickets con los filtros seleccionados</td></tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = tickets.map(ticket => {
+                const estadoColor = {
+                    'STOCK_VENDEDOR': '#2196f3',
+                    'RESERVADO': '#ff9800',
+                    'REPORTADA_VENDIDA': '#9c27b0',
+                    'PAGADO': '#4caf50',
+                    'USADO': '#757575'
+                };
+
+                let acciones = '';
+                if (ticket.estado === 'STOCK_VENDEDOR') {
+                    acciones = `<button class="btn btn-primary" style="padding: 0.5rem 1rem;" onclick="openReservar('${ticket.code}')">Reservar</button>`;
+                } else if (ticket.estado === 'RESERVADO') {
+                    acciones = `<button class="btn btn-primary" style="padding: 0.5rem 1rem;" onclick="openReportar('${ticket.code}', ${ticket.precio_base})">Reportar Venta</button>`;
+                }
+
+                return `
+                    <tr>
+                        <td><strong>${ticket.code}</strong></td>
+                        <td>${ticket.obra_nombre || 'N/A'}</td>
+                        <td>${ticket.comprador_nombre || '-'}</td>
+                        <td>${formatCurrency(ticket.precio_base)}</td>
+                        <td><span style="padding: 0.3rem 0.8rem; border-radius: 20px; background: ${estadoColor[ticket.estado]}; color: white; font-weight: bold;">${ticket.estado}</span></td>
+                        <td>${acciones}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterTickets() {
+            const estado = document.getElementById('filter-estado').value;
+            let filtered = allTickets;
+
+            if (estado) {
+                filtered = allTickets.filter(t => t.estado === estado);
+            }
+
+            displayTickets(filtered);
+        }
+
+        function openReservar(code) {
+            document.getElementById('reservar-code').value = code;
+            document.getElementById('reservar-nombre').value = '';
+            document.getElementById('modal-reservar').style.display = 'flex';
+        }
+
+        function openReportar(code, precio) {
+            document.getElementById('reportar-code').value = code;
+            document.getElementById('reportar-precio').value = precio;
+            document.getElementById('modal-reportar').style.display = 'flex';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        async function handleReservar(event) {
+            event.preventDefault();
+            const code = document.getElementById('reservar-code').value;
+            const nombre = document.getElementById('reservar-nombre').value;
+
+            showLoading();
+            const result = await reservarTicket(code, nombre);
+            hideLoading();
+
+            if (result) {
+                showAlert('Ticket reservado exitosamente', 'success');
+                closeModal('modal-reservar');
+                loadTickets();
+            }
+        }
+
+        async function handleReportar(event) {
+            event.preventDefault();
+            const code = document.getElementById('reportar-code').value;
+            const precio = parseFloat(document.getElementById('reportar-precio').value);
+            const metodo = document.getElementById('reportar-metodo').value;
+
+            showLoading();
+            const result = await reportarVenta(code, precio, metodo);
+            hideLoading();
+
+            if (result) {
+                showAlert('Venta reportada exitosamente', 'success');
+                closeModal('modal-reportar');
+                loadTickets();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadTickets);
+    </script>
+</body>
+</html>

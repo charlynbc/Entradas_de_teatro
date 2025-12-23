@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔐 Login - Baco Teatro</title>
+    <link rel="stylesheet" href="/css/teatro-theme.css">
+</head>
+<body>
+    <!-- 🎭 Navbar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="index.html" class="navbar-logo">
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKsAAACrCAYAAAAZ69KzAAAACXBIWXMAAAsTAAALEwEAmpwYAAADrElEQVR4nO3dMW4bMRSE4X+RwlcI0KYJcgXfIEBOkStQaY6QzjdI6yNQ6a6Q0lcwUPgGKX2FdLlBiqxgGDAGN1rZ1PL7gAUWWxBafJwZkhxJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJ0ma+APf0TQTEVPCpAAAAAElFTkSuQmCC" alt="Baco Teatro" class="logo-img">
+                <span class="logo-text">Baco Teatro</span>
+            </a>
+            <ul class="navbar-menu">
+                <li><a href="index.html">🏠 Inicio</a></li>
+                <li><a href="cartelera.html">🎪 Cartelera</a></li>
+                <li><a href="login.html">🔐 Ingresar</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- 🔐 Login Form -->
+    <div class="container">
+        <div class="form-container fade-in-up">
+            <h1 style="text-align: center; color: var(--baco-dorado); margin-bottom: 2rem;">
+                🔐 Iniciar Sesión
+            </h1>
+
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="cedula">Cédula</label>
+                    <input type="text" id="cedula" name="cedula" required 
+                           placeholder="Ingrese su cédula sin puntos">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" name="password" required 
+                           placeholder="Ingrese su contraseña">
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+                    Ingresar al Sistema
+                </button>
+            </form>
+
+            <div style="text-align: center; margin-top: 2rem;">
+                <p style="color: var(--baco-crema);">¿No tienes cuenta?</p>
+                <a href="registro.html" class="btn btn-secondary" style="margin-top: 1rem;">
+                    Registrarse
+                </a>
+            </div>
+
+            <div style="margin-top: 3rem; padding: 1.5rem; background: rgba(255, 215, 0, 0.1); border-radius: 10px; border: 1px solid var(--baco-dorado);">
+                <h3 style="color: var(--baco-dorado); margin-bottom: 1rem; text-align: center;">
+                    👤 Roles del Sistema
+                </h3>
+                <div style="color: var(--baco-crema); text-align: left;">
+                    <p><strong style="color: var(--baco-dorado);">SUPER:</strong> Usuario supremo con todos los permisos</p>
+                    <p><strong style="color: var(--baco-dorado);">ADMIN:</strong> Directores de grupos teatrales</p>
+                    <p><strong style="color: var(--baco-dorado);">VENDEDOR:</strong> Actores que venden entradas</p>
+                    <p><strong style="color: var(--baco-dorado);">INVITADO:</strong> Público general</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🎭 Footer -->
+    <footer class="footer">
+        <p>🎭 <strong>Baco Teatro</strong> | Sistema de Gestión Teatral v3.0</p>
+    </footer>
+
+    <script src="/js/app.js"></script>
+    <script>
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const cedula = document.getElementById('cedula').value;
+            const password = document.getElementById('password').value;
+
+            showLoading();
+            const result = await login(cedula, password);
+            hideLoading();
+
+            if (result) {
+                // Redirigir según el rol
+                switch(result.user.rol) {
+                    case 'SUPER':
+                    case 'ADMIN':
+                        window.location.href = 'dashboard.html';
+                        break;
+                    case 'VENDEDOR':
+                        window.location.href = 'mis-tickets.html';
+                        break;
+                    case 'INVITADO':
+                        window.location.href = 'cartelera.html';
+                        break;
+                    default:
+                        window.location.href = 'dashboard.html';
+                }
+            }
+        }
+
+        // Si ya está logueado, redirigir
+        if (checkAuth()) {
+            window.location.href = 'dashboard.html';
+        }
+    </script>
+</body>
+</html>

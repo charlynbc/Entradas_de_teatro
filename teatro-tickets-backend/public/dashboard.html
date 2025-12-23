@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 Dashboard - Baco Teatro</title>
+    <link rel="stylesheet" href="/css/teatro-theme.css">
+</head>
+<body>
+    <!-- 🎭 Navbar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="dashboard.html" class="navbar-logo">
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKsAAACrCAYAAAAZ69KzAAAACXBIWXMAAAsTAAALEwEAmpwYAAADrElEQVR4nO3dMW4bMRSE4X+RwlcI0KYJcgXfIEBOkStQaY6QzjdI6yNQ6a6Q0lcwUPgGKX2FdLlBiqxgGDAGN1rZ1PL7gAUWWxBafJwZkhxJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJ0ma+APf0TQTEVPCpAAAAAElFTkSuQmCC" alt="Baco Teatro" class="logo-img">
+                <span class="logo-text">Baco Teatro</span>
+            </a>
+            <ul class="navbar-menu">
+                <li><a href="dashboard.html">📊 Dashboard</a></li>
+                <li><a href="grupos.html">👥 Grupos</a></li>
+                <li><a href="obras.html">📚 Obras</a></li>
+                <li><a href="ensayos.html">🎵 Ensayos</a></li>
+                <li><a href="funciones.html">🎪 Funciones</a></li>
+                <li><a href="mis-tickets.html">🎫 Mis Tickets</a></li>
+            </ul>
+            <div id="user-info"></div>
+        </div>
+    </nav>
+
+    <!-- 📊 Dashboard -->
+    <div class="container">
+        <section class="hero fade-in-up">
+            <h1 id="welcome-message">📊 Dashboard</h1>
+            <p id="role-message">Cargando...</p>
+        </section>
+
+        <!-- Contenido dinámico según rol -->
+        <div id="dashboard-content" class="cards-grid">
+            <!-- Se cargará dinámicamente -->
+        </div>
+
+        <!-- Estadísticas rápidas -->
+        <div id="stats-container" style="margin-top: 3rem;">
+            <!-- Estadísticas se cargarán aquí -->
+        </div>
+    </div>
+
+    <!-- 🎭 Footer -->
+    <footer class="footer">
+        <p>🎭 <strong>Baco Teatro</strong> | Panel de Control</p>
+    </footer>
+
+    <script src="/js/app.js"></script>
+    <script>
+        async function loadDashboard() {
+            if (!checkAuth()) return;
+
+            // Actualizar mensajes de bienvenida
+            document.getElementById('welcome-message').textContent = 
+                `¡Bienvenido, ${currentUser.nombre}!`;
+            document.getElementById('role-message').textContent = 
+                `Rol: ${currentUser.rol}`;
+
+            // Cargar contenido según rol
+            const content = document.getElementById('dashboard-content');
+            
+            switch(currentUser.rol) {
+                case 'SUPER':
+                case 'ADMIN':
+                    loadAdminDashboard(content);
+                    break;
+                case 'VENDEDOR':
+                    loadVendedorDashboard(content);
+                    break;
+                case 'INVITADO':
+                    loadInvitadoDashboard(content);
+                    break;
+            }
+
+            // Cargar estadísticas
+            loadStats();
+        }
+
+        function loadAdminDashboard(container) {
+            container.innerHTML = `
+                <div class="card fade-in-up">
+                    <span class="card-icon">👥</span>
+                    <h3>Gestionar Grupos</h3>
+                    <p>Administra grupos teatrales, miembros y directores</p>
+                    <a href="grupos.html" class="btn btn-primary">Ir a Grupos</a>
+                </div>
+
+                <div class="card fade-in-up" style="animation-delay: 0.1s;">
+                    <span class="card-icon">📚</span>
+                    <h3>Control de Obras</h3>
+                    <p>Gestiona obras desde desarrollo hasta archivo</p>
+                    <a href="obras.html" class="btn btn-primary">Ver Obras</a>
+                </div>
+
+                <div class="card fade-in-up" style="animation-delay: 0.2s;">
+                    <span class="card-icon">🎵</span>
+                    <h3>Programar Ensayos</h3>
+                    <p>Organiza ensayos y controla asistencias</p>
+                    <a href="ensayos.html" class="btn btn-primary">Gestionar</a>
+                </div>
+
+                <div class="card fade-in-up" style="animation-delay: 0.3s;">
+                    <span class="card-icon">🎪</span>
+                    <h3>Crear Funciones</h3>
+                    <p>Programa presentaciones públicas</p>
+                    <a href="funciones.html" class="btn btn-primary">Ver Funciones</a>
+                </div>
+
+                <div class="card fade-in-up" style="animation-delay: 0.4s;">
+                    <span class="card-icon">💰</span>
+                    <h3>Aprobar Ventas</h3>
+                    <p>Revisa y aprueba ventas reportadas</p>
+                    <a href="aprobar-ventas.html" class="btn btn-primary">Revisar</a>
+                </div>
+
+                <div class="card fade-in-up" style="animation-delay: 0.5s;">
+                    <span class="card-icon">📊</span>
+                    <h3>Reportes</h3>
+                    <p>Estadísticas financieras y de rendimiento</p>
+                    <a href="reportes.html" class="btn btn-primary">Ver Reportes</a>
+                </div>
+            `;
+        }
+
+        function loadVendedorDashboard(container) {
+            container.innerHTML = `
+                <div class="card fade-in-up">
+                    <span class="card-icon">🎫</span>
+                    <h3>Mis Tickets</h3>
+                    <p>Ver y gestionar tus entradas asignadas</p>
+                    <a href="mis-tickets.html" class="btn btn-primary">Ver Tickets</a>
+                </div>
+
+                <div class="card fade-in-up" style="animation-delay: 0.1s;">
+                    <span class="card-icon">💵</span>
+                    <h3>Reportar Ventas</h3>
+                    <p>Informa sobre entradas vendidas</p>
+                    <a href="mis-tickets.html" class="btn btn-primary">Reportar</a>
+                </div>
+
+                <div class="card fade-in-up" style="animation-delay: 0.2s;">
+                    <span class="card-icon">📅</span>
+                    <h3>Próximos Ensayos</h3>
+                    <p>Ver calendario de ensayos</p>
+                    <a href="ensayos.html" class="btn btn-primary">Ver Calendario</a>
+                </div>
+
+                <div class="card fade-in-up" style="animation-delay: 0.3s;">
+                    <span class="card-icon">📊</span>
+                    <h3>Mis Ventas</h3>
+                    <p>Historial y estadísticas de ventas</p>
+                    <a href="reportes.html" class="btn btn-primary">Ver Historial</a>
+                </div>
+            `;
+        }
+
+        function loadInvitadoDashboard(container) {
+            container.innerHTML = `
+                <div class="card fade-in-up">
+                    <span class="card-icon">🎪</span>
+                    <h3>Ver Cartelera</h3>
+                    <p>Funciones disponibles</p>
+                    <a href="cartelera.html" class="btn btn-primary">Ver Funciones</a>
+                </div>
+
+                <div class="card fade-in-up" style="animation-delay: 0.1s;">
+                    <span class="card-icon">🎫</span>
+                    <h3>Mis Entradas</h3>
+                    <p>Entradas compradas</p>
+                    <a href="mis-tickets.html" class="btn btn-primary">Ver Entradas</a>
+                </div>
+            `;
+        }
+
+        async function loadStats() {
+            const statsContainer = document.getElementById('stats-container');
+            showLoading();
+
+            try {
+                const data = await apiCall('/reportes/general');
+                hideLoading();
+
+                if (data) {
+                    statsContainer.innerHTML = `
+                        <div class="table-container">
+                            <h2 style="color: var(--baco-dorado); margin-bottom: 1.5rem;">
+                                📊 Estadísticas Generales
+                            </h2>
+                            <div class="cards-grid">
+                                <div class="card" style="text-align: center;">
+                                    <span style="font-size: 3rem;">👥</span>
+                                    <h3>${data.gruposActivos || 0}</h3>
+                                    <p>Grupos Activos</p>
+                                </div>
+                                <div class="card" style="text-align: center;">
+                                    <span style="font-size: 3rem;">📚</span>
+                                    <h3>${data.obrasEnDesarrollo || 0}</h3>
+                                    <p>Obras en Desarrollo</p>
+                                </div>
+                                <div class="card" style="text-align: center;">
+                                    <span style="font-size: 3rem;">🎪</span>
+                                    <h3>${data.proximasFunciones || 0}</h3>
+                                    <p>Próximas Funciones</p>
+                                </div>
+                                <div class="card" style="text-align: center;">
+                                    <span style="font-size: 3rem;">💰</span>
+                                    <h3>${formatCurrency(data.recaudacionTotal || 0)}</h3>
+                                    <p>Recaudación Total</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                hideLoading();
+                statsContainer.innerHTML = `
+                    <div class="alert alert-warning">
+                        No se pudieron cargar las estadísticas
+                    </div>
+                `;
+            }
+        }
+
+        // Cargar dashboard al iniciar
+        document.addEventListener('DOMContentLoaded', loadDashboard);
+    </script>
+</body>
+</html>

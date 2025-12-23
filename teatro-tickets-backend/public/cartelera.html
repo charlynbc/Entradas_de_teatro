@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎪 Cartelera - Baco Teatro</title>
+    <link rel="stylesheet" href="/css/teatro-theme.css">
+</head>
+<body>
+    <!-- 🎭 Navbar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="index.html" class="navbar-logo">
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKsAAACrCAYAAAAZ69KzAAAACXBIWXMAAAsTAAALEwEAmpwYAAADrElEQVR4nO3dMW4bMRSE4X+RwlcI0KYJcgXfIEBOkStQaY6QzjdI6yNQ6a6Q0lcwUPgGKX2FdLlBiqxgGDAGN1rZ1PL7gAUWWxBafJwZkhxJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJ0ma+APf0TQTEVPCpAAAAAElFTkSuQmCC" alt="Baco Teatro" class="logo-img">
+                <span class="logo-text">Baco Teatro</span>
+            </a>
+            <ul class="navbar-menu">
+                <li><a href="index.html">🏠 Inicio</a></li>
+                <li><a href="cartelera.html">🎪 Cartelera</a></li>
+                <li><a href="login.html">🔐 Ingresar</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- 🎪 Cartelera -->
+    <div class="container">
+        <section class="hero fade-in-up">
+            <h1>🎪 Cartelera de Funciones</h1>
+            <p>Próximas presentaciones de teatro en vivo</p>
+        </section>
+
+        <div id="shows-container" class="cards-grid">
+            <!-- Las funciones se cargarán aquí -->
+        </div>
+
+        <div id="no-shows" style="display: none; text-align: center; padding: 3rem;">
+            <span style="font-size: 5rem;">🎭</span>
+            <h2 style="color: var(--baco-dorado); margin-top: 1rem;">
+                No hay funciones programadas
+            </h2>
+            <p style="color: var(--baco-crema); margin-top: 1rem;">
+                Próximamente nuevas presentaciones
+            </p>
+        </div>
+    </div>
+
+    <!-- 🎭 Footer -->
+    <footer class="footer">
+        <p>🎭 <strong>Baco Teatro</strong> | Cartelera de Funciones</p>
+    </footer>
+
+    <script src="/js/app.js"></script>
+    <script>
+        async function loadShows() {
+            showLoading();
+            
+            try {
+                const response = await fetch(`${API_URL}/shows`);
+                const data = await response.json();
+                
+                hideLoading();
+                
+                if (data && data.shows && data.shows.length > 0) {
+                    displayShows(data.shows);
+                } else {
+                    document.getElementById('no-shows').style.display = 'block';
+                }
+            } catch (error) {
+                hideLoading();
+                showAlert('Error al cargar las funciones', 'error');
+                document.getElementById('no-shows').style.display = 'block';
+            }
+        }
+
+        function displayShows(shows) {
+            const container = document.getElementById('shows-container');
+            container.innerHTML = '';
+
+            shows.forEach((show, index) => {
+                const fecha = new Date(show.fecha);
+                const fechaFormato = fecha.toLocaleDateString('es-UY', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                const card = document.createElement('div');
+                card.className = 'card fade-in-up';
+                card.style.animationDelay = `${index * 0.1}s`;
+                
+                card.innerHTML = `
+                    <div style="text-align: center;">
+                        <span class="card-icon">🎭</span>
+                        <h3>${show.obra_nombre || show.obra || 'Obra sin nombre'}</h3>
+                        
+                        <div style="margin: 1.5rem 0; padding: 1rem; background: rgba(255, 215, 0, 0.1); border-radius: 10px;">
+                            <p style="margin: 0.5rem 0;"><strong>📅 Fecha:</strong> ${fechaFormato}</p>
+                            <p style="margin: 0.5rem 0;"><strong>📍 Lugar:</strong> ${show.lugar || 'Por confirmar'}</p>
+                            <p style="margin: 0.5rem 0;"><strong>💰 Precio:</strong> ${formatCurrency(show.precio_base)}</p>
+                            <p style="margin: 0.5rem 0;"><strong>🪑 Capacidad:</strong> ${show.capacidad} personas</p>
+                        </div>
+
+                        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                            <a href="login.html" class="btn btn-primary">
+                                🎫 Comprar Entrada
+                            </a>
+                            <button onclick="verDetalles(${show.id})" class="btn btn-secondary">
+                                ℹ️ Más Info
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+
+        function verDetalles(showId) {
+            showAlert('Para ver detalles completos, por favor inicia sesión', 'warning');
+            setTimeout(() => {
+                window.location.href = `login.html`;
+            }, 2000);
+        }
+
+        // Cargar funciones al iniciar
+        document.addEventListener('DOMContentLoaded', () => {
+            loadShows();
+        });
+    </script>
+</body>
+</html>

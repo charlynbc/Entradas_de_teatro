@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📝 Registro - Baco Teatro</title>
+    <link rel="stylesheet" href="/css/teatro-theme.css">
+</head>
+<body>
+    <!-- 🎭 Navbar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="index.html" class="navbar-logo">
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKsAAACrCAYAAAAZ69KzAAAACXBIWXMAAAsTAAALEwEAmpwYAAADrElEQVR4nO3dMW4bMRSE4X+RwlcI0KYJcgXfIEBOkStQaY6QzjdI6yNQ6a6Q0lcwUPgGKX2FdLlBiqxgGDAGN1rZ1PL7gAUWWxBafJwZkhxJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJ0ma+APf0TQTEVPCpAAAAAElFTkSuQmCC" alt="Baco Teatro" class="logo-img">
+                <span class="logo-text">Baco Teatro</span>
+            </a>
+            <ul class="navbar-menu">
+                <li><a href="index.html">🏠 Inicio</a></li>
+                <li><a href="cartelera.html">🎪 Cartelera</a></li>
+                <li><a href="login.html">🔐 Ingresar</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- 📝 Registro Form -->
+    <div class="container">
+        <div class="form-container fade-in-up">
+            <h1 style="text-align: center; color: var(--baco-dorado); margin-bottom: 2rem;">
+                📝 Crear Cuenta
+            </h1>
+
+            <form id="registerForm" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label for="nombre">Nombre Completo</label>
+                    <input type="text" id="nombre" name="nombre" required 
+                           placeholder="Tu nombre completo">
+                </div>
+
+                <div class="form-group">
+                    <label for="cedula">Cédula</label>
+                    <input type="text" id="cedula" name="cedula" required 
+                           placeholder="Cédula sin puntos">
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Teléfono</label>
+                    <input type="tel" id="phone" name="phone" required 
+                           placeholder="099123456">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" name="password" required 
+                           placeholder="Mínimo 6 caracteres">
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword">Confirmar Contraseña</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required 
+                           placeholder="Repite tu contraseña">
+                </div>
+
+                <div class="form-group">
+                    <label for="rol">Tipo de Usuario</label>
+                    <select id="rol" name="rol" required>
+                        <option value="">Selecciona un rol</option>
+                        <option value="INVITADO">Invitado (Público)</option>
+                        <option value="VENDEDOR">Vendedor (Actor)</option>
+                        <option value="ADMIN">Administrador (Director)</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+                    Crear Cuenta
+                </button>
+            </form>
+
+            <div style="text-align: center; margin-top: 2rem;">
+                <p style="color: var(--baco-crema);">¿Ya tienes cuenta?</p>
+                <a href="login.html" class="btn btn-secondary" style="margin-top: 1rem;">
+                    Iniciar Sesión
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🎭 Footer -->
+    <footer class="footer">
+        <p>🎭 <strong>Baco Teatro</strong> | Registro de Usuario</p>
+    </footer>
+
+    <script src="/js/app.js"></script>
+    <script>
+        async function handleRegister(event) {
+            event.preventDefault();
+            
+            const nombre = document.getElementById('nombre').value;
+            const cedula = document.getElementById('cedula').value;
+            const phone = document.getElementById('phone').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const rol = document.getElementById('rol').value;
+
+            // Validaciones
+            if (password !== confirmPassword) {
+                showAlert('Las contraseñas no coinciden', 'error');
+                return;
+            }
+
+            if (password.length < 6) {
+                showAlert('La contraseña debe tener al menos 6 caracteres', 'error');
+                return;
+            }
+
+            showLoading();
+
+            try {
+                const response = await fetch(`${API_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre, cedula, phone, password, rol })
+                });
+
+                const data = await response.json();
+                hideLoading();
+
+                if (response.ok) {
+                    showAlert('Cuenta creada exitosamente. Redirigiendo al login...', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 2000);
+                } else {
+                    showAlert(data.error || 'Error al crear cuenta', 'error');
+                }
+            } catch (error) {
+                hideLoading();
+                showAlert('Error de conexión', 'error');
+            }
+        }
+    </script>
+</body>
+</html>

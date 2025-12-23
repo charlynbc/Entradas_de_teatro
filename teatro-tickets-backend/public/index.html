@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎭 Baco Teatro - Sistema de Gestión Teatral</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <header class="main-header">
+        <div class="container">
+            <div class="logo-container">
+                <img src="images/baco-logo.jpg" alt="Baco Teatro Logo" class="logo-icon" style="width:48px;height:48px;border-radius:8px;object-fit:cover;">
+                <h1>BACO TEATRO</h1>
+            </div>
+            <nav class="main-nav">
+                <a href="#funciones" class="nav-link"><i class="fas fa-theater-masks"></i> Funciones</a>
+                <a href="como-usar.html" class="nav-link"><i class="fas fa-question-circle"></i> Cómo Usar</a>
+                <a href="sobre-mi.html" class="nav-link"><i class="fas fa-user"></i> Sobre Mí</a>
+                <a href="login.html" class="nav-link btn-login"><i class="fas fa-sign-in-alt"></i> Iniciar Sesión</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="hero-content">
+                <h2>🎭 Bienvenido a Baco Teatro</h2>
+                <p>Reservá tus entradas para las mejores obras teatrales</p>
+                <div class="hero-buttons">
+                    <a href="#funciones" class="btn-primary"><i class="fas fa-ticket-alt"></i> Ver Funciones</a>
+                    <a href="como-usar.html" class="btn-secondary"><i class="fas fa-info-circle"></i> Cómo Reservar</a>
+                </div>
+            </div>
+        </section>
+
+        <section id="funciones" class="funciones-section">
+            <div class="container">
+                <h2 class="section-title"><i class="fas fa-theater-masks"></i> Funciones Disponibles</h2>
+                <p class="section-subtitle">Seleccioná una función para reservar tu entrada</p>
+                <div id="funciones-grid" class="funciones-grid">
+                    <div class="loading-message">
+                        <i class="fas fa-spinner fa-spin"></i> Cargando funciones...
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="info-section">
+            <div class="container">
+                <div class="info-grid">
+                    <div class="info-card">
+                        <i class="fas fa-ticket-alt info-icon"></i>
+                        <h3>Reservá Online</h3>
+                        <p>Elegí tu función, completá tus datos y reservá tu entrada en minutos</p>
+                    </div>
+                    <div class="info-card">
+                        <i class="fas fa-qrcode info-icon"></i>
+                        <h3>Código QR</h3>
+                        <p>Recibí tu entrada con código QR único para validar en la entrada</p>
+                    </div>
+                    <div class="info-card">
+                        <i class="fas fa-mobile-alt info-icon"></i>
+                        <h3>Fácil y Rápido</h3>
+                        <p>Todo desde tu celular o computadora, sin complicaciones</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="main-footer">
+        <div class="container">
+            <p>&copy; 2025 Baco Teatro. Sistema de Gestión Teatral</p>
+            <div class="footer-links">
+                <a href="como-usar.html"><i class="fas fa-question-circle"></i> Ayuda</a>
+                <a href="sobre-mi.html"><i class="fas fa-user"></i> Creador</a>
+                <a href="login.html"><i class="fas fa-sign-in-alt"></i> Acceso Personal</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/index.js"></script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎭 Baco Teatro - Sistema de Gestión</title>
+    <link rel="stylesheet" href="/css/teatro-theme.css">
+</head>
+<body>
+    <!-- 🎭 Navbar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="index.html" class="navbar-logo">
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKsAAACrCAYAAAAZ69KzAAAACXBIWXMAAAsTAAALEwEAmpwYAAADrElEQVR4nO3dMW4bMRSE4X+RwlcI0KYJcgXfIEBOkStQaY6QzjdI6yNQ6a6Q0lcwUPgGKX2FdLlBiqxgGDAGN1rZ1PL7gAUWWxBafJwZkhxJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJ0ma+APf0TQTEVPCpAAAAAElFTkSuQmCC" alt="Baco Teatro" class="logo-img">
+                <span class="logo-text">Baco Teatro</span>
+            </a>
+            <ul class="navbar-menu">
+                <li><a href="index.html">🏠 Inicio</a></li>
+                <li><a href="cartelera.html">🎪 Cartelera</a></li>
+                <li><a href="login.html">🔐 Ingresar</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- 🎭 Hero Section -->
+    <div class="container">
+        <section class="hero fade-in-up">
+            <h1 class="pulse">🎭 Baco Teatro</h1>
+            <p>Sistema Profesional de Gestión Teatral</p>
+            <p>Control total de grupos, obras, ensayos, funciones y venta de entradas</p>
+        </section>
+
+        <!-- 🎭 Características -->
+        <div class="cards-grid">
+            <div class="card fade-in-up">
+                <span class="card-icon">🎪</span>
+                <h3>Funciones Públicas</h3>
+                <p>Crea y gestiona presentaciones teatrales con control completo de tickets y asistencias.</p>
+                <a href="cartelera.html" class="btn btn-primary">Ver Cartelera</a>
+            </div>
+
+            <div class="card fade-in-up" style="animation-delay: 0.2s;">
+                <span class="card-icon">🎫</span>
+                <h3>Sistema de Tickets</h3>
+                <p>Vende entradas con códigos QR, controla pagos y valida accesos en tiempo real.</p>
+                <a href="login.html" class="btn btn-primary">Acceder</a>
+            </div>
+
+            <div class="card fade-in-up" style="animation-delay: 0.4s;">
+                <span class="card-icon">👥</span>
+                <h3>Gestión de Grupos</h3>
+                <p>Administra grupos teatrales, actores, directores y co-directores en un solo lugar.</p>
+                <a href="login.html" class="btn btn-primary">Gestionar</a>
+            </div>
+
+            <div class="card fade-in-up" style="animation-delay: 0.6s;">
+                <span class="card-icon">📚</span>
+                <h3>Control de Obras</h3>
+                <p>Desde desarrollo hasta archivo, lleva el ciclo completo de tus obras teatrales.</p>
+                <a href="login.html" class="btn btn-primary">Ver Obras</a>
+            </div>
+
+            <div class="card fade-in-up" style="animation-delay: 0.8s;">
+                <span class="card-icon">🎵</span>
+                <h3>Ensayos</h3>
+                <p>Programa ensayos y registra asistencias con estadísticas detalladas de participación.</p>
+                <a href="login.html" class="btn btn-primary">Programar</a>
+            </div>
+
+            <div class="card fade-in-up" style="animation-delay: 1s;">
+                <span class="card-icon">📊</span>
+                <h3>Reportes</h3>
+                <p>Informes financieros, estadísticas de ventas y reportes de rendimiento completos.</p>
+                <a href="login.html" class="btn btn-primary">Ver Reportes</a>
+            </div>
+        </div>
+
+        <!-- 🎭 Información del Sistema -->
+        <section class="hero" style="margin-top: 3rem;">
+            <h2 style="color: var(--baco-dorado); margin-bottom: 2rem;">✨ Sistema Completo de Gestión Teatral</h2>
+            <div style="text-align: left; max-width: 800px; margin: 0 auto;">
+                <div style="margin-bottom: 1.5rem;">
+                    <h3 style="color: var(--baco-dorado); margin-bottom: 0.5rem;">🔐 Sistema de Roles</h3>
+                    <p><strong>SUPER:</strong> Usuario supremo con acceso total</p>
+                    <p><strong>ADMIN:</strong> Directores que gestionan sus grupos teatrales</p>
+                    <p><strong>VENDEDOR:</strong> Actores que venden entradas</p>
+                    <p><strong>INVITADO:</strong> Público general que compra entradas</p>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <h3 style="color: var(--baco-dorado); margin-bottom: 0.5rem;">🎯 Funcionalidades Principales</h3>
+                    <p>✅ Gestión completa de grupos teatrales y miembros</p>
+                    <p>✅ Control de obras desde desarrollo hasta archivo</p>
+                    <p>✅ Sistema de ensayos con control de asistencias</p>
+                    <p>✅ Funciones públicas con venta de tickets</p>
+                    <p>✅ Validación de entradas con código QR</p>
+                    <p>✅ Reportes financieros y estadísticos</p>
+                    <p>✅ Aprobación de ventas por administradores</p>
+                </div>
+
+                <div>
+                    <h3 style="color: var(--baco-dorado); margin-bottom: 0.5rem;">🔒 Seguridad y Control</h3>
+                    <p>🛡️ Autenticación JWT con tokens seguros</p>
+                    <p>🔐 Contraseñas encriptadas con bcrypt</p>
+                    <p>📝 Trazabilidad completa de transacciones</p>
+                    <p>💰 Control financiero con aprobaciones de admin</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- 🎭 Footer -->
+    <footer class="footer">
+        <p>🎭 <strong>Baco Teatro</strong> | Sistema de Gestión Teatral v3.0</p>
+        <p style="margin-top: 0.5rem;">PostgreSQL 15 • Node.js + Express • React Native Web</p>
+        <p style="margin-top: 0.5rem; color: var(--baco-dorado);">Diciembre 2025</p>
+    </footer>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>
