@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Usuarios - BACÓ</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/baco-common.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --negro: #0a0a0a;
+            --bordo: #8B1538;
+            --dorado: #D4AF37;
+            --blanco: #F8F8F8;
+            --gris-oscuro: #1a1a1a;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--negro);
+            color: var(--blanco);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--gris-oscuro), var(--negro));
+            padding: 20px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .btn-back {
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid var(--dorado);
+            color: var(--dorado);
+            padding: 10px 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-back:hover {
+            background: var(--dorado);
+            color: var(--negro);
+        }
+
+        .header-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            color: var(--dorado);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 20px;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* FILTROS */
+        .filters-section {
+            background: linear-gradient(135deg, var(--gris-oscuro), #252525);
+            border: 1.5px solid rgba(212, 175, 55, 0.3);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .filter-group label {
+            display: block;
+            color: var(--dorado);
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1.5px solid rgba(212, 175, 55, 0.3);
+            border-radius: 10px;
+            color: var(--blanco);
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: var(--dorado);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-box {
+            flex: 1;
+            min-width: 150px;
+            background: rgba(212, 175, 55, 0.1);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+        }
+
+        .stat-box .number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--dorado);
+        }
+
+        .stat-box .label {
+            font-size: 0.85rem;
+            color: rgba(248, 248, 248, 0.7);
+            margin-top: 5px;
+        }
+
+        /* USUARIOS GRID */
+        .users-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .user-card {
+            background: linear-gradient(135deg, var(--gris-oscuro), #252525);
+            border: 2px solid rgba(212, 175, 55, 0.3);
+            border-radius: 18px;
+            padding: 25px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .user-card:hover {
+            border-color: var(--dorado);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
+        }
+
+        .user-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .user-photo {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: 3px solid var(--dorado);
+            object-fit: cover;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+            background: var(--gris-oscuro);
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .user-role {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .role-super {
+            background: linear-gradient(135deg, var(--dorado), #F4E3B5);
+            color: var(--negro);
+        }
+
+        .role-admin {
+            background: linear-gradient(135deg, var(--bordo), #A31D45);
+            color: white;
+        }
+
+        .role-vendedor {
+            background: linear-gradient(135deg, #3b82f6, #60a5fa);
+            color: white;
+        }
+
+        .user-details {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .detail-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: rgba(248, 248, 248, 0.8);
+        }
+
+        .detail-row i {
+            color: var(--dorado);
+            width: 20px;
+        }
+
+        .user-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-view {
+            background: rgba(212, 175, 55, 0.2);
+            color: var(--dorado);
+            border: 1px solid var(--dorado);
+        }
+
+        .btn-view:hover {
+            background: var(--dorado);
+            color: var(--negro);
+        }
+
+        .btn-suspend {
+            background: rgba(139, 21, 56, 0.2);
+            color: #ff6b6b;
+            border: 1px solid #ff6b6b;
+        }
+
+        .btn-suspend:hover {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--dorado);
+            font-size: 1.2rem;
+        }
+
+        .loading i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .empty-state i {
+            font-size: 5rem;
+            color: rgba(212, 175, 55, 0.3);
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            color: var(--dorado);
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            color: rgba(248, 248, 248, 0.6);
+        }
+
+        @media (max-width: 768px) {
+            .users-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-box {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <a href="admin-dashboard.html" class="btn-back">
+                <i class="fas fa-arrow-left"></i>
+                Volver
+            </a>
+            <h1 class="header-title">Gestión de Usuarios</h1>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- FILTROS Y ESTADÍSTICAS -->
+        <div class="filters-section">
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label>Buscar</label>
+                    <input type="text" id="searchInput" placeholder="Nombre o cédula...">
+                </div>
+                <div class="filter-group">
+                    <label>Filtrar por Rol</label>
+                    <select id="filterRole">
+                        <option value="">Todos</option>
+                        <option value="SUPER">Super Usuario</option>
+                        <option value="ADMIN">Director</option>
+                        <option value="VENDEDOR">Actor/Actriz</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Ordenar por</label>
+                    <select id="sortBy">
+                        <option value="nombre">Nombre</option>
+                        <option value="role">Rol</option>
+                        <option value="fecha">Fecha de registro</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-box">
+                    <div class="number" id="totalUsers">0</div>
+                    <div class="label">Total Usuarios</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number" id="totalDirectores">0</div>
+                    <div class="label">Directores</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number" id="totalActores">0</div>
+                    <div class="label">Actores</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GRID DE USUARIOS -->
+        <div id="usersContainer">
+            <div class="loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                <div>Cargando usuarios...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/baco-common.js"></script>
+    <script>
+        // Verificar autenticación
+        if (!Baco.Auth.requireAuth()) return;
+        
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        if (user.role !== 'SUPER') {
+            Baco.UI.showError('Acceso denegado. Solo Super Usuarios.');
+            setTimeout(() => Baco.Auth.logout(), 2000);
+            return;
+        }
+
+        let allUsers = [];
+
+        // Cargar usuarios
+        async function loadUsers() {
+            Baco.UI.showLoading('Cargando usuarios...');
+            
+            try {
+                allUsers = await Baco.API.get('/users');
+                updateStats();
+                renderUsers(allUsers);
+            } catch (error) {
+                showError('Error al cargar usuarios');
+            } finally {
+                Baco.UI.hideLoading();
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('totalUsers').textContent = allUsers.length;
+            document.getElementById('totalDirectores').textContent = 
+                allUsers.filter(u => u.role === 'ADMIN').length;
+            document.getElementById('totalActores').textContent = 
+                allUsers.filter(u => u.role === 'VENDEDOR').length;
+        }
+
+        function renderUsers(users) {
+            const container = document.getElementById('usersContainer');
+
+            if (users.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-users"></i>
+                        <h3>No hay usuarios</h3>
+                        <p>No se encontraron usuarios con los filtros seleccionados</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const usersGrid = document.createElement('div');
+            usersGrid.className = 'users-grid';
+
+            users.forEach(usuario => {
+                const card = document.createElement('div');
+                card.className = 'user-card';
+                
+                const roleClass = usuario.role === 'SUPER' ? 'role-super' : 
+                                 usuario.role === 'ADMIN' ? 'role-admin' : 'role-vendedor';
+                
+                const roleText = usuario.role === 'SUPER' ? 'Super Usuario' : 
+                                usuario.role === 'ADMIN' ? 'Director' : 'Actor/Actriz';
+
+                // Usar componente de imagen circular
+                const photoUrl = usuario.photo_url || Baco.Image.getPlaceholder(usuario.nombre, 70);
+
+                card.innerHTML = `
+                    <div class="user-header">
+                        <img src="${photoUrl}" 
+                             alt="${usuario.nombre}" 
+                             class="user-photo photo-circular"
+                             onerror="this.src='${Baco.Image.getPlaceholder(usuario.nombre, 70)}'">
+                        <div class="user-info">
+                            <div class="user-name">${usuario.nombre}</div>
+                            <span class="user-role ${roleClass}">${roleText}</span>
+                        </div>
+                    </div>
+                    <div class="user-details">
+                        <div class="detail-row">
+                            <i class="fas fa-id-card"></i>
+                            <span>CI: ${Baco.Format.cedula(usuario.cedula)}</span>
+                        </div>
+                        <div class="detail-row">
+                            <i class="fas fa-phone"></i>
+                            <span>${usuario.phone || 'Sin teléfono'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <i class="fas fa-calendar"></i>
+                            <span>${usuario.fecha_nacimiento ? Baco.Format.date(usuario.fecha_nacimiento) : 'Sin fecha'}</span>
+                        </div>
+                    </div>
+                    <div class="user-actions">
+                        <button class="btn-action btn-view" onclick="viewUser('${usuario.cedula}')">
+                            <i class="fas fa-eye"></i>
+                            Ver Perfil
+                        </button>
+                        ${usuario.role !== 'SUPER' ? `
+                            <button class="btn-action btn-suspend" onclick="suspendUser('${usuario.cedula}')">
+                                <i class="fas fa-ban"></i>
+                                Suspender
+                            </button>
+                        ` : ''}
+                    </div>
+                `;
+
+                usersGrid.appendChild(card);
+            });
+
+            container.innerHTML = '';
+            container.appendChild(usersGrid);
+        }
+
+        function showError(message) {
+            const container = document.getElementById('usersContainer');
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Error</h3>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+
+        function viewUser(cedula) {
+            window.location.href = `ver-usuario.html?cedula=${cedula}`;
+        }
+
+        async function suspendUser(cedula) {
+            Baco.UI.confirm(
+                `¿Estás seguro de suspender al usuario con CI: ${Baco.Format.cedula(cedula)}?`,
+                async () => {
+                    try {
+                        await Baco.API.delete(`/users/${cedula}`);
+                        Baco.UI.showSuccess('Usuario suspendido correctamente');
+                        loadUsers(); // Recargar lista
+                    } catch (error) {
+                        // Error ya manejado por Baco.API
+                    }
+                }
+            );
+        }
+
+        // Filtros
+        document.getElementById('searchInput').addEventListener('input', filterUsers);
+        document.getElementById('filterRole').addEventListener('change', filterUsers);
+        document.getElementById('sortBy').addEventListener('change', filterUsers);
+
+        function filterUsers() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const role = document.getElementById('filterRole').value;
+            const sort = document.getElementById('sortBy').value;
+
+            let filtered = allUsers.filter(u => {
+                const matchSearch = u.nombre.toLowerCase().includes(search) || 
+                                   u.cedula.includes(search);
+                const matchRole = !role || u.role === role;
+                return matchSearch && matchRole;
+            });
+
+            // Ordenar
+            if (sort === 'nombre') {
+                filtered.sort((a, b) => a.nombre.localeCompare(b.nombre));
+            } else if (sort === 'role') {
+                filtered.sort((a, b) => a.role.localeCompare(b.role));
+            }
+
+            renderUsers(filtered);
+        }
+
+        // Cargar al inicio
+        loadUsers();
+    </script>
+</body>
+</html>

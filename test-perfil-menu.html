@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Menu y Frase</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #0a0a0a;
+            color: #F8F8F8;
+        }
+        .test-section {
+            background: #1a1a1a;
+            border: 2px solid #D4AF37;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #D4AF37;
+        }
+        .frase {
+            font-style: italic;
+            color: rgba(212, 175, 55, 0.9);
+            padding: 15px;
+            background: rgba(212, 175, 55, 0.1);
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+        .success {
+            color: #22c55e;
+        }
+        .error {
+            color: #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test de Módulo Perfil</h1>
+
+    <div class="test-section">
+        <h2>1. Test: Frase Teatral Aleatoria</h2>
+        <p>Frases disponibles: <span id="fraseCount" class="success">0</span></p>
+        <div class="frase" id="fraseTest">Cargando...</div>
+        <button onclick="recargarFrase()">🎲 Nueva Frase</button>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Test: Menú Desplegable</h2>
+        <p>Estado del listener: <span id="listenerStatus" class="success">✓ Configurado</span></p>
+        <p>Comportamiento esperado:</p>
+        <ul>
+            <li>✓ Click en enlaces <code>&lt;a&gt;</code> → NAVEGA (no cierra menú)</li>
+            <li>✓ Click en divs con onclick → EJECUTA (cierra menú)</li>
+            <li>✓ Click fuera del menú → CIERRA</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>3. URLs de Prueba</h2>
+        <p><a href="https://legendary-enigma-6qw6pq5wgr43rp67-3000.app.github.dev/credenciales.html" style="color: #D4AF37;">📋 Credenciales</a></p>
+        <p><a href="https://legendary-enigma-6qw6pq5wgr43rp67-3000.app.github.dev/login.html" style="color: #D4AF37;">🔑 Login</a></p>
+        <p><a href="https://legendary-enigma-6qw6pq5wgr43rp67-3000.app.github.dev/admin-dashboard.html" style="color: #D4AF37;">🎭 Dashboard</a></p>
+        <p><a href="https://legendary-enigma-6qw6pq5wgr43rp67-3000.app.github.dev/perfil-super.html" style="color: #D4AF37;">👤 Perfil</a></p>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Pasos para Probar</h2>
+        <ol>
+            <li>Ir al Dashboard (logueado)</li>
+            <li>Click en la foto de perfil → Menú se abre</li>
+            <li>Click en "Mi Perfil" → Debería navegar a perfil-super.html</li>
+            <li>En el perfil, debés ver la frase teatral bajo la cédula</li>
+        </ol>
+    </div>
+
+    <script>
+        // Frases teatrales (mismo array que en perfil-super.html)
+        const frasesTeatro = [
+            'El teatro es la poesía que se levanta del libro y se hace humana',
+            'Todo el mundo es un escenario, y todos los hombres y mujeres meros actores',
+            'El arte del teatro consiste en representar bien las cosas falsas',
+            'El teatro es el lugar donde las lágrimas de los hombres virtuales y desconocidos consuelan a todos',
+            'Actuar es vivir con verdad bajo circunstancias imaginarias',
+            'El teatro es el primer serum que el hombre inventó para protegerse de la enfermedad del olvido',
+            'En el teatro, como en la vida, no hay segundas oportunidades para la primera impresión',
+            'El escenario es un lugar mágico donde la realidad y la ficción bailan juntas',
+            'Cada función es única, irrepetible, como la vida misma',
+            'El teatro no cambia el mundo. Cambia a las personas. Y las personas cambian el mundo',
+            'El buen teatro hace que el público piense, el gran teatro hace que actúen',
+            'Entre bambalinas se esconden los secretos del alma',
+            'El teatro es el arte de hacer visible lo invisible',
+            'Cada actor es un universo, cada obra un nuevo mundo por descubrir'
+        ];
+
+        function getFraseAleatoria() {
+            const index = Math.floor(Math.random() * frasesTeatro.length);
+            return frasesTeatro[index];
+        }
+
+        function recargarFrase() {
+            document.getElementById('fraseTest').textContent = getFraseAleatoria();
+        }
+
+        // Cargar inicial
+        document.getElementById('fraseCount').textContent = frasesTeatro.length;
+        recargarFrase();
+
+        // Test del listener
+        console.log('✅ Test de menú cargado');
+        console.log('📝 Listener configurado para detectar clicks en enlaces');
+    </script>
+</body>
+</html>

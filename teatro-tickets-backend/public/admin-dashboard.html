@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BACÓ - Super Usuario</title>
+    <!-- Version: 26-12-2025 04:15 - Menu y Frase actualizados -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/baco-common.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --negro: #0a0a0a;
+            --bordo: #8B1538;
+            --dorado: #D4AF37;
+            --blanco: #F8F8F8;
+            --gris-oscuro: #1a1a1a;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--negro);
+            color: var(--blanco);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* HEADER */
+        .header {
+            background: linear-gradient(135deg, var(--gris-oscuro) 0%, var(--negro) 100%);
+            padding: 20px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            animation: slideDown 0.5s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-text {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--dorado) 0%, #F4E3B5 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 2px;
+        }
+
+        .profile-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            padding: 8px 15px;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .profile-section:hover {
+            background: rgba(212, 175, 55, 0.1);
+        }
+
+        .profile-photo {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid var(--dorado);
+            object-fit: cover;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+            transition: all 0.3s ease;
+            background: var(--gris-oscuro);
+        }
+
+        .profile-photo:hover {
+            box-shadow: 0 0 25px rgba(212, 175, 55, 0.6);
+            transform: scale(1.05);
+        }
+
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .profile-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .profile-role {
+            font-size: 0.75rem;
+            color: var(--dorado);
+            font-weight: 500;
+        }
+
+        /* MENU DESPLEGABLE */
+        .profile-menu {
+            position: absolute;
+            top: 70px;
+            right: 0;
+            background: linear-gradient(135deg, var(--gris-oscuro), var(--negro));
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 15px;
+            padding: 15px;
+            min-width: 220px;
+            display: none;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .profile-menu.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .menu-item {
+            padding: 12px 15px;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--blanco);
+            text-decoration: none;
+        }
+
+        .menu-item:hover {
+            background: rgba(212, 175, 55, 0.2);
+            color: var(--dorado);
+        }
+
+        .menu-item i {
+            width: 20px;
+        }
+
+        .menu-item.logout {
+            border-top: 1px solid rgba(212, 175, 55, 0.2);
+            margin-top: 8px;
+            padding-top: 15px;
+            color: rgba(139, 21, 56, 0.9);
+        }
+
+        .menu-item.logout:hover {
+            background: rgba(139, 21, 56, 0.2);
+            color: var(--bordo);
+        }
+
+        /* MAIN CONTENT */
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+            animation: fadeInUp 0.7s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .welcome-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .welcome-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--blanco) 0%, var(--dorado) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .welcome-subtitle {
+            font-size: 1.1rem;
+            color: rgba(248, 248, 248, 0.7);
+            font-style: italic;
+            font-weight: 300;
+        }
+
+        /* CARDS PRINCIPALES */
+        .main-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .card-teatral {
+            background: linear-gradient(135deg, var(--gris-oscuro) 0%, #252525 100%);
+            border: 2px solid rgba(212, 175, 55, 0.3);
+            border-radius: 20px;
+            padding: 30px;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-teatral::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(135deg, var(--dorado), var(--bordo));
+            border-radius: 20px;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: -1;
+        }
+
+        .card-teatral:hover::before {
+            opacity: 0.6;
+        }
+
+        .card-teatral:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 50px rgba(212, 175, 55, 0.4);
+            border-color: var(--dorado);
+        }
+
+        .card-icon {
+            font-size: 3rem;
+            background: linear-gradient(135deg, var(--dorado), #F4E3B5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--blanco);
+        }
+
+        .card-description {
+            font-size: 0.9rem;
+            color: rgba(248, 248, 248, 0.6);
+            line-height: 1.5;
+        }
+
+        /* SECCIÓN DE GESTIÓN */
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 50px 0 25px;
+            color: var(--dorado);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 30px;
+            background: linear-gradient(180deg, var(--dorado), var(--bordo));
+            border-radius: 10px;
+        }
+
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .action-card {
+            background: linear-gradient(135deg, var(--gris-oscuro), #1f1f1f);
+            border: 1.5px solid rgba(212, 175, 55, 0.2);
+            border-radius: 15px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .action-card:hover {
+            border-color: var(--dorado);
+            background: linear-gradient(135deg, #252525, var(--gris-oscuro));
+            transform: translateX(5px);
+        }
+
+        .action-icon {
+            font-size: 2rem;
+            color: var(--dorado);
+            width: 50px;
+            text-align: center;
+        }
+
+        .action-text {
+            flex: 1;
+        }
+
+        .action-title {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+
+        .action-subtitle {
+            font-size: 0.85rem;
+            color: rgba(248, 248, 248, 0.5);
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .logo-text {
+                font-size: 1.5rem;
+            }
+
+            .welcome-title {
+                font-size: 2rem;
+            }
+
+            .profile-info {
+                display: none;
+            }
+
+            .main-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .action-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* MODAL FOTO PERFIL */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, var(--gris-oscuro), var(--negro));
+            border: 2px solid var(--dorado);
+            border-radius: 25px;
+            padding: 35px;
+            max-width: 450px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+        }
+
+        .modal-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            color: var(--dorado);
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .photo-preview {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            border: 3px solid var(--dorado);
+            margin: 0 auto 25px;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.4);
+            background: var(--gris-oscuro);
+        }
+
+        .photo-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .btn-modal {
+            padding: 12px 30px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--bordo), #A31D45);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 8px 25px rgba(139, 21, 56, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--dorado);
+            color: var(--dorado);
+        }
+
+        .btn-secondary:hover {
+            background: var(--dorado);
+            color: var(--negro);
+        }
+
+        /* FILE INPUT CUSTOM */
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 15px;
+            background: rgba(212, 175, 55, 0.1);
+            border: 2px dashed var(--dorado);
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-input-label:hover {
+            background: rgba(212, 175, 55, 0.2);
+            border-style: solid;
+        }
+
+        .file-input-label i {
+            display: block;
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: var(--dorado);
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo-text">BACÓ</div>
+            </div>
+            <div class="profile-section" onclick="toggleProfileMenu()">
+                <img src="https://via.placeholder.com/100/1a1a1a/D4AF37?text=BC" alt="Perfil" class="profile-photo" id="headerPhoto">
+                <div class="profile-info">
+                    <div class="profile-name" id="profileName">Cargando...</div>
+                    <div class="profile-role">Super Usuario</div>
+                </div>
+                <i class="fas fa-chevron-down" style="color: var(--dorado); font-size: 0.8rem;"></i>
+                
+                <!-- MENU DESPLEGABLE -->
+                <div class="profile-menu" id="profileMenu">
+                    <a href="perfil-super.html" class="menu-item">
+                        <i class="fas fa-user"></i>
+                        <span>Mi Perfil</span>
+                    </a>
+                    <div class="menu-item" onclick="openPhotoModal(); event.stopPropagation();">
+                        <i class="fas fa-camera"></i>
+                        <span>Cambiar Foto</span>
+                    </div>
+                    <a href="notificaciones.html" class="menu-item">
+                        <i class="fas fa-bell"></i>
+                        <span>Notificaciones</span>
+                    </a>
+                    <a href="configuracion.html" class="menu-item">
+                        <i class="fas fa-cog"></i>
+                        <span>Configuración</span>
+                    </a>
+                    <a href="auditoria.html" class="menu-item">
+                        <i class="fas fa-history"></i>
+                        <span>Historial</span>
+                    </a>
+                    <a href="#" class="menu-item logout" onclick="logout(); return false;">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Cerrar Sesión</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <!-- BIENVENIDA -->
+        <div class="welcome-section">
+            <h1 class="welcome-title">El escenario comienza aquí</h1>
+            <p class="welcome-subtitle" id="fraseDelDia" style="font-style: italic; color: rgba(212, 175, 55, 0.9); margin-top: 15px;">
+                <i class="fas fa-quote-left" style="font-size: 0.85rem; opacity: 0.7; margin-right: 8px;"></i>
+                <span id="fraseTexto">Gestiona todo el teatro desde tu mano</span>
+                <i class="fas fa-quote-right" style="font-size: 0.85rem; opacity: 0.7; margin-left: 8px;"></i>
+            </p>
+        </div>
+
+        <!-- CUMPLEAÑOS SEMANALES -->
+        <div id="birthdayBanner"></div>
+
+        <!-- CARDS PRINCIPALES -->
+        <div class="main-cards">
+            <div class="card-teatral" onclick="window.location.href='crear-director.html'">
+                <div class="card-icon"><i class="fas fa-user-tie"></i></div>
+                <h2 class="card-title">Crear Director</h2>
+                <p class="card-description">Añade un nuevo director al sistema con todos sus datos</p>
+            </div>
+
+            <div class="card-teatral" onclick="window.location.href='crear-actor.html'">
+                <div class="card-icon"><i class="fas fa-theater-masks"></i></div>
+                <h2 class="card-title">Crear Actor / Actriz</h2>
+                <p class="card-description">Registra actores y actrices en la plataforma</p>
+            </div>
+
+            <div class="card-teatral" onclick="window.location.href='crear-grupo.html'">
+                <div class="card-icon"><i class="fas fa-users"></i></div>
+                <h2 class="card-title">Crear Grupo</h2>
+                <p class="card-description">Forma un nuevo grupo teatral con su obra</p>
+            </div>
+
+            <div class="card-teatral" onclick="window.location.href='listar-grupos.html'">
+                <div class="card-icon"><i class="fas fa-layer-group"></i></div>
+                <h2 class="card-title">Ver Grupos</h2>
+                <p class="card-description">Explora todos los grupos activos</p>
+            </div>
+        </div>
+
+        <!-- GESTIÓN DE USUARIOS -->
+        <h2 class="section-title"><i class="fas fa-users-cog"></i> Gestión de Usuarios</h2>
+        <div class="action-grid">
+            <div class="action-card" onclick="window.location.href='listar-usuarios.html'">
+                <div class="action-icon"><i class="fas fa-list"></i></div>
+                <div class="action-text">
+                    <div class="action-title">Listar Usuarios</div>
+                    <div class="action-subtitle">Ver todos los registrados</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CATÁLOGO DE OBRAS -->
+        <h2 class="section-title"><i class="fas fa-scroll"></i> Catálogo de Obras</h2>
+        <div class="action-grid">
+            <div class="action-card" onclick="window.location.href='gestion-obras.html'">
+                <div class="action-icon"><i class="fas fa-theater-masks"></i></div>
+                <div class="action-text">
+                    <div class="action-title">Gestionar Obras</div>
+                    <div class="action-subtitle">Crear y editar obras teatrales</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CARTELERA & ENSAYOS -->
+        <h2 class="section-title"><i class="fas fa-calendar-star"></i> Cartelera & Ensayos</h2>
+        <div class="action-grid">
+            <div class="action-card" onclick="window.location.href='crear-funcion.html'">
+                <div class="action-icon"><i class="fas fa-star"></i></div>
+                <div class="action-text">
+                    <div class="action-title">Crear Función</div>
+                    <div class="action-subtitle">Nueva presentación</div>
+                </div>
+            </div>
+
+            <div class="action-card" onclick="window.location.href='listar-funciones.html'">
+                <div class="action-icon"><i class="fas fa-ticket-alt"></i></div>
+                <div class="action-text">
+                    <div class="action-title">Ver Cartelera</div>
+                    <div class="action-subtitle">Todas las funciones</div>
+                </div>
+            </div>
+
+            <div class="action-card" onclick="window.location.href='crear-ensayo.html'">
+                <div class="action-icon"><i class="fas fa-calendar-plus"></i></div>
+                <div class="action-text">
+                    <div class="action-title">Crear Ensayo</div>
+                    <div class="action-subtitle">Programar ensayo</div>
+                </div>
+            </div>
+
+            <div class="action-card" onclick="window.location.href='listar-ensayos.html'">
+                <div class="action-icon"><i class="fas fa-clock"></i></div>
+                <div class="action-text">
+                    <div class="action-title">Ver Agenda</div>
+                    <div class="action-subtitle">Ensayos programados</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ENTRADAS & REPORTES -->
+        <h2 class="section-title"><i class="fas fa-chart-line"></i> Entradas & Reportes</h2>
+        <div class="action-grid">
+            <div class="action-card" onclick="window.location.href='asignar-entradas.html'">
+                <div class="action-icon"><i class="fas fa-gift"></i></div>
+                <div class="action-text">
+                    <div class="action-title">Asignar Entradas</div>
+                    <div class="action-subtitle">Gestionar tickets</div>
+                </div>
+            </div>
+
+            <div class="action-card" onclick="window.location.href='informes-grupos.html'">
+                <div class="action-icon"><i class="fas fa-file-pdf"></i></div>
+                <div class="action-text">
+                    <div class="action-title">Informes Finales</div>
+                    <div class="action-subtitle">Generar PDFs</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL CAMBIAR FOTO -->
+    <div class="modal-overlay" id="photoModal">
+        <div class="modal-content">
+            <h2 class="modal-title">Cambiar Foto de Perfil</h2>
+            
+            <div class="photo-preview">
+                <img src="https://via.placeholder.com/200/1a1a1a/D4AF37?text=BC" alt="Preview" id="photoPreview">
+            </div>
+
+            <div class="file-input-wrapper">
+                <input type="file" id="photoInput" accept="image/*" onchange="previewPhoto(event)">
+                <label for="photoInput" class="file-input-label">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <div>Seleccionar imagen</div>
+                    <small style="color: rgba(248,248,248,0.5);">JPG, PNG o WEBP</small>
+                </label>
+            </div>
+
+            <div class="modal-buttons">
+                <button class="btn-modal btn-primary" onclick="savePhoto()">
+                    <i class="fas fa-check"></i> Guardar
+                </button>
+                <button class="btn-modal btn-secondary" onclick="closePhotoModal()">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/baco-common.js"></script>
+    <script>
+        (function () {
+        // Verificar autenticación
+        if (!Baco.Auth.requireAuth()) return;
+        
+        // Frases teatrales aleatorias
+        const frasesTeatro = [
+            'El teatro es la poesía que se levanta del libro y se hace humana',
+            'Todo el mundo es un escenario, y todos los hombres y mujeres meros actores',
+            'El arte del teatro consiste en representar bien las cosas falsas',
+            'El teatro es el lugar donde las lágrimas de los hombres virtuales y desconocidos consuelan a todos',
+            'Actuar es vivir con verdad bajo circunstancias imaginarias',
+            'El teatro es el primer serum que el hombre inventó para protegerse de la enfermedad del olvido',
+            'En el teatro, como en la vida, no hay segundas oportunidades para la primera impresión',
+            'El escenario es un lugar mágico donde la realidad y la ficción bailan juntas',
+            'Cada función es única, irrepetible, como la vida misma',
+            'El teatro no cambia el mundo. Cambia a las personas. Y las personas cambian el mundo',
+            'El buen teatro hace que el público piense, el gran teatro hace que actúen',
+            'Entre bambalinas se esconden los secretos del alma',
+            'El teatro es el arte de hacer visible lo invisible',
+            'Cada actor es un universo, cada obra un nuevo mundo por descubrir'
+        ];
+
+        function getFraseAleatoria() {
+            return frasesTeatro[Math.floor(Math.random() * frasesTeatro.length)];
+        }
+
+        // Cargar frase aleatoria
+        document.getElementById('fraseTexto').textContent = getFraseAleatoria();
+        
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        if (user.role !== 'SUPER') {
+            Baco.UI.showError('Acceso denegado. Solo Super Usuarios.');
+            setTimeout(() => Baco.Auth.logout(), 2000);
+            return;
+        }
+
+        // Cargar nombre de usuario
+        const userName = user.nombre || user.name || 'Super Usuario';
+        document.getElementById('profileName').textContent = userName;
+        
+        // Cargar foto de perfil
+        const headerPhoto = document.getElementById('headerPhoto');
+        if (user.foto_url) {
+            headerPhoto.src = user.foto_url;
+        } else {
+            headerPhoto.src = Baco.Image.getPlaceholder(userName, 100);
+        }
+
+        // Cargar cumpleaños semanales
+        Baco.Birthdays.renderWeeklyBanner('birthdayBanner');
+
+        // Toggle menu perfil (GLOBAL)
+        window.toggleProfileMenu = function() {
+            const menu = document.getElementById('profileMenu');
+            menu.classList.toggle('active');
+        };
+
+        // Cerrar menú al hacer click fuera (pero NO si es un enlace externo)
+        document.addEventListener('click', (e) => {
+            const profileSection = document.querySelector('.profile-section');
+            const menu = document.getElementById('profileMenu');
+            
+            // Si el click es en un enlace <a> que NO es logout (href != "#"), dejar que navegue
+            const linkElement = e.target.closest('a.menu-item');
+            if (linkElement && linkElement.getAttribute('href') !== '#') {
+                // Es un enlace real (no logout), dejar que navegue sin cerrar menú
+                return;
+            }
+            
+            // Si el click es dentro de la sección de perfil, no hacer nada
+            // (dejar que los onclick manejen el cierre)
+            if (profileSection.contains(e.target)) {
+                return;
+            }
+            
+            // Si el click es fuera, cerrar el menú
+            menu.classList.remove('active');
+        });
+
+        // Modal foto (GLOBAL)
+        window.openPhotoModal = function() {
+            document.getElementById('photoModal').classList.add('active');
+            document.getElementById('profileMenu').classList.remove('active');
+        };
+
+        window.closePhotoModal = function() {
+            document.getElementById('photoModal').classList.remove('active');
+        };
+
+        window.previewPhoto = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            Baco.Image.previewImage(file, (dataUrl) => {
+                document.getElementById('photoPreview').src = dataUrl;
+            });
+        };
+
+        window.savePhoto = async function() {
+            const fileInput = document.getElementById('photoInput');
+            if (!fileInput.files[0]) {
+                Baco.UI.showError('Por favor selecciona una imagen');
+                return;
+            }
+
+            Baco.UI.showLoading('Subiendo foto...');
+
+            const formData = new FormData();
+            formData.append('photo', fileInput.files[0]);
+
+            try {
+                const response = await fetch('/api/users/photo', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${Baco.Auth.getToken()}`
+                    },
+                    body: formData
+                });
+
+                Baco.UI.hideLoading();
+
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('headerPhoto').src = data.photoUrl;
+                    closePhotoModal();
+                    Baco.UI.showSuccess('Foto actualizada correctamente');
+                    
+                    // Actualizar usuario en localStorage
+                    user.foto_url = data.photoUrl;
+                    localStorage.setItem('user', JSON.stringify(user));
+                } else {
+                    Baco.UI.showError('Error al subir la foto');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Baco.UI.hideLoading();
+                Baco.UI.showError('Error al actualizar la foto');
+            }
+        }
+
+        window.logout = async function() {
+            // Cerrar menú
+            document.getElementById('profileMenu').classList.remove('active');
+            
+            const confirmed = await Baco.UI.confirm(
+                '¿Estás seguro que querés cerrar sesión?',
+                '🎭 Hasta pronto',
+                'Sí, cerrar sesión'
+            );
+
+            if (confirmed) {
+                Baco.UI.showSuccess('Cerrando sesión...');
+                setTimeout(() => {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    window.location.href = '/index.html';
+                }, 1000);
+            }
+        };
+
+        // Cerrar modal con ESC
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closePhotoModal();
+            }
+        });
+        })();
+    </script>
+</body>
+</html>

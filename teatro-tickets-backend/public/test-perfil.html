@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Perfil</title>
+</head>
+<body>
+    <h1>Test de API de Perfil</h1>
+    <div id="status"></div>
+    <div id="data"></div>
+    <button onclick="testGet()">Test GET /users/me</button>
+    <button onclick="testUpdate()">Test UPDATE /users/me</button>
+    
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) {
+            document.getElementById('status').innerHTML = '<p style="color:red">No hay token. <a href="/login.html">Login</a></p>';
+        }
+        
+        async function testGet() {
+            try {
+                const res = await fetch('/api/users/me', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json();
+                document.getElementById('status').innerHTML = '<p style="color:green">GET OK</p>';
+                document.getElementById('data').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } catch(e) {
+                document.getElementById('status').innerHTML = '<p style="color:red">Error: ' + e.message + '</p>';
+            }
+        }
+        
+        async function testUpdate() {
+            try {
+                const res = await fetch('/api/users/me', {
+                    method: 'PUT',
+                    headers: { 
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: 'Super Usuario BACÓ Updated',
+                        email: 'updated@test.com'
+                    })
+                });
+                const data = await res.json();
+                document.getElementById('status').innerHTML = '<p style="color:green">UPDATE OK</p>';
+                document.getElementById('data').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } catch(e) {
+                document.getElementById('status').innerHTML = '<p style="color:red">Error: ' + e.message + '</p>';
+            }
+        }
+    </script>
+</body>
+</html>

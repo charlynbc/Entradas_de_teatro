@@ -99,6 +99,7 @@ async function startServer() {
 
     app.use('/api/auth', authRoutes);
     app.use('/api/usuarios', usersRoutes);
+    app.use('/api/users', usersRoutes); // Alias para compatibilidad con frontend
     app.use('/api/shows', showsRoutes);
     app.use('/api/tickets', ticketsRoutes);
     app.use('/api/reportes', reportesRoutes);

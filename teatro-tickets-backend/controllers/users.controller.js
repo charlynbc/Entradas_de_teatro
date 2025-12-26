@@ -1,4 +1,4 @@
-import { createUser, listUsers, listSellersWithStats, deleteUserByFlexibleId, listAllMembers as listMembersSvc, resetPasswordByFlexibleId } from '../services/users.service.js';
+import { createUser, listUsers, listSellersWithStats, deleteUserByFlexibleId, listAllMembers as listMembersSvc, resetPasswordByFlexibleId, getWeeklyBirthdaysService, getUserByCedula, updateUserByCedula } from '../services/users.service.js';
 
 export async function crearUsuario(req, res) {
   try {
@@ -133,5 +133,97 @@ export async function crearDirector(req, res) {
   } catch (error) {
     console.error('Error creando director:', error);
     res.status(error.status || 500).json({ error: error.message });
+  }
+}
+
+// Obtener cumpleaños de la semana actual
+export async function getWeeklyBirthdays(req, res) {
+  try {
+    const birthdays = await getWeeklyBirthdaysService();
+    res.json(birthdays);
+  } catch (error) {
+    console.error('Error obteniendo cumpleaños semanales:', error);
+    res.status(500).json({ error: error.message });
+  }
+}
+// Obtener perfil del usuario actual
+export async function getMe(req, res) {
+  try {
+    const cedula = req.user.cedula;
+    const user = await getUserByCedula(cedula);
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+    // No enviar el password_hash
+    const { password_hash, ...userData } = user;
+    res.json(userData);
+  } catch (error) {
+    console.error('Error obteniendo perfil:', error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
+// Actualizar perfil del usuario actual
+export async function updateMe(req, res) {
+  try {
+    const cedula = req.user.cedula;
+    const updateData = req.body;
+    
+    // No permitir cambiar role, cedula, active, etc
+    const allowedFields = ['name', 'nombre', 'email', 'telefono', 'foto_url', 'genero', 'fecha_nacimiento'];
+    const filteredData = {};
+    for (const key of allowedFields) {
+      if (updateData[key] !== undefined) {
+        filteredData[key] = updateData[key];
+      }
+    }
+    
+    const updated = await updateUserByCedula(cedula, filteredData);
+    if (!updated) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+    
+    const { password_hash, ...userData } = updated;
+    res.json(userData);
+  } catch (error) {
+    console.error('Error actualizando perfil:', error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
+// Cambiar contraseña del usuario actual
+export async function changePassword(req, res) {
+  try {
+    const cedula = req.user.cedula;
+    const { currentPassword, newPassword } = req.body;
+    
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Contraseña actual y nueva son requeridas' });
+    }
+    
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 6 caracteres' });
+    }
+    
+    // Verificar contraseña actual
+    const user = await getUserByCedula(cedula);
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+    
+    const bcrypt = (await import('bcrypt')).default;
+    const isValid = await bcrypt.compare(currentPassword, user.password_hash);
+    if (!isValid) {
+      return res.status(401).json({ error: 'Contraseña actual incorrecta' });
+    }
+    
+    // Actualizar contraseña
+    const newHash = await bcrypt.hash(newPassword, 10);
+    await updateUserByCedula(cedula, { password_hash: newHash });
+    
+    res.json({ ok: true, message: 'Contraseña actualizada correctamente' });
+  } catch (error) {
+    console.error('Error cambiando contraseña:', error);
+    res.status(500).json({ error: error.message });
   }
 }

@@ -190,3 +190,78 @@ export async function listAllMembers(currentRole) {
   );
   return result.rows;
 }
+
+/**
+ * Obtiene usuarios con cumpleaños en la semana actual (lunes a domingo)
+ */
+export async function getWeeklyBirthdaysService() {
+  // Calcular inicio y fin de la semana actual
+  const now = new Date();
+  const dayOfWeek = now.getDay(); // 0 = domingo, 1 = lunes, ...
+  const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Ajustar para que lunes sea el inicio
+  
+  const monday = new Date(now);
+  monday.setDate(now.getDate() + diff);
+  monday.setHours(0, 0, 0, 0);
+  
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
+
+  // Obtener todos los usuarios activos con fecha de nacimiento
+  const result = await query(
+    `SELECT 
+      cedula,
+      name as nombre,
+      role,
+      fecha_nacimiento,
+      genero
+    FROM users 
+    WHERE active = true 
+      AND fecha_nacimiento IS NOT NULL
+    ORDER BY name`
+  );
+
+  // Filtrar en JavaScript los que cumplen esta semana
+  const birthdays = result.rows.filter(user => {
+    const birth = new Date(user.fecha_nacimiento);
+    const thisBirthday = new Date(now.getFullYear(), birth.getMonth(), birth.getDate());
+    return thisBirthday >= monday && thisBirthday <= sunday;
+  });
+
+  return birthdays;
+}
+
+// Obtener un usuario por cédula
+export async function getUserByCedula(cedula) {
+  const result = await query(
+    'SELECT * FROM users WHERE cedula = $1 AND active = true',
+    [cedula]
+  );
+  return result.rows[0] || null;
+}
+
+// Actualizar un usuario por cédula
+export async function updateUserByCedula(cedula, data) {
+  const fields = [];
+  const values = [];
+  let idx = 1;
+  
+  for (const [key, value] of Object.entries(data)) {
+    if (value !== undefined) {
+      fields.push(`${key} = $${idx}`);
+      values.push(value);
+      idx++;
+    }
+  }
+  
+  if (fields.length === 0) {
+    return await getUserByCedula(cedula);
+  }
+  
+  values.push(cedula);
+  const sql = `UPDATE users SET ${fields.join(', ')} WHERE cedula = $${idx} RETURNING *`;
+  
+  const result = await query(sql, values);
+  return result.rows[0] || null;
+}

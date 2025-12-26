@@ -1,8 +1,16 @@
 import express from 'express';
-import { crearUsuario, listarUsuarios, listarVendedores, desactivarUsuario, listarMiembros, resetPassword, crearActor, crearDirector } from '../controllers/users.controller.js';
+import { crearUsuario, listarUsuarios, listarVendedores, desactivarUsuario, listarMiembros, resetPassword, crearActor, crearDirector, getWeeklyBirthdays, getMe, updateMe, changePassword } from '../controllers/users.controller.js';
 import { authenticate, requireRole } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
+
+// Perfil del usuario actual (debe ir ANTES de las rutas con parámetros)
+router.get('/me', authenticate, getMe);
+router.put('/me', authenticate, updateMe);
+router.post('/change-password', authenticate, changePassword);
+
+// Cumpleaños semanales - todos los roles autenticados
+router.get('/birthdays/weekly', authenticate, getWeeklyBirthdays);
 
 // Crear actores (vendedores) - ADMIN y SUPER
 router.post('/actores', authenticate, requireRole('ADMIN', 'SUPER'), crearActor);
