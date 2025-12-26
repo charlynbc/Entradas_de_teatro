@@ -662,36 +662,60 @@
         }
 
         async function uploadPhoto(file) {
+            console.log('📸 Iniciando upload de foto:', file.name, file.type, file.size);
             Baco.UI.showLoading('Subiendo foto...');
 
             try {
+                // Validar tipo de archivo
+                if (!file.type.startsWith('image/')) {
+                    throw new Error('El archivo debe ser una imagen');
+                }
+
+                // Validar tamaño (máximo 5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    throw new Error('La imagen no debe superar 5MB');
+                }
+
                 const base64 = await new Promise((resolve, reject) => {
                     const reader = new FileReader();
-                    reader.onload = () => resolve(reader.result);
+                    reader.onload = () => {
+                        console.log('✅ Archivo leído, tamaño base64:', reader.result.length);
+                        resolve(reader.result);
+                    };
                     reader.onerror = () => reject(new Error('No se pudo leer la imagen'));
                     reader.readAsDataURL(file);
                 });
 
+                console.log('🚀 Enviando imagen al servidor...');
                 const uploaded = await Baco.API.post('/upload/image', {
                     image: base64,
                     filename: file.name
                 });
 
+                console.log('📦 Respuesta del servidor:', uploaded);
+
                 if (!uploaded?.url) {
-                    throw new Error('No se pudo subir la imagen');
+                    throw new Error('El servidor no devolvió una URL válida');
                 }
 
+                console.log('💾 Actualizando perfil con foto:', uploaded.url);
                 await Baco.API.put('/users/me', { foto_url: uploaded.url });
 
                 Baco.UI.hideLoading();
                 Baco.UI.showSuccess('Foto actualizada correctamente');
 
+                // Actualizar UI
                 user.foto_url = uploaded.url;
                 localStorage.setItem('user', JSON.stringify(user));
+                
+                // Actualizar preview
+                document.getElementById('profilePhotoLarge').src = uploaded.url;
+                
+                console.log('✅ Foto actualizada exitosamente');
             } catch (error) {
-                console.error('Error:', error);
+                console.error('❌ Error completo:', error);
                 Baco.UI.hideLoading();
-                Baco.UI.showError('Error al actualizar la foto');
+                Baco.UI.showError(error.message || 'Error al actualizar la foto');
             }
         }
 

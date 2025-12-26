@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escanear Entradas - BACÓ</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/baco-common.css">
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <style>
+        .scanner-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        .scanner-box {
+            background: linear-gradient(135deg, var(--gris-oscuro), #252525);
+            border: 2px solid rgba(212, 175, 55, 0.3);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        #reader {
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .manual-input {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .manual-input input {
+            flex: 1;
+            padding: 15px;
+            background: rgba(26, 26, 26, 0.8);
+            border: 2px solid rgba(212, 175, 55, 0.3);
+            border-radius: 12px;
+            color: var(--blanco);
+            font-size: 1rem;
+        }
+
+        .manual-input input:focus {
+            outline: none;
+            border-color: var(--dorado);
+        }
+
+        .btn-validate {
+            padding: 15px 30px;
+            background: var(--dorado);
+            color: var(--negro);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-validate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4);
+        }
+
+        .result-box {
+            padding: 25px;
+            border-radius: 16px;
+            margin-top: 20px;
+            display: none;
+            animation: fadeInUp 0.4s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 2px solid #4CAF50;
+        }
+
+        .result-error {
+            background: rgba(244, 67, 54, 0.2);
+            border: 2px solid #F44336;
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .result-icon {
+            font-size: 3rem;
+        }
+
+        .result-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--blanco);
+        }
+
+        .ticket-details {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+
+        .ticket-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .ticket-row:last-child {
+            border-bottom: none;
+        }
+
+        .ticket-label {
+            color: rgba(248, 248, 248, 0.6);
+            font-size: 0.9rem;
+        }
+
+        .ticket-value {
+            color: var(--blanco);
+            font-weight: 600;
+        }
+
+        .estado-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .estado-pagado {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+            border: 1px solid #4CAF50;
+        }
+
+        .estado-usado {
+            background: rgba(158, 158, 158, 0.2);
+            color: #9E9E9E;
+            border: 1px solid #9E9E9E;
+        }
+
+        .estado-disponible {
+            background: rgba(33, 150, 243, 0.2);
+            color: #2196F3;
+            border: 1px solid #2196F3;
+        }
+
+        .btn-scan-again {
+            margin-top: 20px;
+            width: 100%;
+            padding: 15px;
+            background: rgba(212, 175, 55, 0.2);
+            border: 2px solid var(--dorado);
+            color: var(--dorado);
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-scan-again:hover {
+            background: var(--dorado);
+            color: var(--negro);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content" style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <a href="/admin-dashboard.html" style="color: var(--dorado); text-decoration: none; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-arrow-left"></i>
+                    Volver
+                </a>
+                <div style="font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 900; background: linear-gradient(135deg, var(--dorado), #F4E3B5); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    BACÓ
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="scanner-container">
+        <div class="scanner-box">
+            <h2 style="font-family: 'Playfair Display', serif; color: var(--dorado); font-size: 2rem; margin-bottom: 10px;">
+                <i class="fas fa-qrcode"></i> Escanear Entrada
+            </h2>
+            <p style="color: rgba(248, 248, 248, 0.7); margin-bottom: 25px;">
+                Apunta la cámara al código QR de la entrada o ingresa el código manualmente
+            </p>
+
+            <!-- Escáner QR -->
+            <div id="reader"></div>
+
+            <!-- Entrada manual -->
+            <div class="manual-input">
+                <input type="text" id="manualCode" placeholder="O ingresa el código manualmente (ej: T-ABC123)">
+                <button class="btn-validate" onclick="validateManual()">
+                    <i class="fas fa-check"></i> Validar
+                </button>
+            </div>
+        </div>
+
+        <!-- Resultado -->
+        <div id="resultBox" class="result-box">
+            <div class="result-header">
+                <div class="result-icon" id="resultIcon"></div>
+                <div>
+                    <div class="result-title" id="resultTitle"></div>
+                    <p id="resultMessage" style="color: rgba(248, 248, 248, 0.8); margin: 5px 0 0 0;"></p>
+                </div>
+            </div>
+
+            <div id="ticketDetails" class="ticket-details" style="display: none;">
+                <div class="ticket-row">
+                    <span class="ticket-label">Código:</span>
+                    <span class="ticket-value" id="ticketCode">-</span>
+                </div>
+                <div class="ticket-row">
+                    <span class="ticket-label">Obra:</span>
+                    <span class="ticket-value" id="ticketObra">-</span>
+                </div>
+                <div class="ticket-row">
+                    <span class="ticket-label">Fecha:</span>
+                    <span class="ticket-value" id="ticketFecha">-</span>
+                </div>
+                <div class="ticket-row">
+                    <span class="ticket-label">Estado:</span>
+                    <span id="ticketEstado">-</span>
+                </div>
+                <div class="ticket-row">
+                    <span class="ticket-label">Vendedor:</span>
+                    <span class="ticket-value" id="ticketVendedor">-</span>
+                </div>
+            </div>
+
+            <button class="btn-scan-again" onclick="scanAgain()">
+                <i class="fas fa-redo"></i> Escanear otra entrada
+            </button>
+        </div>
+    </div>
+
+    <script src="/js/baco-common.js"></script>
+    <script>
+        if (!Baco.Auth.requireAuth()) {
+            window.location.href = '/login.html';
+        }
+
+        let html5QrCode;
+        let isScanning = false;
+
+        // Inicializar escáner
+        function initScanner() {
+            // Verificar si la librería está disponible
+            if (typeof Html5Qrcode === 'undefined') {
+                console.warn('Html5Qrcode no disponible, usando solo entrada manual');
+                document.getElementById('reader').innerHTML = '<p style="color: rgba(248,248,248,0.6); text-align: center; padding: 20px;">Escáner de cámara no disponible. Usa entrada manual.</p>';
+                return;
+            }
+
+            html5QrCode = new Html5Qrcode("reader");
+            
+            html5QrCode.start(
+                { facingMode: "environment" },
+                {
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 }
+                },
+                onScanSuccess,
+                onScanError
+            ).catch(err => {
+                console.error('Error iniciando escáner:', err);
+                document.getElementById('reader').innerHTML = '<p style="color: rgba(248,248,248,0.6); text-align: center; padding: 20px;">No se pudo acceder a la cámara. Usa entrada manual.</p>';
+                Baco.UI.showError('No se pudo acceder a la cámara. Usa entrada manual.');
+            });
+
+            isScanning = true;
+        }
+
+        function onScanSuccess(decodedText, decodedResult) {
+            if (!isScanning) return;
+            
+            console.log('QR detectado:', decodedText);
+            stopScanner();
+            validateTicket(decodedText);
+        }
+
+        function onScanError(errorMessage) {
+            // Silenciar errores de escaneo continuo
+        }
+
+        function stopScanner() {
+            if (html5QrCode && isScanning) {
+                html5QrCode.stop().catch(err => console.error('Error deteniendo escáner:', err));
+                isScanning = false;
+            }
+        }
+
+        function validateManual() {
+            const code = document.getElementById('manualCode').value.trim();
+            if (!code) {
+                Baco.UI.showError('Ingresa un código');
+                return;
+            }
+            stopScanner();
+            validateTicket(code);
+        }
+
+        async function validateTicket(code) {
+            Baco.UI.showLoading('Validando entrada...');
+            
+            try {
+                const result = await Baco.API.get(`/tickets/validar/${code}`);
+                
+                Baco.UI.hideLoading();
+                showResult(result);
+            } catch (error) {
+                Baco.UI.hideLoading();
+                showResult({
+                    ok: false,
+                    message: error.message || 'Error al validar la entrada'
+                });
+            }
+        }
+
+        function showResult(result) {
+            const resultBox = document.getElementById('resultBox');
+            const resultIcon = document.getElementById('resultIcon');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultMessage = document.getElementById('resultMessage');
+            const ticketDetails = document.getElementById('ticketDetails');
+
+            // Mostrar caja de resultado
+            resultBox.style.display = 'block';
+            resultBox.className = 'result-box ' + (result.ok ? 'result-success' : 'result-error');
+
+            // Icono y título
+            if (result.ok) {
+                resultIcon.textContent = '✅';
+                resultTitle.textContent = 'ENTRADA VÁLIDA';
+            } else {
+                resultIcon.textContent = '❌';
+                resultTitle.textContent = 'ENTRADA RECHAZADA';
+            }
+
+            resultMessage.textContent = result.message || '';
+
+            // Detalles del ticket
+            if (result.ticket) {
+                ticketDetails.style.display = 'block';
+                document.getElementById('ticketCode').textContent = result.ticket.code || '-';
+                document.getElementById('ticketObra').textContent = result.ticket.obra || '-';
+                
+                if (result.ticket.fecha) {
+                    const fecha = new Date(result.ticket.fecha);
+                    document.getElementById('ticketFecha').textContent = fecha.toLocaleString('es-UY');
+                }
+
+                // Estado con badge
+                const estadoBadge = document.getElementById('ticketEstado');
+                const estado = result.ticket.estado || 'DISPONIBLE';
+                estadoBadge.innerHTML = `<span class="estado-badge estado-${estado.toLowerCase()}">${estado}</span>`;
+
+                document.getElementById('ticketVendedor').textContent = result.ticket.vendedor_nombre || 'Sin asignar';
+            } else {
+                ticketDetails.style.display = 'none';
+            }
+
+            // Scroll al resultado
+            resultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function scanAgain() {
+            document.getElementById('resultBox').style.display = 'none';
+            document.getElementById('manualCode').value = '';
+            initScanner();
+        }
+
+        // Iniciar automáticamente
+        window.addEventListener('load', () => {
+            initScanner();
+        });
+
+        // Limpiar al salir
+        window.addEventListener('beforeunload', () => {
+            stopScanner();
+        });
+    </script>
+</body>
+</html>

@@ -63,17 +63,75 @@ export async function generarQR(req, res) {
 export async function validarTicket(req, res) {
   try {
     const { code } = req.params;
-    const result = await query('SELECT * FROM tickets WHERE code = $1', [code]);
+    
+    // Obtener ticket con información completa (JOIN con función y vendedor)
+    const result = await query(`
+      SELECT 
+        t.*,
+        f.titulo as obra,
+        f.fecha,
+        u.nombre as vendedor_nombre
+      FROM tickets t
+      LEFT JOIN funciones f ON t.funcion_id = f.id
+      LEFT JOIN usuarios u ON t.vendedor_cedula = u.cedula
+      WHERE t.code = $1
+    `, [code]);
+    
     const ticket = result.rows[0];
+    
     if (!ticket) {
-      return res.status(404).json({ ok: false, mensaje: 'Ticket no encontrado o inválido' });
+      return res.status(404).json({ 
+        ok: false, 
+        message: 'Código no encontrado',
+        mensaje: 'Ticket no encontrado o inválido'
+      });
     }
+    
     if (ticket.estado === 'USADO') {
-      return res.json({ ok: false, mensaje: 'Ticket ya fue usado' });
+      return res.json({ 
+        ok: false, 
+        message: 'Esta entrada ya fue usada anteriormente',
+        mensaje: 'Ticket ya fue usado',
+        ticket: {
+          code: ticket.code,
+          obra: ticket.obra,
+          fecha: ticket.fecha,
+          estado: ticket.estado,
+          vendedor_nombre: ticket.vendedor_nombre
+        }
+      });
     }
+    
+    if (ticket.estado === 'DISPONIBLE') {
+      return res.json({
+        ok: false,
+        message: 'Esta entrada no ha sido vendida',
+        mensaje: 'Ticket no vendido',
+        ticket: {
+          code: ticket.code,
+          obra: ticket.obra,
+          fecha: ticket.fecha,
+          estado: ticket.estado,
+          vendedor_nombre: ticket.vendedor_nombre
+        }
+      });
+    }
+    
+    // Marcar como usado
     try {
       await query('UPDATE tickets SET estado = $1, usado_at = NOW() WHERE code = $2', ['USADO', code]);
-      res.json({ ok: true, mensaje: 'Ticket validado con éxito', ticket: { ...ticket, estado: 'USADO' } });
+      res.json({ 
+        ok: true, 
+        message: '¡Entrada válida! Puede ingresar',
+        mensaje: 'Ticket validado con éxito', 
+        ticket: { 
+          code: ticket.code,
+          obra: ticket.obra,
+          fecha: ticket.fecha,
+          estado: 'USADO',
+          vendedor_nombre: ticket.vendedor_nombre
+        } 
+      });
     } catch (e) {
       console.error('Update ticket failed:', e);
       return res.status(500).json({ ok: false, error: 'Error actualizando ticket' });
