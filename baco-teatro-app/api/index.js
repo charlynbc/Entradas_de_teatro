@@ -90,101 +90,38 @@ export async function updateMyProfile(payload) {
 
 export async function getSuperDashboard() {
   requireRole(['SUPER']);
-  try {
-    const response = await request('/api/super/dashboard');
-    return response;
-  } catch (error) {
-    console.log('Backend no disponible, usando datos vacíos');
-    // Retornar estructura vacía en lugar de datos mock
-    return {
-      totals: {
-        productions: 0,
-        functions: 0,
-        tickets: 0,
-        sold: 0,
-        attendees: 0,
-      },
-      upcomingShows: [],
-      alerts: [],
-    };
-  }
+  return mock.getSuperDashboard();
 }
 
 export async function listDirectors() {
   requireRole(['SUPER']);
-  try {
-    const response = await request('/api/usuarios?role=ADMIN');
-    return response;
-  } catch (error) {
-    console.log('Backend no disponible, retornando lista vacía');
-    return [];
-  }
+  // TODO: Implementar backend /api/usuarios?role=ADMIN
+  return mock.listDirectors();
 }
 
 export async function createDirector(payload) {
   requireRole(['SUPER']);
-  try {
-    const response = await request('/api/usuarios', { method: 'POST', body: payload });
-    return response;
-  } catch (error) {
-    console.error('Error creando director:', error);
-    throw error;
-  }
+  return mock.createDirector(payload);
 }
 
 export async function resetDirectorPassword(cedula) {
   requireRole(['SUPER']);
-  try {
-    const response = await request(`/api/usuarios/${cedula}/reset-password`, { method: 'POST' });
-    return response;
-  } catch (error) {
-    console.error('Error reseteando contraseña:', error);
-    throw error;
-  }
+  return mock.resetDirectorPassword(cedula);
 }
 
 export async function deleteDirector(cedula) {
   requireRole(['SUPER']);
-  try {
-    const response = await request('DELETE', `/users/${cedula}`);
-    return response;
-  } catch (error) {
-    console.error('Error eliminando director:', error);
-    throw error;
-  }
+  return mock.deleteDirector(cedula);
 }
 
 export async function listProductions() {
   requireRole(['SUPER']);
-  try {
-    const response = await request('/api/obras');
-    return response;
-  } catch (error) {
-    console.log('Backend no disponible, retornando lista vacía');
-    return [];
-  }
+  return mock.listProductions();
 }
 
 export async function createProduction(payload) {
   requireRole(['SUPER']);
-  try {
-    const response = await request('/api/obras', { method: 'POST', body: payload });
-    return response;
-  } catch (error) {
-    console.error('Error creando producción:', error);
-    throw error;
-  }
-}
-
-export async function deleteProduction(id) {
-  requireRole(['SUPER', 'ADMIN']);
-  try {
-    const response = await request('DELETE', `/shows/${id}`);
-    return response;
-  } catch (error) {
-    console.error('Error eliminando obra:', error);
-    throw error;
-  }
+  return mock.createProduction(payload);
 }
 
 export async function listVendors() {
@@ -279,13 +216,7 @@ export function getCurrentUser() {
 
 export async function deleteVendor(cedula) {
   requireRole(['SUPER', 'ADMIN']);
-  try {
-    const response = await request('DELETE', `/users/${cedula}`);
-    return response;
-  } catch (error) {
-    console.error('Error eliminando vendedor:', error);
-    throw error;
-  }
+  return mock.deleteVendor(cedula);
 }
 
 // --- New Features ---
@@ -320,10 +251,10 @@ export async function getActorSchedule() {
 export async function getPublicShows() {
   try {
     const shows = await request('/api/shows');
-    // Return empty array if no shows, DO NOT fallback to mock in production
+    // If backend returns empty array, fall back to mock data
     if (!shows || shows.length === 0) {
-      console.log('No hay funciones disponibles en este momento');
-      return [];
+      console.warn('Backend returned empty shows, falling back to mock');
+      return mock.getPublicShows();
     }
     return shows.map(s => ({
       id: s.id,
@@ -333,9 +264,8 @@ export async function getPublicShows() {
       imagen: 'https://images.unsplash.com/photo-1507676184212-d03816a97f81?auto=format&fit=crop&w=500&q=80' // Placeholder
     }));
   } catch (error) {
-    console.error('Error conectando con backend:', error);
-    // Return empty array instead of mock data
-    return [];
+    console.warn('Backend getPublicShows failed, falling back to mock', error);
+    return mock.getPublicShows();
   }
 }
 
@@ -345,117 +275,4 @@ export async function getPublicShowDetails(showId) {
 
 export async function guestReserveTicket(payload) {
   return mock.guestReserveTicket(payload);
-}
-
-// Reportes de obras
-export async function generarReporteObra(showId) {
-  requireRole(['ADMIN', 'SUPER']);
-  try {
-    const response = await request('POST', `/reportes-obras/generar/${showId}`);
-    return response;
-  } catch (error) {
-    console.error('Error generando reporte:', error);
-    throw error;
-  }
-}
-
-export async function listarReportesObras() {
-  requireRole(['ADMIN', 'SUPER']);
-  try {
-    const response = await request('GET', '/reportes-obras');
-    return response.reportes || [];
-  } catch (error) {
-    console.error('Error listando reportes:', error);
-    throw error;
-  }
-}
-
-export async function obtenerReporteObra(reporteId) {
-  requireRole(['ADMIN', 'SUPER']);
-  try {
-    const response = await request('GET', `/reportes-obras/${reporteId}`);
-    return response.reporte;
-  } catch (error) {
-    console.error('Error obteniendo reporte:', error);
-    throw error;
-  }
-}
-
-export async function eliminarReporteObra(reporteId) {
-  requireRole(['ADMIN', 'SUPER']);
-  try {
-    const response = await request('DELETE', `/reportes-obras/${reporteId}`);
-    return response;
-  } catch (error) {
-    console.error('Error eliminando reporte:', error);
-    throw error;
-  }
-}
-
-// Ensayos Generales
-export async function crearEnsayo(ensayoData) {
-  requireRole(['ADMIN', 'SUPER']);
-  try {
-    const response = await request('POST', '/ensayos', ensayoData);
-    return response;
-  } catch (error) {
-    console.error('Error creando ensayo:', error);
-    throw error;
-  }
-}
-
-export async function listarEnsayos() {
-  requireUser();
-  try {
-    const response = await request('GET', '/ensayos');
-    return response || [];
-  } catch (error) {
-    console.error('Error listando ensayos:', error);
-    throw error;
-  }
-}
-
-export async function obtenerEnsayo(ensayoId) {
-  requireUser();
-  try {
-    const response = await request('GET', `/ensayos/${ensayoId}`);
-    return response;
-  } catch (error) {
-    console.error('Error obteniendo ensayo:', error);
-    throw error;
-  }
-}
-
-export async function actualizarEnsayo(ensayoId, ensayoData) {
-  requireRole(['ADMIN', 'SUPER']);
-  try {
-    const response = await request('PUT', `/ensayos/${ensayoId}`, ensayoData);
-    return response;
-  } catch (error) {
-    console.error('Error actualizando ensayo:', error);
-    throw error;
-  }
-}
-
-export async function eliminarEnsayo(ensayoId) {
-  requireRole(['ADMIN', 'SUPER']);
-  try {
-    const response = await request('DELETE', `/ensayos/${ensayoId}`);
-    return response;
-  } catch (error) {
-    console.error('Error eliminando ensayo:', error);
-    throw error;
-  }
-}
-
-// Miembros del elenco
-export async function listarMiembros() {
-  requireUser();
-  try {
-    const response = await request('GET', '/usuarios/miembros');
-    return response || [];
-  } catch (error) {
-    console.error('Error listando miembros:', error);
-    throw error;
-  }
 }

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Administración - Teatro{% endblock %}
+
+{% block content %}
+<h2>Panel de Administración</h2>
+
+<div class="action-buttons" style="margin: 20px 0;">
+    <a href="/admin/evento/nuevo" class="btn btn-success">➕ Crear Evento</a>
+    <a href="/admin/usuarios" class="btn">👥 Usuarios</a>
+    <a href="/admin/ventas" class="btn">📊 Ventas</a>
+</div>
+
+<div class="card">
+    <h3>Eventos</h3>
+    {% if eventos %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Fecha</th>
+                <th>Lugar</th>
+                <th>Precio</th>
+                <th>Disponibles</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for evento in eventos %}
+            <tr>
+                <td>{{ evento.id }}</td>
+                <td>{{ evento.nombre }}</td>
+                <td>{{ evento.fecha }} {{ evento.hora }}</td>
+                <td>{{ evento.lugar }}</td>
+                <td>${{ "%.2f"|format(evento.precio) }}</td>
+                <td>{{ evento.entradas_disponibles }}</td>
+                <td>
+                    <a href="/admin/evento/editar/{{ evento.id }}" class="btn btn-small">Editar</a>
+                    <a href="/admin/evento/eliminar/{{ evento.id }}" class="btn btn-small btn-danger" onclick="return confirm('¿Está seguro?')">Eliminar</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No hay eventos.</p>
+    {% endif %}
+</div>
+{% endblock %}

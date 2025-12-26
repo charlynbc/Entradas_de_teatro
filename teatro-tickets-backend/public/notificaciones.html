@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centro de Notificaciones | BACÓ</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/baco-common.css">
+    <style>
+        :root {
+            --negro: #0a0a0a;
+            --bordo: #8B1538;
+            --dorado: #D4AF37;
+            --blanco: #F8F8F8;
+            --gris-oscuro: #1a1a1a;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--negro) 0%, #0f0f0f 50%, var(--negro) 100%);
+            color: var(--blanco);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            animation: fadeIn 0.6s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .back-btn {
+            background: linear-gradient(135deg, var(--gris-oscuro), #252525);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            color: var(--dorado);
+            padding: 12px 18px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        
+        .back-btn:hover {
+            background: linear-gradient(135deg, #252525, var(--gris-oscuro));
+            border-color: var(--dorado);
+            box-shadow: 0 4px 20px rgba(212, 175, 55, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .header-title {
+            flex: 1;
+        }
+        
+        .header-title h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--dorado), #f4d03f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 5px;
+        }
+        
+        .header-title p {
+            color: rgba(248, 248, 248, 0.6);
+            font-size: 0.95rem;
+        }
+        
+        .create-notification-btn {
+            background: linear-gradient(135deg, var(--dorado), #f4d03f);
+            color: var(--negro);
+            border: none;
+            padding: 14px 28px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .create-notification-btn:hover {
+            box-shadow: 0 6px 25px rgba(212, 175, 55, 0.5);
+            transform: translateY(-2px);
+        }
+        
+        /* Filters */
+        .filters {
+            background: linear-gradient(135deg, var(--gris-oscuro), #1f1f1f);
+            border: 1px solid rgba(212, 175, 55, 0.15);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .filter-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--dorado);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .filter-group select,
+        .filter-group input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(26, 26, 26, 0.8);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 10px;
+            color: var(--blanco);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+        
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: var(--dorado);
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
+        }
+        
+        /* Notifications List */
+        .notifications-container {
+            background: linear-gradient(135deg, var(--gris-oscuro), #1f1f1f);
+            border: 1px solid rgba(212, 175, 55, 0.15);
+            border-radius: 16px;
+            padding: 0;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+        
+        .notification-item {
+            padding: 20px 25px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .notification-item:hover {
+            background: rgba(212, 175, 55, 0.05);
+        }
+        
+        .notification-item.unread {
+            background: rgba(139, 21, 56, 0.1);
+            border-left: 4px solid var(--dorado);
+        }
+        
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+        
+        .notification-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--bordo), #a01545);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            color: var(--dorado);
+            flex-shrink: 0;
+        }
+        
+        .notification-content {
+            flex: 1;
+        }
+        
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .notification-title {
+            font-weight: 600;
+            color: var(--blanco);
+            font-size: 1rem;
+        }
+        
+        .notification-date {
+            font-size: 0.85rem;
+            color: rgba(248, 248, 248, 0.5);
+        }
+        
+        .notification-message {
+            color: rgba(248, 248, 248, 0.8);
+            line-height: 1.6;
+            font-size: 0.95rem;
+            margin-bottom: 10px;
+        }
+        
+        .notification-meta {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .meta-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: rgba(212, 175, 55, 0.15);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: var(--dorado);
+            font-weight: 500;
+        }
+        
+        .notification-actions {
+            display: flex;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        
+        .action-btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .action-btn.mark-read {
+            background: rgba(212, 175, 55, 0.2);
+            color: var(--dorado);
+        }
+        
+        .action-btn.mark-read:hover {
+            background: rgba(212, 175, 55, 0.3);
+        }
+        
+        .action-btn.delete {
+            background: rgba(139, 21, 56, 0.2);
+            color: var(--bordo);
+        }
+        
+        .action-btn.delete:hover {
+            background: rgba(139, 21, 56, 0.4);
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+        }
+        
+        .empty-state i {
+            font-size: 5rem;
+            color: rgba(212, 175, 55, 0.3);
+            margin-bottom: 20px;
+        }
+        
+        .empty-state h3 {
+            font-family: 'Playfair Display', serif;
+            color: var(--dorado);
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+        
+        .empty-state p {
+            color: rgba(248, 248, 248, 0.6);
+            font-size: 1rem;
+        }
+        
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal-overlay.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: linear-gradient(135deg, var(--gris-oscuro), #1f1f1f);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+        }
+        
+        .modal-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            color: var(--dorado);
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            color: var(--dorado);
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 14px 18px;
+            background: rgba(26, 26, 26, 0.8);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 10px;
+            color: var(--blanco);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--dorado);
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 150px;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--dorado), #f4d03f);
+            color: var(--negro);
+        }
+        
+        .btn-primary:hover {
+            box-shadow: 0 6px 25px rgba(212, 175, 55, 0.5);
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--gris-oscuro), #252525);
+            color: var(--blanco);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+        
+        .btn-secondary:hover {
+            border-color: var(--dorado);
+            box-shadow: 0 4px 20px rgba(212, 175, 55, 0.3);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .header-title h1 {
+                font-size: 2rem;
+            }
+            
+            .filters {
+                flex-direction: column;
+            }
+            
+            .notification-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .notification-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <a href="admin-dashboard.html" class="back-btn">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Volver</span>
+                </a>
+                <div class="header-title">
+                    <h1>Centro de Notificaciones</h1>
+                    <p>Comunicación centralizada del sistema BACÓ</p>
+                </div>
+            </div>
+            <button class="create-notification-btn" onclick="openCreateModal()">
+                <i class="fas fa-plus-circle"></i>
+                Nueva Notificación
+            </button>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-group">
+                <label><i class="fas fa-filter"></i> Estado</label>
+                <select id="filterStatus" onchange="applyFilters()">
+                    <option value="all">Todas</option>
+                    <option value="unread">No leídas</option>
+                    <option value="read">Leídas</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label><i class="fas fa-tag"></i> Destinatario</label>
+                <select id="filterRecipient" onchange="applyFilters()">
+                    <option value="all">Todos</option>
+                    <option value="global">Global</option>
+                    <option value="grupo">Por Grupo</option>
+                    <option value="role">Por Rol</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label><i class="fas fa-calendar"></i> Fecha</label>
+                <input type="date" id="filterDate" onchange="applyFilters()">
+            </div>
+        </div>
+
+        <!-- Notifications List -->
+        <div class="notifications-container" id="notificationsContainer">
+            <div class="empty-state">
+                <i class="fas fa-bell-slash"></i>
+                <h3>Cargando notificaciones...</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Create Notification -->
+    <div class="modal-overlay" id="createModal">
+        <div class="modal-content">
+            <h2 class="modal-title">Nueva Notificación</h2>
+            
+            <form id="notificationForm">
+                <div class="form-group">
+                    <label><i class="fas fa-heading"></i> Título *</label>
+                    <input type="text" id="notifTitle" required placeholder="Ej: Ensayo cancelado">
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-align-left"></i> Mensaje *</label>
+                    <textarea id="notifMessage" required placeholder="Escriba el contenido de la notificación..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-users"></i> Destinatario *</label>
+                    <select id="notifRecipient" required onchange="handleRecipientChange()">
+                        <option value="">Seleccione...</option>
+                        <option value="global">📢 Global (Todos los usuarios)</option>
+                        <option value="grupo">🎭 Grupo Específico</option>
+                        <option value="role">👥 Por Rol</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="grupoSelectGroup" style="display: none;">
+                    <label><i class="fas fa-theater-masks"></i> Seleccionar Grupo</label>
+                    <select id="notifGrupo">
+                        <option value="">Cargando grupos...</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="roleSelectGroup" style="display: none;">
+                    <label><i class="fas fa-user-tag"></i> Seleccionar Rol</label>
+                    <select id="notifRole">
+                        <option value="ADMIN">Directores (ADMIN)</option>
+                        <option value="VENDEDOR">Actores (VENDEDOR)</option>
+                        <option value="SUPER">Super Usuarios</option>
+                    </select>
+                </div>
+                
+                <div class="modal-buttons">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Enviar
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="closeCreateModal()">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let notificaciones = [];
+        let grupos = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNotifications();
+            loadGrupos();
+        });
+
+        async function loadNotifications() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/notificaciones', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    notificaciones = await response.json();
+                    renderNotifications();
+                } else {
+                    renderEmptyState('Error al cargar notificaciones');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                renderEmptyState('Error de conexión');
+            }
+        }
+
+        async function loadGrupos() {
+            try {
+                const response = await fetch('/api/grupos');
+                if (response.ok) {
+                    grupos = await response.json();
+                    const select = document.getElementById('notifGrupo');
+                    select.innerHTML = '<option value="">Seleccione un grupo...</option>' +
+                        grupos.map(g => `<option value="${g.id}">${g.nombre}</option>`).join('');
+                }
+            } catch (error) {
+                console.error('Error loading grupos:', error);
+            }
+        }
+
+        function renderNotifications() {
+            const container = document.getElementById('notificationsContainer');
+            
+            if (notificaciones.length === 0) {
+                renderEmptyState('No hay notificaciones');
+                return;
+            }
+            
+            container.innerHTML = notificaciones.map(notif => `
+                <div class="notification-item ${notif.leida ? '' : 'unread'}">
+                    <div class="notification-icon">
+                        <i class="fas ${getIconForType(notif.tipo)}"></i>
+                    </div>
+                    <div class="notification-content">
+                        <div class="notification-header">
+                            <div class="notification-title">${notif.titulo}</div>
+                            <div class="notification-date">${formatDate(notif.fecha)}</div>
+                        </div>
+                        <div class="notification-message">${notif.mensaje}</div>
+                        <div class="notification-meta">
+                            <span class="meta-badge"><i class="fas fa-${notif.destinatario === 'global' ? 'globe' : notif.destinatario === 'grupo' ? 'users' : 'user-tag'}"></i> ${notif.destinatario_nombre || notif.destinatario}</span>
+                            ${!notif.leida ? '<span class="meta-badge"><i class="fas fa-circle"></i> Nueva</span>' : ''}
+                        </div>
+                    </div>
+                    <div class="notification-actions">
+                        ${!notif.leida ? `
+                            <button class="action-btn mark-read" onclick="markAsRead(${notif.id})">
+                                <i class="fas fa-check"></i> Marcar leída
+                            </button>
+                        ` : ''}
+                        <button class="action-btn delete" onclick="deleteNotification(${notif.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderEmptyState(message) {
+            document.getElementById('notificationsContainer').innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-bell-slash"></i>
+                    <h3>${message}</h3>
+                    <p>Cuando haya notificaciones, aparecerán aquí</p>
+                </div>
+            `;
+        }
+
+        function getIconForType(tipo) {
+            const icons = {
+                'global': 'bullhorn',
+                'grupo': 'users',
+                'role': 'user-tag',
+                'info': 'info-circle',
+                'warning': 'exclamation-triangle',
+                'success': 'check-circle'
+            };
+            return icons[tipo] || 'bell';
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            const hours = Math.floor(diff / 3600000);
+            
+            if (hours < 1) return 'Hace un momento';
+            if (hours < 24) return `Hace ${hours}h`;
+            if (hours < 48) return 'Ayer';
+            
+            return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+        }
+
+        function applyFilters() {
+            const status = document.getElementById('filterStatus').value;
+            const recipient = document.getElementById('filterRecipient').value;
+            const date = document.getElementById('filterDate').value;
+            
+            let filtered = notificaciones;
+            
+            if (status !== 'all') {
+                filtered = filtered.filter(n => {
+                    if (status === 'unread') return !n.leida;
+                    if (status === 'read') return n.leida;
+                    return true;
+                });
+            }
+            
+            if (recipient !== 'all') {
+                filtered = filtered.filter(n => n.destinatario === recipient);
+            }
+            
+            if (date) {
+                filtered = filtered.filter(n => {
+                    const notifDate = new Date(n.fecha).toISOString().split('T')[0];
+                    return notifDate === date;
+                });
+            }
+            
+            notificaciones = filtered;
+            renderNotifications();
+        }
+
+        async function markAsRead(id) {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`/api/notificaciones/${id}/read`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    loadNotifications();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function deleteNotification(id) {
+            if (!confirm('¿Eliminar esta notificación?')) return;
+            
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`/api/notificaciones/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    loadNotifications();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        // Modal functions
+        function openCreateModal() {
+            document.getElementById('createModal').classList.add('active');
+        }
+
+        function closeCreateModal() {
+            document.getElementById('createModal').classList.remove('active');
+            document.getElementById('notificationForm').reset();
+            document.getElementById('grupoSelectGroup').style.display = 'none';
+            document.getElementById('roleSelectGroup').style.display = 'none';
+        }
+
+        function handleRecipientChange() {
+            const recipient = document.getElementById('notifRecipient').value;
+            document.getElementById('grupoSelectGroup').style.display = recipient === 'grupo' ? 'block' : 'none';
+            document.getElementById('roleSelectGroup').style.display = recipient === 'role' ? 'block' : 'none';
+        }
+
+        document.getElementById('notificationForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const data = {
+                titulo: document.getElementById('notifTitle').value,
+                mensaje: document.getElementById('notifMessage').value,
+                destinatario: document.getElementById('notifRecipient').value,
+                grupo_id: document.getElementById('notifGrupo').value || null,
+                role: document.getElementById('notifRole').value || null
+            };
+            
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/notificaciones', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    alert('Notificación enviada exitosamente');
+                    closeCreateModal();
+                    loadNotifications();
+                } else {
+                    alert('Error al enviar notificación');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error de conexión');
+            }
+        });
+
+        // Close modal on outside click
+        document.getElementById('createModal').addEventListener('click', (e) => {
+            if (e.target.id === 'createModal') {
+                closeCreateModal();
+            }
+        });
+    </script>
+    <script src="/js/baco-common.js"></script>
+</body>
+</html>

@@ -5,8 +5,17 @@
   "main": "index-v3-postgres.js",
   "type": "module",
   "scripts": {
+    "db:seed-minimo": "node ../scripts/seed-minimo.js",
     "start": "node index-v3-postgres.js",
-    "dev": "node index-v3-postgres.js",
+    "dev": "nodemon --watch . --ext js,json --exec \"node index-v3-postgres.js\"",
+    "reload": "pkill -f \"node index-v3-postgres.js\" || true && NODE_ENV=development node index-v3-postgres.js & echo $! > /tmp/backend.pid",
+    "stop": "test -f /tmp/backend.pid && kill $(cat /tmp/backend.pid) || pkill -f \"node index-v3-postgres.js\" || true",
+    "status": "ps aux | grep \"node index-v3-postgres.js\" | grep -v grep || true",
+    "debug": "export DATABASE_URL=postgres://postgres:postgres@localhost:5432/teatro && node --inspect=9229 index-v3-postgres.js",
+    "db:migrate-phone-fk": "node scripts/migrate-phone-fk.js",
+    "ts:check": "tsc -p tsconfig.json --noEmit",
+    "ts:build": "tsc -p tsconfig.json",
+    "ts:dev": "tsx watch src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -23,9 +32,19 @@
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
-    "node-fetch": "^3.3.2",
+    "node-fetch": "^2.7.0",
     "pdfkit": "^0.17.2",
     "pg": "^8.16.3",
     "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/node": "^22.7.4",
+    "@types/pg": "^8.11.6",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.3"
   }
 }

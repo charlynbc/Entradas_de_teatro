@@ -10,7 +10,7 @@ import Toast from '../../components/Toast';
 import colors from '../../theme/colors';
 import { listarEnsayos, crearEnsayo, eliminarEnsayo, listarVendedores } from '../../api';
 import { useAuth } from '../../contexts/AuthContext';
-import useToast from '../../hooks/useToast';
+import { useToast } from '../../hooks/useToast';
 
 export default function EnsayosGeneralesScreen({ navigation }) {
   const [ensayos, setEnsayos] = useState([]);
@@ -134,7 +134,7 @@ export default function EnsayosGeneralesScreen({ navigation }) {
               <View style={styles.actoresList}>
                 <Ionicons name="people-outline" size={14} color={colors.secondary} />
                 <Text style={styles.actoresText}>
-                  {actores.map(a => a.nombre).join(', ')}
+                  {actores.map(a => a.name).join(', ')}
                 </Text>
               </View>
             )}
@@ -291,7 +291,7 @@ export default function EnsayosGeneralesScreen({ navigation }) {
                       styles.actorChipText,
                       formData.actores.includes(vendedor.id) && styles.actorChipTextSelected
                     ]}>
-                      {vendedor.nombre}
+                      {vendedor.name}
                     </Text>
                   </TouchableOpacity>
                 ))}

@@ -14,18 +14,18 @@ fi
 
 # Generar build web
 echo "🌐 Generando build web..."
-npx expo export:web
+npx expo export --platform web
 
 # Verificar que el build se generó
-if [ ! -d "web-build" ]; then
-    echo "❌ Error: No se generó la carpeta web-build"
+if [ ! -d "dist" ]; then
+    echo "❌ Error: No se generó la carpeta dist"
     exit 1
 fi
 
 # Copiar al backend
 echo "📋 Copiando build al backend..."
 rm -rf ../teatro-tickets-backend/public
-cp -r web-build ../teatro-tickets-backend/public
+cp -r dist ../teatro-tickets-backend/public
 
 echo "✅ ¡Build completado! Los archivos están en teatro-tickets-backend/public"
 echo "🚀 Ahora puedes hacer commit y push para desplegar en Render"

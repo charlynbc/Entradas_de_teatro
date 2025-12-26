@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credenciales de Acceso - BACÓ</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/baco-common.css">
+    <style>
+        body {
+            padding: 40px 20px;
+        }
+        
+        .credentials-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: rgba(248, 248, 248, 0.7);
+            font-size: 1.1rem;
+        }
+        
+        .credential-card {
+            background: var(--gradient-dark);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .credential-card h2 {
+            font-family: 'Playfair Display', serif;
+            color: var(--dorado);
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .credential-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: rgba(26, 26, 26, 0.6);
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .credential-item i {
+            color: var(--dorado);
+            font-size: 1.3rem;
+            width: 30px;
+        }
+        
+        .credential-content {
+            flex: 1;
+        }
+        
+        .credential-label {
+            color: rgba(248, 248, 248, 0.6);
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+        }
+        
+        .credential-value {
+            color: var(--blanco);
+            font-size: 1.2rem;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .copy-btn {
+            background: rgba(212, 175, 55, 0.2);
+            border: 1px solid var(--dorado);
+            color: var(--dorado);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+        
+        .copy-btn:hover {
+            background: rgba(212, 175, 55, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .quick-login {
+            text-align: center;
+            margin-top: 40px;
+        }
+        
+        .quick-login .btn {
+            padding: 16px 40px;
+            font-size: 1.1rem;
+        }
+        
+        .info-box {
+            background: rgba(139, 21, 56, 0.2);
+            border: 1px solid var(--bordo);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        
+        .info-box h3 {
+            color: var(--dorado);
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .info-box ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .info-box li {
+            padding: 8px 0;
+            color: rgba(248, 248, 248, 0.8);
+        }
+        
+        .info-box li i {
+            color: var(--dorado);
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="credentials-container">
+        <div class="header">
+            <h1>🎭 BACÓ</h1>
+            <p>Credenciales de Acceso al Sistema</p>
+        </div>
+
+        <!-- SUPER USUARIO -->
+        <div class="credential-card">
+            <h2>
+                <i class="fas fa-crown"></i>
+                Super Usuario (Acceso Total)
+            </h2>
+            
+            <div class="credential-item">
+                <i class="fas fa-id-card"></i>
+                <div class="credential-content">
+                    <div class="credential-label">Cédula</div>
+                    <div class="credential-value" id="superCedula">48376669</div>
+                </div>
+                <button class="copy-btn" onclick="copyText('superCedula')">
+                    <i class="fas fa-copy"></i> Copiar
+                </button>
+            </div>
+            
+            <div class="credential-item">
+                <i class="fas fa-key"></i>
+                <div class="credential-content">
+                    <div class="credential-label">Contraseña</div>
+                    <div class="credential-value" id="superPassword">Teamomama91</div>
+                </div>
+                <button class="copy-btn" onclick="copyText('superPassword')">
+                    <i class="fas fa-copy"></i> Copiar
+                </button>
+            </div>
+        </div>
+
+        <!-- DIRECTOR -->
+        <div class="credential-card">
+            <h2>
+                <i class="fas fa-user-tie"></i>
+                Director (Admin)
+            </h2>
+            
+            <div class="credential-item">
+                <i class="fas fa-id-card"></i>
+                <div class="credential-content">
+                    <div class="credential-label">Cédula</div>
+                    <div class="credential-value" id="directorCedula">48376668</div>
+                </div>
+                <button class="copy-btn" onclick="copyText('directorCedula')">
+                    <i class="fas fa-copy"></i> Copiar
+                </button>
+            </div>
+            
+            <div class="credential-item">
+                <i class="fas fa-key"></i>
+                <div class="credential-content">
+                    <div class="credential-label">Contraseña</div>
+                    <div class="credential-value" id="directorPassword">admin123</div>
+                </div>
+                <button class="copy-btn" onclick="copyText('directorPassword')">
+                    <i class="fas fa-copy"></i> Copiar
+                </button>
+            </div>
+        </div>
+
+        <!-- ACTOR/ACTRIZ -->
+        <div class="credential-card">
+            <h2>
+                <i class="fas fa-theater-masks"></i>
+                Actor/Actriz (Vendedor)
+            </h2>
+            
+            <div class="credential-item">
+                <i class="fas fa-id-card"></i>
+                <div class="credential-content">
+                    <div class="credential-label">Cédula</div>
+                    <div class="credential-value" id="actorCedula">48376667</div>
+                </div>
+                <button class="copy-btn" onclick="copyText('actorCedula')">
+                    <i class="fas fa-copy"></i> Copiar
+                </button>
+            </div>
+            
+            <div class="credential-item">
+                <i class="fas fa-key"></i>
+                <div class="credential-content">
+                    <div class="credential-label">Contraseña</div>
+                    <div class="credential-value" id="actorPassword">admin123</div>
+                </div>
+                <button class="copy-btn" onclick="copyText('actorPassword')">
+                    <i class="fas fa-copy"></i> Copiar
+                </button>
+            </div>
+        </div>
+
+        <!-- INFO ADICIONAL -->
+        <div class="info-box">
+            <h3><i class="fas fa-info-circle"></i> Información Importante</h3>
+            <ul>
+                <li><i class="fas fa-check"></i> <strong>Super Usuario:</strong> Acceso total al sistema, gestión de usuarios, obras y configuración</li>
+                <li><i class="fas fa-check"></i> <strong>Director:</strong> Puede crear grupos, funciones y gestionar su elenco</li>
+                <li><i class="fas fa-check"></i> <strong>Actor/Actriz:</strong> Puede ver sus grupos, funciones y entradas asignadas</li>
+                <li><i class="fas fa-check"></i> El Super Usuario se crea automáticamente al iniciar el servidor</li>
+                <li><i class="fas fa-check"></i> Las credenciales son para ambiente de desarrollo/testing</li>
+            </ul>
+        </div>
+
+        <!-- BOTÓN DE LOGIN RÁPIDO -->
+        <div class="quick-login">
+            <a href="/login.html" class="btn btn-primary">
+                <i class="fas fa-sign-in-alt"></i>
+                Ir a Login
+            </a>
+        </div>
+    </div>
+
+    <script src="/js/baco-common.js"></script>
+    <script>
+        function copyText(elementId) {
+            const element = document.getElementById(elementId);
+            const text = element.textContent;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                Baco.UI.showSuccess(`Copiado: ${text}`);
+            }).catch(err => {
+                Baco.UI.showError('Error al copiar');
+                console.error('Error:', err);
+            });
+        }
+    </script>
+</body>
+</html>

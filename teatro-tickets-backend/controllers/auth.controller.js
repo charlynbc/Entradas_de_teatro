@@ -3,62 +3,26 @@ import { query } from '../db/postgres.js';
 
 export async function login(req, res) {
   try {
-    const { phone, password } = req.body;
-    
-    if (!phone || !password) {
-      return res.status(400).json({ error: 'phone y password son obligatorios' });
+    const { cedula: cedulaBody, phone, password } = req.body;
+    const cedula = cedulaBody || phone; // aceptar ambos nombres de campo
+    if (!cedula || !password) {
+      return res.status(400).json({ error: 'cedula y password son obligatorios' });
     }
-    
-    // Buscar usuario por cédula en PostgreSQL
-    const result = await query(
-      'SELECT * FROM users WHERE cedula = $1',
-      [phone]
-    );
-    
+    const result = await query('SELECT * FROM users WHERE cedula = $1', [cedula]);
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Usuario no existe' });
     }
-    
     const user = result.rows[0];
-    
-    if (!user.password) {
-      return res.status(400).json({ 
-        error: 'Debe completar registro',
-        requiresSetup: true,
-        phone: user.cedula 
-      });
+    if (!user.password_hash) {
+      return res.status(400).json({ error: 'Debe completar registro', requiresSetup: true, cedula: user.cedula });
     }
-    
-    // Verificar password con bcrypt
-    const valid = await comparePassword(password, user.password);
-    
+    const valid = await comparePassword(password, user.password_hash);
     if (!valid) {
       return res.status(401).json({ error: 'Contraseña incorrecta' });
     }
-    
-    // Mapear roles: supremo -> SUPER, admin -> ADMIN, vendedor -> VENDEDOR
-    const roleMap = {
-      'supremo': 'SUPER',
-      'admin': 'ADMIN',
-      'vendedor': 'VENDEDOR'
-    };
-    
-    const token = generateToken({
-      id: user.id,
-      phone: user.cedula,
-      role: roleMap[user.rol] || user.rol,
-      name: user.nombre
-    });
-    
-    res.json({
-      token,
-      user: {
-        id: user.id,
-        phone: user.cedula,
-        role: roleMap[user.rol] || user.rol,
-        name: user.nombre
-      }
-    });
+    const payload = { cedula: user.cedula, role: user.role, name: user.name };
+    const token = generateToken(payload);
+    res.json({ token, user: payload });
   } catch (error) {
     console.error('Error en login:', error);
     res.status(500).json({ error: error.message });
@@ -67,50 +31,25 @@ export async function login(req, res) {
 
 export async function completarRegistro(req, res) {
   try {
-    const { phone, name, password } = req.body;
-    
-    if (!phone || !name || !password) {
-      return res.status(400).json({ error: 'phone, name y password son obligatorios' });
+    const { cedula: cedulaBody, phone, nombre: nombreBody, name, password } = req.body;
+    const cedula = cedulaBody || phone;
+    const nombre = nombreBody || name;
+    if (!cedula || !nombre || !password) {
+      return res.status(400).json({ error: 'cedula, nombre y password son obligatorios' });
     }
-    
-    // Buscar usuario en PostgreSQL
-    const result = await query('SELECT * FROM users WHERE cedula = $1', [phone]);
-    
+    const result = await query('SELECT * FROM users WHERE cedula = $1', [cedula]);
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
-    
     const user = result.rows[0];
-    
-    if (user.password) {
+    if (user.password_hash) {
       return res.status(400).json({ error: 'Usuario ya completó registro' });
     }
-    
-    // Actualizar usuario con nombre y password hasheado
     const hashedPassword = await hashPassword(password);
-    await query(
-      'UPDATE users SET nombre = $1, password = $2, updated_at = NOW() WHERE cedula = $3',
-      [name, hashedPassword, phone]
-    );
-    
-    const roleMap = {
-      'supremo': 'SUPER',
-      'admin': 'ADMIN',
-      'vendedor': 'VENDEDOR'
-    };
-    
-    const token = generateToken({
-      id: user.id,
-      phone,
-      role: roleMap[user.rol] || user.rol,
-      name
-    });
-    
-    res.json({ 
-      ok: true, 
-      token,
-      user: { id: user.id, phone, name, role: roleMap[user.rol] || user.rol }
-    });
+    await query('UPDATE users SET name = $1, password_hash = $2 WHERE cedula = $3', [nombre, hashedPassword, cedula]);
+    const payload = { cedula, role: user.role, name: nombre };
+    const token = generateToken(payload);
+    res.json({ ok: true, token, user: payload });
   } catch (error) {
     console.error('Error en completar registro:', error);
     res.status(500).json({ error: error.message });

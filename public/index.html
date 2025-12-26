@@ -3,101 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Baco Teatro - Cartelera</title>
-    
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Lora:wght@400;600&display=swap" rel="stylesheet">
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    
-    <!-- Estilos -->
-    <link rel="stylesheet" href="/styles/common.css">
-    <link rel="stylesheet" href="/styles/index.css">
+    <title>Baco Teatro Uruguay - Inicio</title>
+    <link rel="stylesheet" href="/css/main-index.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
-    <!-- Logo de Baco siempre visible -->
-    <a href="/" class="logo-baco-fixed" title="Baco Teatro - Inicio">
-        <img src="/images/logo-baco.svg" alt="Baco Teatro">
-    </a>
-
-    <div class="teatro-curtain"></div>
-    
-    <header>
-        <div class="logo-container-principal">
-            <img src="/images/logo-baco.svg" alt="Baco Teatro" class="logo-principal">
+    <div class="main-container">
+        <!-- Logo de Baco Teatro -->
+        <div class="logo-container">
+            <img src="/images/logo-baco.svg" alt="Baco Teatro" class="main-logo">
         </div>
-        <h1><i class="fas fa-theater-masks"></i> Baco Teatro</h1>
-        <p style="color: var(--teatro-dorado); font-size: 1.2rem;">Donde el arte cobra vida</p>
-    </header>
 
-    <nav>
-        <a href="/" class="btn-teatro btn-activo">
-            <i class="fas fa-home"></i> Inicio
-        </a>
-        <a href="/" class="btn-teatro">
-            <i class="fas fa-film"></i> Cartelera
-        </a>
-        <a href="/contacto.html" class="btn-teatro">
-            <i class="fas fa-envelope"></i> Contacto
-        </a>
-        <a href="/mis-entradas" class="btn-teatro">
-            <i class="fas fa-ticket-alt"></i> Mis Entradas
-        </a>
-    </nav>
-
-    <main class="container">
-        <div id="obras-container" class="obras-grid">
-            <!-- Las obras se cargarán dinámicamente aquí -->
+        <!-- Título Principal -->
+        <div class="title-container">
+            <h1 class="main-title">BACO TEATRO</h1>
+            <p class="main-subtitle">Donde el arte cobra vida</p>
         </div>
-    </main>
 
-    <footer class="footer-teatro">
-        <p><i class="fas fa-theater-masks"></i> Baco Teatro © 2024 - Donde el arte cobra vida</p>
-    </footer>
-
-    <!-- Modal de opciones de descarga -->
-    <div id="modal-descarga" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2><i class="fas fa-ticket-alt"></i> ¡Compra Exitosa!</h2>
-                <p>Elige cómo recibir tu entrada</p>
+        <!-- Frase del Día -->
+        <div class="quote-container">
+            <div class="quote-content">
+                <i class="fas fa-quote-left quote-icon"></i>
+                <p class="quote-text" id="quoteText">Cargando frase...</p>
+                <p class="quote-author" id="quoteAuthor">- Autor</p>
             </div>
-            
-            <div class="modal-options">
-                <button class="option-button" onclick="opcionSeleccionada('descargar')">
-                    <i class="fas fa-file-download"></i>
-                    <div class="option-text">
-                        <h3>Descargar PDF</h3>
-                        <p>Descarga tu entrada en formato PDF</p>
-                    </div>
-                </button>
+        </div>
 
-                <button class="option-button" onclick="opcionSeleccionada('email')">
-                    <i class="fas fa-envelope"></i>
-                    <div class="option-text">
-                        <h3>Enviar por Email</h3>
-                        <p>Recibe tu entrada en tu correo electrónico</p>
-                    </div>
-                </button>
+        <!-- Menú de Navegación -->
+        <nav class="main-navigation">
+            <a href="/funciones.html" class="nav-button">
+                <div class="button-icon">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <div class="button-text">
+                    <h3>Funciones</h3>
+                    <p>Ver todas las funciones disponibles</p>
+                </div>
+            </a>
 
-                <button class="option-button" onclick="opcionSeleccionada('whatsapp')">
-                    <i class="fab fa-whatsapp"></i>
-                    <div class="option-text">
-                        <h3>Enviar por WhatsApp</h3>
-                        <p>Recibe tu entrada directamente en WhatsApp</p>
-                    </div>
-                </button>
-            </div>
+            <a href="/sobre-baco.html" class="nav-button">
+                <div class="button-icon">
+                    <i class="fas fa-masks-theater"></i>
+                </div>
+                <div class="button-text">
+                    <h3>Sobre Baco</h3>
+                    <p>Conoce nuestra historia y misión</p>
+                </div>
+            </a>
 
-            <button class="modal-close" onclick="cerrarModal()">
-                <i class="fas fa-times"></i> Cerrar
+            <a href="/guia.html" class="nav-button">
+                <div class="button-icon">
+                    <i class="fas fa-question-circle"></i>
+                </div>
+                <div class="button-text">
+                    <h3>Cómo Reservar</h3>
+                    <p>Guía para reservar tu entrada</p>
+                </div>
+            </a>
+
+            <a href="/desarrollador.html" class="nav-button">
+                <div class="button-icon">
+                    <i class="fas fa-code"></i>
+                </div>
+                <div class="button-text">
+                    <h3>Desarrollador</h3>
+                    <p>Información del sistema</p>
+                </div>
+            </a>
+
+            <button class="nav-button login-button" onclick="window.location.href='/login.html'">
+                <div class="button-icon">
+                    <i class="fas fa-sign-in-alt"></i>
+                </div>
+                <div class="button-text">
+                    <h3>Iniciar Sesión</h3>
+                    <p>Acceso para el equipo</p>
+                </div>
             </button>
-        </div>
+        </nav>
+
+        <!-- Footer -->
+        <footer class="main-footer">
+            <p>&copy; 2025 Baco Teatro Uruguay</p>
+            <div class="social-links">
+                <a href="https://www.instagram.com/bacoteatro" target="_blank" title="Instagram">
+                    <i class="fab fa-instagram"></i>
+                </a>
+                <a href="https://www.facebook.com/BACO.TEATRO.URUGUAY" target="_blank" title="Facebook">
+                    <i class="fab fa-facebook"></i>
+                </a>
+            </div>
+        </footer>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        // Frases teatrales aleatorias
+        const quotes = [
+            { text: "El teatro es poesía que se sale del libro para hacerse humana.", author: "Federico García Lorca" },
+            { text: "Actuar es vivir.", author: "Konstantin Stanislavski" },
+            { text: "El teatro es el arte de mirarnos a nosotros mismos.", author: "Augusto Boal" },
+            { text: "La vida es puro teatro, pero no tiene ensayos.", author: "Charles Chaplin" },
+            { text: "El teatro es la primera invención del ser humano y es el instrumento que le permite crear la realidad.", author: "Ariane Mnouchkine" },
+            { text: "En el teatro, como en la vida, lo importante no es lo que se dice sino lo que se calla.", author: "Harold Pinter" },
+            { text: "El teatro no puede desaparecer porque es el único arte donde la humanidad se enfrenta a sí misma.", author: "Arthur Miller" },
+            { text: "El buen teatro hace pensar, el gran teatro hace sentir.", author: "Peter Brook" },
+            { text: "Actuar es una cuestión de absorber las emociones de otras personas y de proyectar las propias.", author: "Marlon Brando" },
+            { text: "El teatro es el arte de crear la vida sobre el escenario.", author: "Bertolt Brecht" },
+            { text: "No hay teatro sin transformación.", author: "Jerzy Grotowski" },
+            { text: "El teatro es la expresión más completa del arte.", author: "Antonin Artaud" },
+            { text: "En el escenario, la verdad es lo único que importa.", author: "Sanford Meisner" },
+            { text: "El teatro es donde vamos a escuchar las historias que no nos atrevemos a contar.", author: "Anna Deavere Smith" },
+            { text: "Un actor sin técnica es como un automóvil sin motor.", author: "Stella Adler" }
+        ];
+
+        // Función para mostrar una frase aleatoria
+        function showRandomQuote() {
+            const randomIndex = Math.floor(Math.random() * quotes.length);
+            const quote = quotes[randomIndex];
+            document.getElementById('quoteText').textContent = quote.text;
+            document.getElementById('quoteAuthor').textContent = `— ${quote.author}`;
+        }
+
+        // Mostrar frase al cargar la página
+        showRandomQuote();
+    </script>
 </body>
 </html>
+

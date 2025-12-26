@@ -9,7 +9,7 @@ import { getDirectorDashboard, deleteVendor } from '../../api';
 import { useAuth } from '../../contexts/AuthContext';
 import DailyQuote from '../../components/DailyQuote';
 
-export default function DirectorDashboardScreen({ navigation }) {
+export default function DirectorDashboardScreen() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -81,52 +81,6 @@ export default function DirectorDashboardScreen({ navigation }) {
           <StatCard label="Entradas" value={data?.stats?.tickets || 0} helper={`Pagadas ${data?.stats?.pagadas || 0}`} />
           <StatCard label="Actores" value={data?.stats?.actores || 0} gradient={colors.gradientSecondary} />
         </View>
-
-        <TouchableOpacity 
-          style={styles.reportesButton}
-          onPress={() => navigation.navigate('DirectorReportsObras')}
-        >
-          <Ionicons name="document-text-outline" size={24} color={colors.secondary} />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.reportesTitle}>Reportes de Obras</Text>
-            <Text style={styles.reportesSubtitle}>Ver historial de funciones finalizadas</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
-        </TouchableOpacity>
-
-        {/* Sección de accesos rápidos para funcionalidades de vendedor */}
-        <SectionCard title="Accesos Directos" subtitle="Funcionalidades de vendedor">
-          <View style={styles.quickActionsGrid}>
-            <TouchableOpacity 
-              style={styles.quickAction}
-              onPress={() => navigation.navigate('DirectorScanner')}
-            >
-              <Ionicons name="qr-code-outline" size={32} color={colors.secondary} />
-              <Text style={styles.quickActionText}>Validar QR</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.quickAction}
-              onPress={() => navigation.navigate('ActorTransfer')}
-            >
-              <Ionicons name="swap-horizontal-outline" size={32} color={colors.secondary} />
-              <Text style={styles.quickActionText}>Transferir</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.quickAction}
-              onPress={() => navigation.navigate('ActorHistory')}
-            >
-              <Ionicons name="time-outline" size={32} color={colors.secondary} />
-              <Text style={styles.quickActionText}>Historial</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.quickAction}
-              onPress={() => navigation.navigate('DirectorEnsayos')}
-            >
-              <Ionicons name="calendar-outline" size={32} color={colors.secondary} />
-              <Text style={styles.quickActionText}>Ensayos</Text>
-            </TouchableOpacity>
-          </View>
-        </SectionCard>
 
         <SectionCard title="Salas abiertas" subtitle="Estado por función">
           {(data?.functions || []).map((funcion) => (
@@ -266,49 +220,5 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingVertical: 20,
     fontStyle: 'italic',
-  },
-  reportesButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: colors.secondary + '40',
-    gap: 12,
-  },
-  reportesTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: colors.text,
-  },
-  reportesSubtitle: {
-    fontSize: 12,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
-  quickActionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    marginTop: 4,
-  },
-  quickAction: {
-    flex: 1,
-    minWidth: '45%',
-    backgroundColor: colors.surfaceAlt,
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    borderWidth: 1,
-    borderColor: colors.secondary + '30',
-  },
-  quickActionText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.text,
-    textAlign: 'center',
   },
 });

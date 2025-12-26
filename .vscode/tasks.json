@@ -1,0 +1,140 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "DB: start postgres",
+      "type": "shell",
+      "command": "docker rm -f teatro-postgres || true && docker run -d --name teatro-postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_USER=postgres -e POSTGRES_DB=teatro -p 5432:5432 postgres:15",
+      "problemMatcher": [],
+      "group": "none"
+    },
+    {
+      "label": "DB: stop postgres",
+      "type": "shell",
+      "command": "docker rm -f teatro-postgres || true",
+      "problemMatcher": [],
+      "group": "none"
+    },
+    {
+      "label": "Backend: dev (nodemon)",
+      "type": "shell",
+      "command": "cd teatro-tickets-backend && cp -n .env.example .env || true && npm run dev",
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "Backend: reload (background)",
+      "type": "shell",
+      "command": "export DATABASE_URL=postgres://postgres:postgres@localhost:5432/teatro && cd teatro-tickets-backend && npm run reload",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Backend: stop",
+      "type": "shell",
+      "command": "cd teatro-tickets-backend && npm run stop",
+      "problemMatcher": []
+    }
+    ,
+    {
+      "label": "Backend: debug (inspect)",
+      "type": "npm",
+      "script": "debug",
+      "path": "teatro-tickets-backend",
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "Backend: debug (inspect background)",
+      "type": "shell",
+      "command": "cd teatro-tickets-backend && npm run debug & echo $! > /tmp/backend-debug.pid",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "DB: migrate phone+FK",
+      "type": "shell",
+      "command": "export DATABASE_URL=postgres://postgres:postgres@localhost:5432/teatro && cd teatro-tickets-backend && npm run db:migrate-phone-fk",
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "Backend: stop debug",
+      "type": "shell",
+      "command": "test -f /tmp/backend-debug.pid && kill $(cat /tmp/backend-debug.pid) || pkill -f \"--inspect=9229 index-v3-postgres.js\" || true",
+      "problemMatcher": []
+    },
+    {
+      "label": "Dev: Start DB + Backend Debug",
+      "dependsOn": [
+        "DB: start postgres",
+        "DB: migrate phone+FK",
+        "Backend: debug (inspect background)"
+      ],
+      "dependsOrder": "sequence"
+    },
+    {
+      "label": "Dev: Start DB + Backend Dev (nodemon)",
+      "dependsOn": [
+        "DB: start postgres",
+        "DB: migrate phone+FK",
+        "Backend: dev (nodemon)"
+      ],
+      "dependsOrder": "sequence"
+    },
+    {
+      "label": "Dev: Backend Dev (nodemon only + migrate)",
+      "dependsOn": [
+        "DB: migrate phone+FK",
+        "Backend: dev (nodemon)"
+      ],
+      "dependsOrder": "sequence"
+    },
+    {
+      "label": "Tests: Super Usuario",
+      "type": "shell",
+      "command": "node tests/test-super-usuario.js",
+      "problemMatcher": []
+    },
+    {
+      "label": "Tests: Director",
+      "type": "shell",
+      "command": "node tests/test-director.js",
+      "problemMatcher": []
+    },
+    {
+      "label": "Tests: Vendedores",
+      "type": "shell",
+      "command": "node tests/test-vendedores.js",
+      "problemMatcher": []
+    },
+    {
+      "label": "Tests: Invitados",
+      "type": "shell",
+      "command": "node tests/test-invitados.js",
+      "problemMatcher": []
+    },
+    {
+      "label": "DB: borrar (salvo supremo)",
+      "type": "shell",
+      "command": "chmod +x scripts/borrar.sh && ./scripts/borrar.sh",
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "DB: limpieza automática (Postgres)",
+      "type": "shell",
+      "command": "export DATABASE_URL=postgres://postgres:postgres@localhost:5432/teatro && node scripts/limpieza-automatica-postgres.js",
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "Dev: Stop DB + Backend",
+      "dependsOn": [
+        "Backend: stop debug",
+        "DB: stop postgres"
+      ],
+      "dependsOrder": "sequence"
+    }
+  ]
+}

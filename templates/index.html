@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Eventos Disponibles - Teatro{% endblock %}
+
+{% block content %}
+<h2>Eventos Disponibles</h2>
+
+<style>
+    .eventos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 20px; }
+    .evento-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: transform 0.3s; }
+    .evento-card:hover { transform: translateY(-5px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+    .evento-card h3 { color: #333; margin-bottom: 10px; }
+    .evento-info { margin: 10px 0; color: #666; }
+    .evento-precio { font-size: 1.5em; color: #28a745; font-weight: bold; margin: 10px 0; }
+    .evento-disponibles { color: #666; margin: 10px 0; }
+    .evento-imagen { width: 100%; height: 200px; object-fit: cover; border-radius: 5px; margin-bottom: 10px; }
+</style>
+
+{% if eventos %}
+<div class="eventos-grid">
+    {% for evento in eventos %}
+    <div class="evento-card">
+        {% if evento.imagen_url %}
+        <img src="{{ evento.imagen_url }}" alt="{{ evento.nombre }}" class="evento-imagen">
+        {% endif %}
+        <h3>{{ evento.nombre }}</h3>
+        <div class="evento-info">📅 {{ evento.fecha }} - {{ evento.hora }}</div>
+        <div class="evento-info">📍 {{ evento.lugar }}</div>
+        {% if evento.descripcion %}
+        <p style="color: #666; font-size: 0.9rem; margin: 10px 0;">{{ evento.descripcion[:100] }}...</p>
+        {% endif %}
+        <div class="evento-precio">${{ "%.2f"|format(evento.precio) }}</div>
+        <div class="evento-disponibles">
+            {% if evento.entradas_disponibles > 0 %}
+                ✅ {{ evento.entradas_disponibles }} entradas disponibles
+            {% else %}
+                ❌ Agotado
+            {% endif %}
+        </div>
+        <div style="margin-top: 15px;">
+            <a href="/evento/{{ evento.id }}" class="btn">Ver Detalles</a>
+            {% if evento.entradas_disponibles > 0 %}
+                {% if session.user_id %}
+                    <a href="/comprar/{{ evento.id }}" class="btn btn-success">Comprar</a>
+                {% else %}
+                    <a href="/login" class="btn btn-success">Login para Comprar</a>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p>No hay eventos disponibles en este momento.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desarrollador - Carlos Barrios</title>
+    <link rel="stylesheet" href="/css/baco-landing.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .developer-page {
+            min-height: 80vh;
+            padding-top: 120px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+        
+        .developer-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(218, 165, 32, 0.3);
+            border-radius: 20px;
+            padding: 50px;
+            max-width: 800px;
+            margin: 0 auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .developer-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .developer-avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #8B0000, #DAA520);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 60px;
+            color: white;
+            box-shadow: 0 5px 20px rgba(218, 165, 32, 0.4);
+        }
+        
+        .developer-name {
+            font-size: 2.5rem;
+            color: #DAA520;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        .developer-role {
+            font-size: 1.3rem;
+            color: #fff;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+        
+        .developer-description {
+            font-size: 1.1rem;
+            color: #fff;
+            line-height: 1.8;
+            margin-bottom: 40px;
+            text-align: center;
+            opacity: 0.85;
+        }
+        
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .contact-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(218, 165, 32, 0.2);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: white;
+            display: block;
+        }
+        
+        .contact-card:hover {
+            transform: translateY(-5px);
+            border-color: #DAA520;
+            background: rgba(218, 165, 32, 0.1);
+            box-shadow: 0 5px 20px rgba(218, 165, 32, 0.2);
+        }
+        
+        .contact-card i {
+            font-size: 2.5rem;
+            color: #DAA520;
+            margin-bottom: 15px;
+        }
+        
+        .contact-card h3 {
+            color: #DAA520;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .contact-card p {
+            color: #fff;
+            opacity: 0.8;
+            font-size: 0.95rem;
+        }
+        
+        .skills-section {
+            margin-top: 50px;
+            padding-top: 40px;
+            border-top: 2px solid rgba(218, 165, 32, 0.2);
+        }
+        
+        .skills-title {
+            text-align: center;
+            color: #DAA520;
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+        }
+        
+        .skills-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        .skill-tag {
+            background: rgba(218, 165, 32, 0.2);
+            color: #DAA520;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 0.95rem;
+            border: 1px solid rgba(218, 165, 32, 0.3);
+        }
+        
+        .project-info {
+            background: rgba(139, 0, 0, 0.2);
+            border-left: 4px solid #8B0000;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+        }
+        
+        .project-info h3 {
+            color: #DAA520;
+            margin-bottom: 10px;
+        }
+        
+        .project-info p {
+            color: #fff;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <!-- Botón Volver al Inicio -->
+    <a href="/" class="back-to-home">
+        <i class="fas fa-home"></i>
+        <span>Volver al Inicio</span>
+    </a>
+
+    <!-- Navigation -->
+    <nav class="main-nav">
+        <div class="container">
+            <div class="nav-brand" onclick="window.location.href='/'">
+                <img src="/images/logo-baco.svg" alt="Baco Teatro" class="logo">
+                <span class="brand-text">BACO TEATRO</span>
+            </div>
+            <div class="nav-menu" id="navMenu">
+                <a href="/" class="nav-link">Inicio</a>
+                <a href="/funciones.html" class="nav-link">Funciones</a>
+                <a href="/sobre-baco.html" class="nav-link">Sobre Baco</a>
+                <a href="/guia.html" class="nav-link">Cómo Usar</a>
+                <a href="/desarrollador.html" class="nav-link active">Desarrollador</a>
+                <button class="btn-login" onclick="window.location.href='/login.html'">
+                    <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                </button>
+            </div>
+            <button class="nav-toggle" id="navToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Developer Section -->
+    <section class="developer-page">
+        <div class="container">
+            <div class="developer-card">
+                <div class="developer-header">
+                    <div class="developer-avatar">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <h1 class="developer-name">Carlos Barrios</h1>
+                    <p class="developer-role">Desarrollador Full Stack</p>
+                </div>
+
+                <p class="developer-description">
+                    Sistema de gestión de entradas teatrales diseñado específicamente para Baco Teatro. 
+                    ¿Necesitas una plataforma similar para tu teatro o proyecto cultural?
+                </p>
+
+                <div class="contact-grid">
+                    <a href="mailto:charly_nbc@icloud.com" class="contact-card">
+                        <i class="fas fa-envelope"></i>
+                        <h3>Email</h3>
+                        <p>charly_nbc@icloud.com</p>
+                    </a>
+
+                    <a href="https://www.instagram.com/charly_nbc" target="_blank" class="contact-card">
+                        <i class="fab fa-instagram"></i>
+                        <h3>Instagram</h3>
+                        <p>@charly_nbc</p>
+                    </a>
+                </div>
+
+                <div class="project-info">
+                    <h3><i class="fas fa-laptop-code"></i> Sobre el Proyecto</h3>
+                    <p>
+                        Este sistema fue desarrollado para optimizar la gestión de entradas y funciones de Baco Teatro, 
+                        permitiendo a directores, actores y al equipo gestionar de manera eficiente todas las operaciones 
+                        relacionadas con las presentaciones teatrales.
+                    </p>
+                </div>
+
+                <div style="text-align: center; margin-top: 50px;">
+                    <p style="color: #fff; opacity: 0.8; font-size: 1.1rem;">
+                        <i class="fas fa-heart" style="color: #8B0000;"></i>
+                        ¿Necesitas un sistema personalizado para tu teatro o proyecto cultural?
+                    </p>
+                    <a href="mailto:charly_nbc@icloud.com" class="btn btn-primary" style="display: inline-block; margin-top: 20px; padding: 15px 30px;">
+                        <i class="fas fa-envelope"></i> Contáctame
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <img src="/images/logo-baco.svg" alt="Baco Teatro" class="footer-logo">
+                    <p>Baco Teatro Uruguay</p>
+                    <p class="footer-slogan">Donde el arte cobra vida</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Navegación</h4>
+                    <a href="/">Inicio</a>
+                    <a href="/funciones.html">Funciones</a>
+                    <a href="/sobre-baco.html">Sobre Baco</a>
+                    <a href="/guia.html">Cómo Usar</a>
+                    <a href="/desarrollador.html">Desarrollador</a>
+                </div>
+                <div class="footer-contact">
+                    <h4>Contacto</h4>
+                    <p><i class="fas fa-phone"></i> 099 893 748</p>
+                    <p><i class="fab fa-whatsapp"></i> +598 94 687 473</p>
+                    <p><i class="fas fa-envelope"></i> bacoteatro.uy@gmail.com</p>
+                    <div class="footer-social">
+                        <a href="https://www.instagram.com/bacoteatro" target="_blank">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="https://www.facebook.com/BACO.TEATRO.URUGUAY" target="_blank">
+                            <i class="fab fa-facebook"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Baco Teatro Uruguay. Todos los derechos reservados.</p>
+                <p style="margin-top: 10px;">Desarrollado por <a href="mailto:charly_nbc@icloud.com" style="color: #DAA520;">Carlos Barrios</a></p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Toggle móvil menu
+        document.getElementById('navToggle')?.addEventListener('click', function() {
+            document.getElementById('navMenu')?.classList.toggle('active');
+        });
+    </script>
+</body>
+</html>

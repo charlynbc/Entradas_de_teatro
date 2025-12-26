@@ -13,7 +13,7 @@ function buildVendorSummary(tickets, users) {
       const user = users.find(u => u.phone === ticket.vendedor_phone) || {};
       summary.set(ticket.vendedor_phone, {
         show_id: ticket.show_id,
-        vendedor_phone: ticket.vendedor_phone,
+        vendedor_cedula: user.cedula || ticket.vendedor_phone,
         vendedor_nombre: user.name || ticket.vendedor_phone,
         asignados: 0,
         vendidos: 0,

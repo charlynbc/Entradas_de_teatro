@@ -1,31 +1,52 @@
 import { query } from '../db/postgres.js';
 
-// Crear ensayo general
+// Crear ensayo para una obra
 export const crearEnsayo = async (req, res) => {
   try {
-    const { titulo, fecha, lugar, descripcion, actores } = req.body;
-    let directorId = req.user.id;
+    const { obra_id, titulo, fecha, hora_fin, lugar, descripcion } = req.body;
+    const { cedula: userCedula, role: userRole } = req.user;
 
-    // Si el token no tiene ID (tokens antiguos), obtenerlo de la base de datos
-    if (!directorId && req.user.phone) {
-      const userResult = await query('SELECT id FROM users WHERE cedula = $1', [req.user.phone]);
-      if (userResult.rows.length > 0) {
-        directorId = userResult.rows[0].id;
-      }
+    if (!obra_id || !titulo || !fecha || !lugar) {
+      return res.status(400).json({ error: 'obra_id, título, fecha y lugar son requeridos' });
     }
 
-    if (!titulo || !fecha || !lugar) {
-      return res.status(400).json({ error: 'Título, fecha y lugar son requeridos' });
+    // Verificar que la obra existe y que el usuario tiene permiso
+    const obraResult = await query(
+      `SELECT o.grupo_id, g.director_cedula 
+       FROM obras o 
+       JOIN grupos g ON g.id = o.grupo_id 
+       WHERE o.id = $1`,
+      [obra_id]
+    );
+
+    if (obraResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Obra no encontrada' });
+    }
+
+    const { grupo_id, director_cedula } = obraResult.rows[0];
+
+    // Solo el director del grupo, co-directores, o SUPER pueden crear ensayos
+    if (userRole !== 'SUPER' && director_cedula !== userCedula) {
+      // Verificar si es co-director
+      const coDirectorResult = await query(
+        'SELECT id FROM grupo_miembros WHERE grupo_id = $1 AND miembro_cedula = $2 AND rol_en_grupo = $3 AND activo = TRUE',
+        [grupo_id, userCedula, 'DIRECTOR']
+      );
+
+      if (coDirectorResult.rows.length === 0) {
+        return res.status(403).json({ error: 'Solo los directores del grupo pueden crear ensayos' });
+      }
     }
 
     const result = await query(
       `INSERT INTO ensayos_generales 
-       (titulo, fecha, lugar, descripcion, director_id, actores_ids, created_at) 
+       (obra_id, titulo, fecha, hora_fin, lugar, descripcion, created_at) 
        VALUES ($1, $2, $3, $4, $5, $6, NOW()) 
        RETURNING *`,
-      [titulo, fecha, lugar, descripcion || '', directorId, JSON.stringify(actores || [])]
+      [obra_id, titulo, fecha, hora_fin || null, lugar, descripcion || '']
     );
 
+    console.log(`✅ Ensayo creado para obra ${obra_id}: ${titulo}`);
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Error creando ensayo:', error);
@@ -33,83 +54,14 @@ export const crearEnsayo = async (req, res) => {
   }
 };
 
-// Listar ensayos
+// Listar ensayos - TODOS los ensayos del teatro (filtro en frontend)
 export const listarEnsayos = async (req, res) => {
   try {
-    let { role, id: userId } = req.user;
+    // Traer TODOS los ensayos con información de grupo
+    // El filtro "solo mis ensayos" se hace en el frontend
+    const ensayos = await query('SELECT * FROM v_ensayos_completos ORDER BY fecha ASC, hora_fin ASC');
 
-    // Si el token no tiene ID (tokens antiguos), obtenerlo de la base de datos
-    if (!userId && req.user.phone) {
-      const userResult = await query('SELECT id FROM users WHERE cedula = $1', [req.user.phone]);
-      if (userResult.rows.length > 0) {
-        userId = userResult.rows[0].id;
-        console.log(`[DEBUG] ID obtenido de DB para ${req.user.phone}: ${userId}`);
-      }
-    }
-
-    let ensayos;
-    if (role === 'SUPER') {
-      // Super ve todos
-      ensayos = await query(
-        `SELECT e.*, u.nombre as director_nombre 
-         FROM ensayos_generales e 
-         LEFT JOIN users u ON e.director_id = u.id 
-         ORDER BY e.fecha DESC`
-      );
-    } else if (role === 'ADMIN') {
-      // Director ve los suyos
-      console.log(`[DEBUG] Director buscando ensayos con director_id: ${userId}`);
-      ensayos = await query(
-        `SELECT e.*, u.nombre as director_nombre 
-         FROM ensayos_generales e 
-         LEFT JOIN users u ON e.director_id = u.id 
-         WHERE e.director_id = $1 
-         ORDER BY e.fecha DESC`,
-        [userId]
-      );
-      console.log(`[DEBUG] Ensayos encontrados para director: ${ensayos.rows.length}`);
-    } else {
-      // Actor ve ensayos donde está incluido
-      // Usamos jsonb_array_elements_text para extraer cada elemento del array
-      // y compararlo directamente con el userId
-      console.log(`[DEBUG] Actor buscando ensayos para userId: ${userId}`);
-      ensayos = await query(
-        `SELECT DISTINCT e.*, u.nombre as director_nombre 
-         FROM ensayos_generales e 
-         LEFT JOIN users u ON e.director_id = u.id 
-         WHERE EXISTS (
-           SELECT 1 
-           FROM jsonb_array_elements_text(e.actores_ids) actor_id 
-           WHERE actor_id = $1
-         )
-         ORDER BY e.fecha DESC`,
-        [userId]
-      );
-      console.log(`[DEBUG] Ensayos encontrados: ${ensayos.rows.length}`);
-      if (ensayos.rows.length > 0) {
-        console.log(`[DEBUG] Primer ensayo actores_ids:`, ensayos.rows[0].actores_ids);
-      }
-    }
-
-    // Obtener nombres de actores para cada ensayo
-    const ensayosConActores = await Promise.all(
-      ensayos.rows.map(async (ensayo) => {
-        // actores_ids ya viene como array JSONB de PostgreSQL, no necesita parse
-        const actoresIds = Array.isArray(ensayo.actores_ids) ? ensayo.actores_ids : [];
-        if (actoresIds.length > 0) {
-          const actoresResult = await query(
-            `SELECT id, nombre FROM users WHERE id = ANY($1)`,
-            [actoresIds]
-          );
-          ensayo.actores = actoresResult.rows;
-        } else {
-          ensayo.actores = [];
-        }
-        return ensayo;
-      })
-    );
-
-    res.json(ensayosConActores);
+    res.json(ensayos.rows);
   } catch (error) {
     console.error('Error listando ensayos:', error);
     res.status(500).json({ error: error.message });
@@ -120,21 +72,10 @@ export const listarEnsayos = async (req, res) => {
 export const obtenerEnsayo = async (req, res) => {
   try {
     const { id } = req.params;
-    let { role, id: userId } = req.user;
-
-    // Backward compatibility para tokens sin ID
-    if (!userId && req.user.phone) {
-      const userResult = await query('SELECT id FROM users WHERE cedula = $1', [req.user.phone]);
-      if (userResult.rows.length > 0) {
-        userId = userResult.rows[0].id;
-      }
-    }
+    const { cedula: userCedula, role: userRole } = req.user;
 
     const result = await query(
-      `SELECT e.*, u.nombre as director_nombre 
-       FROM ensayos_generales e 
-       LEFT JOIN users u ON e.director_id = u.id 
-       WHERE e.id = $1`,
+      'SELECT * FROM v_ensayos_completos WHERE id = $1',
       [id]
     );
 
@@ -144,33 +85,24 @@ export const obtenerEnsayo = async (req, res) => {
 
     const ensayo = result.rows[0];
 
-    // Verificar permisos: Super ve todo, Director ve los suyos, Actor ve donde está asignado
-    if (role === 'VENDEDOR') {
-      return res.status(403).json({ error: 'No tienes permisos para ver ensayos' });
+    if (userRole === 'SUPER') {
+      return res.json(ensayo);
     }
 
-    if (role === 'ADMIN' && ensayo.director_id !== userId) {
-      return res.status(403).json({ error: 'No puedes ver ensayos de otros directores' });
-    }
-
-    if (role === 'ACTOR') {
-      const actoresIds = ensayo.actores_ids || [];
-      if (!actoresIds.includes(userId)) {
-        return res.status(403).json({ error: 'No estás asignado a este ensayo' });
+    if (userRole === 'ADMIN') {
+      if (ensayo.grupo_director_cedula !== userCedula) {
+        return res.status(403).json({ error: 'No tienes permiso para ver este ensayo' });
       }
+      return res.json(ensayo);
     }
 
-    // actores_ids ya viene como array JSONB de PostgreSQL, no necesita parse
-    const actoresIds = Array.isArray(ensayo.actores_ids) ? ensayo.actores_ids : [];
-    
-    if (actoresIds.length > 0) {
-      const actoresResult = await query(
-        `SELECT id, nombre, cedula FROM users WHERE id = ANY($1)`,
-        [actoresIds]
-      );
-      ensayo.actores = actoresResult.rows;
-    } else {
-      ensayo.actores = [];
+    const memberCheck = await query(
+      'SELECT 1 FROM grupo_miembros WHERE grupo_id = $1 AND miembro_cedula = $2 AND activo = TRUE',
+      [ensayo.grupo_id, userCedula]
+    );
+
+    if (memberCheck.rows.length === 0) {
+      return res.status(403).json({ error: 'No tienes permiso para ver este ensayo' });
     }
 
     res.json(ensayo);
@@ -184,20 +116,14 @@ export const obtenerEnsayo = async (req, res) => {
 export const actualizarEnsayo = async (req, res) => {
   try {
     const { id } = req.params;
-    const { titulo, fecha, lugar, descripcion, actores } = req.body;
-    let { role, id: userId } = req.user;
+    const { titulo, fecha, hora_fin, lugar, descripcion } = req.body;
+    const { cedula: userCedula, role: userRole } = req.user;
 
-    // Si el token no tiene ID (tokens antiguos), obtenerlo de la base de datos
-    if (!userId && req.user.phone) {
-      const userResult = await query('SELECT id FROM users WHERE cedula = $1', [req.user.phone]);
-      if (userResult.rows.length > 0) {
-        userId = userResult.rows[0].id;
-      }
-    }
-
-    // Verificar permisos
     const ensayoActual = await query(
-      'SELECT director_id FROM ensayos_generales WHERE id = $1',
+      `SELECT e.*, g.director_cedula 
+       FROM ensayos_generales e
+       JOIN grupos g ON g.id = e.grupo_id
+       WHERE e.id = $1`,
       [id]
     );
 
@@ -205,18 +131,19 @@ export const actualizarEnsayo = async (req, res) => {
       return res.status(404).json({ error: 'Ensayo no encontrado' });
     }
 
-    if (role !== 'SUPER' && ensayoActual.rows[0].director_id !== userId) {
+    if (userRole !== 'SUPER' && ensayoActual.rows[0].director_cedula !== userCedula) {
       return res.status(403).json({ error: 'No tienes permiso para editar este ensayo' });
     }
 
     const result = await query(
       `UPDATE ensayos_generales 
-       SET titulo = $1, fecha = $2, lugar = $3, descripcion = $4, actores_ids = $5 
+       SET titulo = $1, fecha = $2, hora_fin = $3, lugar = $4, descripcion = $5 
        WHERE id = $6 
        RETURNING *`,
-      [titulo, fecha, lugar, descripcion || '', JSON.stringify(actores || []), id]
+      [titulo, fecha, hora_fin || null, lugar, descripcion || '', id]
     );
 
+    console.log(`✅ Ensayo actualizado: \${id}`);
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Error actualizando ensayo:', error);
@@ -228,19 +155,13 @@ export const actualizarEnsayo = async (req, res) => {
 export const eliminarEnsayo = async (req, res) => {
   try {
     const { id } = req.params;
-    let { role, id: userId } = req.user;
+    const { cedula: userCedula, role: userRole } = req.user;
 
-    // Si el token no tiene ID (tokens antiguos), obtenerlo de la base de datos
-    if (!userId && req.user.phone) {
-      const userResult = await query('SELECT id FROM users WHERE cedula = $1', [req.user.phone]);
-      if (userResult.rows.length > 0) {
-        userId = userResult.rows[0].id;
-      }
-    }
-
-    // Verificar permisos
     const ensayoActual = await query(
-      'SELECT director_id FROM ensayos_generales WHERE id = $1',
+      `SELECT e.*, g.director_cedula 
+       FROM ensayos_generales e
+       JOIN grupos g ON g.id = e.grupo_id
+       WHERE e.id = $1`,
       [id]
     );
 
@@ -248,14 +169,18 @@ export const eliminarEnsayo = async (req, res) => {
       return res.status(404).json({ error: 'Ensayo no encontrado' });
     }
 
-    if (role !== 'SUPER' && ensayoActual.rows[0].director_id !== userId) {
+    if (userRole !== 'SUPER' && ensayoActual.rows[0].director_cedula !== userCedula) {
       return res.status(403).json({ error: 'No tienes permiso para eliminar este ensayo' });
     }
 
     await query('DELETE FROM ensayos_generales WHERE id = $1', [id]);
+    
+    console.log(`✅ Ensayo eliminado: \${id}`);
     res.json({ message: 'Ensayo eliminado correctamente' });
   } catch (error) {
     console.error('Error eliminando ensayo:', error);
     res.status(500).json({ error: error.message });
   }
 };
+
+// Listar ensayos de un grupo específico

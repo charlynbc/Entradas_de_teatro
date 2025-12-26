@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Mis Compras - Teatro{% endblock %}
+
+{% block content %}
+<h2>Compras de {{ email }}</h2>
+
+{% if ventas %}
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Evento</th>
+                <th>Fecha Evento</th>
+                <th>Lugar</th>
+                <th>Cantidad</th>
+                <th>Total</th>
+                <th>Fecha Compra</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for venta in ventas %}
+            <tr>
+                <td>#{{ venta.id }}</td>
+                <td>{{ venta.evento_nombre }}</td>
+                <td>{{ venta.fecha }} {{ venta.hora }}</td>
+                <td>{{ venta.lugar }}</td>
+                <td>{{ venta.cantidad }}</td>
+                <td>${{ "%.2f"|format(venta.total) }}</td>
+                <td>{{ venta.fecha_compra }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card">
+    <p>No se encontraron compras para este email.</p>
+    <a href="/mis-compras" class="btn">Buscar de Nuevo</a>
+</div>
+{% endif %}
+{% endblock %}

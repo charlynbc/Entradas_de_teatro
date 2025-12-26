@@ -1,11 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionCard from '../../components/SectionCard';
-import Toast from '../../components/Toast';
-import { useToast } from '../../hooks/useToast';
 import colors from '../../theme/colors';
 import {
   listDirectors,
@@ -17,7 +13,6 @@ import {
 } from '../../api';
 
 export default function DirectorsScreen() {
-  const { toast, showSuccess, showError, showWarning, hideToast } = useToast();
   const [directors, setDirectors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [vendors, setVendors] = useState([]);
@@ -44,7 +39,7 @@ export default function DirectorsScreen() {
 
   const handleCreate = async () => {
     if (!form.nombre || !form.cedula) {
-      showError('Completa nombre y cédula');
+      Alert.alert('Falta info', 'Completa nombre y cedula');
       return;
     }
     setSaving(true);
@@ -52,9 +47,9 @@ export default function DirectorsScreen() {
       await createDirector(form);
       setForm({ nombre: '', cedula: '' });
       load();
-      showSuccess('✨ Director creado con éxito (contraseña: 1234)');
+      Alert.alert('Listo', 'Director creado con contrasena 1234');
     } catch (error) {
-      showError(error.message || 'No se pudo crear el director');
+      Alert.alert('Error', error.message || 'No se pudo crear');
     } finally {
       setSaving(false);
     }
@@ -62,19 +57,15 @@ export default function DirectorsScreen() {
 
   const handleReset = async (cedula) => {
     Alert.alert(
-      '🔐 Resetear contraseña',
-      `¿Querés restablecer la contraseña de ${cedula} a 1234?`,
+      'Resetear contrasena',
+      `Queres restablecer la contrasena de ${cedula} a 1234?`,
       [
         { text: 'Cancelar', style: 'cancel' },
         {
           text: 'Confirmar',
           onPress: async () => {
-            try {
-              await resetDirectorPassword(cedula);
-              showSuccess('🔐 Contraseña reseteada con éxito');
-            } catch (error) {
-              showError('No se pudo resetear la contraseña');
-            }
+            await resetDirectorPassword(cedula);
+            Alert.alert('Hecho', 'Contrasena reseteada');
           },
         },
       ]
@@ -83,8 +74,8 @@ export default function DirectorsScreen() {
 
   const handleDeleteDirector = (cedula) => {
     Alert.alert(
-      '🗑️ Eliminar director',
-      `Se van a borrar las obras y funciones asignadas a ${cedula}. ¿Continuar?`,
+        'Eliminar director',
+        `Se van a borrar las obras y funciones asignadas a ${cedula}. Continuar?`,
       [
         { text: 'Cancelar', style: 'cancel' },
         {
@@ -94,9 +85,9 @@ export default function DirectorsScreen() {
             try {
               await deleteDirector(cedula);
               load();
-              showSuccess('🗑️ Director eliminado con éxito');
+              Alert.alert('Listo', 'Director eliminado');
             } catch (error) {
-              showError(error.message || 'No se pudo eliminar el director');
+              Alert.alert('Error', error.message || 'No se pudo eliminar');
             }
           },
         },
@@ -106,8 +97,8 @@ export default function DirectorsScreen() {
 
   const handleDeleteVendor = (cedula) => {
     Alert.alert(
-      '🗑️ Eliminar vendedor',
-      `El stock de ${cedula} volverá a dirección. ¿Confirmás?`,
+        'Eliminar vendedor',
+        `El stock de ${cedula} volvera a direccion. Confirmas?`,
       [
         { text: 'Cancelar', style: 'cancel' },
         {
@@ -117,9 +108,9 @@ export default function DirectorsScreen() {
             try {
               await deleteVendor(cedula);
               load();
-              showSuccess('🗑️ Vendedor eliminado con éxito');
+              Alert.alert('Listo', 'Vendedor eliminado');
             } catch (error) {
-              showError(error.message || 'No se pudo eliminar el vendedor');
+              Alert.alert('Error', error.message || 'No se pudo eliminar');
             }
           },
         },
@@ -129,21 +120,6 @@ export default function DirectorsScreen() {
 
   return (
     <ScreenContainer>
-      <LinearGradient
-        colors={['#8B0000', '#DC143C', '#8B0000']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.headerGradient}
-      >
-        <View style={styles.headerContent}>
-          <View>
-            <Text style={styles.headerTitle}>🎭 Administración</Text>
-            <Text style={styles.headerSubtitle}>Directores y Elenco</Text>
-          </View>
-          <MaterialCommunityIcons name="account-supervisor" size={48} color="#FFD700" />
-        </View>
-      </LinearGradient>
-      
       <SectionCard title="Crear director" subtitle="Cada director administra sus obras">
         <TextInput
           style={styles.input}
@@ -209,54 +185,11 @@ export default function DirectorsScreen() {
           ))
         )}
       </SectionCard>
-      
-      <Toast 
-        visible={toast.visible} 
-        message={toast.message} 
-        type={toast.type}
-        onHide={hideToast}
-      />
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  headerGradient: {
-    marginHorizontal: -20,
-    marginTop: -20,
-    marginBottom: 20,
-    paddingTop: 20,
-    paddingHorizontal: 20,
-    paddingBottom: 24,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    shadowColor: '#8B0000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 32,
-    fontWeight: '900',
-    color: '#FFD700',
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 4,
-    letterSpacing: 0.5,
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: '#FFF',
-    opacity: 0.9,
-    marginTop: 4,
-    fontWeight: '600',
-  },
   input: {
     backgroundColor: colors.surface,
     borderRadius: 12,

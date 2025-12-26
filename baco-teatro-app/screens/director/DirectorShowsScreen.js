@@ -2,22 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ActivityIndicator, Modal, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
-import { LinearGradient } from 'expo-linear-gradient';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionCard from '../../components/SectionCard';
 import ShowCard from '../../components/ShowCard';
-import Toast from '../../components/Toast';
-import { useToast } from '../../hooks/useToast';
 import colors from '../../theme/colors';
-import { listDirectorShows, createShow, assignTicketsToActor, deleteProduction } from '../../api';
+import { listDirectorShows, createShow, assignTicketsToActor } from '../../api';
 import { Ionicons } from '@expo/vector-icons';
 
 const initialShow = { obra: '', fecha: new Date(), lugar: '', capacidad: '', base_price: '' };
 const initialAssign = { showId: '', actorId: '', cantidad: '' };
 
 export default function DirectorShowsScreen({ navigation }) {
-  const { toast, showSuccess, showError, hideToast } = useToast();
   const [shows, setShows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -47,7 +42,7 @@ export default function DirectorShowsScreen({ navigation }) {
 
   const handleCreateShow = async () => {
     if (!showForm.obra || !showForm.lugar || !showForm.capacidad) {
-      showError('Completá obra, lugar y capacidad');
+      Alert.alert('Falta info', 'Completa obra, lugar y capacidad');
       return;
     }
     setCreating(true);
@@ -65,35 +60,12 @@ export default function DirectorShowsScreen({ navigation }) {
       setShowForm(initialShow);
       setModalVisible(false);
       load();
-      showSuccess('✨ Función creada y tickets generados con éxito');
+      Alert.alert('Listo', 'Función creada y tickets generados');
     } catch (error) {
-      showError(error.message || 'No se pudo crear la función');
+      Alert.alert('Error', error.message || 'No se pudo crear la función');
     } finally {
       setCreating(false);
     }
-  };
-
-  const handleDeleteShow = (show) => {
-    Alert.alert(
-      '🗑️ Eliminar Obra',
-      `¿Estás seguro de eliminar "${show.obra}"? Esto borrará todos los tickets asociados.`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteProduction(show.id);
-              load();
-              showSuccess('🗑️ Obra eliminada con éxito');
-            } catch (error) {
-              showError(error.message || 'No se pudo eliminar la obra');
-            }
-          },
-        },
-      ]
-    );
   };
 
   const onDateChange = (event, selectedDate) => {
@@ -124,60 +96,34 @@ export default function DirectorShowsScreen({ navigation }) {
 
   return (
     <ScreenContainer>
-      <LinearGradient
-        colors={['#FFD700', '#FFA500', '#FF8C00']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.headerGradient}
-      >
-        <View style={styles.headerContent}>
-          <View>
-            <Text style={styles.title}>🎭 Funciones</Text>
-            <Text style={styles.subtitle}>Gestión de shows y entradas</Text>
-          </View>
-          <TouchableOpacity 
-            style={styles.addButton} 
-            onPress={() => setModalVisible(true)}
-            activeOpacity={0.8}
-          >
-            <LinearGradient
-              colors={['#8B0000', '#DC143C', '#8B0000']}
-              style={styles.addButtonGradient}
-            >
-              <MaterialCommunityIcons name="plus" size={28} color="#FFD700" />
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
-      </LinearGradient>
+      <View style={styles.header}>
+        <Text style={styles.title}>Funciones</Text>
+        <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
+          <Ionicons name="add" size={24} color={colors.black} />
+          <Text style={styles.addButtonText}>Nueva</Text>
+        </TouchableOpacity>
+      </View>
 
       <SectionCard title="Funciones creadas" subtitle={`${shows.length} registros`}>
         {loading ? (
           <ActivityIndicator color={colors.secondary} />
         ) : (
           shows.map((show) => (
-            <View key={show.id} style={styles.showItemContainer}>
-              <TouchableOpacity 
-                onPress={() => navigation.navigate('DirectorShowDetail', { show })}
-                activeOpacity={0.8}
-                style={{ flex: 1 }}
-              >
-                <ShowCard
-                  show={show}
-                  footer={(
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Text style={styles.meta}>Stock actores {show.enStock} /  Vendidas {show.vendidas}</Text>
-                      <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
-                    </View>
-                  )}
-                />
-              </TouchableOpacity>
-              <TouchableOpacity 
-                onPress={() => handleDeleteShow(show)}
-                style={styles.deleteButton}
-              >
-                <Ionicons name="trash-outline" size={20} color={colors.error} />
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity 
+              key={show.id} 
+              onPress={() => navigation.navigate('DirectorShowDetail', { show })}
+              activeOpacity={0.8}
+            >
+              <ShowCard
+                show={show}
+                footer={(
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Text style={styles.meta}>Stock actores {show.enStock} /  Vendidas {show.vendidas}</Text>
+                    <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+                  </View>
+                )}
+              />
+            </TouchableOpacity>
           ))
         )}
       </SectionCard>
@@ -396,69 +342,35 @@ export default function DirectorShowsScreen({ navigation }) {
           </View>
         </View>
       </Modal>
-      
-      <Toast 
-        visible={toast.visible} 
-        message={toast.message} 
-        type={toast.type}
-        onHide={hideToast}
-      />
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  headerGradient: {
-    marginHorizontal: -20,
-    marginTop: -20,
-    marginBottom: 20,
-    paddingTop: 20,
-    paddingHorizontal: 20,
-    paddingBottom: 24,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    shadowColor: '#FFD700',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  headerContent: {
+  header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 20,
+    paddingHorizontal: 4,
   },
   title: {
-    fontSize: 32,
-    fontWeight: '900',
-    color: '#000',
-    textShadowColor: 'rgba(255, 255, 255, 0.5)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
-    letterSpacing: 0.5,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#000',
-    opacity: 0.8,
-    marginTop: 4,
-    fontWeight: '600',
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: colors.text,
   },
   addButton: {
-    shadowColor: '#8B0000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
-    elevation: 8,
-  },
-  addButtonGradient: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
+    flexDirection: 'row',
+    backgroundColor: colors.secondary,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
     alignItems: 'center',
-    borderWidth: 3,
-    borderColor: '#000',
+    gap: 4,
+  },
+  addButtonText: {
+    color: colors.black,
+    fontWeight: 'bold',
   },
   input: {
     backgroundColor: colors.background,
@@ -649,18 +561,5 @@ const styles = StyleSheet.create({
     color: colors.warning,
     fontSize: 10,
     marginBottom: 10,
-  },
-  showItemContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 12,
-  },
-  deleteButton: {
-    backgroundColor: colors.surface,
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.error + '40',
-  },
+  }
 });

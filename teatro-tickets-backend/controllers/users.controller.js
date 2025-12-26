@@ -1,64 +1,25 @@
-import { readData, writeData } from '../utils/dataStore.js';
-import { query } from '../db/postgres.js';
+import { createUser, listUsers, listSellersWithStats, deleteUserByFlexibleId, listAllMembers as listMembersSvc, resetPasswordByFlexibleId, getWeeklyBirthdaysService, getUserByCedula, updateUserByCedula } from '../services/users.service.js';
 
 export async function crearUsuario(req, res) {
   try {
     const { cedula, nombre, password, rol } = req.body;
-    
-    if (!cedula || !nombre || !password || !rol) {
-      return res.status(400).json({ error: 'cedula, nombre, password y rol son obligatorios' });
-    }
-    
-    if (!['admin', 'vendedor'].includes(rol)) {
-      return res.status(400).json({ error: 'rol debe ser admin o vendedor' });
-    }
-    
-    // Verificar si ya existe
-    const existente = await query('SELECT id FROM users WHERE cedula = $1', [cedula]);
-    if (existente.rows.length > 0) {
-      return res.status(400).json({ error: 'Ya existe un usuario con esa cédula' });
-    }
-
-    // Importar bcrypt
-    const bcrypt = (await import('bcrypt')).default;
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Generar ID único
-    const id = `${rol}_${cedula}`;
-
-    const result = await query(
-      `INSERT INTO users (id, cedula, nombre, password, rol, created_at) 
-       VALUES ($1, $2, $3, $4, $5, NOW()) 
-       RETURNING id, cedula, nombre, rol`,
-      [id, cedula, nombre, hashedPassword, rol]
-    );
-
-    const user = result.rows[0];
+    const userRole = req.user.role;
+    const user = await createUser({ cedula, nombre, password, rol, requesterRole: userRole });
     res.status(201).json({
       message: 'Usuario creado exitosamente',
-      user: {
-        id: user.id,
-        phone: user.cedula,
-        cedula: user.cedula,
-        name: user.nombre,
-        role: rol.toUpperCase()
-      }
+      user
     });
   } catch (error) {
     console.error('Error creando usuario:', error);
-    res.status(500).json({ error: error.message });
+    res.status(error.status || 500).json({ error: error.message });
   }
 }
 
 export async function listarUsuarios(req, res) {
   try {
-    const result = await query(`
-      SELECT id, cedula, nombre, rol, created_at
-      FROM users
-      WHERE rol IN ('admin', 'vendedor')
-      ORDER BY created_at DESC
-    `);
-    res.json(result.rows);
+    const { role } = req.query;
+    const rows = await listUsers(role);
+    res.json(rows);
   } catch (error) {
     console.error('Error listando usuarios:', error);
     res.status(500).json({ error: error.message });
@@ -67,34 +28,8 @@ export async function listarUsuarios(req, res) {
 
 export async function listarVendedores(req, res) {
   try {
-    // Obtener vendedores con información de sus tickets y shows
-    const result = await query(`
-      SELECT 
-        u.id,
-        u.cedula,
-        u.nombre,
-        u.rol,
-        COUNT(DISTINCT t.show_id) as total_shows,
-        COUNT(t.id) as total_tickets,
-        json_agg(DISTINCT jsonb_build_object(
-          'show_id', s.id,
-          'show_nombre', s.nombre,
-          'tickets_asignados', (
-            SELECT COUNT(*) 
-            FROM tickets t2 
-            WHERE t2.vendedor_id = u.id 
-            AND t2.show_id = s.id
-          )
-        )) FILTER (WHERE s.id IS NOT NULL) as shows
-      FROM users u
-      LEFT JOIN tickets t ON t.vendedor_id = u.id
-      LEFT JOIN shows s ON s.id = t.show_id
-      WHERE u.rol = 'vendedor'
-      GROUP BY u.id, u.cedula, u.nombre, u.rol
-      ORDER BY u.nombre
-    `);
-    
-    res.json(result.rows);
+    const rows = await listSellersWithStats();
+    res.json(rows);
   } catch (error) {
     console.error('Error listando vendedores:', error);
     res.status(500).json({ error: error.message });
@@ -104,63 +39,191 @@ export async function listarVendedores(req, res) {
 export async function desactivarUsuario(req, res) {
   try {
     const { id } = req.params;
-    
-    // Buscar usuario por ID o cédula (flexible para ambos casos)
-    const result = await query(
-      'SELECT * FROM users WHERE id = $1 OR cedula = $1',
-      [id]
-    );
-    
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Usuario no encontrado' });
-    }
-    
-    // Eliminar el usuario usando su ID interno
-    await query('DELETE FROM users WHERE id = $1', [result.rows[0].id]);
-    
+    const requesterRole = req.user.role;
+    await deleteUserByFlexibleId(id, requesterRole);
     res.json({ ok: true, mensaje: 'Usuario eliminado correctamente' });
   } catch (error) {
     console.error('Error eliminando usuario:', error);
+    res.status(error.status || 500).json({ error: error.message });
+  }
+}
+
+// Listar todos los usuarios activos del sistema (incluye SUPER)
+export async function listarMiembros(req, res) {
+  try {
+    console.log('✅ Controller listarMiembros llamado por usuario:', req.user.cedula);
+    const { role } = req.user;
+    const rows = await listMembersSvc(role);
+    console.log(`📋 listMembersSvc devolvió ${rows.length} miembros`);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error listando miembros:', error);
     res.status(500).json({ error: error.message });
   }
 }
 
-// Listar todos los miembros (excluye usuario supremo)
-export async function listarMiembros(req, res) {
+export async function resetPassword(req, res) {
   try {
-    const { role } = req.user;
-
-    // Super puede ver todos incluyéndose, directores y actores ven a todos excepto super
-    const result = await query(`
-      SELECT 
-        u.id,
-        u.cedula,
-        u.nombre,
-        u.rol,
-        u.created_at,
-        COUNT(DISTINCT t.show_id) as obras_activas,
-        json_agg(DISTINCT jsonb_build_object(
-          'show_id', s.id,
-          'show_nombre', s.nombre,
-          'show_fecha', s.fecha
-        )) FILTER (WHERE s.id IS NOT NULL) as obras
-      FROM users u
-      LEFT JOIN tickets t ON t.vendedor_id = u.id AND t.estado != 'USADA'
-      LEFT JOIN shows s ON s.id = t.show_id
-      WHERE u.rol != 'supremo' OR $1 = 'SUPER'
-      GROUP BY u.id, u.cedula, u.nombre, u.rol, u.created_at
-      ORDER BY 
-        CASE u.rol 
-          WHEN 'admin' THEN 1 
-          WHEN 'vendedor' THEN 2 
-          ELSE 3 
-        END,
-        u.nombre
-    `, [role]);
-
-    res.json(result.rows);
+    const { id } = req.params;
+    const { newPassword } = req.body || {};
+    const requesterRole = req.user?.role;
+    if (requesterRole !== 'SUPER') {
+      const error = new Error('Solo el Super Usuario puede resetear contraseñas');
+      error.status = 403;
+      throw error;
+    }
+    const finalPassword = newPassword || 'admin123';
+    await resetPasswordByFlexibleId(id, finalPassword);
+    res.json({ ok: true, mensaje: 'Contraseña reseteada correctamente', nueva: finalPassword });
   } catch (error) {
-    console.error('Error listando miembros:', error);
+    console.error('Error reseteando contraseña:', error);
+    res.status(error.status || 500).json({ error: error.message });
+  }
+}
+
+// Crear actor/vendedor (para SUPER y ADMIN)
+export async function crearActor(req, res) {
+  try {
+    const { cedula, nombre, name, password, genero } = req.body;
+    const userRole = req.user.role;
+    const user = await createUser({ 
+      cedula, 
+      nombre: nombre || name, 
+      name: nombre || name,
+      password: password || 'admin123', 
+      rol: 'VENDEDOR',
+      role: 'VENDEDOR',
+      genero: genero || 'otro',
+      requesterRole: userRole 
+    });
+    res.status(201).json({
+      message: 'Actor/Vendedor creado exitosamente',
+      user
+    });
+  } catch (error) {
+    console.error('Error creando actor:', error);
+    res.status(error.status || 500).json({ error: error.message });
+  }
+}
+
+// Crear director/admin (solo para SUPER)
+export async function crearDirector(req, res) {
+  try {
+    const { cedula, nombre, name, password, genero } = req.body;
+    const userRole = req.user.role;
+    
+    if (userRole !== 'SUPER') {
+      return res.status(403).json({ error: 'Solo el Super Usuario puede crear directores' });
+    }
+    
+    const user = await createUser({ 
+      cedula, 
+      nombre: nombre || name,
+      name: nombre || name,
+      password: password || 'admin123', 
+      rol: 'ADMIN',
+      role: 'ADMIN',
+      genero: genero || 'otro',
+      requesterRole: userRole 
+    });
+    res.status(201).json({
+      message: 'Director/Admin creado exitosamente',
+      user
+    });
+  } catch (error) {
+    console.error('Error creando director:', error);
+    res.status(error.status || 500).json({ error: error.message });
+  }
+}
+
+// Obtener cumpleaños de la semana actual
+export async function getWeeklyBirthdays(req, res) {
+  try {
+    const birthdays = await getWeeklyBirthdaysService();
+    res.json(birthdays);
+  } catch (error) {
+    console.error('Error obteniendo cumpleaños semanales:', error);
+    res.status(500).json({ error: error.message });
+  }
+}
+// Obtener perfil del usuario actual
+export async function getMe(req, res) {
+  try {
+    const cedula = req.user.cedula;
+    const user = await getUserByCedula(cedula);
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+    // No enviar el password_hash
+    const { password_hash, ...userData } = user;
+    res.json(userData);
+  } catch (error) {
+    console.error('Error obteniendo perfil:', error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
+// Actualizar perfil del usuario actual
+export async function updateMe(req, res) {
+  try {
+    const cedula = req.user.cedula;
+    const updateData = req.body;
+    
+    // No permitir cambiar role, cedula, active, etc
+    const allowedFields = ['name', 'nombre', 'email', 'telefono', 'foto_url', 'genero', 'fecha_nacimiento'];
+    const filteredData = {};
+    for (const key of allowedFields) {
+      if (updateData[key] !== undefined) {
+        filteredData[key] = updateData[key];
+      }
+    }
+    
+    const updated = await updateUserByCedula(cedula, filteredData);
+    if (!updated) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+    
+    const { password_hash, ...userData } = updated;
+    res.json(userData);
+  } catch (error) {
+    console.error('Error actualizando perfil:', error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
+// Cambiar contraseña del usuario actual
+export async function changePassword(req, res) {
+  try {
+    const cedula = req.user.cedula;
+    const { currentPassword, newPassword } = req.body;
+    
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Contraseña actual y nueva son requeridas' });
+    }
+    
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 6 caracteres' });
+    }
+    
+    // Verificar contraseña actual
+    const user = await getUserByCedula(cedula);
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+    
+    const bcrypt = (await import('bcrypt')).default;
+    const isValid = await bcrypt.compare(currentPassword, user.password_hash);
+    if (!isValid) {
+      return res.status(401).json({ error: 'Contraseña actual incorrecta' });
+    }
+    
+    // Actualizar contraseña
+    const newHash = await bcrypt.hash(newPassword, 10);
+    await updateUserByCedula(cedula, { password_hash: newHash });
+    
+    res.json({ ok: true, message: 'Contraseña actualizada correctamente' });
+  } catch (error) {
+    console.error('Error cambiando contraseña:', error);
     res.status(500).json({ error: error.message });
   }
 }

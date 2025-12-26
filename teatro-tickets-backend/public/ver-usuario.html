@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil de Usuario - BACÓ</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/baco-common.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --negro: #0a0a0a;
+            --bordo: #8B1538;
+            --dorado: #D4AF37;
+            --blanco: #F8F8F8;
+            --gris-oscuro: #1a1a1a;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--negro);
+            color: var(--blanco);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--gris-oscuro), var(--negro));
+            padding: 20px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .btn-back {
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid var(--dorado);
+            color: var(--dorado);
+            padding: 10px 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-back:hover {
+            background: var(--dorado);
+            color: var(--negro);
+        }
+
+        .header-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            color: var(--dorado);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 20px;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .profile-header {
+            background: linear-gradient(135deg, var(--gris-oscuro), #252525);
+            border: 2px solid rgba(212, 175, 55, 0.3);
+            border-radius: 25px;
+            padding: 40px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .profile-photo {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 4px solid var(--dorado);
+            object-fit: cover;
+            box-shadow: 0 0 40px rgba(212, 175, 55, 0.4);
+            flex-shrink: 0;
+        }
+
+        .profile-info {
+            flex: 1;
+        }
+
+        .profile-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--blanco), var(--dorado));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .profile-role {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .role-super {
+            background: linear-gradient(135deg, var(--dorado), #F4E3B5);
+            color: var(--negro);
+        }
+
+        .role-admin {
+            background: linear-gradient(135deg, var(--bordo), #A31D45);
+            color: white;
+        }
+
+        .role-vendedor {
+            background: linear-gradient(135deg, #3b82f6, #60a5fa);
+            color: white;
+        }
+
+        .profile-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: rgba(248, 248, 248, 0.8);
+        }
+
+        .detail-item i {
+            color: var(--dorado);
+            font-size: 1.1rem;
+            width: 25px;
+        }
+
+        .section {
+            background: linear-gradient(135deg, var(--gris-oscuro), #1f1f1f);
+            border: 1.5px solid rgba(212, 175, 55, 0.2);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.6rem;
+            color: var(--dorado);
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--dorado);
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: rgba(248, 248, 248, 0.7);
+            font-size: 0.95rem;
+        }
+
+        .grupos-list, .funciones-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .list-item {
+            background: rgba(26, 26, 26, 0.6);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .list-item:hover {
+            border-color: var(--dorado);
+            background: rgba(26, 26, 26, 0.8);
+        }
+
+        .list-item-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+
+        .list-item-details {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            color: rgba(248, 248, 248, 0.7);
+            font-size: 0.9rem;
+        }
+
+        .list-item-details span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .list-item-details i {
+            color: var(--dorado);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 14px 25px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 0.95rem;
+        }
+
+        .btn-edit {
+            background: rgba(212, 175, 55, 0.2);
+            color: var(--dorado);
+            border: 1px solid var(--dorado);
+        }
+
+        .btn-edit:hover {
+            background: var(--dorado);
+            color: var(--negro);
+        }
+
+        .btn-suspend {
+            background: rgba(139, 21, 56, 0.2);
+            color: var(--bordo);
+            border: 1px solid var(--bordo);
+        }
+
+        .btn-suspend:hover {
+            background: var(--bordo);
+            color: white;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--dorado);
+        }
+
+        .loading i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: rgba(248, 248, 248, 0.6);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: rgba(212, 175, 55, 0.3);
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .profile-details {
+                grid-template-columns: 1fr;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="listar-usuarios.html" class="btn-back">
+            <i class="fas fa-arrow-left"></i>
+            Volver a Usuarios
+        </a>
+        <h1 class="header-title">Perfil de Usuario</h1>
+    </header>
+
+    <div class="container">
+        <div id="userContainer">
+            <div class="loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                <div>Cargando perfil...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/baco-common.js"></script>
+    <script>
+        // Verificar autenticación
+        if (!Baco.Auth.requireAuth()) return;
+        
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        if (currentUser.role !== 'SUPER') {
+            Baco.UI.showError('Acceso denegado');
+            setTimeout(() => window.location.href = '/admin-dashboard.html', 2000);
+            return;
+        }
+
+        // Obtener cédula del usuario desde URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const cedula = urlParams.get('cedula');
+
+        if (!cedula) {
+            Baco.UI.showError('Cédula no especificada');
+            setTimeout(() => window.location.href = '/listar-usuarios.html', 2000);
+            return;
+        }
+
+        // Cargar datos del usuario
+        async function loadUser() {
+            try {
+                const user = await Baco.API.get(`/users/${cedula}`);
+                renderUser(user);
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Error al cargar el usuario');
+            }
+        }
+
+        function renderUser(user) {
+            const container = document.getElementById('userContainer');
+            
+            const roleClass = user.role === 'SUPER' ? 'role-super' : 
+                             user.role === 'ADMIN' ? 'role-admin' : 'role-vendedor';
+            
+            const roleText = user.role === 'SUPER' ? 'Super Usuario' : 
+                            user.role === 'ADMIN' ? 'Director' : 'Actor/Actriz';
+
+            const photoUrl = user.photo_url || Baco.Image.getPlaceholder(user.nombre, 150);
+
+            // Estadísticas (datos de ejemplo - adaptar según tu API)
+            const statsHTML = `
+                <div class="section">
+                    <h3 class="section-title">
+                        <i class="fas fa-chart-bar"></i>
+                        Estadísticas
+                    </h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number">${user.grupos_count || 0}</div>
+                            <div class="stat-label">Grupos</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${user.funciones_count || 0}</div>
+                            <div class="stat-label">Funciones</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${user.entradas_vendidas || 0}</div>
+                            <div class="stat-label">Entradas Vendidas</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${user.dias_activo || 0}</div>
+                            <div class="stat-label">Días Activo</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Grupos (si los tiene)
+            const gruposHTML = user.grupos && user.grupos.length > 0 ? `
+                <div class="section">
+                    <h3 class="section-title">
+                        <i class="fas fa-users"></i>
+                        Grupos (${user.grupos.length})
+                    </h3>
+                    <div class="grupos-list">
+                        ${user.grupos.map(grupo => `
+                            <div class="list-item">
+                                <div class="list-item-title">${grupo.nombre}</div>
+                                <div class="list-item-details">
+                                    <span><i class="fas fa-theater-masks"></i> ${grupo.obra}</span>
+                                    <span><i class="fas fa-users"></i> ${grupo.miembros_count || 0} miembros</span>
+                                    <span><i class="fas fa-calendar"></i> ${grupo.funciones_count || 0} funciones</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            ` : '';
+
+            // Funciones próximas
+            const funcionesHTML = user.funciones && user.funciones.length > 0 ? `
+                <div class="section">
+                    <h3 class="section-title">
+                        <i class="fas fa-calendar-alt"></i>
+                        Próximas Funciones
+                    </h3>
+                    <div class="funciones-list">
+                        ${user.funciones.map(funcion => `
+                            <div class="list-item">
+                                <div class="list-item-title">${funcion.obra || 'Sin título'}</div>
+                                <div class="list-item-details">
+                                    <span><i class="fas fa-calendar"></i> ${Baco.Format.date(funcion.fecha)}</span>
+                                    <span><i class="fas fa-clock"></i> ${funcion.hora || 'Sin hora'}</span>
+                                    <span><i class="fas fa-map-marker-alt"></i> ${funcion.lugar || 'Sin lugar'}</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            ` : '';
+
+            const actionButtons = user.role !== 'SUPER' ? `
+                <div class="action-buttons">
+                    <button class="btn-action btn-edit" onclick="editUser('${user.cedula}')">
+                        <i class="fas fa-edit"></i>
+                        Editar Usuario
+                    </button>
+                    <button class="btn-action btn-suspend" onclick="suspendUser('${user.cedula}')">
+                        <i class="fas fa-ban"></i>
+                        Suspender Usuario
+                    </button>
+                </div>
+            ` : '';
+
+            container.innerHTML = `
+                <div class="profile-header">
+                    <img src="${photoUrl}" 
+                         alt="${user.nombre}" 
+                         class="profile-photo photo-circular"
+                         onerror="this.src='${Baco.Image.getPlaceholder(user.nombre, 150)}'">
+                    <div class="profile-info">
+                        <h1 class="profile-name">${user.nombre}</h1>
+                        <span class="profile-role ${roleClass}">${roleText}</span>
+                        <div class="profile-details">
+                            <div class="detail-item">
+                                <i class="fas fa-id-card"></i>
+                                <span>CI: ${Baco.Format.cedula(user.cedula)}</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-phone"></i>
+                                <span>${user.phone || 'Sin teléfono'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-envelope"></i>
+                                <span>${user.email || 'Sin email'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-birthday-cake"></i>
+                                <span>${user.fecha_nacimiento ? Baco.Format.date(user.fecha_nacimiento) : 'Sin fecha'}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                ${statsHTML}
+                ${gruposHTML}
+                ${funcionesHTML}
+                ${actionButtons}
+            `;
+        }
+
+        function showError(message) {
+            document.getElementById('userContainer').innerHTML = `
+                <div class="empty-state" style="padding: 80px 20px;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 5rem; color: rgba(212, 175, 55, 0.3); margin-bottom: 20px;"></i>
+                    <h3 style="font-family: 'Playfair Display', serif; color: var(--dorado); font-size: 1.8rem; margin-bottom: 10px;">Error</h3>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+
+        function editUser(cedula) {
+            Baco.UI.showSuccess('Función de edición en desarrollo');
+            // TODO: Implementar modal de edición
+        }
+
+        async function suspendUser(cedula) {
+            const confirmed = await Baco.UI.confirm(
+                `¿Estás seguro de suspender al usuario con CI: ${Baco.Format.cedula(cedula)}?`,
+                '⚠️ Suspender Usuario',
+                'Sí, suspender'
+            );
+
+            if (confirmed) {
+                try {
+                    await Baco.API.delete(`/users/${cedula}`);
+                    Baco.UI.showSuccess('Usuario suspendido correctamente');
+                    setTimeout(() => window.location.href = '/listar-usuarios.html', 1500);
+                } catch (error) {
+                    // Error ya manejado por Baco.API
+                }
+            }
+        }
+
+        // Cargar al inicio
+        loadUser();
+    </script>
+</body>
+</html>
