@@ -1,7 +1,7 @@
 import express from 'express';
 import { 
   crearFuncion, 
-  listarFuncions, 
+  listarFunciones, 
   obtenerFuncion, 
   asignarTickets, 
   eliminarFuncion, 
@@ -15,8 +15,8 @@ import { authenticate, requireRole } from '../middleware/auth.middleware.js';
 const router = express.Router();
 
 router.post('/', authenticate, requireRole('ADMIN', 'SUPER'), crearFuncion);
-router.get('/', listarFuncions);  // Public endpoint - no authentication required
-router.get('/public', listarFuncions);  // Alias público explícito
+router.get('/', listarFunciones);  // Public endpoint - no authentication required
+router.get('/public', listarFunciones);  // Alias público explícito
 router.get('/concluidas', authenticate, requireRole('ADMIN', 'SUPER'), listarFuncionesConcluideas);  // Funciones concluidas
 router.get('/:id', obtenerFuncion);  // Detalle de show - público
 router.patch('/:id', authenticate, requireRole('ADMIN', 'SUPER', 'DIRECTOR'), updateFuncion);  // Actualizar función

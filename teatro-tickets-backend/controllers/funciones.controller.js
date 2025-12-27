@@ -110,7 +110,7 @@ export async function crearFuncion(req, res) {
   }
 }
 
-export async function listarFuncions(req, res) {
+export async function listarFunciones(req, res) {
   try {
     // Si no hay token, solo mostrar funciones ACTIVAS
     // Si hay token (director/super), mostrar todas las activas

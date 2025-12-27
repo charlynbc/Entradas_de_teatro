@@ -54,7 +54,7 @@ router.post('/limpiar-db', authenticate, requireRole(['SUPER']), async (req, res
   }
 });
 
-// Crear show (SUPER o ADMIN)
-router.post('/crear-show', authenticate, requireRole('SUPER', 'ADMIN'), crearShow);
+// Crear función (SUPER o ADMIN)
+router.post('/crear-funcion', authenticate, requireRole('SUPER', 'ADMIN'), crearFuncion);
 
 export default router;
