@@ -2,9 +2,23 @@ import { createUser, listUsers, listSellersWithStats, deleteUserByFlexibleId, li
 
 export async function crearUsuario(req, res) {
   try {
-    const { cedula, nombre, password, rol } = req.body;
+    const { cedula, nombre, password, rol, genero, phone, email, fecha_nacimiento, apellido, foto_url, direccion, notas } = req.body;
     const userRole = req.user.role;
-    const user = await createUser({ cedula, nombre, password, rol, requesterRole: userRole });
+    const user = await createUser({ 
+      cedula, 
+      nombre, 
+      password, 
+      rol, 
+      genero,
+      phone,
+      email,
+      fecha_nacimiento,
+      apellido,
+      foto_url,
+      direccion,
+      notas,
+      requesterRole: userRole 
+    });
     res.status(201).json({
       message: 'Usuario creado exitosamente',
       user
@@ -91,13 +105,13 @@ export async function crearActor(req, res) {
       nombre: nombre || name, 
       name: nombre || name,
       password: password || 'admin123', 
-      rol: 'VENDEDOR',
-      role: 'VENDEDOR',
+      rol: 'ACTOR',
+      role: 'ACTOR',
       genero: genero || 'otro',
       requesterRole: userRole 
     });
     res.status(201).json({
-      message: 'Actor/Vendedor creado exitosamente',
+      message: 'Actor/Actriz creado exitosamente',
       user
     });
   } catch (error) {

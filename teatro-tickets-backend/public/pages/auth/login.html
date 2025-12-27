@@ -251,8 +251,19 @@
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('user', JSON.stringify(data.user));
                 
-                // Todos los roles van al mismo dashboard (unificado)
-                window.location.href = '/admin-dashboard.html';
+                // Redirigir según el rol del usuario
+                const role = data.user.role;
+                let redirectUrl = '/pages/admin/admin-dashboard.html'; // Default para SUPER
+                
+                if (role === 'ADMIN') {
+                    redirectUrl = '/pages/admin/director-dashboard.html';
+                } else if (role === 'ACTOR') {
+                    redirectUrl = '/pages/admin/actor-dashboard.html';
+                } else if (role === 'SUPER') {
+                    redirectUrl = '/pages/admin/admin-dashboard.html';
+                }
+                
+                window.location.href = redirectUrl;
                 
             } catch (error) {
                 console.error('Error:', error);

@@ -1,579 +1,387 @@
-import QRCode from 'qrcode';
-import PDFDocument from 'pdfkit';
-import { generateTicketCode } from '../utils/generateCode.js';
-import { readData, writeData, nextId } from '../utils/dataStore.js';
-import { query } from '../db/postgres.js';
+/**
+ * Controller: Funciones (asociadas a Grupos)
+ * Descripción: Gestión de funciones teatrales dentro de grupos
+ * Fecha: 27-12-2025
+ */
 
-const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
+import pool from '../db/postgres.js';
+import crypto from 'crypto';
 
-async function generarQR(code) {
-  try {
-    const url = `${BASE_URL}/validar/${code}`;
-    const dataUrl = await QRCode.toDataURL(url);
-    return dataUrl;
-  } catch (error) {
-    console.error('Error generando QR:', error);
-    return null;
-  }
-}
-
+/**
+ * Crear función dentro de un grupo
+ * Solo SUPER y ADMIN (directores del grupo)
+ */
 export async function crearFuncion(req, res) {
-  try {
-    const { obra_id, obra, fecha, lugar, capacidad, precio_base } = req.body;
-    const { cedula: userCedula, role: userRole } = req.user;
-    const capacidadNum = Number(capacidad);
-    const basePriceNum = Number(precio_base);
+    const client = await pool.connect();
+    
+    try {
+        const { grupo_id, fecha, lugar, capacidad, precio_base, descripcion } = req.body;
+        const userRole = req.user.role;
+        const userCedula = req.user.cedula;
 
-    if (!obra || !fecha || !capacidadNum || !basePriceNum) {
-      return res.status(400).json({ 
-        error: 'obra, fecha, capacidad y precio_base son obligatorios' 
-      });
-    }
-
-    // Si se proporciona obra_id, verificar permisos
-    if (obra_id) {
-      const obraResult = await query(
-        `SELECT o.grupo_id, g.director_cedula 
-         FROM obras o 
-         JOIN grupos g ON g.id = o.grupo_id 
-         WHERE o.id = $1`,
-        [obra_id]
-      );
-
-      if (obraResult.rows.length > 0) {
-        const { grupo_id, director_cedula } = obraResult.rows[0];
-
-        // Verificar permisos: director, co-director, o SUPER
-        if (userRole !== 'SUPER' && director_cedula !== userCedula) {
-          const coDirectorResult = await query(
-            'SELECT id FROM grupo_miembros WHERE grupo_id = $1 AND miembro_cedula = $2 AND rol_en_grupo = $3 AND activo = TRUE',
-            [grupo_id, userCedula, 'DIRECTOR']
-          );
-
-          if (coDirectorResult.rows.length === 0) {
-            return res.status(403).json({ error: 'Solo los directores del grupo pueden crear funciones para esta obra' });
-          }
+        // Validar campos requeridos
+        if (!grupo_id || !fecha || !lugar || !capacidad || !precio_base) {
+            return res.status(400).json({ 
+                error: 'Faltan campos requeridos: grupo_id, fecha, lugar, capacidad, precio_base' 
+            });
         }
-      }
+
+        // Verificar que el grupo existe
+        const grupoResult = await client.query(
+            'SELECT * FROM grupos WHERE id = $1',
+            [grupo_id]
+        );
+
+        if (grupoResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Grupo no encontrado' });
+        }
+
+        const grupo = grupoResult.rows[0];
+
+        // Si es ADMIN, verificar que es director del grupo
+        if (userRole === 'ADMIN') {
+            const directorResult = await client.query(
+                'SELECT * FROM grupo_directores WHERE grupo_id = $1 AND director_cedula = $2',
+                [grupo_id, userCedula]
+            );
+
+            if (directorResult.rows.length === 0) {
+                return res.status(403).json({ 
+                    error: 'No tienes permiso para crear funciones en este grupo' 
+                });
+            }
+        }
+
+        // Generar código QR único
+        const qrCode = crypto.randomBytes(16).toString('hex');
+
+        // Obtener obra_id del grupo (si existe la relación)
+        let obraId = grupo.obra_id || null;
+
+        await client.query('BEGIN');
+
+        // Insertar función
+        const result = await client.query(
+            `INSERT INTO funciones (
+                grupo_id, obra_id, fecha, lugar, capacidad, precio_base, 
+                qr_code, entradas_disponibles, estado, created_at, updated_at
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'PROGRAMADA', NOW(), NOW())
+            RETURNING *`,
+            [grupo_id, obraId, fecha, lugar, capacidad, precio_base, qrCode, capacidad]
+        );
+
+        const funcion = result.rows[0];
+
+        // Crear entradas automáticamente
+        const entradas = [];
+        for (let i = 1; i <= capacidad; i++) {
+            const qrEntrada = `${qrCode}-${i.toString().padStart(4, '0')}`;
+            entradas.push([funcion.id, i, qrEntrada]);
+        }
+
+        // Insertar entradas en lote
+        const valuesPlaceholder = entradas.map((_, idx) => 
+            `($${idx * 3 + 1}, $${idx * 3 + 2}, $${idx * 3 + 3}, 'NO_ASIGNADA', NOW())`
+        ).join(',');
+
+        await client.query(
+            `INSERT INTO tickets (funcion_id, numero_asiento, qr_code, estado, created_at)
+             VALUES ${valuesPlaceholder}`,
+            entradas.flat()
+        );
+
+        await client.query('COMMIT');
+
+        res.status(201).json({
+            message: 'Función creada exitosamente',
+            funcion,
+            entradas_creadas: capacidad
+        });
+
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Error al crear función:', error);
+        res.status(500).json({ error: 'Error al crear función' });
+    } finally {
+        client.release();
     }
-
-    // Crear el show en PostgreSQL
-    const foto_url = req.body.foto_url || null;
-    const showResult = await query(
-      `INSERT INTO funciones (obra_id, obra, fecha, lugar, capacidad, precio_base, foto_url) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7) 
-       RETURNING *`,
-      [obra_id || null, obra, fecha, lugar || 'Teatro Principal', capacidadNum, basePriceNum, foto_url]
-    );
-
-    const show = showResult.rows[0];
-
-    // Generar tickets
-    const tickets = [];
-    for (let i = 0; i < capacidadNum; i++) {
-      let code;
-      let isUnique = false;
-      
-      while (!isUnique) {
-        code = generateTicketCode();
-        const existing = await query('SELECT code FROM tickets WHERE code = $1', [code]);
-        isUnique = existing.rows.length === 0;
-      }
-
-      const qrCode = await generarQR(code);
-      
-      const ticketResult = await query(
-        `INSERT INTO tickets (code, funcion_id, qr_code, estado, precio) 
-         VALUES ($1, $2, $3, 'DISPONIBLE', $4) 
-         RETURNING *`,
-        [code, show.id, qrCode, basePriceNum]
-      );
-      
-      tickets.push(ticketResult.rows[0]);
-    }
-
-    res.status(201).json({
-      show: {
-        id: show.id,
-        obra: show.obra,
-        fecha: show.fecha,
-        lugar: show.lugar,
-        capacidad: show.capacidad,
-        precio_base: show.precio_base
-      },
-      tickets_generados: tickets.length,
-      mensaje: `Función creada con ${tickets.length} tickets disponibles`
-    });
-  } catch (error) {
-    console.error('Error creando show:', error);
-    res.status(500).json({ error: error.message });
-  }
 }
 
-export async function listarFunciones(req, res) {
-  try {
-    // Si no hay token, solo mostrar funciones ACTIVAS
-    // Si hay token (director/super), mostrar todas las activas
-    const showOnlyActive = !req.user || req.user.role === 'INVITADO';
-    
-    let sqlQuery = `
-      SELECT s.*
-      FROM funciones s
-    `;
-    
-    if (showOnlyActive) {
-      sqlQuery += ` WHERE s.estado = 'ACTIVA'`;
-    } else {
-      // Directores y SUPER ven todas las activas (no las concluidas a menos que sea endpoint específico)
-      sqlQuery += ` WHERE s.estado = 'ACTIVA'`;
+/**
+ * Listar funciones de un grupo
+ */
+export async function listarFuncionesGrupo(req, res) {
+    try {
+        const { grupo_id } = req.params;
+
+        const result = await pool.query(
+            `SELECT 
+                f.*,
+                g.nombre as grupo_nombre,
+                g.obra as grupo_obra,
+                (SELECT COUNT(*) FROM tickets WHERE funcion_id = f.id AND estado != 'NO_ASIGNADA') as entradas_asignadas
+            FROM funciones f
+            JOIN grupos g ON f.grupo_id = g.id
+            WHERE f.grupo_id = $1
+            ORDER BY f.fecha ASC`,
+            [grupo_id]
+        );
+
+        res.json({
+            total: result.rows.length,
+            funciones: result.rows
+        });
+
+    } catch (error) {
+        console.error('Error al listar funciones:', error);
+        res.status(500).json({ error: 'Error al listar funciones' });
     }
-    
-    sqlQuery += ` ORDER BY s.fecha_hora DESC`;
-    
-    const result = await query(sqlQuery);
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Error listando funciones:', error);
-    res.status(500).json({ error: error.message });
-  }
 }
 
+/**
+ * Obtener función por ID
+ */
 export async function obtenerFuncion(req, res) {
-  try {
-    const showId = parseInt(req.params.id);
-    const result = await query(
-      'SELECT * FROM funciones WHERE id = $1',
-      [showId]
-    );
-    
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Funcion no encontrado' });
-    }
-    
-    // Obtener tickets del show
-    const ticketsResult = await query(
-      'SELECT * FROM tickets WHERE funcion_id = $1 ORDER BY code',
-      [showId]
-    );
-    
-    const show = result.rows[0];
-    show.tickets = ticketsResult.rows;
-    
-    res.json(show);
-  } catch (error) {
-    console.error('Error obteniendo show:', error);
-    res.status(500).json({ error: error.message });
-  }
-}
+    try {
+        const { id } = req.params;
 
-export async function asignarTickets(req, res) {
-  try {
-    const showId = parseInt(req.params.id);
-    const { vendedor_cedula, cantidad } = req.body;
-    const cantidadNum = Number(cantidad);
-
-    if (!vendedor_cedula || !cantidadNum) {
-      return res.status(400).json({ error: 'vendedor_cedula y cantidad son obligatorios' });
-    }
-    
-    // Verificar que el show existe
-    const showResult = await query('SELECT * FROM funciones WHERE id = $1', [showId]);
-    if (showResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Función no encontrada' });
-    }
-
-    // Verificar que el vendedor existe (buscar por cedula pero usar phone para FK)
-    const vendedorResult = await query(
-      'SELECT * FROM users WHERE cedula = $1 AND role = $2 AND active = TRUE',
-      [vendedor_cedula, 'VENDEDOR']
-    );
-    if (vendedorResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Vendedor no encontrado' });
-    }
-    const vendedor = vendedorResult.rows[0];
-
-    // Obtener tickets disponibles
-    const disponiblesResult = await query(
-      'SELECT * FROM tickets WHERE funcion_id = $1 AND estado = $2 LIMIT $3',
-      [showId, 'DISPONIBLE', cantidadNum]
-    );
-
-    if (disponiblesResult.rows.length < cantidadNum) {
-      return res.status(400).json({
-        error: `Solo hay ${disponiblesResult.rows.length} tickets disponibles`
-      });
-    }
-
-    // Asignar tickets al vendedor usando phone (FK)
-    const codes = disponiblesResult.rows.map(t => t.code);
-    await query(
-      `UPDATE tickets 
-       SET estado = 'STOCK_VENDEDOR', vendedor_phone = $1, reservado_at = NOW() 
-       WHERE code = ANY($2::text[])`,
-      [vendedor.phone, codes]
-    );
-
-    res.json({
-      mensaje: `${codes.length} tickets asignados a ${vendedor.name}`,
-      vendedor: { cedula: vendedor.cedula, name: vendedor.name },
-      tickets: codes
-    });
-  } catch (error) {
-    console.error('Error asignando tickets:', error);
-    res.status(500).json({ error: error.message });
-  }
-}
-
-export async function eliminarFuncion(req, res) {
-  try {
-    const showId = parseInt(req.params.id);
-    
-    // Verificar que el show existe
-    const showResult = await query(
-      'SELECT * FROM funciones WHERE id = $1',
-      [showId]
-    );
-    
-    if (showResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Función no encontrada' });
-    }
-    
-    const show = showResult.rows[0];
-    
-    // Eliminar tickets asociados (por CASCADE debería hacerse automático)
-    await query('DELETE FROM tickets WHERE funcion_id = $1', [showId]);
-    
-    // Eliminar el show
-    await query('DELETE FROM funciones WHERE id = $1', [showId]);
-    
-    res.json({ 
-      ok: true, 
-      mensaje: 'Función eliminada correctamente',
-      obra: show.obra 
-    });
-  } catch (error) {
-    console.error('Error eliminando show:', error);
-    res.status(500).json({ error: error.message });
-  }
-}
-
-export async function updateFuncion(req, res) {
-  try {
-    const showId = parseInt(req.params.id);
-    const { obra, fecha, lugar, capacidad, precio_base, foto_url } = req.body;
-    const { cedula: userCedula, role: userRole } = req.user;
-
-    // Verificar que el show existe y obtener permisos
-    const showResult = await query(
-      'SELECT s.*, o.grupo_id, g.director_cedula FROM funciones s LEFT JOIN obras o ON o.id = s.obra_id LEFT JOIN grupos g ON g.id = o.grupo_id WHERE s.id = $1',
-      [showId]
-    );
-
-    if (showResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Función no encontrada' });
-    }
-
-    const show = showResult.rows[0];
-
-    // Si tiene obra_id asociada, verificar permisos
-    if (show.obra_id) {
-      const { grupo_id, director_cedula } = show;
-
-      if (userRole !== 'SUPER' && director_cedula !== userCedula) {
-        const coDirectorResult = await query(
-          'SELECT id FROM grupo_miembros WHERE grupo_id = $1 AND miembro_cedula = $2 AND rol_en_grupo = $3 AND activo = TRUE',
-          [grupo_id, userCedula, 'DIRECTOR']
+        const result = await pool.query(
+            `SELECT 
+                f.*,
+                g.nombre as grupo_nombre,
+                g.obra as grupo_obra,
+                g.estado as grupo_estado
+            FROM funciones f
+            JOIN grupos g ON f.grupo_id = g.id
+            WHERE f.id = $1`,
+            [id]
         );
 
-        if (coDirectorResult.rows.length === 0) {
-          return res.status(403).json({ 
-            error: 'No tienes permisos para modificar esta función. Solo el director del grupo o SUPER pueden hacerlo.' 
-          });
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Función no encontrada' });
         }
-      }
-    } else if (userRole !== 'SUPER') {
-      // Funciones sin obra_id solo las puede modificar SUPER
-      return res.status(403).json({ error: 'Solo SUPER puede modificar funciones sin obra asociada' });
-    }
 
-    // Construir la consulta UPDATE dinámicamente
-    const updates = [];
-    const values = [];
-    let paramCount = 1;
-
-    if (obra !== undefined) {
-      updates.push(`obra = $${paramCount++}`);
-      values.push(obra);
-    }
-    if (fecha !== undefined) {
-      updates.push(`fecha = $${paramCount++}`);
-      values.push(fecha);
-    }
-    if (lugar !== undefined) {
-      updates.push(`lugar = $${paramCount++}`);
-      values.push(lugar);
-    }
-    if (capacidad !== undefined) {
-      updates.push(`capacidad = $${paramCount++}`);
-      values.push(Number(capacidad));
-    }
-    if (precio_base !== undefined) {
-      updates.push(`precio_base = $${paramCount++}`);
-      values.push(Number(precio_base));
-    }
-    if (foto_url !== undefined) {
-      updates.push(`foto_url = $${paramCount++}`);
-      values.push(foto_url);
-    }
-
-    if (updates.length === 0) {
-      return res.status(400).json({ error: 'No hay campos para actualizar' });
-    }
-
-    values.push(showId);
-    const updateQuery = `UPDATE funciones SET ${updates.join(', ')} WHERE id = $${paramCount} RETURNING *`;
-
-    const result = await query(updateQuery, values);
-
-    res.json({
-      ok: true,
-      show: result.rows[0],
-      mensaje: 'Función actualizada correctamente'
-    });
-  } catch (error) {
-    console.error('Error actualizando show:', error);
-    res.status(500).json({ error: error.message });
-  }
-}
-
-// Cerrar función (marcarla como concluida con conclusión y puntuación)
-export async function cerrarFuncion(req, res) {
-  try {
-    const showId = parseInt(req.params.id);
-    const { conclusion_director, puntuacion } = req.body;
-    const { cedula: userCedula, role: userRole } = req.user;
-
-    // Verificar que la función existe
-    const showResult = await query(
-      `SELECT s.*
-       FROM funciones s
-       WHERE s.id = $1`,
-      [showId]
-    );
-
-    if (showResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Función no encontrada' });
-    }
-
-    const show = showResult.rows[0];
-
-    // SUPER puede cerrar cualquier función
-    // TODO: Agregar validación de permisos basada en el grupo cuando se agregue grupo_id a funciones
-
-    // Verificar que no esté ya concluida
-    if (show.estado === 'CONCLUIDA') {
-      return res.status(400).json({ error: 'La función ya está concluida' });
-    }
-
-    // Validar puntuación
-    if (puntuacion && (puntuacion < 1 || puntuacion > 10)) {
-      return res.status(400).json({ error: 'La puntuación debe estar entre 1 y 10' });
-    }
-
-    // Actualizar función
-    const result = await query(
-      `UPDATE funciones 
-       SET estado = 'CONCLUIDA', 
-           conclusion_director = $1, 
-           puntuacion = $2,
-           fecha_conclusion = NOW()
-       WHERE id = $3
-       RETURNING *`,
-      [conclusion_director, puntuacion, showId]
-    );
-
-    res.json({
-      ok: true,
-      show: result.rows[0],
-      mensaje: 'Función cerrada exitosamente'
-    });
-  } catch (error) {
-    console.error('Error cerrando función:', error);
-    res.status(500).json({ error: error.message });
-  }
-}
-
-// Generar PDF de función concluida
-export async function generarPDFFuncion(req, res) {
-  try {
-    const showId = parseInt(req.params.id);
-    const { cedula: userCedula, role: userRole } = req.user;
-
-    // Obtener información completa de la función
-    const showResult = await query(
-      `SELECT s.*
-       FROM funciones s
-       WHERE s.id = $1`,
-      [showId]
-    );
-
-    if (showResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Función no encontrada' });
-    }
-
-    const show = showResult.rows[0];
-
-    // SUPER puede ver cualquier PDF
-    // TODO: Agregar validación de permisos basada en el grupo cuando se agregue grupo_id a funciones
-
-    // Obtener estadísticas de tickets
-    const statsResult = await query(
-      `SELECT 
-        COUNT(*) as total_tickets,
-        COUNT(*) FILTER (WHERE estado IN ('PAGADO', 'USADO')) as vendidas,
-        COUNT(*) FILTER (WHERE estado = 'USADO') as usadas,
-        COUNT(*) FILTER (WHERE estado = 'DISPONIBLE') as disponibles,
-        SUM(CASE WHEN estado IN ('PAGADO', 'USADO') THEN COALESCE(precio, $2) ELSE 0 END) as recaudacion
-       FROM tickets
-       WHERE funcion_id = $1`,
-      [showId, show.precio_base]
-    );
-
-    const stats = statsResult.rows[0];
-
-    // Obtener elenco (vendedores que tuvieron tickets)
-    const elencoResult = await query(
-      `SELECT DISTINCT u.name, u.cedula, u.genero,
-              COUNT(t.code) FILTER (WHERE t.estado IN ('PAGADO', 'USADO')) as tickets_vendidos,
-              SUM(CASE WHEN t.estado IN ('PAGADO', 'USADO') THEN COALESCE(t.precio, $2) ELSE 0 END) as monto_vendido
-       FROM tickets t
-       JOIN users u ON u.phone = t.vendedor_phone
-       WHERE t.funcion_id = $1 AND t.vendedor_phone IS NOT NULL
-       GROUP BY u.name, u.cedula, u.genero
-       ORDER BY u.name`,
-      [showId, show.precio_base]
-    );
-
-    // Crear PDF
-    const doc = new PDFDocument({ size: 'A4', margin: 50 });
-    
-    // Headers para descarga
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename=funcion-${showId}-${show.obra}.pdf`);
-    
-    doc.pipe(res);
-
-    // Título
-    doc.fontSize(20).fillColor('#8B0000').text('🎭 INFORME DE FUNCIÓN CONCLUIDA', { align: 'center' });
-    doc.moveDown();
-
-    // Información de la función
-    doc.fontSize(16).fillColor('#000').text('Información General', { underline: true });
-    doc.moveDown(0.5);
-    doc.fontSize(12);
-    doc.text(`Obra: ${show.obra}`);
-    doc.text(`Fecha: ${new Date(show.fecha).toLocaleString('es-UY')}`);
-    doc.text(`Lugar: ${show.lugar || 'No especificado'}`);
-    doc.text(`Capacidad: ${show.capacidad}`);
-    doc.text(`Precio base: $${Number(show.precio_base).toFixed(2)}`);
-    if (show.foto_url) doc.text(`Foto: ${show.foto_url}`);
-    doc.text(`Estado: ${show.estado}`);
-    if (show.fecha_conclusion) {
-      doc.text(`Fecha de conclusión: ${new Date(show.fecha_conclusion).toLocaleString('es-UY')}`);
-    }
-    doc.text(`Lugar: ${show.lugar || 'No especificado'}`);
-    doc.text(`Capacidad: ${show.capacidad}`);
-    doc.text(`Precio base: $${Number(show.precio_base).toFixed(2)}`);
-    doc.moveDown();
-
-    // Estadísticas de entradas
-    doc.fontSize(16).fillColor('#000').text('Estadísticas de Entradas', { underline: true });
-    doc.moveDown(0.5);
-    doc.fontSize(12);
-    doc.text(`Total generadas: ${stats.total_tickets}`);
-    doc.text(`Vendidas: ${stats.vendidas} (${((stats.vendidas / show.capacidad) * 100).toFixed(1)}%)`);
-    doc.text(`Usadas: ${stats.usadas}`);
-    doc.text(`Disponibles: ${stats.disponibles}`);
-    doc.text(`Recaudación total: $${Number(stats.recaudacion || 0).toFixed(2)}`);
-    doc.moveDown();
-
-    // Elenco
-    doc.fontSize(16).fillColor('#000').text('Elenco y Ventas', { underline: true });
-    doc.moveDown(0.5);
-    doc.fontSize(12);
-    
-    if (elencoResult.rows.length > 0) {
-      elencoResult.rows.forEach((actor, index) => {
-        doc.text(
-          `${index + 1}. ${actor.name} (${actor.genero}) - ${actor.tickets_vendidos} entradas - $${Number(actor.monto_vendido || 0).toFixed(2)}`
+        // Obtener estadísticas de entradas
+        const statsResult = await pool.query(
+            `SELECT 
+                estado,
+                COUNT(*) as cantidad
+            FROM tickets
+            WHERE funcion_id = $1
+            GROUP BY estado`,
+            [id]
         );
-      });
-    } else {
-      doc.text('No hay información de elenco disponible');
+
+        const funcion = result.rows[0];
+        funcion.estadisticas_entradas = statsResult.rows;
+
+        res.json(funcion);
+
+    } catch (error) {
+        console.error('Error al obtener función:', error);
+        res.status(500).json({ error: 'Error al obtener función' });
     }
-    doc.moveDown();
-
-    // Conclusión del director
-    if (show.conclusion_director) {
-      doc.fontSize(16).fillColor('#000').text('Conclusión del Director', { underline: true });
-      doc.moveDown(0.5);
-      doc.fontSize(12);
-      doc.text(show.conclusion_director, { align: 'justify' });
-      doc.moveDown();
-    }
-
-    // Puntuación
-    if (show.puntuacion) {
-      doc.fontSize(16).fillColor('#000').text('Puntuación', { underline: true });
-      doc.moveDown(0.5);
-      doc.fontSize(12);
-      doc.text(`${show.puntuacion}/10`, { align: 'center' });
-      doc.moveDown();
-    }
-
-    // Fecha de conclusión
-    if (show.fecha_conclusion) {
-      doc.fontSize(10).fillColor('#666');
-      doc.text(`Función concluida el: ${new Date(show.fecha_conclusion).toLocaleString('es-UY')}`, { align: 'right' });
-    }
-
-    // Finalizar PDF
-    doc.end();
-
-  } catch (error) {
-    console.error('Error generando PDF:', error);
-    res.status(500).json({ error: error.message });
-  }
 }
 
-// Listar funciones concluidas
-export async function listarFuncionesConcluideas(req, res) {
-  try {
-    const { cedula: userCedula, role: userRole } = req.user;
+/**
+ * Actualizar función
+ */
+export async function actualizarFuncion(req, res) {
+    try {
+        const { id } = req.params;
+        const { fecha, lugar, capacidad, precio_base, estado, foto_url } = req.body;
+        const userRole = req.user.role;
+        const userCedula = req.user.cedula;
 
-    let sqlQuery = `
-      SELECT s.*
-      FROM funciones s
-      WHERE s.estado = 'CONCLUIDA'
-    `;
+        // Verificar que la función existe y obtener su grupo
+        const funcionResult = await pool.query(
+            'SELECT grupo_id FROM funciones WHERE id = $1',
+            [id]
+        );
 
-    // Si no es SUPER, solo ver sus funciones
-    const params = [];
-    if (userRole !== 'SUPER') {
-      sqlQuery += ` AND g.director_cedula = $1`;
-      params.push(userCedula);
+        if (funcionResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Función no encontrada' });
+        }
+
+        const grupoId = funcionResult.rows[0].grupo_id;
+
+        // Si es ADMIN, verificar que es director del grupo
+        if (userRole === 'ADMIN') {
+            const directorResult = await pool.query(
+                'SELECT * FROM grupo_directores WHERE grupo_id = $1 AND director_cedula = $2',
+                [grupoId, userCedula]
+            );
+
+            if (directorResult.rows.length === 0) {
+                return res.status(403).json({ 
+                    error: 'No tienes permiso para actualizar funciones de este grupo' 
+                });
+            }
+        }
+
+        // Construir query de actualización dinámicamente
+        const updates = [];
+        const values = [];
+        let paramCount = 1;
+
+        if (fecha !== undefined) {
+            updates.push(`fecha = $${paramCount++}`);
+            values.push(fecha);
+        }
+        if (lugar !== undefined) {
+            updates.push(`lugar = $${paramCount++}`);
+            values.push(lugar);
+        }
+        if (precio_base !== undefined) {
+            updates.push(`precio_base = $${paramCount++}`);
+            values.push(precio_base);
+        }
+        if (estado !== undefined) {
+            updates.push(`estado = $${paramCount++}`);
+            values.push(estado);
+        }
+        if (foto_url !== undefined) {
+            updates.push(`foto_url = $${paramCount++}`);
+            values.push(foto_url);
+        }
+
+        if (updates.length === 0) {
+            return res.status(400).json({ error: 'No hay campos para actualizar' });
+        }
+
+        updates.push(`updated_at = NOW()`);
+        values.push(id);
+
+        const result = await pool.query(
+            `UPDATE funciones 
+             SET ${updates.join(', ')}
+             WHERE id = $${paramCount}
+             RETURNING *`,
+            values
+        );
+
+        res.json({
+            message: 'Función actualizada exitosamente',
+            funcion: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error('Error al actualizar función:', error);
+        res.status(500).json({ error: 'Error al actualizar función' });
     }
+}
 
-    sqlQuery += ` ORDER BY s.fecha_conclusion DESC`;
+/**
+ * Eliminar función
+ * Solo SUPER
+ */
+export async function eliminarFuncion(req, res) {
+    try {
+        const { id } = req.params;
 
-    const result = await query(sqlQuery, params);
+        // Verificar si hay entradas vendidas
+        const entradasResult = await pool.query(
+            `SELECT COUNT(*) as vendidas 
+             FROM tickets 
+             WHERE funcion_id = $1 AND estado IN ('PAGADA', 'USADA')`,
+            [id]
+        );
 
-    res.json({
-      ok: true,
-      funciones: result.rows
-    });
-  } catch (error) {
-    console.error('Error listando funciones concluidas:', error);
-    res.status(500).json({ error: error.message });
-  }
+        const entradasVendidas = parseInt(entradasResult.rows[0].vendidas);
+
+        if (entradasVendidas > 0) {
+            return res.status(400).json({ 
+                error: 'No se puede eliminar una función con entradas vendidas',
+                entradas_vendidas: entradasVendidas
+            });
+        }
+
+        // Eliminar función (las entradas se eliminan en cascada)
+        const result = await pool.query(
+            'DELETE FROM funciones WHERE id = $1 RETURNING *',
+            [id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Función no encontrada' });
+        }
+
+        res.json({ 
+            message: 'Función eliminada exitosamente',
+            funcion: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error('Error al eliminar función:', error);
+        res.status(500).json({ error: 'Error al eliminar función' });
+    }
+}
+
+/**
+ * Listar todas las funciones (con filtros)
+ */
+export async function listarFunciones(req, res) {
+    try {
+        const { estado, fecha_desde, fecha_hasta } = req.query;
+        const userRole = req.user.role;
+        const userCedula = req.user.cedula;
+
+        let query = `
+            SELECT 
+                f.*,
+                g.nombre as grupo_nombre,
+                g.obra as grupo_obra,
+                g.estado as grupo_estado
+            FROM funciones f
+            JOIN grupos g ON f.grupo_id = g.id
+        `;
+
+        const conditions = [];
+        const values = [];
+        let paramCount = 1;
+
+        // Filtro por rol
+        if (userRole === 'ACTOR') {
+            // Actores solo ven funciones de sus grupos
+            query += ` JOIN grupo_actores ga ON g.id = ga.grupo_id `;
+            conditions.push(`ga.actor_cedula = $${paramCount++}`);
+            values.push(userCedula);
+        } else if (userRole === 'ADMIN') {
+            // Admins solo ven funciones de grupos donde son directores
+            query += ` JOIN grupo_directores gd ON g.id = gd.grupo_id `;
+            conditions.push(`gd.director_cedula = $${paramCount++}`);
+            values.push(userCedula);
+        }
+
+        // Filtros adicionales
+        if (estado) {
+            conditions.push(`f.estado = $${paramCount++}`);
+            values.push(estado);
+        }
+        if (fecha_desde) {
+            conditions.push(`f.fecha >= $${paramCount++}`);
+            values.push(fecha_desde);
+        }
+        if (fecha_hasta) {
+            conditions.push(`f.fecha <= $${paramCount++}`);
+            values.push(fecha_hasta);
+        }
+
+        if (conditions.length > 0) {
+            query += ` WHERE ${conditions.join(' AND ')}`;
+        }
+
+        query += ` ORDER BY f.fecha ASC`;
+
+        const result = await pool.query(query, values);
+
+        res.json({
+            total: result.rows.length,
+            funciones: result.rows
+        });
+
+    } catch (error) {
+        console.error('Error al listar funciones:', error);
+        res.status(500).json({ error: 'Error al listar funciones' });
+    }
 }

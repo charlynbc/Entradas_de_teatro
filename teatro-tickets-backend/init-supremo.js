@@ -40,11 +40,11 @@ export async function initSupremo() {
     console.log('   Cédula: ' + cedula);
     console.log('   Rol: ' + rol);
 
-    // Crear usuarios base para pruebas (director y vendedor)
-    console.log('🔍 Verificando usuarios base (director y vendedor)...');
+    // Crear usuarios base para pruebas (director y actor)
+    console.log('🔍 Verificando usuarios base (director y actor)...');
     const baseUsers = [
       { cedula: '48376668', nombre: 'Admin Sistema', rol: 'ADMIN', password: 'admin123' },
-      { cedula: '48376667', nombre: 'Vendedor Base', rol: 'VENDEDOR', password: 'admin123' }
+      { cedula: '48376667', nombre: 'Actor Base', rol: 'ACTOR', password: 'admin123' }
     ];
     for (const u of baseUsers) {
       const exists = await query('SELECT 1 FROM users WHERE cedula = $1', [u.cedula]);

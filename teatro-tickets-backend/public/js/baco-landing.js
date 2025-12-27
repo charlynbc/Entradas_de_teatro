@@ -257,11 +257,11 @@ async function showFuncionDetail(show) {
     // Cargar elenco (actores con entradas)
     let elenco = [];
     try {
-        const response = await fetch(`${API_URL}/usuarios/vendedores`);
-        const vendedores = await response.json();
+        const response = await fetch(`${API_URL}/usuarios/actores`);
+        const actores = await response.json();
         // Filtrar actores que tengan entradas de este show
         // Por ahora mostrar todos los actores disponibles
-        elenco = vendedores.filter(v => v.active);
+        elenco = actores.filter(v => v.active);
     } catch (error) {
         console.error('Error loading elenco:', error);
     }

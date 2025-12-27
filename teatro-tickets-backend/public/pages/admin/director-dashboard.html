@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BACÓ - Dashboard</title>
-    <!-- Version: 27-12-2025 - Multi-rol unificado -->
+    <title>BACÓ - Dashboard Director</title>
+    <!-- Version: 27-12-2025 - Director (ADMIN role) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -528,13 +528,13 @@
                 <img src="https://via.placeholder.com/100/1a1a1a/D4AF37?text=BC" alt="Perfil" class="profile-photo" id="headerPhoto">
                 <div class="profile-info">
                     <div class="profile-name" id="profileName">Cargando...</div>
-                    <div class="profile-role" id="profileRole">Usuario</div>
+                    <div class="profile-role" id="profileRole">Director</div>
                 </div>
                 <i class="fas fa-chevron-down" style="color: var(--dorado); font-size: 0.8rem;"></i>
                 
                 <!-- MENU DESPLEGABLE -->
                 <div class="profile-menu" id="profileMenu">
-                    <a href="perfil-super.html" class="menu-item">
+                    <a href="../usuarios/perfil-director.html" class="menu-item">
                         <i class="fas fa-user"></i>
                         <span>Mi Perfil</span>
                     </a>
@@ -550,10 +550,6 @@
                         <i class="fas fa-cog"></i>
                         <span>Configuración</span>
                     </a>
-                    <a href="auditoria.html" class="menu-item">
-                        <i class="fas fa-history"></i>
-                        <span>Historial</span>
-                    </a>
                     <a href="#" class="menu-item logout" onclick="logout(); return false;">
                         <i class="fas fa-sign-out-alt"></i>
                         <span>Cerrar Sesión</span>
@@ -567,10 +563,10 @@
     <main class="main-content">
         <!-- BIENVENIDA -->
         <div class="welcome-section">
-            <h1 class="welcome-title">El escenario comienza aquí</h1>
+            <h1 class="welcome-title">Dirige con pasión</h1>
             <p class="welcome-subtitle" id="fraseDelDia" style="font-style: italic; color: rgba(212, 175, 55, 0.9); margin-top: 15px;">
                 <i class="fas fa-quote-left" style="font-size: 0.85rem; opacity: 0.7; margin-right: 8px;"></i>
-                <span id="fraseTexto">Gestiona todo el teatro desde tu mano</span>
+                <span id="fraseTexto">El director es el arquitecto de emociones</span>
                 <i class="fas fa-quote-right" style="font-size: 0.85rem; opacity: 0.7; margin-left: 8px;"></i>
             </p>
         </div>
@@ -580,29 +576,29 @@
 
         <!-- CARDS PRINCIPALES -->
         <div class="main-cards">
-            <div class="card-teatral" onclick="window.location.href='crear-director.html'">
-                <div class="card-icon"><i class="fas fa-user-tie"></i></div>
-                <h2 class="card-title">Crear Director</h2>
-                <p class="card-description">Añade un nuevo director al sistema con todos sus datos</p>
-            </div>
-
-            <div class="card-teatral" onclick="window.location.href='pages/admin/crear-actor.html'">
+            <div class="card-teatral" onclick="window.location.href='../usuarios/crear-actor.html'">
                 <div class="card-icon"><i class="fas fa-theater-masks"></i></div>
                 <h2 class="card-title">Crear Actor / Actriz</h2>
-                <p class="card-description">Registra actores y actrices en la plataforma</p>
+                <p class="card-description">Registra nuevos actores y actrices en tu elenco</p>
             </div>
 
-            <div class="card-teatral" onclick="window.location.href='pages/admin/grupos.html'">
+            <div class="card-teatral" onclick="window.location.href='../grupos/crear-grupo.html'">
                 <div class="card-icon"><i class="fas fa-users"></i></div>
-                <h2 class="card-title">Gestionar Grupos</h2>
-                <p class="card-description">Administra grupos teatrales y sus integrantes</p>
+                <h2 class="card-title">Crear Grupo</h2>
+                <p class="card-description">Forma un nuevo grupo teatral con su obra</p>
+            </div>
+
+            <div class="card-teatral" onclick="window.location.href='../grupos/listar-grupos.html'">
+                <div class="card-icon"><i class="fas fa-layer-group"></i></div>
+                <h2 class="card-title">Ver Grupos</h2>
+                <p class="card-description">Explora y gestiona todos los grupos activos</p>
             </div>
         </div>
 
         <!-- GESTIÓN DE USUARIOS -->
         <h2 class="section-title"><i class="fas fa-users-cog"></i> Gestión de Usuarios</h2>
         <div class="action-grid">
-            <div class="action-card" onclick="window.location.href='listar-usuarios.html'">
+            <div class="action-card" onclick="window.location.href='../usuarios/listar-usuarios.html'">
                 <div class="action-icon"><i class="fas fa-list"></i></div>
                 <div class="action-text">
                     <div class="action-title">Listar Usuarios</div>
@@ -614,7 +610,7 @@
         <!-- CATÁLOGO DE OBRAS -->
         <h2 class="section-title"><i class="fas fa-scroll"></i> Catálogo de Obras</h2>
         <div class="action-grid">
-            <div class="action-card" onclick="window.location.href='gestion-obras.html'">
+            <div class="action-card" onclick="window.location.href='../obras/gestion-obras.html'">
                 <div class="action-icon"><i class="fas fa-theater-masks"></i></div>
                 <div class="action-text">
                     <div class="action-title">Gestionar Obras</div>
@@ -626,7 +622,7 @@
         <!-- CARTELERA & ENSAYOS -->
         <h2 class="section-title"><i class="fas fa-calendar-star"></i> Cartelera & Ensayos</h2>
         <div class="action-grid">
-            <div class="action-card" onclick="window.location.href='crear-funcion.html'">
+            <div class="action-card" onclick="window.location.href='../admin/funciones.html'">
                 <div class="action-icon"><i class="fas fa-star"></i></div>
                 <div class="action-text">
                     <div class="action-title">Crear Función</div>
@@ -634,7 +630,7 @@
                 </div>
             </div>
 
-            <div class="action-card" onclick="window.location.href='listar-funciones.html'">
+            <div class="action-card" onclick="window.location.href='../admin/funciones.html'">
                 <div class="action-icon"><i class="fas fa-ticket-alt"></i></div>
                 <div class="action-text">
                     <div class="action-title">Ver Cartelera</div>
@@ -715,22 +711,20 @@
         // Verificar autenticación
         if (!Baco.Auth.requireAuth()) return;
         
-        // Frases teatrales aleatorias
+        // Frases teatrales para directores
         const frasesTeatro = [
-            'El teatro es la poesía que se levanta del libro y se hace humana',
-            'Todo el mundo es un escenario, y todos los hombres y mujeres meros actores',
-            'El arte del teatro consiste en representar bien las cosas falsas',
-            'El teatro es el lugar donde las lágrimas de los hombres virtuales y desconocidos consuelan a todos',
-            'Actuar es vivir con verdad bajo circunstancias imaginarias',
-            'El teatro es el primer serum que el hombre inventó para protegerse de la enfermedad del olvido',
-            'En el teatro, como en la vida, no hay segundas oportunidades para la primera impresión',
-            'El escenario es un lugar mágico donde la realidad y la ficción bailan juntas',
-            'Cada función es única, irrepetible, como la vida misma',
-            'El teatro no cambia el mundo. Cambia a las personas. Y las personas cambian el mundo',
-            'El buen teatro hace que el público piense, el gran teatro hace que actúen',
-            'Entre bambalinas se esconden los secretos del alma',
-            'El teatro es el arte de hacer visible lo invisible',
-            'Cada actor es un universo, cada obra un nuevo mundo por descubrir'
+            'El director es el arquitecto de emociones',
+            'Dirigir es transformar palabras en vida sobre el escenario',
+            'El arte de dirigir es hacer visible lo invisible',
+            'Un gran director es un narrador que cuenta historias con cuerpos y voces',
+            'La dirección teatral es la alquimia de convertir ideas en arte vivo',
+            'Cada ensayo es un paso más cerca de la perfección',
+            'El director es el guardián de la visión artística',
+            'Entre bambalinas nacen las grandes historias',
+            'Dirigir es coordinar el caos para crear belleza',
+            'El teatro se construye con pasión, se dirige con visión',
+            'Un buen director inspira, un gran director transforma',
+            'La magia del teatro comienza con la visión del director'
         ];
 
         function getFraseAleatoria() {
@@ -747,18 +741,17 @@
             return;
         }
 
-        // Cargar nombre de usuario y rol
-        const userName = user.nombre || user.name || 'Usuario';
-        const roleNames = {
-            'SUPER': 'Super Usuario',
-            'ADMIN': 'Director',
-            'ACTOR': 'Actor/Actriz',
-            'INVITADO': 'Invitado'
-        };
-        const roleName = roleNames[user.role] || 'Usuario';
+        // Verificar que es ADMIN
+        if (user.role !== 'ADMIN') {
+            Baco.UI.showError('No tienes permisos para acceder a este dashboard.');
+            setTimeout(() => window.location.href = '/pages/auth/login.html', 2000);
+            return;
+        }
+
+        // Cargar nombre de usuario
+        const userName = user.nombre || user.name || 'Director';
         
         document.getElementById('profileName').textContent = userName;
-        document.getElementById('profileRole').textContent = roleName;
         
         // Cargar foto de perfil
         const headerPhoto = document.getElementById('headerPhoto');
@@ -777,25 +770,20 @@
             menu.classList.toggle('active');
         };
 
-        // Cerrar menú al hacer click fuera (pero NO si es un enlace externo)
+        // Cerrar menú al hacer click fuera
         document.addEventListener('click', (e) => {
             const profileSection = document.querySelector('.profile-section');
             const menu = document.getElementById('profileMenu');
             
-            // Si el click es en un enlace <a> que NO es logout (href != "#"), dejar que navegue
             const linkElement = e.target.closest('a.menu-item');
             if (linkElement && linkElement.getAttribute('href') !== '#') {
-                // Es un enlace real (no logout), dejar que navegue sin cerrar menú
                 return;
             }
             
-            // Si el click es dentro de la sección de perfil, no hacer nada
-            // (dejar que los onclick manejen el cierre)
             if (profileSection.contains(e.target)) {
                 return;
             }
             
-            // Si el click es fuera, cerrar el menú
             menu.classList.remove('active');
         });
 
@@ -847,7 +835,6 @@
                     closePhotoModal();
                     Baco.UI.showSuccess('Foto actualizada correctamente');
                     
-                    // Actualizar usuario en localStorage
                     user.foto_url = data.photoUrl;
                     localStorage.setItem('user', JSON.stringify(user));
                 } else {
@@ -861,7 +848,6 @@
         }
 
         window.logout = async function() {
-            // Cerrar menú
             document.getElementById('profileMenu').classList.remove('active');
             
             const confirmed = await Baco.UI.confirm(

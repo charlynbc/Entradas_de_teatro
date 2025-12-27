@@ -874,7 +874,7 @@ const BacoBirthdays = {
         const roles = {
             'SUPER': 'Super Usuario',
             'ADMIN': 'Director/a',
-            'VENDEDOR': 'Actor/Actriz',
+            'ACTOR': 'Actor/Actriz',
             'INVITADO': 'Invitado/a'
         };
         return roles[role] || role;

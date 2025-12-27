@@ -1,6 +1,6 @@
 import { query } from '../db/postgres.js';
 
-export async function createUser({ cedula, nombre, name, password, rol, role, requesterRole, genero }) {
+export async function createUser({ cedula, nombre, name, password, rol, role, requesterRole, genero, phone, email, fecha_nacimiento, apellido, foto_url, direccion, notas }) {
   const finalNombre = nombre || name;
   const finalRol = rol || role;
   const finalGenero = genero || 'otro';
@@ -13,13 +13,13 @@ export async function createUser({ cedula, nombre, name, password, rol, role, re
 
   // Normalizar rol a mayúsculas
   const normalizedRole = finalRol.toUpperCase();
-  if (!['ADMIN', 'VENDEDOR', 'INVITADO'].includes(normalizedRole)) {
-    const error = new Error('rol debe ser ADMIN (director), VENDEDOR (actor) o INVITADO');
+  if (!['ADMIN', 'ACTOR', 'INVITADO'].includes(normalizedRole)) {
+    const error = new Error('rol debe ser ADMIN (director), ACTOR (actor/actriz) o INVITADO');
     error.status = 400;
     throw error;
   }
   
-  // Solo el SUPER puede crear otros roles, excepto que ADMIN puede crear VENDEDORES
+  // Solo el SUPER puede crear otros roles, excepto que ADMIN puede crear ACTORES
   if (normalizedRole === 'SUPER') {
     const error = new Error('No se puede crear otro usuario SUPER. Solo existe uno.');
     error.status = 403;
@@ -42,11 +42,27 @@ export async function createUser({ cedula, nombre, name, password, rol, role, re
   const bcrypt = (await import('bcrypt')).default;
   const hashedPassword = await bcrypt.hash(password, 10);
 
+  // Construir query con campos opcionales
+  const fields = ['cedula', 'name', 'password_hash', 'role', 'genero', 'active'];
+  const values = [cedula, finalNombre, hashedPassword, normalizedRole, finalGenero, true];
+  
+  // Agregar campos opcionales si están presentes
+  const optionalFields = { phone, email, fecha_nacimiento, apellido, foto_url, direccion, notas };
+  Object.entries(optionalFields).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      fields.push(key);
+      values.push(value);
+    }
+  });
+
+  fields.push('created_at');
+  const placeholders = values.map((_, i) => `$${i + 1}`).join(', ') + ', NOW()';
+  
   const result = await query(
-    `INSERT INTO users (cedula, name, password_hash, role, genero, active, created_at)
-     VALUES ($1, $2, $3, $4, $5, TRUE, NOW())
-     RETURNING cedula, name, role, genero`,
-    [cedula, finalNombre, hashedPassword, normalizedRole, finalGenero]
+    `INSERT INTO users (${fields.join(', ')})
+     VALUES (${placeholders})
+     RETURNING cedula, name, role, genero, phone, email, fecha_nacimiento, apellido, foto_url`,
+    values
   );
 
   const user = result.rows[0];
@@ -61,7 +77,7 @@ export async function createUser({ cedula, nombre, name, password, rol, role, re
 export async function listUsers(roleFilter) {
   let sql = `SELECT cedula, name, role, genero, created_at, active
      FROM users
-     WHERE role IN ('ADMIN', 'VENDEDOR')`;
+     WHERE role IN ('ADMIN', 'ACTOR')`;
   const params = [];
   
   if (roleFilter) {
@@ -82,22 +98,23 @@ export async function listSellersWithStats() {
         u.name,
         u.role,
         u.genero,
-        COUNT(DISTINCT t.show_id) as total_shows,
+        COUNT(DISTINCT t.funcion_id) as total_funciones,
         COUNT(t.code) as total_tickets,
         json_agg(DISTINCT jsonb_build_object(
-          'show_id', s.id,
-          'show_obra', s.obra,
+          'funcion_id', f.id,
+          'funcion_obra', o.nombre,
           'tickets_asignados', (
             SELECT COUNT(*) 
             FROM tickets t2 
             WHERE t2.vendedor_phone = u.phone 
-            AND t2.show_id = s.id
+            AND t2.funcion_id = f.id
           )
-        )) FILTER (WHERE s.id IS NOT NULL) as shows
+        )) FILTER (WHERE f.id IS NOT NULL) as funciones
       FROM users u
       LEFT JOIN tickets t ON t.vendedor_phone = u.phone
-      LEFT JOIN shows s ON s.id = t.show_id
-      WHERE u.role = 'VENDEDOR'
+      LEFT JOIN funciones f ON f.id = t.funcion_id
+      LEFT JOIN obras o ON o.id = f.obra_id
+      WHERE u.role = 'ACTOR'
       GROUP BY u.cedula, u.name, u.role
       ORDER BY u.name
   `);
@@ -128,8 +145,8 @@ export async function deleteUserByFlexibleId(idOrCedula, requesterRole) {
     throw error;
   }
   
-  // Primero eliminar o liberar todos los tickets del vendedor
-  // Cambiar vendedor_phone a NULL para liberar los tickets
+  // Primero eliminar o liberar todos los tickets del actor
+  // Cambiar vendedor_phone a NULL para liberar los tickets (campo de base de datos no cambiado)
   await query('UPDATE tickets SET vendedor_phone = NULL, estado = $1 WHERE vendedor_phone = $2', 
     ['DISPONIBLE', user.phone]);
   
@@ -156,7 +173,7 @@ export async function resetPasswordByFlexibleId(idOrCedula, newPassword) {
   return { ok: true };
 }
 
-// Listar todos los usuarios activos (incluye SUPER, ADMIN, VENDEDOR)
+// Listar todos los usuarios activos (incluye SUPER, ADMIN, ACTOR)
 export async function listAllMembers(currentRole) {
   console.log('🔍 listAllMembers llamado - versión actualizada con SUPER incluido');
   const result = await query(
@@ -168,22 +185,23 @@ export async function listAllMembers(currentRole) {
         u.genero,
         u.created_at,
         u.active,
-        COUNT(DISTINCT t.show_id) as obras_activas,
+        COUNT(DISTINCT t.funcion_id) as obras_activas,
         json_agg(DISTINCT jsonb_build_object(
-          'show_id', s.id,
-          'show_obra', s.obra,
-          'show_fecha', s.fecha
-        )) FILTER (WHERE s.id IS NOT NULL) as obras
+          'funcion_id', f.id,
+          'funcion_obra', o.nombre,
+          'funcion_fecha', f.fecha
+        )) FILTER (WHERE f.id IS NOT NULL) as obras
       FROM users u
       LEFT JOIN tickets t ON t.vendedor_phone = u.phone AND t.estado != 'USADO'
-      LEFT JOIN shows s ON s.id = t.show_id
+      LEFT JOIN funciones f ON f.id = t.funcion_id
+      LEFT JOIN obras o ON o.id = f.obra_id
       WHERE u.active = true
       GROUP BY u.cedula, u.name, u.phone, u.role, u.genero, u.created_at, u.active
       ORDER BY 
         CASE u.role 
           WHEN 'SUPER' THEN 1
           WHEN 'ADMIN' THEN 2 
-          WHEN 'VENDEDOR' THEN 3 
+          WHEN 'ACTOR' THEN 3 
           ELSE 4 
         END,
         u.name`

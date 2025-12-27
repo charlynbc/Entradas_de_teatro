@@ -928,7 +928,7 @@
                 const users = await response.json();
                 
                 const directores = users.filter(u => u.role === 'ADMIN');
-                const actores = users.filter(u => u.role === 'VENDEDOR');
+                const actores = users.filter(u => u.role === 'ACTOR');
                 
                 renderDirectores(directores);
                 renderActores(actores);

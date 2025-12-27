@@ -130,7 +130,7 @@
             color: white;
         }
 
-        .role-vendedor {
+        .role-actor {
             background: linear-gradient(135deg, #3b82f6, #60a5fa);
             color: white;
         }
@@ -379,7 +379,7 @@
             const container = document.getElementById('userContainer');
             
             const roleClass = user.role === 'SUPER' ? 'role-super' : 
-                             user.role === 'ADMIN' ? 'role-admin' : 'role-vendedor';
+                             user.role === 'ADMIN' ? 'role-admin' : 'role-actor';
             
             const roleText = user.role === 'SUPER' ? 'Super Usuario' : 
                             user.role === 'ADMIN' ? 'Director' : 'Actor/Actriz';

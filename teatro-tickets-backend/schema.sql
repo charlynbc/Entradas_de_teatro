@@ -6,7 +6,7 @@
 CREATE TABLE users (
   cedula         VARCHAR(20) PRIMARY KEY,   -- número de cédula
   name          VARCHAR(100) NOT NULL,
-  role          VARCHAR(20) NOT NULL CHECK (role IN ('SUPER', 'ADMIN', 'VENDEDOR', 'INVITADO')),
+  role          VARCHAR(20) NOT NULL CHECK (role IN ('SUPER', 'ADMIN', 'ACTOR', 'INVITADO')),
   password_hash TEXT,                       -- NULL si es invitado
   created_at    TIMESTAMP NOT NULL DEFAULT NOW(),
   active        BOOLEAN NOT NULL DEFAULT TRUE,
@@ -20,7 +20,7 @@ CREATE TABLE users (
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_phone_unique ON users(phone);
 
 -- Usuario Super (único) - password por defecto: admin123
--- Tipos de usuario: SUPER (único), ADMIN (directores), VENDEDOR (actores), INVITADO (sin login)
+-- Tipos de usuario: SUPER (único), ADMIN (directores), ACTOR (actores/actrices), INVITADO (sin login)
 INSERT INTO users (cedula, name, role, password_hash, phone, active) VALUES
   ('48376669', 'Super Usuario', 'SUPER', '$2b$10$ZXH8vT/SpnVBDGDjj3L7M.7BKMCuQC19V5Ieou0Rv25KTk3lHIT1e', '48376669', TRUE)
 ON CONFLICT (cedula) DO UPDATE SET role = 'SUPER', password_hash = '$2b$10$ZXH8vT/SpnVBDGDjj3L7M.7BKMCuQC19V5Ieou0Rv25KTk3lHIT1e';
@@ -50,13 +50,13 @@ CREATE TABLE tickets (
   
   -- ESTADOS:
   -- DISPONIBLE: recién creado, sin asignar
-  -- STOCK_VENDEDOR: asignado a un actor
+  -- STOCK_ACTOR: asignado a un actor/actriz
   -- RESERVADO: actor puso nombre de comprador pero no cobró
   -- REPORTADA_VENDIDA: actor dice "cobré", admin aún no aprobó
   -- PAGADO: admin confirmó que recibió la plata
   -- USADO: entrada validada en puerta
   estado                  VARCHAR(20) NOT NULL CHECK (
-                            estado IN ('DISPONIBLE', 'STOCK_VENDEDOR', 'RESERVADO', 
+                            estado IN ('DISPONIBLE', 'STOCK_ACTOR', 'RESERVADO', 
                                        'REPORTADA_VENDIDA', 'PAGADO', 'USADO')
                           ) DEFAULT 'DISPONIBLE',
   
@@ -101,7 +101,7 @@ SELECT
   o.nombre AS obra_nombre,
   
   -- Conteos
-  COUNT(*) FILTER (WHERE t.estado = 'STOCK_VENDEDOR') AS para_vender,
+  COUNT(*) FILTER (WHERE t.estado = 'STOCK_ACTOR') AS para_vender,
   COUNT(*) FILTER (WHERE t.estado = 'RESERVADO') AS reservadas,
   COUNT(*) FILTER (WHERE t.estado = 'REPORTADA_VENDIDA') AS reportadas_vendidas,
   COUNT(*) FILTER (WHERE t.estado IN ('PAGADO', 'USADO')) AS pagadas,

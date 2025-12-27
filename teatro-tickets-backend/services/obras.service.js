@@ -51,7 +51,7 @@ export async function createObra(obraData, userCedula, userRole) {
  * Listar obras según el rol del usuario
  * - SUPER: todas las obras
  * - ADMIN: obras de sus grupos
- * - VENDEDOR: obras de grupos donde es miembro
+ * - ACTOR: obras de grupos donde es miembro
  */
 export async function listObras(userCedula, userRole) {
   if (userRole === 'SUPER') {
@@ -74,7 +74,7 @@ export async function listObras(userCedula, userRole) {
     return result.rows;
   }
 
-  // VENDEDOR: solo obras de grupos donde es miembro
+  // ACTOR: solo obras de grupos donde es miembro
   const result = await query(
     `SELECT DISTINCT o.* FROM v_obras_completas o
      WHERE o.grupo_id IN (
