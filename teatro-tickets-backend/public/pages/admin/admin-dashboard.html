@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BACÓ - Super Usuario</title>
-    <!-- Version: 26-12-2025 04:15 - Menu y Frase actualizados -->
+    <title>BACÓ - Dashboard</title>
+    <!-- Version: 27-12-2025 - Multi-rol unificado -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -528,7 +528,7 @@
                 <img src="https://via.placeholder.com/100/1a1a1a/D4AF37?text=BC" alt="Perfil" class="profile-photo" id="headerPhoto">
                 <div class="profile-info">
                     <div class="profile-name" id="profileName">Cargando...</div>
-                    <div class="profile-role">Super Usuario</div>
+                    <div class="profile-role" id="profileRole">Usuario</div>
                 </div>
                 <i class="fas fa-chevron-down" style="color: var(--dorado); font-size: 0.8rem;"></i>
                 
@@ -747,15 +747,24 @@
         document.getElementById('fraseTexto').textContent = getFraseAleatoria();
         
         const user = JSON.parse(localStorage.getItem('user') || '{}');
-        if (user.role !== 'SUPER') {
-            Baco.UI.showError('Acceso denegado. Solo Super Usuarios.');
+        if (!user.role) {
+            Baco.UI.showError('Sesión inválida. Por favor inicia sesión.');
             setTimeout(() => Baco.Auth.logout(), 2000);
             return;
         }
 
-        // Cargar nombre de usuario
-        const userName = user.nombre || user.name || 'Super Usuario';
+        // Cargar nombre de usuario y rol
+        const userName = user.nombre || user.name || 'Usuario';
+        const roleNames = {
+            'SUPER': 'Super Usuario',
+            'ADMIN': 'Director',
+            'VENDEDOR': 'Vendedor',
+            'INVITADO': 'Invitado'
+        };
+        const roleName = roleNames[user.role] || 'Usuario';
+        
         document.getElementById('profileName').textContent = userName;
+        document.getElementById('profileRole').textContent = roleName;
         
         // Cargar foto de perfil
         const headerPhoto = document.getElementById('headerPhoto');

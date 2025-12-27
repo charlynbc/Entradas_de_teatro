@@ -251,25 +251,8 @@
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('user', JSON.stringify(data.user));
                 
-                // Redireccionar según el rol
-                const role = data.user.role.toLowerCase();
-                
-                switch(role) {
-                    case 'supremo':
-                    case 'super':
-                    case 'admin':
-                        window.location.href = '/admin-dashboard.html';
-                        break;
-                    case 'director':
-                        window.location.href = '/director-dashboard.html';
-                        break;
-                    case 'actor':
-                    case 'vendedor':
-                        window.location.href = '/vendedor-dashboard.html';
-                        break;
-                    default:
-                        window.location.href = '/';
-                }
+                // Todos los roles van al mismo dashboard (unificado)
+                window.location.href = '/admin-dashboard.html';
                 
             } catch (error) {
                 console.error('Error:', error);

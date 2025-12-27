@@ -111,6 +111,15 @@ async function startServer() {
     app.use('/api/obras', obrasRoutes);
     app.use('/api/upload', uploadRoutes);
 
+    // Rutas específicas para páginas (nueva estructura)
+    app.get('/login', (req, res) => {
+      res.sendFile(path.join(PUBLIC_DIR, 'pages/auth/login.html'));
+    });
+    
+    app.get('/admin-dashboard.html', (req, res) => {
+      res.sendFile(path.join(PUBLIC_DIR, 'pages/admin/admin-dashboard.html'));
+    });
+
     // Ruta explícita para pantalla 404 teatral
     app.get('/404', (req, res) => {
       return res.status(404).sendFile(path.join(PUBLIC_DIR, '404.html'));
