@@ -25,26 +25,28 @@ INSERT INTO users (cedula, name, role, password_hash, phone, active) VALUES
   ('48376669', 'Super Usuario', 'SUPER', '$2b$10$ZXH8vT/SpnVBDGDjj3L7M.7BKMCuQC19V5Ieou0Rv25KTk3lHIT1e', '48376669', TRUE)
 ON CONFLICT (cedula) DO UPDATE SET role = 'SUPER', password_hash = '$2b$10$ZXH8vT/SpnVBDGDjj3L7M.7BKMCuQC19V5Ieou0Rv25KTk3lHIT1e';
 
--- 2. FUNCIONES (shows vinculados a obras)
-CREATE TABLE shows (
+-- 2. FUNCIONES (presentaciones de obras)
+CREATE TABLE funciones (
   id           SERIAL PRIMARY KEY,
-  obra_id      INT REFERENCES obras(id) ON DELETE SET NULL,  -- Vinculado a obra del grupo
-  obra         VARCHAR(200) NOT NULL,                         -- Nombre de la obra
+  obra_id      INT NOT NULL REFERENCES obras(id) ON DELETE CASCADE,
   fecha        TIMESTAMP NOT NULL,
   lugar        VARCHAR(200),
   capacidad    INT NOT NULL,
-  base_price   NUMERIC(10,2) NOT NULL,   -- precio base por entrada
-  foto_url     TEXT,                      -- Foto específica de esta función
-  created_at   TIMESTAMP NOT NULL DEFAULT NOW()
+  precio_base  NUMERIC(10,2) NOT NULL,
+  foto_url     TEXT,
+  estado       VARCHAR(20) NOT NULL CHECK (estado IN ('PROGRAMADA', 'CONFIRMADA', 'CANCELADA', 'REALIZADA')) DEFAULT 'PROGRAMADA',
+  created_at   TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at   TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_shows_fecha ON shows(fecha);
-CREATE INDEX idx_shows_obra_id ON shows(obra_id);
+CREATE INDEX idx_funciones_fecha ON funciones(fecha);
+CREATE INDEX idx_funciones_obra_id ON funciones(obra_id);
+CREATE INDEX idx_funciones_estado ON funciones(estado);
 
--- 3. TICKETS
+-- 3. TICKETS (entradas para funciones)
 CREATE TABLE tickets (
   code                    VARCHAR(50) PRIMARY KEY,  -- T-XXXXXXXX
-  show_id                 INT NOT NULL REFERENCES shows(id) ON DELETE CASCADE,
+  funcion_id              INT NOT NULL REFERENCES funciones(id) ON DELETE CASCADE,
   
   -- ESTADOS:
   -- DISPONIBLE: recién creado, sin asignar
@@ -66,7 +68,7 @@ CREATE TABLE tickets (
   comprador_contacto      VARCHAR(150),
   
   -- Dinero
-  precio                  NUMERIC(10,2),           -- precio efectivo (puede diferir de base_price)
+  precio                  NUMERIC(10,2),           -- precio efectivo (puede diferir de precio_base)
   medio_pago              VARCHAR(50),
   
   -- Control de plata
@@ -84,19 +86,19 @@ CREATE TABLE tickets (
   usado_at                TIMESTAMP
 );
 
-CREATE INDEX idx_tickets_show ON tickets(show_id);
+CREATE INDEX idx_tickets_funcion ON tickets(funcion_id);
 CREATE INDEX idx_tickets_vendedor ON tickets(vendedor_phone);
 CREATE INDEX idx_tickets_estado ON tickets(estado);
 CREATE INDEX idx_tickets_comprador ON tickets(comprador_nombre);
 
 -- 4. VISTA: Resumen por vendedor y función
-CREATE VIEW v_resumen_vendedor_show AS
+CREATE VIEW v_resumen_vendedor_funcion AS
 SELECT
-  t.show_id,
-  s.obra,
-  s.fecha,
+  t.funcion_id,
+  f.fecha,
   t.vendedor_phone,
   u.name AS vendedor_nombre,
+  o.nombre AS obra_nombre,
   
   -- Conteos
   COUNT(*) FILTER (WHERE t.estado = 'STOCK_VENDEDOR') AS para_vender,
@@ -107,31 +109,35 @@ SELECT
   
   -- Dinero
   SUM(CASE WHEN t.estado IN ('REPORTADA_VENDIDA', 'PAGADO', 'USADO') 
-           THEN COALESCE(t.precio, s.base_price) 
+           THEN COALESCE(t.precio, f.precio_base) 
            ELSE 0 END) AS monto_reportado,
   
   SUM(CASE WHEN t.aprobada_por_admin 
-           THEN COALESCE(t.precio, s.base_price) 
+           THEN COALESCE(t.precio, f.precio_base) 
            ELSE 0 END) AS monto_aprobado,
   
   SUM(CASE WHEN t.reportada_por_vendedor AND NOT t.aprobada_por_admin
-           THEN COALESCE(t.precio, s.base_price) 
+           THEN COALESCE(t.precio, f.precio_base) 
            ELSE 0 END) AS monto_debe
            
 FROM tickets t
-JOIN shows s ON s.id = t.show_id
+JOIN funciones f ON f.id = t.funcion_id
+JOIN obras o ON o.id = f.obra_id
 LEFT JOIN users u ON u.phone = t.vendedor_phone
 WHERE t.vendedor_phone IS NOT NULL
-GROUP BY t.show_id, s.obra, s.fecha, t.vendedor_phone, u.name;
+GROUP BY t.funcion_id, f.fecha, t.vendedor_phone, u.name, o.nombre;
 
 -- 5. VISTA: Resumen global por función (para admin)
-CREATE VIEW v_resumen_show_admin AS
+CREATE VIEW v_resumen_funcion_admin AS
 SELECT
-  s.id,
-  s.obra,
-  s.fecha,
-  s.capacidad,
-  s.base_price,
+  f.id,
+  f.fecha,
+  f.lugar,
+  f.capacidad,
+  f.precio_base,
+  f.estado AS estado_funcion,
+  o.nombre AS obra_nombre,
+  g.nombre AS grupo_nombre,
   
   -- Conteos de tickets
   COUNT(t.code) AS total_generados,
@@ -144,20 +150,22 @@ SELECT
   
   -- Dinero
   SUM(CASE WHEN t.estado IN ('REPORTADA_VENDIDA', 'PAGADO', 'USADO')
-           THEN COALESCE(t.precio, s.base_price)
+           THEN COALESCE(t.precio, f.precio_base)
            ELSE 0 END) AS recaudacion_teorica,
   
   SUM(CASE WHEN t.aprobada_por_admin
-           THEN COALESCE(t.precio, s.base_price)
+           THEN COALESCE(t.precio, f.precio_base)
            ELSE 0 END) AS recaudacion_real,
   
   SUM(CASE WHEN t.reportada_por_vendedor AND NOT t.aprobada_por_admin
-           THEN COALESCE(t.precio, s.base_price)
+           THEN COALESCE(t.precio, f.precio_base)
            ELSE 0 END) AS pendiente_aprobar
 
-FROM shows s
-LEFT JOIN tickets t ON t.show_id = s.id
-GROUP BY s.id, s.obra, s.fecha, s.capacidad, s.base_price;
+FROM funciones f
+JOIN obras o ON o.id = f.obra_id
+JOIN grupos g ON g.id = o.grupo_id
+LEFT JOIN tickets t ON t.funcion_id = f.id
+GROUP BY f.id, f.fecha, f.lugar, f.capacidad, f.precio_base, f.estado, o.nombre, g.nombre;
 
 -- 6. GRUPOS (para clases de teatro)
 CREATE TABLE grupos (

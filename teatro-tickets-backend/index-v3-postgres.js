@@ -8,7 +8,7 @@ import { initSupremo } from './init-supremo.js';
 import { seedMinimo } from './seed-minimo-init.js';
 import authRoutes from './routes/auth.routes.js';
 import usersRoutes from './routes/users.routes.js';
-import showsRoutes from './routes/shows.routes.js';
+import funcionesRoutes from './routes/funciones.routes.js';
 import ticketsRoutes from './routes/tickets.routes.js';
 import reportesRoutes from './routes/reportes.routes.js';
 import reportesObrasRoutes from './routes/reportes-obras.routes.js';
@@ -83,7 +83,7 @@ async function startServer() {
           database: process.env.DATABASE_URL ? 'connected' : 'not configured',
           totals: {
             users: data.users.length,
-            shows: data.shows.length,
+            funciones: data.funciones.length,
             tickets: data.tickets.length
           }
         });
@@ -100,7 +100,8 @@ async function startServer() {
     app.use('/api/auth', authRoutes);
     app.use('/api/usuarios', usersRoutes);
     app.use('/api/users', usersRoutes); // Alias para compatibilidad con frontend
-    app.use('/api/shows', showsRoutes);
+    app.use('/api/funciones', funcionesRoutes);
+    app.use('/api/shows', funcionesRoutes); // Alias para compatibilidad con frontend antiguo
     app.use('/api/tickets', ticketsRoutes);
     app.use('/api/reportes', reportesRoutes);
     app.use('/api/reportes-obras', reportesObrasRoutes);

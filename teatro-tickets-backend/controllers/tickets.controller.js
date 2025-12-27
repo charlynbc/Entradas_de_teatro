@@ -6,10 +6,10 @@ const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 export async function misTickets(req, res) {
   try {
     const vendedorPhone = req.user.phone || req.user.cedula;
-    const { show_id } = req.query;
+    const { funcion_id } = req.query;
     const params = [vendedorPhone];
     let sql = 'SELECT * FROM tickets WHERE vendedor_phone = $1';
-    if (show_id) { sql += ' AND show_id = $2'; params.push(String(show_id)); }
+    if (funcion_id) { sql += ' AND funcion_id = $2'; params.push(String(funcion_id)); }
     const result = await query(sql, params);
     res.json(result.rows);
   } catch (error) {
@@ -20,21 +20,21 @@ export async function misTickets(req, res) {
 
 export async function asignarTickets(req, res) {
   try {
-    const { cantidad, show_id } = req.body;
+    const { cantidad, funcion_id } = req.body;
     const vendedorPhone = req.user.phone || req.user.cedula;
     const cantidadNum = Number(cantidad);
-    if (!cantidadNum || !show_id) {
+    if (!cantidadNum || !funcion_id) {
       return res.status(400).json({ error: 'Faltan datos' });
     }
     const tickets = [];
     for (let i = 0; i < cantidadNum; i++) {
       const code = `T-${Math.random().toString(36).slice(2, 10).toUpperCase()}`;
       await query(
-        `INSERT INTO tickets (code, show_id, estado, vendedor_phone, created_at)
+        `INSERT INTO tickets (code, funcion_id, estado, vendedor_phone, created_at)
          VALUES ($1, $2, 'STOCK_VENDEDOR', $3, NOW())`,
-        [code, String(show_id), vendedorPhone]
+        [code, String(funcion_id), vendedorPhone]
       );
-      tickets.push({ code, show_id: String(show_id), estado: 'STOCK_VENDEDOR', vendedor_phone: vendedorPhone });
+      tickets.push({ code, funcion_id: String(funcion_id), estado: 'STOCK_VENDEDOR', vendedor_phone: vendedorPhone });
     }
     res.json({ message: 'Tickets asignados', tickets });
   } catch (error) {

@@ -3,15 +3,15 @@ import { query } from '../db/postgres.js';
 // Leer todos los datos de la base de datos (equivalente a readData del archivo JSON)
 export async function readData() {
   try {
-    const [usersRes, showsRes, ticketsRes] = await Promise.all([
+    const [usersRes, funcionesRes, ticketsRes] = await Promise.all([
       query('SELECT * FROM users ORDER BY created_at DESC'),
-      query('SELECT * FROM shows ORDER BY created_at DESC'),
+      query('SELECT * FROM funciones ORDER BY created_at DESC'),
       query('SELECT * FROM tickets ORDER BY created_at DESC')
     ]);
 
     return {
       users: usersRes.rows,
-      shows: showsRes.rows,
+      funciones: funcionesRes.rows,
       tickets: ticketsRes.rows
     };
   } catch (error) {
@@ -27,7 +27,7 @@ export async function writeData(data) {
   try {
     // Limpiar tablas existentes
     await query('DELETE FROM tickets');
-    await query('DELETE FROM shows');
+    await query('DELETE FROM funciones');
     await query('DELETE FROM users');
 
     // Insertar usuarios
@@ -42,11 +42,11 @@ export async function writeData(data) {
       }
     }
 
-    // Insertar shows
-    if (data.shows && data.shows.length > 0) {
-      for (const show of data.shows) {
+    // Insertar funciones
+    if (data.funciones && data.funciones.length > 0) {
+      for (const show of data.funciones) {
         await query(
-          `INSERT INTO shows (id, nombre, fecha, precio, total_tickets, creado_por, created_at, updated_at) 
+          `INSERT INTO funciones (id, nombre, fecha, precio, total_tickets, creado_por, created_at, updated_at) 
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
            ON CONFLICT (id) DO NOTHING`,
           [show.id, show.nombre, show.fecha, show.precio, show.total_tickets || show.totalTickets, show.creado_por || show.creadoPor, show.created_at || new Date(), show.updated_at || new Date()]
@@ -114,14 +114,14 @@ export async function saveUsers(users) {
   });
 }
 
-export async function getShows() {
+export async function getFunciones() {
   const data = await loadData();
-  return data.shows;
+  return data.funciones;
 }
 
-export async function saveShows(shows) {
+export async function saveFunciones(funciones) {
   return await updateData(data => {
-    data.shows = shows;
+    data.funciones = funciones;
     return data;
   });
 }
@@ -160,9 +160,9 @@ export async function updateTicketByCode(code, updates = {}) {
   return updatedTicket;
 }
 
-export async function findShowById(id) {
-  const shows = await getShows();
-  return shows.find(show => show.id === id) || null;
+export async function findFuncionById(id) {
+  const funciones = await getFunciones();
+  return funciones.find(show => show.id === id) || null;
 }
 
 export async function findUserByPhone(phone) {
@@ -187,13 +187,13 @@ const dataStore = {
   updateData,
   getUsers,
   saveUsers,
-  getShows,
-  saveShows,
+  getFunciones,
+  saveFunciones,
   getTickets,
   saveTickets,
   addTicket,
   updateTicketByCode,
-  findShowById,
+  findFuncionById,
   findUserByPhone,
   nextId
 };
