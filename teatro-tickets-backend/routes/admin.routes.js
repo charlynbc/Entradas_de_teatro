@@ -1,6 +1,6 @@
 import express from 'express';
 import { query } from '../db/postgres.js';
-import { crearShow } from '../controllers/shows.controller.js';
+import { crearFuncion } from '../controllers/funciones.controller.js';
 import { authenticate, requireRole } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
@@ -19,8 +19,8 @@ router.post('/limpiar-db', authenticate, requireRole(['SUPER']), async (req, res
     // 3. Eliminar tickets
     const ticketsResult = await query('DELETE FROM tickets');
     
-    // 4. Eliminar shows
-    const showsResult = await query('DELETE FROM shows');
+    // 4. Eliminar funciones
+    const funcionesResult = await query('DELETE FROM funciones');
     
     // 5. Eliminar usuarios excepto SUPER
     const usersResult = await query(
@@ -39,7 +39,7 @@ router.post('/limpiar-db', authenticate, requireRole(['SUPER']), async (req, res
         reportes: reportesResult.rowCount,
         ensayos: ensayosResult.rowCount,
         tickets: ticketsResult.rowCount,
-        shows: showsResult.rowCount,
+        funciones: funcionesResult.rowCount,
         usuarios: usersResult.rowCount
       },
       usuariosRestantes: remainingUsers.rows.map(u => ({
