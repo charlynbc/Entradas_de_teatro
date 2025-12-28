@@ -15,87 +15,76 @@ export async function crearFuncion(req, res) {
     const client = await pool.connect();
     
     try {
-        const { grupo_id, fecha, lugar, capacidad, precio_base, descripcion } = req.body;
+        const { obra_id, fecha, lugar, capacidad, precio_base, foto_url } = req.body;
         const userRole = req.user.role;
         const userCedula = req.user.cedula;
 
         // Validar campos requeridos
-        if (!grupo_id || !fecha || !lugar || !capacidad || !precio_base) {
+        if (!obra_id || !fecha || !lugar || !capacidad || !precio_base) {
             return res.status(400).json({ 
-                error: 'Faltan campos requeridos: grupo_id, fecha, lugar, capacidad, precio_base' 
+                error: 'Faltan campos requeridos: obra_id, fecha, lugar, capacidad, precio_base' 
             });
         }
 
-        // Verificar que el grupo existe
-        const grupoResult = await client.query(
-            'SELECT * FROM grupos WHERE id = $1',
-            [grupo_id]
+        // Verificar que la obra existe y obtener su grupo
+        const obraResult = await client.query(
+            'SELECT o.*, g.director_cedula FROM obras o JOIN grupos g ON o.grupo_id = g.id WHERE o.id = $1',
+            [obra_id]
         );
 
-        if (grupoResult.rows.length === 0) {
-            return res.status(404).json({ error: 'Grupo no encontrado' });
+        if (obraResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Obra no encontrada' });
         }
 
-        const grupo = grupoResult.rows[0];
+        const obra = obraResult.rows[0];
 
         // Si es ADMIN, verificar que es director del grupo
-        if (userRole === 'ADMIN') {
-            const directorResult = await client.query(
-                'SELECT * FROM grupo_directores WHERE grupo_id = $1 AND director_cedula = $2',
-                [grupo_id, userCedula]
-            );
-
-            if (directorResult.rows.length === 0) {
-                return res.status(403).json({ 
-                    error: 'No tienes permiso para crear funciones en este grupo' 
-                });
-            }
+        if (userRole === 'ADMIN' && obra.director_cedula !== userCedula) {
+            return res.status(403).json({ 
+                error: 'No tienes permiso para crear funciones de esta obra' 
+            });
         }
-
-        // Generar código QR único
-        const qrCode = crypto.randomBytes(16).toString('hex');
-
-        // Obtener obra_id del grupo (si existe la relación)
-        let obraId = grupo.obra_id || null;
 
         await client.query('BEGIN');
 
         // Insertar función
         const result = await client.query(
             `INSERT INTO funciones (
-                grupo_id, obra_id, fecha, lugar, capacidad, precio_base, 
-                qr_code, entradas_disponibles, estado, created_at, updated_at
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'PROGRAMADA', NOW(), NOW())
+                obra_id, fecha, lugar, capacidad, precio_base, foto_url,
+                estado, created_at, updated_at
+            ) VALUES ($1, $2, $3, $4, $5, $6, 'PROGRAMADA', NOW(), NOW())
             RETURNING *`,
-            [grupo_id, obraId, fecha, lugar, capacidad, precio_base, qrCode, capacidad]
+            [obra_id, fecha, lugar, capacidad, precio_base, foto_url]
         );
 
         const funcion = result.rows[0];
 
-        // Crear entradas automáticamente
-        const entradas = [];
+        // Crear tickets/entradas automáticamente
+        const tickets = [];
         for (let i = 1; i <= capacidad; i++) {
-            const qrEntrada = `${qrCode}-${i.toString().padStart(4, '0')}`;
-            entradas.push([funcion.id, i, qrEntrada]);
+            const code = `T-${funcion.id}-${i.toString().padStart(4, '0')}`;
+            tickets.push([code, funcion.id, precio_base]);
         }
 
-        // Insertar entradas en lote
-        const valuesPlaceholder = entradas.map((_, idx) => 
-            `($${idx * 3 + 1}, $${idx * 3 + 2}, $${idx * 3 + 3}, 'NO_ASIGNADA', NOW())`
-        ).join(',');
+        // Insertar tickets en lote
+        if (tickets.length > 0) {
+            const valuesPlaceholder = tickets.map((_, idx) => 
+                `($${idx * 3 + 1}, $${idx * 3 + 2}, $${idx * 3 + 3}, 'DISPONIBLE')`
+            ).join(',');
 
-        await client.query(
-            `INSERT INTO tickets (funcion_id, numero_asiento, qr_code, estado, created_at)
-             VALUES ${valuesPlaceholder}`,
-            entradas.flat()
-        );
+            await client.query(
+                `INSERT INTO tickets (code, funcion_id, precio, estado)
+                 VALUES ${valuesPlaceholder}`,
+                tickets.flat()
+            );
+        }
 
         await client.query('COMMIT');
 
         res.status(201).json({
             message: 'Función creada exitosamente',
             funcion,
-            entradas_creadas: capacidad
+            tickets_creados: capacidad
         });
 
     } catch (error) {
@@ -117,12 +106,13 @@ export async function listarFuncionesGrupo(req, res) {
         const result = await pool.query(
             `SELECT 
                 f.*,
+                o.nombre as obra_nombre,
                 g.nombre as grupo_nombre,
-                g.obra as grupo_obra,
-                (SELECT COUNT(*) FROM tickets WHERE funcion_id = f.id AND estado != 'NO_ASIGNADA') as entradas_asignadas
+                (SELECT COUNT(*) FROM tickets WHERE funcion_id = f.id AND estado != 'ANULADO') as entradas_asignadas
             FROM funciones f
-            JOIN grupos g ON f.grupo_id = g.id
-            WHERE f.grupo_id = $1
+            JOIN obras o ON f.obra_id = o.id
+            JOIN grupos g ON o.grupo_id = g.id
+            WHERE g.id = $1
             ORDER BY f.fecha ASC`,
             [grupo_id]
         );
@@ -148,11 +138,14 @@ export async function obtenerFuncion(req, res) {
         const result = await pool.query(
             `SELECT 
                 f.*,
+                o.id as obra_id,
+                o.nombre as obra_nombre,
+                g.id as grupo_id,
                 g.nombre as grupo_nombre,
-                g.obra as grupo_obra,
                 g.estado as grupo_estado
             FROM funciones f
-            JOIN grupos g ON f.grupo_id = g.id
+            JOIN obras o ON f.obra_id = o.id
+            JOIN grupos g ON o.grupo_id = g.id
             WHERE f.id = $1`,
             [id]
         );
@@ -329,11 +322,14 @@ export async function listarFunciones(req, res) {
         let query = `
             SELECT 
                 f.*,
+                o.id as obra_id,
+                o.nombre as obra_nombre,
+                g.id as grupo_id,
                 g.nombre as grupo_nombre,
-                g.obra as grupo_obra,
                 g.estado as grupo_estado
             FROM funciones f
-            JOIN grupos g ON f.grupo_id = g.id
+            JOIN obras o ON f.obra_id = o.id
+            JOIN grupos g ON o.grupo_id = g.id
         `;
 
         const conditions = [];
