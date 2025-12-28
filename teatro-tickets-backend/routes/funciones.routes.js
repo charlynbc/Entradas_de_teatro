@@ -9,6 +9,8 @@ import {
     crearFuncion,
     listarFunciones,
     listarFuncionesGrupo,
+    listarFuncionesConcluidas,
+    listarFuncionesPublicas,
     obtenerFuncion,
     actualizarFuncion,
     eliminarFuncion
@@ -16,6 +18,12 @@ import {
 import { authenticate, requireRole } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
+
+/**
+ * GET /api/funciones/publicas
+ * Listar funciones públicas (próximas) - SIN AUTENTICACIÓN
+ */
+router.get('/publicas', listarFuncionesPublicas);
 
 /**
  * POST /api/funciones
@@ -32,10 +40,29 @@ router.post('/',
  * GET /api/funciones
  * Listar funciones con filtros
  * Roles: SUPER (todas), ADMIN (sus grupos), ACTOR (grupos donde es actor)
+ * SIN AUTH: Lista funciones públicas próximas
  */
 router.get('/', 
+    (req, res, next) => {
+        // Si no hay token, mostrar funciones públicas
+        if (!req.headers.authorization) {
+            return listarFuncionesPublicas(req, res);
+        }
+        next();
+    },
     authenticate, 
     listarFunciones
+);
+
+/**
+ * GET /api/funciones/concluidas
+ * Listar funciones realizadas/concluidas
+ * Roles: SUPER, ADMIN
+ */
+router.get('/concluidas', 
+    authenticate, 
+    requireRole(['SUPER', 'ADMIN']), 
+    listarFuncionesConcluidas
 );
 
 /**

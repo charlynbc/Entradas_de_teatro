@@ -577,3 +577,37 @@ export const eliminarGrupo = async (req, res) => {
         res.status(500).json({ error: 'Error al eliminar grupo' });
     }
 };
+
+/**
+ * Listar grupos finalizados/archivados
+ * GET /api/grupos/finalizados/lista
+ */
+export const listarGruposFinalizados = async (req, res) => {
+    try {
+        const result = await pool.query(
+            `SELECT 
+                g.*,
+                u.name as director_nombre,
+                COUNT(DISTINCT gm.miembro_cedula) FILTER (WHERE gm.activo = TRUE) as total_miembros,
+                COUNT(DISTINCT o.id) as total_obras,
+                COUNT(DISTINCT f.id) as total_funciones
+            FROM grupos g
+            LEFT JOIN users u ON u.cedula = g.director_cedula
+            LEFT JOIN grupo_miembros gm ON gm.grupo_id = g.id
+            LEFT JOIN obras o ON o.grupo_id = g.id
+            LEFT JOIN funciones f ON f.obra_id = o.id
+            WHERE g.estado IN ('ARCHIVADO', 'INACTIVO')
+               OR (g.fecha_fin IS NOT NULL AND g.fecha_fin < CURRENT_DATE)
+            GROUP BY g.id, u.name
+            ORDER BY g.fecha_fin DESC, g.updated_at DESC`
+        );
+
+        res.json({
+            total: result.rows.length,
+            grupos: result.rows
+        });
+    } catch (error) {
+        console.error('Error al listar grupos finalizados:', error);
+        res.status(500).json({ error: 'Error al listar grupos finalizados' });
+    }
+};

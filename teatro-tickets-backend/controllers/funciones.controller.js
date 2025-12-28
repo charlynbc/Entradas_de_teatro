@@ -381,3 +381,77 @@ export async function listarFunciones(req, res) {
         res.status(500).json({ error: 'Error al listar funciones' });
     }
 }
+
+/**
+ * Listar funciones concluidas/realizadas
+ * GET /api/funciones/concluidas
+ */
+export async function listarFuncionesConcluidas(req, res) {
+    try {
+        const result = await pool.query(
+            `SELECT 
+                f.*,
+                o.id as obra_id,
+                o.nombre as obra_nombre,
+                g.id as grupo_id,
+                g.nombre as grupo_nombre,
+                COUNT(t.code) as total_tickets,
+                COUNT(t.code) FILTER (WHERE t.estado = 'USADO') as tickets_usados,
+                SUM(CASE WHEN t.estado IN ('PAGADO', 'USADO') THEN t.precio ELSE 0 END) as recaudacion_total
+            FROM funciones f
+            JOIN obras o ON f.obra_id = o.id
+            JOIN grupos g ON o.grupo_id = g.id
+            LEFT JOIN tickets t ON t.funcion_id = f.id
+            WHERE f.estado = 'REALIZADA'
+            GROUP BY f.id, o.id, o.nombre, g.id, g.nombre
+            ORDER BY f.fecha DESC`
+        );
+
+        res.json({
+            total: result.rows.length,
+            funciones: result.rows
+        });
+    } catch (error) {
+        console.error('Error al listar funciones concluidas:', error);
+        res.status(500).json({ error: 'Error al listar funciones concluidas' });
+    }
+}
+
+/**
+ * Listar funciones públicas (próximas, sin autenticación)
+ * GET /api/funciones/publicas
+ */
+export async function listarFuncionesPublicas(req, res) {
+    try {
+        const result = await pool.query(
+            `SELECT 
+                f.id,
+                f.fecha,
+                f.lugar,
+                f.capacidad,
+                f.precio_base,
+                f.foto_url,
+                f.estado,
+                o.nombre as obra_nombre,
+                o.descripcion as obra_descripcion,
+                g.nombre as grupo_nombre,
+                COUNT(t.code) FILTER (WHERE t.estado = 'DISPONIBLE') as entradas_disponibles
+            FROM funciones f
+            JOIN obras o ON f.obra_id = o.id
+            JOIN grupos g ON o.grupo_id = g.id
+            LEFT JOIN tickets t ON t.funcion_id = f.id
+            WHERE f.estado IN ('PROGRAMADA', 'CONFIRMADA')
+              AND f.fecha >= CURRENT_TIMESTAMP
+            GROUP BY f.id, o.nombre, o.descripcion, g.nombre
+            ORDER BY f.fecha ASC`
+        );
+
+        res.json({
+            total: result.rows.length,
+            funciones: result.rows
+        });
+    } catch (error) {
+        console.error('Error al listar funciones públicas:', error);
+        res.status(500).json({ error: 'Error al listar funciones públicas' });
+    }
+}

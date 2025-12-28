@@ -24,7 +24,10 @@ export function requireRole(...roles) {
       return res.status(401).json({ error: 'No autenticado' });
     }
     
-    if (!roles.includes(req.user.role)) {
+    // Aplanar el array en caso de que se pase como ['SUPER', 'ADMIN']
+    const flatRoles = roles.flat();
+    
+    if (!flatRoles.includes(req.user.role)) {
       return res.status(403).json({ error: 'No autorizado' });
     }
     

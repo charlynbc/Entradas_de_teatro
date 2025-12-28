@@ -8,6 +8,7 @@ import { authenticate, requireRole } from '../middleware/auth.middleware.js';
 import {
     crearGrupo,
     listarGrupos,
+    listarGruposFinalizados,
     obtenerGrupo,
     actualizarGrupo,
     agregarDirector,
@@ -34,6 +35,12 @@ router.post('/', requireRole('SUPER', 'ADMIN'), crearGrupo);
  * Listar grupos - SUPER, ADMIN, ACTOR
  */
 router.get('/', listarGrupos);
+
+/**
+ * GET /api/grupos/finalizados/lista
+ * Listar grupos finalizados/archivados - SUPER, ADMIN
+ */
+router.get('/finalizados/lista', requireRole('SUPER', 'ADMIN'), listarGruposFinalizados);
 
 /**
  * GET /api/grupos/:id
