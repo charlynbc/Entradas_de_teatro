@@ -50,18 +50,20 @@ export const crearGrupo = async (req, res) => {
         // Crear grupo
         const result = await pool.query(
             `INSERT INTO grupos 
-            (nombre, obra, fecha_inicio, fecha_fin, horarios, director_principal_cedula)
-            VALUES ($1, $2, $3, $4, $5, $6)
+            (nombre, descripcion, director_cedula, fecha_inicio, fecha_fin, dia_semana, hora_inicio, obra_a_realizar, estado)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'ACTIVO')
             RETURNING *`,
-            [nombre, obra, fecha_inicio, fecha_fin, horarios, directorPrincipal]
+            [nombre, req.body.descripcion, directorPrincipal, fecha_inicio, fecha_fin, req.body.dia_semana, req.body.hora_inicio, obra || req.body.obra_a_realizar]
         );
 
         const grupo = result.rows[0];
 
-        // Asignar director principal a la tabla intermedia
+        // El director principal ya está en grupos.director_cedula
+        // Agregarlo también a grupo_miembros
         await pool.query(
-            `INSERT INTO grupo_directores (grupo_id, director_cedula, es_principal)
-            VALUES ($1, $2, true)`,
+            `INSERT INTO grupo_miembros (grupo_id, miembro_cedula, rol_en_grupo, activo)
+            VALUES ($1, $2, 'DIRECTOR', true)
+            ON CONFLICT (grupo_id, miembro_cedula) DO NOTHING`,
             [grupo.id, directorPrincipal]
         );
 
