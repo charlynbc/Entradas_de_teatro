@@ -16,7 +16,9 @@ import {
     agregarActor,
     quitarActor,
     subirFotoGrupo,
-    eliminarGrupo
+    eliminarGrupo,
+    finalizarGrupo,
+    generarPDFGrupo
 } from '../controllers/grupos.controller.js';
 
 const router = express.Router();
@@ -89,5 +91,19 @@ router.put('/:id/foto', requireRole('SUPER', 'ADMIN'), subirFotoGrupo);
  * Eliminar grupo - SUPER
  */
 router.delete('/:id', requireRole('SUPER'), eliminarGrupo);
+
+/**
+ * POST /api/grupos/:id/finalizar
+ * Finalizar/Archivar grupo
+ * Roles: SUPER, ADMIN (directores del grupo)
+ */
+router.post('/:id/finalizar', requireRole('SUPER', 'ADMIN'), finalizarGrupo);
+
+/**
+ * GET /api/grupos/:id/pdf
+ * Generar PDF con reporte de grupo
+ * Roles: SUPER, ADMIN (directores del grupo)
+ */
+router.get('/:id/pdf', requireRole('SUPER', 'ADMIN'), generarPDFGrupo);
 
 export default router;

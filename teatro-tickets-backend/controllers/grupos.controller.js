@@ -5,6 +5,7 @@
  */
 
 import pool from '../db/postgres.js';
+import PDFDocument from 'pdfkit';
 
 /**
  * Crear nuevo grupo
@@ -611,5 +612,156 @@ export const listarGruposFinalizados = async (req, res) => {
     } catch (error) {
         console.error('Error al listar grupos finalizados:', error);
         res.status(500).json({ error: 'Error al listar grupos finalizados' });
+    }
+};
+
+/**
+ * Finalizar/Archivar grupo
+ * POST /api/grupos/:id/finalizar
+ */
+export const finalizarGrupo = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userRole = req.user.role;
+        const userCedula = req.user.cedula;
+
+        // Verificar que el grupo existe
+        const checkRes = await pool.query(
+            'SELECT * FROM grupos WHERE id = $1',
+            [id]
+        );
+
+        if (checkRes.rows.length === 0) {
+            return res.status(404).json({ error: 'Grupo no encontrado' });
+        }
+
+        const grupo = checkRes.rows[0];
+
+        // Solo SUPER o director del grupo pueden finalizar
+        if (userRole === 'ADMIN' && grupo.director_cedula !== userCedula) {
+            return res.status(403).json({ error: 'No tienes permiso para finalizar este grupo' });
+        }
+
+        // Actualizar estado a ARCHIVADO
+        const result = await pool.query(
+            'UPDATE grupos SET estado = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
+            ['ARCHIVADO', id]
+        );
+
+        res.json({
+            message: 'Grupo finalizado exitosamente',
+            grupo: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error('Error finalizando grupo:', error);
+        res.status(500).json({ error: 'Error al finalizar grupo' });
+    }
+};
+
+/**
+ * Generar PDF de grupo
+ * GET /api/grupos/:id/pdf
+ */
+export const generarPDFGrupo = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Obtener datos completos del grupo
+        const result = await pool.query(
+            `SELECT 
+                g.*,
+                u.name as director_nombre,
+                COUNT(DISTINCT gm.miembro_cedula) FILTER (WHERE gm.activo = TRUE) as total_miembros,
+                COUNT(DISTINCT o.id) as total_obras,
+                COUNT(DISTINCT f.id) as total_funciones
+            FROM grupos g
+            LEFT JOIN users u ON u.cedula = g.director_cedula
+            LEFT JOIN grupo_miembros gm ON gm.grupo_id = g.id
+            LEFT JOIN obras o ON o.grupo_id = g.id
+            LEFT JOIN funciones f ON f.obra_id = o.id
+            WHERE g.id = $1
+            GROUP BY g.id, u.name`,
+            [id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Grupo no encontrado' });
+        }
+
+        const grupo = result.rows[0];
+
+        // Obtener miembros
+        const miembrosRes = await pool.query(
+            `SELECT u.name, u.cedula, gm.rol_en_grupo, gm.joined_at
+            FROM grupo_miembros gm
+            JOIN users u ON u.cedula = gm.miembro_cedula
+            WHERE gm.grupo_id = $1 AND gm.activo = TRUE
+            ORDER BY gm.rol_en_grupo, u.name`,
+            [id]
+        );
+
+        // Crear documento PDF
+        const doc = new PDFDocument();
+        const filename = `grupo-${id}-${Date.now()}.pdf`;
+
+        // Configurar headers
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+        // Pipe del PDF a la respuesta
+        doc.pipe(res);
+
+        // Contenido del PDF
+        doc.fontSize(20).text('🎭 REPORTE DE GRUPO TEATRAL', { align: 'center' });
+        doc.moveDown();
+        doc.fontSize(16).text(`${grupo.nombre}`, { align: 'center' });
+        doc.moveDown(2);
+
+        doc.fontSize(12);
+        doc.text(`Director: ${grupo.director_nombre || 'N/A'}`);
+        doc.text(`Obra realizando: ${grupo.obra_a_realizar || 'N/A'}`);
+        doc.text(`Estado: ${grupo.estado}`);
+        doc.moveDown();
+
+        if (grupo.fecha_inicio) {
+            doc.text(`Fecha inicio: ${new Date(grupo.fecha_inicio).toLocaleDateString('es-DO')}`);
+        }
+        if (grupo.fecha_fin) {
+            doc.text(`Fecha fin: ${new Date(grupo.fecha_fin).toLocaleDateString('es-DO')}`);
+        }
+        if (grupo.dia_semana && grupo.hora_inicio) {
+            doc.text(`Horario: ${grupo.dia_semana} ${grupo.hora_inicio}`);
+        }
+        doc.moveDown();
+
+        doc.fontSize(14).text('Estadísticas:', { underline: true });
+        doc.moveDown(0.5);
+        doc.fontSize(12);
+        doc.text(`Miembros activos: ${parseInt(grupo.total_miembros) || 0}`);
+        doc.text(`Obras: ${parseInt(grupo.total_obras) || 0}`);
+        doc.text(`Funciones realizadas: ${parseInt(grupo.total_funciones) || 0}`);
+        doc.moveDown();
+
+        if (miembrosRes.rows.length > 0) {
+            doc.fontSize(14).text('Miembros:', { underline: true });
+            doc.moveDown(0.5);
+            doc.fontSize(10);
+            miembrosRes.rows.forEach((miembro, i) => {
+                doc.text(`${i + 1}. ${miembro.name} (${miembro.rol_en_grupo}) - ${miembro.cedula}`);
+            });
+            doc.moveDown();
+        }
+
+        doc.fontSize(10).text(`Generado: ${new Date().toLocaleString('es-DO')}`, { align: 'right' });
+
+        // Finalizar PDF
+        doc.end();
+
+    } catch (error) {
+        console.error('Error generando PDF grupo:', error);
+        if (!res.headersSent) {
+            res.status(500).json({ error: 'Error al generar PDF' });
+        }
     }
 };

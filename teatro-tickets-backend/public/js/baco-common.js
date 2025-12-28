@@ -263,8 +263,9 @@ const BacoAPI = {
             });
             
             if (response.status === 401) {
-                BacoAuth.logout();
-                return null;
+                // No hacer logout automático - puede ser error de permisos, no sesión expirada
+                const error = { message: 'No autorizado. Verifica tus permisos.' };
+                throw new Error(error.message);
             }
             
             if (!response.ok) {
@@ -299,8 +300,9 @@ const BacoAPI = {
             });
             
             if (response.status === 401) {
-                BacoAuth.logout();
-                return null;
+                // No hacer logout automático - puede ser error de permisos, no sesión expirada
+                const error = { message: 'No autorizado. Verifica tus permisos.' };
+                throw new Error(error.message);
             }
             
             if (!response.ok) {
@@ -335,8 +337,9 @@ const BacoAPI = {
             });
             
             if (response.status === 401) {
-                BacoAuth.logout();
-                return null;
+                // No hacer logout automático - puede ser error de permisos, no sesión expirada
+                const error = { message: 'No autorizado. Verifica tus permisos.' };
+                throw new Error(error.message);
             }
             
             if (!response.ok) {
@@ -370,8 +373,9 @@ const BacoAPI = {
             });
             
             if (response.status === 401) {
-                BacoAuth.logout();
-                return null;
+                // No hacer logout automático - puede ser error de permisos, no sesión expirada
+                const error = { message: 'No autorizado. Verifica tus permisos.' };
+                throw new Error(error.message);
             }
             
             if (!response.ok) {

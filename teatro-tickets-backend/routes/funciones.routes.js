@@ -13,7 +13,9 @@ import {
     listarFuncionesPublicas,
     obtenerFuncion,
     actualizarFuncion,
-    eliminarFuncion
+    eliminarFuncion,
+    cerrarFuncion,
+    generarPDFFuncion
 } from '../controllers/funciones.controller.js';
 import { authenticate, requireRole } from '../middleware/auth.middleware.js';
 
@@ -105,6 +107,28 @@ router.delete('/:id',
     authenticate, 
     requireRole(['SUPER']), 
     eliminarFuncion
+);
+
+/**
+ * POST /api/funciones/:id/cerrar
+ * Cerrar/Finalizar función (marcar como REALIZADA)
+ * Roles: SUPER, ADMIN (directores del grupo)
+ */
+router.post('/:id/cerrar', 
+    authenticate, 
+    requireRole(['SUPER', 'ADMIN']), 
+    cerrarFuncion
+);
+
+/**
+ * GET /api/funciones/:id/pdf
+ * Generar PDF con reporte de función
+ * Roles: SUPER, ADMIN (directores del grupo)
+ */
+router.get('/:id/pdf', 
+    authenticate, 
+    requireRole(['SUPER', 'ADMIN']), 
+    generarPDFFuncion
 );
 
 export default router;

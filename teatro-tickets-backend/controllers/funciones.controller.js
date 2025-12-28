@@ -6,6 +6,7 @@
 
 import pool from '../db/postgres.js';
 import crypto from 'crypto';
+import PDFDocument from 'pdfkit';
 
 /**
  * Crear función dentro de un grupo
@@ -453,5 +454,138 @@ export async function listarFuncionesPublicas(req, res) {
     } catch (error) {
         console.error('Error al listar funciones públicas:', error);
         res.status(500).json({ error: 'Error al listar funciones públicas' });
+    }
+}
+
+/**
+ * Cerrar/Finalizar función
+ * POST /api/funciones/:id/cerrar
+ */
+export async function cerrarFuncion(req, res) {
+    try {
+        const { id } = req.params;
+        const userRole = req.user.role;
+
+        // Verificar que la función existe
+        const checkRes = await pool.query(
+            'SELECT f.*, o.grupo_id FROM funciones f JOIN obras o ON f.obra_id = o.id WHERE f.id = $1',
+            [id]
+        );
+
+        if (checkRes.rows.length === 0) {
+            return res.status(404).json({ error: 'Función no encontrada' });
+        }
+
+        const funcion = checkRes.rows[0];
+
+        // Solo SUPER o director del grupo pueden cerrar
+        if (userRole === 'ADMIN') {
+            const grupoRes = await pool.query(
+                'SELECT director_cedula FROM grupos WHERE id = $1',
+                [funcion.grupo_id]
+            );
+            
+            if (grupoRes.rows[0]?.director_cedula !== req.user.cedula) {
+                return res.status(403).json({ error: 'No tienes permiso para cerrar esta función' });
+            }
+        }
+
+        // Actualizar estado a REALIZADA
+        const result = await pool.query(
+            'UPDATE funciones SET estado = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
+            ['REALIZADA', id]
+        );
+
+        res.json({
+            message: 'Función cerrada exitosamente',
+            funcion: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error('Error cerrando función:', error);
+        res.status(500).json({ error: 'Error al cerrar función' });
+    }
+}
+
+/**
+ * Generar PDF de función
+ * GET /api/funciones/:id/pdf
+ */
+export async function generarPDFFuncion(req, res) {
+    try {
+        const { id } = req.params;
+
+        // Obtener datos completos de la función
+        const result = await pool.query(
+            `SELECT 
+                f.*,
+                o.nombre as obra_nombre,
+                g.nombre as grupo_nombre,
+                g.director_cedula,
+                u.name as director_nombre,
+                COUNT(t.code) as total_tickets,
+                COUNT(t.code) FILTER (WHERE t.estado = 'USADO') as tickets_usados,
+                COUNT(t.code) FILTER (WHERE t.estado IN ('PAGADO', 'USADO')) as tickets_pagados,
+                SUM(CASE WHEN t.estado IN ('PAGADO', 'USADO') THEN t.precio ELSE 0 END) as recaudacion_total
+            FROM funciones f
+            JOIN obras o ON f.obra_id = o.id
+            JOIN grupos g ON o.grupo_id = g.id
+            LEFT JOIN users u ON u.cedula = g.director_cedula
+            LEFT JOIN tickets t ON t.funcion_id = f.id
+            WHERE f.id = $1
+            GROUP BY f.id, o.nombre, g.nombre, g.director_cedula, u.name`,
+            [id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Función no encontrada' });
+        }
+
+        const data = result.rows[0];
+
+        // Crear documento PDF
+        const doc = new PDFDocument();
+        const filename = `funcion-${id}-${Date.now()}.pdf`;
+
+        // Configurar headers
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+        // Pipe del PDF a la respuesta
+        doc.pipe(res);
+
+        // Contenido del PDF
+        doc.fontSize(20).text('🎭 REPORTE DE FUNCIÓN', { align: 'center' });
+        doc.moveDown();
+        doc.fontSize(16).text(`${data.obra_nombre}`, { align: 'center' });
+        doc.moveDown(2);
+
+        doc.fontSize(12);
+        doc.text(`Grupo: ${data.grupo_nombre}`);
+        doc.text(`Director: ${data.director_nombre || 'N/A'}`);
+        doc.text(`Fecha: ${new Date(data.fecha).toLocaleDateString('es-DO')}`);
+        doc.text(`Lugar: ${data.lugar}`);
+        doc.text(`Estado: ${data.estado}`);
+        doc.moveDown();
+
+        doc.fontSize(14).text('Estadísticas:', { underline: true });
+        doc.moveDown(0.5);
+        doc.fontSize(12);
+        doc.text(`Capacidad: ${data.capacidad}`);
+        doc.text(`Tickets vendidos: ${parseInt(data.tickets_pagados) || 0}`);
+        doc.text(`Tickets usados: ${parseInt(data.tickets_usados) || 0}`);
+        doc.text(`Recaudación total: RD$ ${parseFloat(data.recaudacion_total || 0).toFixed(2)}`);
+        doc.moveDown();
+
+        doc.fontSize(10).text(`Generado: ${new Date().toLocaleString('es-DO')}`, { align: 'right' });
+
+        // Finalizar PDF
+        doc.end();
+
+    } catch (error) {
+        console.error('Error generando PDF función:', error);
+        if (!res.headersSent) {
+            res.status(500).json({ error: 'Error al generar PDF' });
+        }
     }
 }
