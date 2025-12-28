@@ -4,67 +4,111 @@ import PDFDocument from 'pdfkit';
 export async function generarReporteObra(req, res) {
   try {
     const { showId } = req.params;
+
+    // Compatibilidad: en v3, showId = funcion_id
+    const funcionId = Number(showId);
+    if (!Number.isFinite(funcionId)) {
+      return res.status(400).json({ error: 'showId inválido' });
+    }
     
-    // Obtener información del show
-    const showResult = await query(
-      'SELECT * FROM shows WHERE id = $1',
-      [showId]
+    // Obtener info de la función + obra + grupo
+    const funcionResult = await query(
+      `SELECT
+          f.id,
+          f.fecha,
+          f.lugar,
+          f.precio_base,
+          o.nombre AS obra_nombre,
+          g.director_cedula
+       FROM funciones f
+       JOIN obras o ON o.id = f.obra_id
+       JOIN grupos g ON g.id = o.grupo_id
+       WHERE f.id = $1`,
+      [funcionId]
     );
-    
-    if (showResult.rows.length === 0) {
+
+    if (funcionResult.rows.length === 0) {
       return res.status(404).json({ error: 'Obra no encontrada' });
     }
-    
-    const show = showResult.rows[0];
-    
-    // Verificar que el usuario tenga permisos (creador o SUPER)
-    if (req.user.role !== 'SUPER' && show.creado_por !== req.user.id) {
+
+    const funcion = funcionResult.rows[0];
+
+    // Permisos: SUPER todo; ADMIN solo si es director del grupo
+    if (req.user.role !== 'SUPER' && req.user.role !== 'ADMIN') {
       return res.status(403).json({ error: 'No tienes permiso para generar este reporte' });
     }
-    
-    // Obtener todos los tickets del show (sin vendor tracking - schema simplificado)
+    if (req.user.role === 'ADMIN' && funcion.director_cedula !== req.user.cedula) {
+      return res.status(403).json({ error: 'No tienes permiso para generar este reporte' });
+    }
+
+    // Obtener tickets de la función
     const ticketsResult = await query(
-      `SELECT * FROM tickets WHERE show_id = $1`,
-      [showId]
+      `SELECT estado, precio, vendedor_phone, reportada_por_vendedor, aprobada_por_admin
+       FROM tickets
+       WHERE funcion_id = $1`,
+      [funcionId]
     );
     
     const tickets = ticketsResult.rows;
-    
+
+    const SOLD_STATES = new Set(['REPORTADA_VENDIDA', 'PAGADO', 'USADO']);
+    const PAID_STATES = new Set(['PAGADO', 'USADO']);
+    const STOCK_STATES = new Set(['STOCK_ACTOR', 'STOCK_VENDEDOR']);
+
     // Calcular estadísticas
     const totalTickets = tickets.length;
-    const ticketsVendidos = tickets.filter(t => 
-      ['VENDIDA_NO_PAGADA', 'VENDIDA_PAGADA', 'USADA'].includes(t.estado)
-    ).length;
-    const ticketsUsados = tickets.filter(t => t.estado === 'USADA').length;
-    
+    const ticketsVendidos = tickets.filter(t => SOLD_STATES.has(t.estado)).length;
+    const ticketsUsados = tickets.filter(t => t.estado === 'USADO').length;
+
     const ingresosTotales = tickets
-      .filter(t => ['VENDIDA_PAGADA', 'USADA'].includes(t.estado))
-      .reduce((sum, t) => sum + parseFloat(t.precio_venta || 0), 0);
-    
-    // Datos de vendedores - simplificado (sin vendor tracking en schema actual)
-    const datosVendedores = [];
-    
-    // Datos de ventas por estado
+      .filter(t => PAID_STATES.has(t.estado))
+      .reduce((sum, t) => sum + Number(t.precio ?? funcion.precio_base ?? 0), 0);
+
+    // Datos por vendedor_phone
+    const byVendedor = new Map();
+    for (const t of tickets) {
+      const key = t.vendedor_phone || null;
+      if (!byVendedor.has(key)) byVendedor.set(key, { vendedor_phone: key, total: 0, vendidas: 0, pagadas: 0 });
+      const agg = byVendedor.get(key);
+      agg.total += 1;
+      if (SOLD_STATES.has(t.estado)) agg.vendidas += 1;
+      if (PAID_STATES.has(t.estado)) agg.pagadas += 1;
+    }
+    const phones = [...byVendedor.keys()].filter(Boolean);
+    const nombres = phones.length
+      ? await query('SELECT phone, name FROM users WHERE phone = ANY($1)', [phones])
+      : { rows: [] };
+    const nameByPhone = new Map(nombres.rows.map(r => [r.phone, r.name]));
+    const datosVendedores = [...byVendedor.values()]
+      .filter(v => v.vendedor_phone)
+      .map(v => ({
+        phone: v.vendedor_phone,
+        nombre: nameByPhone.get(v.vendedor_phone) || null,
+        total_tickets: v.total,
+        vendidos: v.vendidas,
+        pagados: v.pagadas
+      }));
+
+    // Datos de ventas por estado (mantener claves legacy)
     const datosVentas = {
-      noAsignados: tickets.filter(t => t.estado === 'NO_ASIGNADO').length,
-      enPoder: tickets.filter(t => t.estado === 'EN_PODER').length,
-      vendidasNoPagadas: tickets.filter(t => t.estado === 'VENDIDA_NO_PAGADA').length,
-      vendidasPagadas: tickets.filter(t => t.estado === 'VENDIDA_PAGADA').length,
+      noAsignados: tickets.filter(t => t.estado === 'DISPONIBLE').length,
+      enPoder: tickets.filter(t => STOCK_STATES.has(t.estado)).length,
+      vendidasNoPagadas: tickets.filter(t => t.estado === 'REPORTADA_VENDIDA').length,
+      vendidasPagadas: tickets.filter(t => t.estado === 'PAGADO').length,
       usadas: ticketsUsados
     };
     
-    // Guardar reporte en la base de datos
     const reporteResult = await query(
-      `INSERT INTO reportes_obras 
-       (show_id, nombre_obra, fecha_show, director_id, total_tickets, 
+      `INSERT INTO reportes_obras
+       (show_id, nombre_obra, fecha_show, director_id, total_tickets,
         tickets_vendidos, tickets_usados, ingresos_totales, datos_vendedores, datos_ventas)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10::jsonb)
        RETURNING *`,
       [
-        showId,
-        show.nombre,
-        show.fecha,
-        show.creado_por,
+        funcionId,
+        funcion.obra_nombre,
+        funcion.fecha,
+        req.user.cedula,
         totalTickets,
         ticketsVendidos,
         ticketsUsados,
@@ -79,8 +123,8 @@ export async function generarReporteObra(req, res) {
       mensaje: 'Reporte generado correctamente',
       reporte: {
         id: reporteResult.rows[0].id,
-        nombreObra: show.nombre,
-        fechaShow: show.fecha,
+        nombreObra: funcion.obra_nombre,
+        fechaShow: funcion.fecha,
         totalTickets,
         ticketsVendidos,
         ticketsUsados,
@@ -104,7 +148,7 @@ export async function listarReportes(req, res) {
     // Si no es SUPER, solo mostrar sus reportes
     if (req.user.role !== 'SUPER') {
       reportesQuery += ' WHERE director_id = $1';
-      params.push(req.user.id);
+      params.push(req.user.cedula);
     }
     
     reportesQuery += ' ORDER BY fecha_show DESC';
@@ -150,7 +194,7 @@ export async function obtenerReporte(req, res) {
     const reporte = result.rows[0];
     
     // Verificar permisos
-    if (req.user.role !== 'SUPER' && reporte.director_id !== req.user.id) {
+    if (req.user.role !== 'SUPER' && reporte.director_id !== req.user.cedula) {
       return res.status(403).json({ error: 'No tienes permiso para ver este reporte' });
     }
     
@@ -199,7 +243,7 @@ export async function eliminarReporte(req, res) {
     const reporte = result.rows[0];
     
     // Verificar permisos
-    if (req.user.role !== 'SUPER' && reporte.director_id !== req.user.id) {
+    if (req.user.role !== 'SUPER' && reporte.director_id !== req.user.cedula) {
       return res.status(403).json({ error: 'No tienes permiso para eliminar este reporte' });
     }
     
@@ -232,7 +276,7 @@ export async function descargarReportePDF(req, res) {
     const reporte = result.rows[0];
     
     // Verificar permisos
-    if (req.user.role !== 'SUPER' && reporte.director_id !== req.user.id) {
+    if (req.user.role !== 'SUPER' && reporte.director_id !== req.user.cedula) {
       return res.status(403).json({ error: 'No tienes permiso para descargar este reporte' });
     }
     

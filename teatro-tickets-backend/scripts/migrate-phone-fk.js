@@ -1,5 +1,8 @@
 import 'dotenv/config';
 import { Pool } from 'pg';
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const url = process.env.DATABASE_URL;
 if (!url) {
@@ -7,42 +10,127 @@ if (!url) {
   process.exit(1);
 }
 
-const pool = new Pool({ connectionString: url });
+const pool = new Pool({
+  connectionString: url,
+  // cuando Postgres arranca dentro de Docker puede tardar unos segundos
+  connectionTimeoutMillis: 5_000
+});
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+async function ensureSchema(client) {
+  const check = await client.query(
+    `SELECT 1
+     FROM information_schema.tables
+     WHERE table_schema='public' AND table_name='users'`
+  );
+  if (check.rows.length > 0) return;
+
+  console.log('🧱 DB vacía detectada: aplicando schema v3...');
+  const initPath = path.join(__dirname, '..', 'db', 'init-v3-postgres.sql');
+  const sql = await fs.readFile(initPath, 'utf8');
+  await client.query(sql);
+  console.log('✅ Schema v3 aplicado');
+}
+
+async function ensureCompatViews(client) {
+  // grupo_miembros: el código legacy usa joined_at
+  await client.query(`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema='public' AND table_name='grupo_miembros' AND column_name='joined_at'
+      ) THEN
+        ALTER TABLE grupo_miembros ADD COLUMN joined_at TIMESTAMP;
+        -- si existe fecha_ingreso (schema anterior), migrar valores
+        IF EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_schema='public' AND table_name='grupo_miembros' AND column_name='fecha_ingreso'
+        ) THEN
+          UPDATE grupo_miembros SET joined_at = COALESCE(joined_at, fecha_ingreso, NOW());
+        ELSE
+          UPDATE grupo_miembros SET joined_at = COALESCE(joined_at, NOW());
+        END IF;
+        ALTER TABLE grupo_miembros ALTER COLUMN joined_at SET DEFAULT NOW();
+        ALTER TABLE grupo_miembros ALTER COLUMN joined_at SET NOT NULL;
+      END IF;
+    END $$;
+  `);
+
+  // Tabla reportes_obras (algunos endpoints la esperan)
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS reportes_obras (
+      id               SERIAL PRIMARY KEY,
+      show_id          INT NOT NULL,
+      nombre_obra      VARCHAR(255) NOT NULL,
+      fecha_show       TIMESTAMP NOT NULL,
+      director_id      VARCHAR(20) NOT NULL,
+      total_tickets    INT NOT NULL DEFAULT 0,
+      tickets_vendidos INT NOT NULL DEFAULT 0,
+      tickets_usados   INT NOT NULL DEFAULT 0,
+      ingresos_totales NUMERIC(12,2) NOT NULL DEFAULT 0,
+      datos_vendedores JSONB NOT NULL DEFAULT '[]'::jsonb,
+      datos_ventas     JSONB NOT NULL DEFAULT '{}'::jsonb,
+      fecha_generacion TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_reportes_obras_show_id ON reportes_obras(show_id);
+    CREATE INDEX IF NOT EXISTS idx_reportes_obras_director_id ON reportes_obras(director_id);
+    CREATE INDEX IF NOT EXISTS idx_reportes_obras_fecha_show ON reportes_obras(fecha_show);
+  `);
+
+  // Compatibilidad: vistas+triggers para grupo_directores / grupo_actores
+  const migPath = path.join(__dirname, '..', 'db', 'migrations', '002-normalize-relations.sql');
+  const sql = await fs.readFile(migPath, 'utf8');
+  await client.query(sql);
+}
 
 async function run() {
   console.log('🚀 Migración: users.phone único + FK tickets.vendedor_phone');
-  const client = await pool.connect();
+  let client;
+  for (let attempt = 1; attempt <= 15; attempt++) {
+    try {
+      client = await pool.connect();
+      break;
+    } catch (err) {
+      const msg = String(err?.message || err);
+      const retryable = msg.includes('Connection terminated unexpectedly') || msg.includes('ECONNREFUSED') || msg.includes('timeout') || msg.includes('terminating connection');
+      if (!retryable || attempt === 15) {
+        console.error(`❌ No se pudo conectar a Postgres (intento ${attempt}/15):`, msg);
+        throw err;
+      }
+      console.log(`⏳ Esperando Postgres... (intento ${attempt}/15)`);
+      await new Promise(r => setTimeout(r, 1000));
+    }
+  }
   try {
     await client.query('BEGIN');
 
+    // 0) Si la DB está vacía, crear schema base (orden correcto)
+    await ensureSchema(client);
+
+    // 0.1) Compatibilidad con joins legacy (grupo_directores/grupo_actores)
+    await ensureCompatViews(client);
+
+    // 1) users.phone e índice único
     await client.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(20)');
     await client.query('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_phone_unique ON users(phone)');
 
-    // Si la tabla tickets no existe, crear estructura mínima
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS tickets (
-        code VARCHAR(50) PRIMARY KEY,
-        show_id INT NOT NULL REFERENCES shows(id) ON DELETE CASCADE,
-        estado VARCHAR(20) NOT NULL CHECK (estado IN ('DISPONIBLE','STOCK_VENDEDOR','RESERVADO','REPORTADA_VENDIDA','PAGADO','USADO')) DEFAULT 'DISPONIBLE',
-        vendedor_phone VARCHAR(20),
-        comprador_nombre VARCHAR(150),
-        comprador_contacto VARCHAR(150),
-        precio NUMERIC(10,2),
-        medio_pago VARCHAR(50),
-        reportada_por_vendedor BOOLEAN NOT NULL DEFAULT FALSE,
-        aprobada_por_admin BOOLEAN NOT NULL DEFAULT FALSE,
-        qr_code TEXT,
-        created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-        reservado_at TIMESTAMP,
-        reportada_at TIMESTAMP,
-        pagado_at TIMESTAMP,
-        usado_at TIMESTAMP
-      );
-    `);
+    // 2) tickets: asegurar estados tolerantes (evita errores por CHECK desfasado)
+    await client.query('ALTER TABLE tickets DROP CONSTRAINT IF EXISTS tickets_estado_check');
+    await client.query(
+      `ALTER TABLE tickets ADD CONSTRAINT tickets_estado_check
+       CHECK (estado IN ('DISPONIBLE', 'STOCK_ACTOR', 'STOCK_VENDEDOR', 'RESERVADO', 'REPORTADA_VENDIDA', 'PAGADO', 'USADO', 'ANULADO'))`
+    );
 
-    // FK a users(phone)
+    // 3) FK tickets.vendedor_phone -> users(phone)
     await client.query('ALTER TABLE tickets DROP CONSTRAINT IF EXISTS tickets_vendedor_phone_fkey');
-    await client.query('ALTER TABLE tickets ADD CONSTRAINT tickets_vendedor_phone_fkey FOREIGN KEY (vendedor_phone) REFERENCES users(phone)');
+    await client.query(
+      `ALTER TABLE tickets
+       ADD CONSTRAINT tickets_vendedor_phone_fkey
+       FOREIGN KEY (vendedor_phone) REFERENCES users(phone) ON DELETE SET NULL`
+    );
 
     await client.query('COMMIT');
     console.log('✅ Migración aplicada correctamente');
@@ -51,7 +139,7 @@ async function run() {
     console.error('❌ Error aplicando migración:', err.message);
     process.exitCode = 1;
   } finally {
-    client.release();
+    client?.release();
     await pool.end();
   }
 }

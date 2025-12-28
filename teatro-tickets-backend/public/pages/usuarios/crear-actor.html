@@ -323,17 +323,25 @@
         </div>
     </div>
 
-    <script src="/js/baco-common.js"></script>
+    <script src="/js/baco-common.js?v=20251228"></script>
     <script>
         // Verificar autenticación
         if (!Baco.Auth.requireAuth()) return;
         
         const user = JSON.parse(localStorage.getItem('user') || '{}');
-        if (user.role !== 'SUPER') {
-            Baco.UI.showError('Acceso denegado. Solo Super Usuarios.');
-            setTimeout(() => Baco.Auth.logout(), 2000);
-            return;
-        }
+            // Validación robusta: no depender de localStorage corrupto/viejo
+            (async () => {
+                const user = await Baco.Auth.ensureUser();
+                if (!user || !user.role) {
+                    Baco.UI.showError('Sesión inválida. Por favor inicia sesión.');
+                    setTimeout(() => window.location.href = '/pages/auth/login.html', 1200);
+                    return;
+                }
+                if (user.role !== 'SUPER' && user.role !== 'ADMIN') {
+                    Baco.UI.showError('Acceso denegado. Solo Super Usuarios o Directores.');
+                    setTimeout(() => window.location.href = '/pages/auth/login.html', 1200);
+                }
+            })();
 
         async function submitForm(event) {
             event.preventDefault();

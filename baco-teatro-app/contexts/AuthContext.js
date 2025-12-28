@@ -88,7 +88,7 @@ export function AuthProvider({ children }) {
     updateProfile,
     isSuper: user?.role === 'SUPER',
     isDirector: user?.role === 'ADMIN',
-    isActor: user?.role === 'VENDEDOR',
+    isActor: user?.role === 'VENDEDOR' || user?.role === 'ACTOR',
   }), [user, token, loading, hydrated]);
 
   return (

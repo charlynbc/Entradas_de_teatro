@@ -705,7 +705,7 @@
         </div>
     </div>
 
-    <script src="/js/baco-common.js"></script>
+    <script src="/js/baco-common.js?v=20251228"></script>
     <script>
         (function () {
         // Verificar autenticación
@@ -734,11 +734,16 @@
         // Cargar frase aleatoria
         document.getElementById('fraseTexto').textContent = getFraseAleatoria();
         
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        // Validación robusta: rehidratar usuario si localStorage está viejo/corrupto
+        let user = JSON.parse(localStorage.getItem('user') || '{}');
         if (!user.role) {
-            Baco.UI.showError('Sesión inválida. Por favor inicia sesión.');
-            setTimeout(() => Baco.Auth.logout(), 2000);
-            return;
+            const hydrated = await Baco.Auth.ensureUser();
+            if (!hydrated || !hydrated.role) {
+                Baco.UI.showError('Sesión inválida. Por favor inicia sesión.');
+                setTimeout(() => window.location.href = '/pages/auth/login.html', 1200);
+                return;
+            }
+            user = hydrated;
         }
 
         // Verificar que es ADMIN

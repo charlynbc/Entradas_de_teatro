@@ -84,7 +84,7 @@ async function testLogin() {
       method: 'POST',
       body: JSON.stringify({
         cedula: '48376669',
-        password: 'Teamomama91'
+        password: 'admin123'
       })
     });
 
