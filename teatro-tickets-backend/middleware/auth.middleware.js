@@ -18,6 +18,19 @@ export function authenticate(req, res, next) {
   next();
 }
 
+// Autenticación opcional: si hay token válido, setea req.user; si no, sigue sin error.
+export function optionalAuthenticate(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring(7);
+    const decoded = verifyToken(token);
+    if (decoded) {
+      req.user = decoded;
+    }
+  }
+  next();
+}
+
 export function requireRole(...roles) {
   return (req, res, next) => {
     if (!req.user) {

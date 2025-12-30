@@ -16,24 +16,94 @@ export async function crearFuncion(req, res) {
     const client = await pool.connect();
     
     try {
-        const { obra_id, fecha, lugar, capacidad, precio_base, foto_url } = req.body;
+        const { obra_id, obra: obraNombreLegacy, fecha, lugar, capacidad, precio_base, base_price, foto_url } = req.body;
         const userRole = req.user.role;
         const userCedula = req.user.cedula;
 
+        const precioBase = precio_base ?? base_price;
+
+        // Compatibilidad: payload legacy tipo "show" (sin obra_id)
+        // En el modelo actual: siempre creamos una función dentro de una obra (y obra dentro de un grupo).
+        // Si no viene obra_id pero viene obra (string), creamos grupo+obra automáticamente para el director.
+        let obraId = obra_id;
+
         // Validar campos requeridos
-        if (!obra_id || !fecha || !lugar || !capacidad || !precio_base) {
+        if (!obraId && !obraNombreLegacy) {
             return res.status(400).json({ 
-                error: 'Faltan campos requeridos: obra_id, fecha, lugar, capacidad, precio_base' 
+                error: 'Faltan campos requeridos: obra_id (o obra), fecha, lugar, capacidad, precio_base' 
             });
+        }
+
+        if (!fecha || !lugar || !capacidad || !precioBase) {
+            return res.status(400).json({ 
+                error: 'Faltan campos requeridos: fecha, lugar, capacidad, precio_base' 
+            });
+        }
+
+        await client.query('BEGIN');
+
+        if (!obraId && obraNombreLegacy) {
+            const dateObj = new Date(fecha);
+            if (Number.isNaN(dateObj.getTime())) {
+                await client.query('ROLLBACK');
+                return res.status(400).json({ error: 'fecha inválida' });
+            }
+
+            const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+            const dia_semana = dayNames[dateObj.getDay()];
+            const hora_inicio = dateObj.toTimeString().slice(0, 8);
+
+            const today = new Date();
+            const fecha_inicio = today.toISOString().slice(0, 10);
+            const fecha_fin = new Date(today.getTime() + 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+            // Crear grupo mínimo
+            const grupoRes = await client.query(
+                `INSERT INTO grupos
+                 (nombre, descripcion, director_cedula, dia_semana, hora_inicio, fecha_inicio, fecha_fin, obra_a_realizar, estado)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'ACTIVO')
+                 RETURNING *`,
+                [
+                    `Grupo ${obraNombreLegacy}`,
+                    'Grupo creado automáticamente por compatibilidad (shows → funciones)',
+                    userCedula,
+                    dia_semana,
+                    hora_inicio,
+                    fecha_inicio,
+                    fecha_fin,
+                    String(obraNombreLegacy)
+                ]
+            );
+
+            const grupo = grupoRes.rows[0];
+
+            // Asegurar relación director (según migraciones, puede existir grupo_miembros o vista+triggers)
+            await client.query(
+                `INSERT INTO grupo_miembros (grupo_id, miembro_cedula, rol_en_grupo, activo)
+                 VALUES ($1, $2, 'DIRECTOR', true)
+                 ON CONFLICT (grupo_id, miembro_cedula) DO NOTHING`,
+                [grupo.id, userCedula]
+            );
+
+            // Crear obra mínima
+            const obraRes = await client.query(
+                `INSERT INTO obras (grupo_id, nombre, descripcion, estado)
+                 VALUES ($1, $2, $3, 'LISTA')
+                 RETURNING *`,
+                [grupo.id, String(obraNombreLegacy), 'Obra creada automáticamente por compatibilidad (shows → funciones)']
+            );
+
+            obraId = obraRes.rows[0].id;
         }
 
         // Verificar que la obra existe y obtener su grupo
         const obraResult = await client.query(
             'SELECT o.*, g.director_cedula FROM obras o JOIN grupos g ON o.grupo_id = g.id WHERE o.id = $1',
-            [obra_id]
+            [obraId]
         );
 
         if (obraResult.rows.length === 0) {
+            await client.query('ROLLBACK');
             return res.status(404).json({ error: 'Obra no encontrada' });
         }
 
@@ -41,12 +111,11 @@ export async function crearFuncion(req, res) {
 
         // Si es ADMIN, verificar que es director del grupo
         if (userRole === 'ADMIN' && obra.director_cedula !== userCedula) {
+            await client.query('ROLLBACK');
             return res.status(403).json({ 
                 error: 'No tienes permiso para crear funciones de esta obra' 
             });
         }
-
-        await client.query('BEGIN');
 
         // Insertar función
         const result = await client.query(
@@ -55,7 +124,7 @@ export async function crearFuncion(req, res) {
                 estado, created_at, updated_at
             ) VALUES ($1, $2, $3, $4, $5, $6, 'PROGRAMADA', NOW(), NOW())
             RETURNING *`,
-            [obra_id, fecha, lugar, capacidad, precio_base, foto_url]
+            [obraId, fecha, lugar, capacidad, precioBase, foto_url]
         );
 
         const funcion = result.rows[0];
@@ -85,7 +154,11 @@ export async function crearFuncion(req, res) {
         res.status(201).json({
             message: 'Función creada exitosamente',
             funcion,
-            tickets_creados: capacidad
+            // Alias de compatibilidad legacy
+            show: funcion,
+            id: funcion.id,
+            tickets_creados: capacidad,
+            tickets_generados: capacidad
         });
 
     } catch (error) {
@@ -168,6 +241,24 @@ export async function obtenerFuncion(req, res) {
 
         const funcion = result.rows[0];
         funcion.estadisticas_entradas = statsResult.rows;
+
+        // Compatibilidad: incluir tickets
+        const ticketsResult = await pool.query(
+            `SELECT
+                code AS id,
+                code,
+                estado,
+                vendedor_phone,
+                comprador_nombre,
+                comprador_contacto,
+                precio
+             FROM tickets
+             WHERE funcion_id = $1
+             ORDER BY code ASC`,
+            [id]
+        );
+
+        funcion.tickets = ticketsResult.rows;
 
         res.json(funcion);
 
@@ -273,11 +364,34 @@ export async function eliminarFuncion(req, res) {
     try {
         const { id } = req.params;
 
+        // Permisos: SUPER todo; ADMIN solo si es director del grupo de la función
+        if (req.user.role !== 'SUPER') {
+            if (req.user.role !== 'ADMIN') {
+                return res.status(403).json({ error: 'No tienes permiso para eliminar esta función' });
+            }
+
+            const ownerCheck = await pool.query(
+                `SELECT g.director_cedula
+                 FROM funciones f
+                 JOIN obras o ON o.id = f.obra_id
+                 JOIN grupos g ON g.id = o.grupo_id
+                 WHERE f.id = $1`,
+                [id]
+            );
+
+            if (ownerCheck.rows.length === 0) {
+                return res.status(404).json({ error: 'Función no encontrada' });
+            }
+            if (String(ownerCheck.rows[0].director_cedula) !== String(req.user.cedula)) {
+                return res.status(403).json({ error: 'No tienes permiso para eliminar esta función' });
+            }
+        }
+
         // Verificar si hay entradas vendidas
         const entradasResult = await pool.query(
             `SELECT COUNT(*) as vendidas 
              FROM tickets 
-             WHERE funcion_id = $1 AND estado IN ('PAGADA', 'USADA')`,
+             WHERE funcion_id = $1 AND estado IN ('PAGADO', 'USADO')`,
             [id]
         );
 
@@ -372,10 +486,18 @@ export async function listarFunciones(req, res) {
 
         const result = await pool.query(query, values);
 
-        res.json({
-            total: result.rows.length,
-            funciones: result.rows
-        });
+        // Compatibilidad: /api/shows espera array y claves legacy
+        if (req.baseUrl === '/api/shows') {
+            return res.json(
+                result.rows.map(r => ({
+                    ...r,
+                    obra: r.obra_nombre ?? r.obra,
+                    base_price: r.precio_base
+                }))
+            );
+        }
+
+        res.json({ total: result.rows.length, funciones: result.rows });
 
     } catch (error) {
         console.error('Error al listar funciones:', error);
@@ -447,10 +569,18 @@ export async function listarFuncionesPublicas(req, res) {
             ORDER BY f.fecha ASC`
         );
 
-        res.json({
-            total: result.rows.length,
-            funciones: result.rows
-        });
+        // Compatibilidad: /api/shows (público) espera array
+        if (req.baseUrl === '/api/shows') {
+            return res.json(
+                result.rows.map(r => ({
+                    ...r,
+                    obra: r.obra_nombre ?? r.obra,
+                    base_price: r.precio_base
+                }))
+            );
+        }
+
+        res.json({ total: result.rows.length, funciones: result.rows });
     } catch (error) {
         console.error('Error al listar funciones públicas:', error);
         res.status(500).json({ error: 'Error al listar funciones públicas' });

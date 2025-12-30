@@ -18,6 +18,8 @@ import {
     subirFotoGrupo,
     eliminarGrupo,
     finalizarGrupo,
+    obtenerLiquidacionFinalGrupo,
+    crearLiquidacionFinalGrupo,
     generarPDFGrupo
 } from '../controllers/grupos.controller.js';
 
@@ -98,6 +100,20 @@ router.delete('/:id', requireRole('SUPER'), eliminarGrupo);
  * Roles: SUPER, ADMIN (directores del grupo)
  */
 router.post('/:id/finalizar', requireRole('SUPER', 'ADMIN'), finalizarGrupo);
+
+/**
+ * GET /api/grupos/:id/liquidacion-final
+ * Obtener liquidación final (live + snapshot si existe)
+ * Roles: SUPER, ADMIN (directores del grupo)
+ */
+router.get('/:id/liquidacion-final', requireRole('SUPER', 'ADMIN'), obtenerLiquidacionFinalGrupo);
+
+/**
+ * POST /api/grupos/:id/liquidacion-final
+ * Crear snapshot congelado
+ * Roles: SUPER, ADMIN (directores del grupo)
+ */
+router.post('/:id/liquidacion-final', requireRole('SUPER', 'ADMIN'), crearLiquidacionFinalGrupo);
 
 /**
  * GET /api/grupos/:id/pdf

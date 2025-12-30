@@ -84,6 +84,8 @@ async function startServer() {
           totals: {
             users: data.users.length,
             funciones: data.funciones.length,
+            // Alias de compatibilidad: "shows" ya no es entidad, equivale a funciones
+            shows: data.funciones.length,
             tickets: data.tickets.length
           }
         });

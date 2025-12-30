@@ -4,6 +4,9 @@ Este directorio centraliza la documentación funcional, técnica y operativa.
 
 ## Índice
 - Fundacional
+	- [Prompt Maestro Único (base permanente)](./PROMPT-MAESTRO.md)
+	- [Reporte: Cumplimiento vs Prompt](./REPORTE-CUMPLIMIENTO-PROMPT.md)
+	- [Gaps: Prompt vs Sistema](./GAPS-PROMPT-VS-SISTEMA.md)
 	- [Cómo funciona](./como-funciona.md)
 	- [Qué falta (pendientes y roadmap)](./que-falta.md)
 	- [Costos y licenciamiento](./costos-y-licenciamiento.md)

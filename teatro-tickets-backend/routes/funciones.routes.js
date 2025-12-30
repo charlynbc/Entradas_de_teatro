@@ -28,6 +28,12 @@ const router = express.Router();
 router.get('/publicas', listarFuncionesPublicas);
 
 /**
+ * GET /api/funciones/public
+ * Alias de compatibilidad (tests / frontend viejo)
+ */
+router.get('/public', listarFuncionesPublicas);
+
+/**
  * POST /api/funciones
  * Crear función en un grupo
  * Roles: SUPER, ADMIN (directores del grupo)
@@ -101,11 +107,11 @@ router.put('/:id',
 /**
  * DELETE /api/funciones/:id
  * Eliminar función (solo si no tiene entradas vendidas)
- * Roles: SUPER
+ * Roles: SUPER, ADMIN (si es director del grupo)
  */
 router.delete('/:id', 
     authenticate, 
-    requireRole(['SUPER']), 
+    requireRole(['SUPER', 'ADMIN']), 
     eliminarFuncion
 );
 

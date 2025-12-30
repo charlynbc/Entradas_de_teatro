@@ -56,8 +56,16 @@ CREATE TABLE tickets (
   -- PAGADO: admin confirmó que recibió la plata
   -- USADO: entrada validada en puerta
   estado                  VARCHAR(20) NOT NULL CHECK (
-                            estado IN ('DISPONIBLE', 'STOCK_ACTOR', 'RESERVADO', 
-                                       'REPORTADA_VENDIDA', 'PAGADO', 'USADO')
+                            estado IN (
+                              'DISPONIBLE',
+                              'STOCK_ACTOR',
+                              'RESERVADO',
+                              'REPORTADA_VENDIDA',
+                              'VENDIDO',
+                              'PAGADO',
+                              'USADO',
+                              'ANULADO'
+                            )
                           ) DEFAULT 'DISPONIBLE',
   
   -- Propietario
@@ -77,6 +85,10 @@ CREATE TABLE tickets (
   
   -- QR code (data URL)
   qr_code                 TEXT,
+
+  -- Anulación
+  anulado_motivo           TEXT,
+  anulado_at               TIMESTAMP,
   
   -- Timestamps
   created_at              TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -90,6 +102,29 @@ CREATE INDEX idx_tickets_funcion ON tickets(funcion_id);
 CREATE INDEX idx_tickets_vendedor ON tickets(vendedor_phone);
 CREATE INDEX idx_tickets_estado ON tickets(estado);
 CREATE INDEX idx_tickets_comprador ON tickets(comprador_nombre);
+
+-- 3.1 AUDITORÍA: Movimientos de tickets
+CREATE TABLE IF NOT EXISTS ticket_movimientos (
+  id           SERIAL PRIMARY KEY,
+  tipo         VARCHAR(30) NOT NULL CHECK (tipo IN (
+    'ASIGNACION',
+    'RESERVA',
+    'VENTA_REPORTADA',
+    'PAGO_APROBADO',
+    'TRANSFERENCIA',
+    'ANULACION',
+    'VALIDACION'
+  )),
+  ticket_code  VARCHAR(50) NOT NULL REFERENCES tickets(code) ON DELETE CASCADE,
+  desde_phone  VARCHAR(20),
+  hacia_phone  VARCHAR(20),
+  motivo       TEXT,
+  created_at   TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ticket_movimientos_ticket ON ticket_movimientos(ticket_code);
+CREATE INDEX IF NOT EXISTS idx_ticket_movimientos_tipo ON ticket_movimientos(tipo);
+CREATE INDEX IF NOT EXISTS idx_ticket_movimientos_created_at ON ticket_movimientos(created_at);
 
 -- 4. VISTA: Resumen por vendedor y función
 CREATE VIEW v_resumen_vendedor_funcion AS
@@ -142,7 +177,7 @@ SELECT
   -- Conteos de tickets
   COUNT(t.code) AS total_generados,
   COUNT(*) FILTER (WHERE t.estado = 'DISPONIBLE') AS disponibles,
-  COUNT(*) FILTER (WHERE t.estado = 'STOCK_VENDEDOR') AS en_stock_vendedores,
+  COUNT(*) FILTER (WHERE t.estado = 'STOCK_ACTOR') AS en_stock_actores,
   COUNT(*) FILTER (WHERE t.estado = 'RESERVADO') AS reservadas,
   COUNT(*) FILTER (WHERE t.estado = 'REPORTADA_VENDIDA') AS reportadas_sin_aprobar,
   COUNT(*) FILTER (WHERE t.estado IN ('PAGADO', 'USADO')) AS pagadas,

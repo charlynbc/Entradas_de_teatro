@@ -86,6 +86,39 @@ async function ensureCompatViews(client) {
   await client.query(sql);
 }
 
+async function ensureSafeConstraints(client) {
+  // Constraints e índices tolerantes (sin borrar datos)
+  const migPath = path.join(__dirname, '..', 'db', 'migrations', '004-constraints-safe.sql');
+  const sql = await fs.readFile(migPath, 'utf8');
+  await client.query(sql);
+}
+
+async function ensureLiquidacionesGrupo(client) {
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS liquidaciones_grupo (
+      id               SERIAL PRIMARY KEY,
+      grupo_id          INT NOT NULL REFERENCES grupos(id) ON DELETE CASCADE,
+      created_by_cedula VARCHAR(20) REFERENCES users(cedula) ON DELETE SET NULL,
+      created_at        TIMESTAMP NOT NULL DEFAULT NOW(),
+      ingresos_total    NUMERIC(12,2) NOT NULL DEFAULT 0,
+      total_tickets     INT NOT NULL DEFAULT 0,
+      tickets_pagados   INT NOT NULL DEFAULT 0,
+      tickets_usados    INT NOT NULL DEFAULT 0,
+      gastos_total      NUMERIC(12,2) NOT NULL DEFAULT 0,
+      alquiler_total    NUMERIC(12,2) NOT NULL DEFAULT 0,
+      neto_total        NUMERIC(12,2) NOT NULL DEFAULT 0,
+      puntos_total      INT,
+      valor_punto       NUMERIC(12,4),
+      notas             TEXT,
+      datos             JSONB NOT NULL DEFAULT '{}'::jsonb,
+      UNIQUE (grupo_id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_liquidaciones_grupo_grupo_id ON liquidaciones_grupo(grupo_id);
+    CREATE INDEX IF NOT EXISTS idx_liquidaciones_grupo_created_at ON liquidaciones_grupo(created_at);
+  `);
+}
+
 async function run() {
   console.log('🚀 Migración: users.phone único + FK tickets.vendedor_phone');
   let client;
@@ -112,6 +145,12 @@ async function run() {
 
     // 0.1) Compatibilidad con joins legacy (grupo_directores/grupo_actores)
     await ensureCompatViews(client);
+
+    // 0.15) Constraints tolerantes (roles/estados)
+    await ensureSafeConstraints(client);
+
+    // 0.2) Tabla de liquidación final de grupo (snapshot)
+    await ensureLiquidacionesGrupo(client);
 
     // 1) users.phone e índice único
     await client.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(20)');

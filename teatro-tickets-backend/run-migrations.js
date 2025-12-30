@@ -20,7 +20,8 @@ async function runMigrations() {
         const files = [
             '003-grupos.sql',
             '003-grupos-update.sql',
-            '004-funciones-grupos.sql'
+            '004-funciones-grupos.sql',
+            '007-ticket-auditoria-anulacion.sql'
         ];
         
         for (const file of files) {

@@ -11,9 +11,13 @@ export async function createUser({ cedula, nombre, name, password, rol, role, re
     throw error;
   }
 
-  // Normalizar rol a mayúsculas
-  const normalizedRole = finalRol.toUpperCase();
-  if (!['ADMIN', 'ACTOR', 'INVITADO'].includes(normalizedRole)) {
+  // Normalizar rol y aceptar alias legacy (frontend/tests)
+  const roleRaw = String(finalRol || '').trim().toUpperCase();
+  const normalizedRole = roleRaw === 'VENDEDOR' ? 'ACTOR'
+    : roleRaw === 'SUPREMO' ? 'SUPER'
+    : roleRaw;
+
+  if (!['ADMIN', 'ACTOR', 'INVITADO', 'SUPER'].includes(normalizedRole)) {
     const error = new Error('rol debe ser ADMIN (director), ACTOR (actor/actriz) o INVITADO');
     error.status = 400;
     throw error;
@@ -39,15 +43,32 @@ export async function createUser({ cedula, nombre, name, password, rol, role, re
     throw error;
   }
 
+  // Compatibilidad: si no viene phone, usar cedula (el login usa phone/cedula indistintamente)
+  const finalPhone = (phone !== undefined && phone !== null && String(phone).trim() !== '')
+    ? String(phone).trim()
+    : String(cedula);
+
+  // Validar unicidad de phone (hay índice único)
+  const phoneExists = await query('SELECT cedula FROM users WHERE phone = $1', [finalPhone]);
+  if (phoneExists.rows.length > 0) {
+    const error = new Error('Ya existe un usuario con ese teléfono');
+    error.status = 400;
+    throw error;
+  }
+
   const bcrypt = (await import('bcrypt')).default;
   const hashedPassword = await bcrypt.hash(password, 10);
 
   // Construir query con campos opcionales
   const fields = ['cedula', 'name', 'password_hash', 'role', 'genero', 'active'];
   const values = [cedula, finalNombre, hashedPassword, normalizedRole, finalGenero, true];
+
+  // Siempre persistimos phone para flujos legacy
+  fields.push('phone');
+  values.push(finalPhone);
   
   // Agregar campos opcionales si están presentes
-  const optionalFields = { phone, email, fecha_nacimiento, apellido, foto_url, direccion, notas };
+  const optionalFields = { email, fecha_nacimiento, apellido, foto_url, direccion, notas };
   Object.entries(optionalFields).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== '') {
       fields.push(key);
@@ -67,10 +88,12 @@ export async function createUser({ cedula, nombre, name, password, rol, role, re
 
   const user = result.rows[0];
   return {
+    id: user.cedula,
     cedula: user.cedula,
     name: user.name,
     role: user.role,
-    genero: user.genero
+    genero: user.genero,
+    phone: user.phone
   };
 }
 
@@ -144,6 +167,22 @@ export async function deleteUserByFlexibleId(idOrCedula, requesterRole) {
     error.status = 403;
     throw error;
   }
+
+  // Si es director y quien solicita es SUPER, re-asignar sus grupos al SUPER existente.
+  // Evita FK grupos.director_cedula -> users.cedula sin borrar contenido (ensayos/obras).
+  if (user.role === 'ADMIN' && requesterRole === 'SUPER') {
+    const superUser = await query("SELECT cedula FROM users WHERE role = 'SUPER' LIMIT 1");
+    const superCedula = superUser.rows[0]?.cedula;
+    if (!superCedula) {
+      const error = new Error('No existe usuario SUPER para reasignar grupos');
+      error.status = 500;
+      throw error;
+    }
+    await query('UPDATE grupos SET director_cedula = $1 WHERE director_cedula = $2', [superCedula, user.cedula]);
+  }
+
+  // Limpiar membresías (por si el usuario es miembro en otros grupos)
+  await query('DELETE FROM grupo_miembros WHERE miembro_cedula = $1', [user.cedula]);
   
   // Primero eliminar o liberar todos los tickets del actor
   // Cambiar vendedor_phone a NULL para liberar los tickets (campo de base de datos no cambiado)
@@ -175,13 +214,18 @@ export async function resetPasswordByFlexibleId(idOrCedula, newPassword) {
 
 // Listar todos los usuarios activos (incluye SUPER, ADMIN, ACTOR)
 export async function listAllMembers(currentRole) {
-  console.log('🔍 listAllMembers llamado - versión actualizada con SUPER incluido');
+  console.log('🔍 listAllMembers llamado - compatibilidad roles legacy');
   const result = await query(
     `SELECT 
         u.cedula,
         u.name,
         u.phone,
-        u.role as rol,
+        CASE u.role
+          WHEN 'ADMIN' THEN 'admin'
+          WHEN 'ACTOR' THEN 'vendedor'
+          WHEN 'INVITADO' THEN 'invitado'
+          ELSE LOWER(u.role)
+        END as rol,
         u.genero,
         u.created_at,
         u.active,
@@ -196,12 +240,12 @@ export async function listAllMembers(currentRole) {
       LEFT JOIN funciones f ON f.id = t.funcion_id
       LEFT JOIN obras o ON o.id = f.obra_id
       WHERE u.active = true
+        AND u.role <> 'SUPER'
       GROUP BY u.cedula, u.name, u.phone, u.role, u.genero, u.created_at, u.active
       ORDER BY 
         CASE u.role 
-          WHEN 'SUPER' THEN 1
-          WHEN 'ADMIN' THEN 2 
-          WHEN 'ACTOR' THEN 3 
+          WHEN 'ADMIN' THEN 1 
+          WHEN 'ACTOR' THEN 2 
           ELSE 4 
         END,
         u.name`
