@@ -1,5 +1,4 @@
 import { createUser, listUsers, listSellersWithStats, deleteUserByFlexibleId, listAllMembers as listMembersSvc, resetPasswordByFlexibleId, getWeeklyBirthdaysService, getUserByCedula, updateUserByCedula } from '../services/users.service.js';
-import { query } from '../db/postgres.js';
 
 export async function crearUsuario(req, res) {
   try {
@@ -99,7 +98,7 @@ export async function resetPassword(req, res) {
 // Crear actor/vendedor (para SUPER y ADMIN)
 export async function crearActor(req, res) {
   try {
-    const { cedula, nombre, name, password, genero } = req.body;
+    const { cedula, nombre, name, password, genero, phone, telefono, email } = req.body;
     const userRole = req.user.role;
     const user = await createUser({ 
       cedula, 
@@ -109,6 +108,8 @@ export async function crearActor(req, res) {
       rol: 'ACTOR',
       role: 'ACTOR',
       genero: genero || 'otro',
+      phone: phone || telefono,
+      email,
       requesterRole: userRole 
     });
     res.status(201).json({
@@ -130,10 +131,9 @@ export async function crearDirector(req, res) {
       name,
       password,
       genero,
-      // Opcional: asignar a grupo al crear
-      grupo_id,
-      grupoId,
-      es_principal
+      phone,
+      telefono,
+      email
     } = req.body;
     const userRole = req.user.role;
     
@@ -149,30 +149,10 @@ export async function crearDirector(req, res) {
       rol: 'ADMIN',
       role: 'ADMIN',
       genero: genero || 'otro',
+      phone: phone || telefono,
+      email,
       requesterRole: userRole 
     });
-
-    // Asignación opcional al grupo (si el frontend/envío lo incluye)
-    const targetGrupoId = grupo_id || grupoId;
-    if (targetGrupoId) {
-      // Validar existencia del grupo (mensaje claro)
-      const grp = await query('SELECT id FROM grupos WHERE id = $1', [targetGrupoId]);
-      if (grp.rows.length === 0) {
-        return res.status(404).json({ error: 'Grupo no encontrado para asignar director' });
-      }
-
-      await query(
-        `INSERT INTO grupo_miembros (grupo_id, miembro_cedula, rol_en_grupo, activo)
-         VALUES ($1, $2, 'DIRECTOR', TRUE)
-         ON CONFLICT (grupo_id, miembro_cedula)
-         DO UPDATE SET rol_en_grupo = 'DIRECTOR', activo = TRUE`,
-        [targetGrupoId, cedula]
-      );
-
-      if (es_principal) {
-        await query('UPDATE grupos SET director_cedula = $1 WHERE id = $2', [cedula, targetGrupoId]);
-      }
-    }
     res.status(201).json({
       message: 'Director/Admin creado exitosamente',
       user

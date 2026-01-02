@@ -146,23 +146,60 @@ export async function getSuperDashboard() {
 
 export async function listDirectors() {
   requireRole(['SUPER']);
-  // TODO: Implementar backend /api/usuarios?role=ADMIN
-  return mock.listDirectors();
+  try {
+    const rows = await authedRequest('/api/usuarios?role=ADMIN');
+    return (rows || []).map((row) => ({
+      cedula: row.cedula,
+      nombre: row.nombre || row.name || row.cedula,
+      obras: Number(row.obras || 0),
+      funciones: Number(row.funciones || 0),
+    }));
+  } catch (error) {
+    if (error.offline) return mock.listDirectors();
+    console.warn('Backend listDirectors failed, falling back to mock', error);
+    return mock.listDirectors();
+  }
 }
 
 export async function createDirector(payload) {
   requireRole(['SUPER']);
-  return mock.createDirector(payload);
+  try {
+    const body = {
+      cedula: payload.cedula,
+      nombre: payload.nombre,
+      password: payload.password || 'admin123',
+      genero: payload.genero || 'otro',
+      email: payload.email,
+      phone: payload.telefono || payload.phone,
+    };
+    return await authedRequest('/api/usuarios/directores', { method: 'POST', body });
+  } catch (error) {
+    if (error.offline) return mock.createDirector(payload);
+    throw error;
+  }
 }
 
 export async function resetDirectorPassword(cedula) {
   requireRole(['SUPER']);
-  return mock.resetDirectorPassword(cedula);
+  try {
+    return await authedRequest(`/api/usuarios/${cedula}/reset-password`, {
+      method: 'POST',
+      body: { newPassword: 'admin123' },
+    });
+  } catch (error) {
+    if (error.offline) return mock.resetDirectorPassword(cedula);
+    throw error;
+  }
 }
 
 export async function deleteDirector(cedula) {
   requireRole(['SUPER']);
-  return mock.deleteDirector(cedula);
+  try {
+    return await authedRequest(`/api/usuarios/${cedula}`, { method: 'DELETE' });
+  } catch (error) {
+    if (error.offline) return mock.deleteDirector(cedula);
+    throw error;
+  }
 }
 
 export async function listProductions() {
@@ -177,12 +214,44 @@ export async function createProduction(payload) {
 
 export async function listVendors() {
   requireRole(['SUPER', 'ADMIN']);
-  return mock.listVendors();
+  try {
+    const rows = await authedRequest('/api/usuarios/vendedores');
+    return (rows || []).map((row) => {
+      const cedula = row.cedula || row.id;
+      return {
+        id: cedula,
+        cedula,
+        nombre: row.nombre || row.name || cedula,
+        email: row.email,
+        telefono: row.telefono || row.phone,
+        stock: Number(row.stock || 0),
+        vendidas: Number(row.vendidas || 0),
+        pagadas: Number(row.pagadas || 0),
+      };
+    });
+  } catch (error) {
+    if (error.offline) return mock.listVendors();
+    console.warn('Backend listVendors failed, falling back to mock', error);
+    return mock.listVendors();
+  }
 }
 
 export async function createVendor(payload) {
   requireRole(['SUPER', 'ADMIN']);
-  return mock.createVendor(payload);
+  try {
+    const body = {
+      cedula: payload.cedula,
+      nombre: payload.nombre,
+      email: payload.email,
+      phone: payload.telefono || payload.phone,
+      password: payload.password || 'admin123',
+      genero: payload.genero || 'otro',
+    };
+    return await authedRequest('/api/usuarios/actores', { method: 'POST', body });
+  } catch (error) {
+    if (error.offline) return mock.createVendor(payload);
+    throw error;
+  }
 }
 
 export async function getDirectorDashboard() {
@@ -267,7 +336,12 @@ export function getCurrentUser() {
 
 export async function deleteVendor(cedula) {
   requireRole(['SUPER', 'ADMIN']);
-  return mock.deleteVendor(cedula);
+  try {
+    return await authedRequest(`/api/usuarios/${cedula}`, { method: 'DELETE' });
+  } catch (error) {
+    if (error.offline) return mock.deleteVendor(cedula);
+    throw error;
+  }
 }
 
 // --- New Features ---

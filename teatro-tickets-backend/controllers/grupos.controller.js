@@ -4,7 +4,7 @@
  * Fecha: 27-12-2025
  */
 
-import pool from '../db/postgres.js';
+import pool, { transaction } from '../db/postgres.js';
 import PDFDocument from 'pdfkit';
 
 /**
@@ -29,44 +29,68 @@ export const crearGrupo = async (req, res) => {
             });
         }
 
-        // El director principal puede ser el que crea o uno especificado
-        const directorPrincipal = director_principal_cedula || req.user.cedula;
+        // Regla:
+        // - Un ADMIN crea grupos y queda asignado automáticamente como DIRECTOR del grupo.
+        // - Un SUPER puede crear grupos para sí mismo o para un director_principal_cedula.
+        const isAdminCreator = req.user.role === 'ADMIN';
+        const directorPrincipal = isAdminCreator
+            ? req.user.cedula
+            : (director_principal_cedula || req.user.cedula);
 
-        // Verificar que el director principal existe y es ADMIN o SUPER
-        const checkDirector = await pool.query(
-            'SELECT cedula, role FROM users WHERE cedula = $1',
-            [directorPrincipal]
-        );
-
-        if (checkDirector.rows.length === 0) {
-            return res.status(404).json({ error: 'Director no encontrado' });
+        // Un ADMIN no puede crear un grupo para otro director.
+        if (isAdminCreator && director_principal_cedula && director_principal_cedula !== req.user.cedula) {
+            return res.status(403).json({ error: 'Un director solo puede crear grupos para sí mismo' });
         }
 
-        if (!['SUPER', 'ADMIN'].includes(checkDirector.rows[0].role)) {
-            return res.status(403).json({ 
-                error: 'El director principal debe ser SUPER o ADMIN' 
-            });
-        }
+        const grupo = await transaction(async (client) => {
+            // Verificar que el director principal existe y es ADMIN o SUPER
+            const checkDirector = await client.query(
+                'SELECT cedula, role FROM users WHERE cedula = $1',
+                [directorPrincipal]
+            );
 
-        // Crear grupo
-        const result = await pool.query(
-            `INSERT INTO grupos 
-            (nombre, descripcion, director_cedula, fecha_inicio, fecha_fin, dia_semana, hora_inicio, obra_a_realizar, estado)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'ACTIVO')
-            RETURNING *`,
-            [nombre, req.body.descripcion, directorPrincipal, fecha_inicio, fecha_fin, req.body.dia_semana, req.body.hora_inicio, obra || req.body.obra_a_realizar]
-        );
+            if (checkDirector.rows.length === 0) {
+                const err = new Error('Director no encontrado');
+                err.status = 404;
+                throw err;
+            }
 
-        const grupo = result.rows[0];
+            if (!['SUPER', 'ADMIN'].includes(checkDirector.rows[0].role)) {
+                const err = new Error('El director principal debe ser SUPER o ADMIN');
+                err.status = 403;
+                throw err;
+            }
 
-        // El director principal ya está en grupos.director_cedula
-        // Agregarlo también a grupo_miembros
-        await pool.query(
-            `INSERT INTO grupo_miembros (grupo_id, miembro_cedula, rol_en_grupo, activo)
-            VALUES ($1, $2, 'DIRECTOR', true)
-            ON CONFLICT (grupo_id, miembro_cedula) DO NOTHING`,
-            [grupo.id, directorPrincipal]
-        );
+            const result = await client.query(
+                `INSERT INTO grupos 
+                (nombre, descripcion, director_cedula, fecha_inicio, fecha_fin, dia_semana, hora_inicio, obra_a_realizar, estado)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'ACTIVO')
+                RETURNING *`,
+                [
+                    nombre,
+                    req.body.descripcion,
+                    directorPrincipal,
+                    fecha_inicio,
+                    fecha_fin,
+                    req.body.dia_semana,
+                    req.body.hora_inicio,
+                    obra || req.body.obra_a_realizar,
+                ]
+            );
+
+            const created = result.rows[0];
+
+            // Insertar membresía del director principal en el grupo
+            await client.query(
+                `INSERT INTO grupo_miembros (grupo_id, miembro_cedula, rol_en_grupo, activo)
+                 VALUES ($1, $2, 'DIRECTOR', true)
+                 ON CONFLICT (grupo_id, miembro_cedula)
+                 DO UPDATE SET rol_en_grupo = 'DIRECTOR', activo = true`,
+                [created.id, directorPrincipal]
+            );
+
+            return created;
+        });
 
         res.status(201).json({
             message: 'Grupo creado exitosamente',
@@ -75,7 +99,7 @@ export const crearGrupo = async (req, res) => {
 
     } catch (error) {
         console.error('Error al crear grupo:', error);
-        res.status(500).json({ error: 'Error al crear grupo' });
+        res.status(error.status || 500).json({ error: error.message || 'Error al crear grupo' });
     }
 };
 

@@ -47,7 +47,7 @@ export default function DirectorsScreen() {
       await createDirector(form);
       setForm({ nombre: '', cedula: '' });
       load();
-      Alert.alert('Listo', 'Director creado con contrasena 1234');
+      Alert.alert('Listo', 'Director creado con contraseña admin123');
     } catch (error) {
       Alert.alert('Error', error.message || 'No se pudo crear');
     } finally {
@@ -58,7 +58,7 @@ export default function DirectorsScreen() {
   const handleReset = async (cedula) => {
     Alert.alert(
       'Resetear contrasena',
-      `Queres restablecer la contrasena de ${cedula} a 1234?`,
+      `Queres restablecer la contrasena de ${cedula} a admin123?`,
       [
         { text: 'Cancelar', style: 'cancel' },
         {
@@ -75,7 +75,7 @@ export default function DirectorsScreen() {
   const handleDeleteDirector = (cedula) => {
     Alert.alert(
         'Eliminar director',
-        `Se van a borrar las obras y funciones asignadas a ${cedula}. Continuar?`,
+        `Se va a desactivar la cuenta ${cedula} (los grupos se reasignan a dirección). Continuar?`,
       [
         { text: 'Cancelar', style: 'cancel' },
         {

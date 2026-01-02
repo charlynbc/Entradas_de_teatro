@@ -98,19 +98,40 @@ export async function createUser({ cedula, nombre, name, password, rol, role, re
 }
 
 export async function listUsers(roleFilter) {
-  let sql = `SELECT cedula, name, role, genero, created_at, active
-     FROM users
-     WHERE role IN ('ADMIN', 'ACTOR')`;
   const params = [];
-  
+  let roleClause = '';
   if (roleFilter) {
-    sql += ` AND role = $1`;
-    params.push(roleFilter);
+    roleClause = ' AND u.role = $1';
+    params.push(String(roleFilter).trim().toUpperCase());
   }
-  
-  sql += ` ORDER BY name ASC`;
-  
-  const result = await query(sql, params);
+
+  const result = await query(
+    `SELECT
+        u.cedula,
+        u.name,
+        u.role,
+        u.genero,
+        u.created_at,
+        u.active,
+        COALESCE((
+          SELECT COUNT(*)
+          FROM obras o
+          JOIN grupos g ON g.id = o.grupo_id
+          WHERE g.director_cedula = u.cedula
+        ), 0)::int AS obras,
+        COALESCE((
+          SELECT COUNT(*)
+          FROM funciones f
+          JOIN obras o ON o.id = f.obra_id
+          JOIN grupos g ON g.id = o.grupo_id
+          WHERE g.director_cedula = u.cedula
+        ), 0)::int AS funciones
+     FROM users u
+     WHERE u.role IN ('ADMIN', 'ACTOR')
+       ${roleClause}
+     ORDER BY u.name ASC`,
+    params
+  );
   return result.rows;
 }
 
@@ -119,10 +140,15 @@ export async function listSellersWithStats() {
       SELECT 
         u.cedula,
         u.name,
+        u.email,
+        u.phone,
         u.role,
         u.genero,
-        COUNT(DISTINCT t.funcion_id) as total_funciones,
-        COUNT(t.code) as total_tickets,
+        COUNT(*) FILTER (WHERE t.vendedor_phone = u.phone AND t.estado IN ('STOCK_VENDEDOR', 'RESERVADO'))::int as stock,
+        COUNT(*) FILTER (WHERE t.vendedor_phone = u.phone AND t.estado = 'REPORTADA_VENDIDA')::int as vendidas,
+        COUNT(*) FILTER (WHERE t.vendedor_phone = u.phone AND t.estado IN ('PAGADO', 'USADO'))::int as pagadas,
+        COUNT(DISTINCT t.funcion_id) FILTER (WHERE t.vendedor_phone = u.phone)::int as total_funciones,
+        COUNT(t.code) FILTER (WHERE t.vendedor_phone = u.phone)::int as total_tickets,
         json_agg(DISTINCT jsonb_build_object(
           'funcion_id', f.id,
           'funcion_obra', o.nombre,
@@ -138,7 +164,7 @@ export async function listSellersWithStats() {
       LEFT JOIN funciones f ON f.id = t.funcion_id
       LEFT JOIN obras o ON o.id = f.obra_id
       WHERE u.role = 'ACTOR'
-      GROUP BY u.cedula, u.name, u.role
+      GROUP BY u.cedula, u.name, u.email, u.phone, u.role, u.genero
       ORDER BY u.name
   `);
   return result.rows;
