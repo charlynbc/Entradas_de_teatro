@@ -93,6 +93,12 @@ async function ensureSafeConstraints(client) {
   await client.query(sql);
 }
 
+async function ensureGrupoCierreDefinitivo(client) {
+  const migPath = path.join(__dirname, '..', 'db', 'migrations', '005-grupos-cierre-definitivo.sql');
+  const sql = await fs.readFile(migPath, 'utf8');
+  await client.query(sql);
+}
+
 async function ensureLiquidacionesGrupo(client) {
   await client.query(`
     CREATE TABLE IF NOT EXISTS liquidaciones_grupo (
@@ -148,6 +154,9 @@ async function run() {
 
     // 0.15) Constraints tolerantes (roles/estados)
     await ensureSafeConstraints(client);
+
+    // 0.16) Cierre definitivo de grupo (CERRADO) + campos extra de liquidación
+    await ensureGrupoCierreDefinitivo(client);
 
     // 0.2) Tabla de liquidación final de grupo (snapshot)
     await ensureLiquidacionesGrupo(client);

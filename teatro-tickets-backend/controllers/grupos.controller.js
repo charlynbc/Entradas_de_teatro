@@ -110,6 +110,7 @@ export const crearGrupo = async (req, res) => {
 export const listarGrupos = async (req, res) => {
     try {
         const { estado, director_cedula } = req.query;
+        const includeHistorico = String(req.query?.include_historico || req.query?.historico || '').toLowerCase() === 'true';
         const userRole = req.user.role;
         const userCedula = req.user.cedula;
 
@@ -124,6 +125,9 @@ export const listarGrupos = async (req, res) => {
             query += ` AND estado = $${paramIndex}`;
             params.push(estado);
             paramIndex++;
+        } else if (!includeHistorico) {
+            // Por defecto: no mostrar grupos CERRADOS en flujos activos.
+            query += ` AND estado <> 'CERRADO'`;
         }
 
         // ACTOR solo ve grupos donde está asignado
@@ -673,7 +677,7 @@ export const listarGruposFinalizados = async (req, res) => {
             LEFT JOIN grupo_miembros gm ON gm.grupo_id = g.id
             LEFT JOIN obras o ON o.grupo_id = g.id
             LEFT JOIN funciones f ON f.obra_id = o.id
-            WHERE g.estado IN ('ARCHIVADO', 'INACTIVO')
+                WHERE g.estado IN ('ARCHIVADO', 'INACTIVO', 'CERRADO')
                OR (g.fecha_fin IS NOT NULL AND g.fecha_fin < CURRENT_DATE)
             GROUP BY g.id, u.name
             ORDER BY g.fecha_fin DESC, g.updated_at DESC`
@@ -838,9 +842,396 @@ async function computeLiquidacionGrupo(grupoId) {
 
 function isGrupoCerrado(grupo) {
     const estado = String(grupo?.estado || '').toUpperCase();
-    if (['ARCHIVADO', 'INACTIVO', 'FINALIZADO'].includes(estado)) return true;
+    if (['CERRADO', 'ARCHIVADO', 'INACTIVO', 'FINALIZADO'].includes(estado)) return true;
     return Boolean(grupo?.fecha_fin) && new Date(grupo.fecha_fin) < new Date(new Date().toISOString().slice(0, 10));
 }
+
+async function assertGrupoPermisosDirectorOSuper(req, res, grupoId) {
+    const checkRes = await pool.query('SELECT id, nombre, estado, director_cedula FROM grupos WHERE id = $1', [grupoId]);
+    if (checkRes.rows.length === 0) {
+        res.status(404).json({ error: 'Grupo no encontrado' });
+        return null;
+    }
+
+    const grupo = checkRes.rows[0];
+    const userRole = req.user?.role;
+    const userCedula = req.user?.cedula;
+
+    if (!['SUPER', 'ADMIN'].includes(userRole)) {
+        res.status(403).json({ error: 'No tienes permiso' });
+        return null;
+    }
+
+    if (userRole === 'ADMIN') {
+        if (String(grupo.director_cedula) === String(userCedula)) {
+            return grupo;
+        }
+
+        // Co-director (grupo_miembros rol DIRECTOR)
+        const co = await pool.query(
+            `SELECT 1
+             FROM grupo_miembros
+             WHERE grupo_id = $1 AND miembro_cedula = $2 AND rol_en_grupo = 'DIRECTOR' AND activo = TRUE
+             LIMIT 1`,
+            [grupoId, userCedula]
+        );
+        if (co.rows.length === 0) {
+            res.status(403).json({ error: 'No tienes permiso para este grupo' });
+            return null;
+        }
+    }
+
+    return grupo;
+}
+
+async function computeResumenCierreDefinitivo(grupoId) {
+    const totalesRes = await pool.query(
+        `SELECT
+            COUNT(*) FILTER (WHERE t.estado <> 'ANULADO')::int AS total_tickets,
+            COUNT(*) FILTER (WHERE t.estado IN ('REPORTADA_VENDIDA','PAGADO','USADO'))::int AS total_vendidos,
+            COUNT(*) FILTER (WHERE t.estado IN ('PAGADO','USADO'))::int AS total_pagados,
+            COUNT(*) FILTER (WHERE t.estado = 'USADO')::int AS total_usados,
+            COALESCE(SUM(
+              CASE WHEN t.estado IN ('PAGADO','USADO')
+                THEN COALESCE(t.precio, f.precio_base)
+                ELSE 0
+              END
+            ), 0)::numeric(12,2) AS total_recaudado,
+            COALESCE(SUM(
+              CASE WHEN t.estado = 'REPORTADA_VENDIDA' AND NOT t.aprobada_por_admin
+                THEN COALESCE(t.precio, f.precio_base)
+                ELSE 0
+              END
+            ), 0)::numeric(12,2) AS total_pendiente
+         FROM tickets t
+         JOIN funciones f ON f.id = t.funcion_id
+         JOIN obras o ON o.id = f.obra_id
+         WHERE o.grupo_id = $1`,
+        [grupoId]
+    );
+
+    const porVendedorRes = await pool.query(
+        `SELECT
+            t.vendedor_phone,
+            u.name AS vendedor_nombre,
+            COUNT(*) FILTER (WHERE t.estado <> 'ANULADO')::int AS total_tickets,
+            COUNT(*) FILTER (WHERE t.estado IN ('REPORTADA_VENDIDA','PAGADO','USADO'))::int AS total_vendidos,
+            COUNT(*) FILTER (WHERE t.estado IN ('PAGADO','USADO'))::int AS total_pagados,
+            COALESCE(SUM(
+              CASE WHEN t.estado IN ('PAGADO','USADO')
+                THEN COALESCE(t.precio, f.precio_base)
+                ELSE 0
+              END
+            ), 0)::numeric(12,2) AS total_recaudado,
+            COALESCE(SUM(
+              CASE WHEN t.estado = 'REPORTADA_VENDIDA' AND NOT t.aprobada_por_admin
+                THEN COALESCE(t.precio, f.precio_base)
+                ELSE 0
+              END
+            ), 0)::numeric(12,2) AS total_pendiente
+         FROM tickets t
+         JOIN funciones f ON f.id = t.funcion_id
+         JOIN obras o ON o.id = f.obra_id
+         LEFT JOIN users u ON u.phone = t.vendedor_phone
+         WHERE o.grupo_id = $1
+           AND t.vendedor_phone IS NOT NULL
+         GROUP BY t.vendedor_phone, u.name
+         ORDER BY total_pendiente DESC, total_recaudado DESC`,
+        [grupoId]
+    );
+
+    const funcionesRes = await pool.query(
+        `SELECT
+            COUNT(*)::int AS total_funciones,
+            COUNT(*) FILTER (WHERE f.estado = 'REALIZADA')::int AS funciones_realizadas,
+            MIN(f.fecha) AS periodo_inicio,
+            MAX(f.fecha) AS periodo_fin
+         FROM funciones f
+         JOIN obras o ON o.id = f.obra_id
+         WHERE o.grupo_id = $1`,
+        [grupoId]
+    );
+
+    const totales = totalesRes.rows[0] || {};
+    const funciones = funcionesRes.rows[0] || {};
+
+    const totalPendienteNum = Number(totales.total_pendiente || 0);
+    const totalFunciones = Number(funciones.total_funciones || 0);
+    const realizadas = Number(funciones.funciones_realizadas || 0);
+
+    const sugerencia_cierre = {
+        habilitada: totalFunciones > 0 && realizadas === totalFunciones && totalPendienteNum === 0,
+        motivo: null
+    };
+    if (!sugerencia_cierre.habilitada) {
+        if (totalFunciones === 0) sugerencia_cierre.motivo = 'No hay funciones en el grupo';
+        else if (realizadas !== totalFunciones) sugerencia_cierre.motivo = 'Aún hay funciones no realizadas';
+        else if (totalPendienteNum !== 0) sugerencia_cierre.motivo = 'Aún hay tickets pendientes de pago';
+    }
+
+    return {
+        funciones: {
+            total_funciones: totalFunciones,
+            funciones_realizadas: realizadas,
+            periodo_inicio: funciones.periodo_inicio,
+            periodo_fin: funciones.periodo_fin
+        },
+        totales: {
+            total_tickets: Number(totales.total_tickets || 0),
+            total_vendidos: Number(totales.total_vendidos || 0),
+            total_pagados: Number(totales.total_pagados || 0),
+            total_usados: Number(totales.total_usados || 0),
+            total_recaudado: Number(totales.total_recaudado || 0),
+            total_pendiente: totalPendienteNum
+        },
+        por_vendedor: porVendedorRes.rows.map(r => ({
+            vendedor_phone: r.vendedor_phone,
+            vendedor_nombre: r.vendedor_nombre || null,
+            total_tickets: Number(r.total_tickets || 0),
+            total_vendidos: Number(r.total_vendidos || 0),
+            total_pagados: Number(r.total_pagados || 0),
+            total_recaudado: Number(r.total_recaudado || 0),
+            total_pendiente: Number(r.total_pendiente || 0)
+        })),
+        sugerencia_cierre
+    };
+}
+
+/**
+ * Resumen para cierre definitivo (visible solo DIRECTOR/SUPER)
+ * GET /api/grupos/:id/cierre-resumen
+ */
+export const obtenerResumenCierreGrupo = async (req, res) => {
+    try {
+        const grupoId = Number(req.params.id);
+        if (!Number.isFinite(grupoId)) {
+            return res.status(400).json({ error: 'ID de grupo inválido' });
+        }
+
+        const grupo = await assertGrupoPermisosDirectorOSuper(req, res, grupoId);
+        if (!grupo) return;
+
+        const calculado = await computeResumenCierreDefinitivo(grupoId);
+        const snapshotRes = await pool.query(
+            'SELECT * FROM liquidaciones_grupo WHERE grupo_id = $1 LIMIT 1',
+            [grupoId]
+        );
+
+        const snapshot = snapshotRes.rows[0] || null;
+
+        res.json({
+            ok: true,
+            grupo,
+            snapshot,
+            calculado
+        });
+    } catch (error) {
+        console.error('Error obteniendo resumen de cierre:', error);
+        res.status(500).json({ error: 'Error al obtener resumen de cierre del grupo' });
+    }
+};
+
+/**
+ * Cierre definitivo de grupo (irreversible)
+ * POST /api/grupos/:id/cerrar
+ */
+export const cerrarGrupoDefinitivo = async (req, res) => {
+    try {
+        const grupoId = Number(req.params.id);
+        if (!Number.isFinite(grupoId)) {
+            return res.status(400).json({ error: 'ID de grupo inválido' });
+        }
+
+        const grupoPerm = await assertGrupoPermisosDirectorOSuper(req, res, grupoId);
+        if (!grupoPerm) return;
+
+        const result = await transaction(async (client) => {
+            const lock = await client.query('SELECT id, nombre, estado, director_cedula FROM grupos WHERE id = $1 FOR UPDATE', [grupoId]);
+            if (lock.rows.length === 0) {
+                const err = new Error('Grupo no encontrado');
+                err.status = 404;
+                throw err;
+            }
+            const grupo = lock.rows[0];
+            if (String(grupo.estado).toUpperCase() === 'CERRADO') {
+                const err = new Error('El grupo ya está CERRADO');
+                err.status = 409;
+                throw err;
+            }
+
+            const calculado = await computeResumenCierreDefinitivo(grupoId);
+            const observaciones = req.body?.observaciones !== undefined ? String(req.body.observaciones || '') : null;
+
+            const datos = {
+                por_vendedor: calculado.por_vendedor,
+                funciones: calculado.funciones,
+                totales: calculado.totales,
+                sugerencia_cierre: calculado.sugerencia_cierre,
+                generado_en: new Date().toISOString()
+            };
+
+            const insertRes = await client.query(
+                `INSERT INTO liquidaciones_grupo
+                 (grupo_id, created_by_cedula, created_at,
+                  ingresos_total, total_tickets, tickets_pagados, tickets_usados,
+                  datos,
+                  total_vendidos, total_pagados, total_recaudado, total_pendiente,
+                  fecha_cierre, cerrado_por, observaciones)
+                 VALUES ($1,$2,NOW(),
+                         $3,$4,$5,$6,
+                         $7::jsonb,
+                         $8,$9,$10,$11,
+                         NOW(),$12,$13)
+                 ON CONFLICT (grupo_id) DO NOTHING
+                 RETURNING *`,
+                [
+                    grupoId,
+                    req.user.cedula,
+                    calculado.totales.total_recaudado,
+                    calculado.totales.total_tickets,
+                    calculado.totales.total_pagados,
+                    calculado.totales.total_usados,
+                    JSON.stringify(datos),
+                    calculado.totales.total_vendidos,
+                    calculado.totales.total_pagados,
+                    calculado.totales.total_recaudado,
+                    calculado.totales.total_pendiente,
+                    String(req.user.role || ''),
+                    observaciones
+                ]
+            );
+
+            if (insertRes.rows.length === 0) {
+                const err = new Error('La liquidación del grupo ya existe (cierre ya fue ejecutado)');
+                err.status = 409;
+                throw err;
+            }
+
+            await client.query(
+                "UPDATE grupos SET estado = 'CERRADO', updated_at = NOW() WHERE id = $1",
+                [grupoId]
+            );
+
+            return { snapshot: insertRes.rows[0], calculado };
+        });
+
+        res.json({
+            ok: true,
+            message: 'Grupo cerrado definitivamente (irreversible)',
+            snapshot: result.snapshot,
+            calculado: result.calculado
+        });
+    } catch (error) {
+        console.error('Error cerrando grupo:', error);
+        res.status(error.status || 500).json({ error: error.message || 'Error al cerrar grupo' });
+    }
+};
+
+/**
+ * PDF de liquidación de grupo (solo DIRECTOR/SUPER)
+ * GET /api/grupos/:id/liquidacion/pdf
+ */
+export const generarPDFLiquidacionGrupo = async (req, res) => {
+    try {
+        const grupoId = Number(req.params.id);
+        if (!Number.isFinite(grupoId)) {
+            return res.status(400).json({ error: 'ID de grupo inválido' });
+        }
+
+        const grupo = await assertGrupoPermisosDirectorOSuper(req, res, grupoId);
+        if (!grupo) return;
+
+        const estado = String(grupo.estado || '').toUpperCase();
+        if (estado !== 'CERRADO') {
+            return res.status(400).json({ error: 'El grupo debe estar CERRADO para exportar la liquidación final' });
+        }
+
+        const grupoInfoRes = await pool.query(
+            `SELECT g.id, g.nombre, g.director_cedula, u.name AS director_nombre
+             FROM grupos g
+             LEFT JOIN users u ON u.cedula = g.director_cedula
+             WHERE g.id = $1
+             LIMIT 1`,
+            [grupoId]
+        );
+        const grupoInfo = grupoInfoRes.rows[0];
+        if (!grupoInfo) return res.status(404).json({ error: 'Grupo no encontrado' });
+
+        const snapRes = await pool.query(
+            'SELECT * FROM liquidaciones_grupo WHERE grupo_id = $1 LIMIT 1',
+            [grupoId]
+        );
+        const snap = snapRes.rows[0];
+        if (!snap) return res.status(404).json({ error: 'Liquidación no encontrada para este grupo' });
+
+        let datos = {};
+        try {
+            datos = snap.datos || {};
+        } catch {
+            datos = {};
+        }
+
+        const doc = new PDFDocument({ margin: 50 });
+        const filename = `liquidacion-grupo-${grupoId}-${Date.now()}.pdf`;
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        doc.pipe(res);
+
+        doc.fontSize(20).text('LIQUIDACIÓN FINAL DE GRUPO', { align: 'center' });
+        doc.moveDown();
+
+        doc.fontSize(14).text(`Grupo: ${grupoInfo.nombre}`);
+        doc.fontSize(12).text(`Director: ${grupoInfo.director_nombre || grupoInfo.director_cedula}`);
+        doc.text(`Fecha de cierre: ${snap.fecha_cierre ? new Date(snap.fecha_cierre).toLocaleString('es-UY') : new Date(snap.created_at).toLocaleString('es-UY')}`);
+        if (snap.observaciones) {
+            doc.moveDown(0.5);
+            doc.text(`Observaciones: ${snap.observaciones}`);
+        }
+        doc.moveDown();
+
+        const periodoInicio = datos?.funciones?.periodo_inicio;
+        const periodoFin = datos?.funciones?.periodo_fin;
+        doc.fontSize(12).text(
+            `Período de funciones: ${periodoInicio ? new Date(periodoInicio).toLocaleString('es-UY') : 'N/D'} — ${periodoFin ? new Date(periodoFin).toLocaleString('es-UY') : 'N/D'}`
+        );
+        doc.moveDown();
+
+        doc.fontSize(14).text('Resumen financiero', { underline: true });
+        doc.moveDown(0.5);
+        doc.fontSize(12);
+        doc.text(`Funciones realizadas: ${Number(datos?.funciones?.funciones_realizadas || 0)}`);
+        doc.text(`Tickets totales: ${Number(snap.total_tickets || datos?.totales?.total_tickets || 0)}`);
+        doc.text(`Tickets vendidos: ${Number(snap.total_vendidos || datos?.totales?.total_vendidos || 0)}`);
+        doc.text(`Tickets pagados: ${Number(snap.total_pagados || snap.tickets_pagados || datos?.totales?.total_pagados || 0)}`);
+        doc.text(`Total recaudado: $${Number(snap.total_recaudado || snap.ingresos_total || datos?.totales?.total_recaudado || 0).toFixed(2)}`);
+        doc.text(`Total pendiente: $${Number(snap.total_pendiente || datos?.totales?.total_pendiente || 0).toFixed(2)}`);
+        doc.moveDown();
+
+        const vendedores = Array.isArray(datos?.por_vendedor) ? datos.por_vendedor : [];
+        doc.fontSize(14).text('Detalle por vendedor', { underline: true });
+        doc.moveDown(0.5);
+
+        if (vendedores.length === 0) {
+            doc.fontSize(12).text('Sin ventas registradas por vendedor.');
+        } else {
+            doc.fontSize(10);
+            vendedores.forEach((v, idx) => {
+                const nombre = v.vendedor_nombre || v.vendedor_phone || 'Vendedor';
+                doc.text(
+                    `${idx + 1}. ${nombre} | Vendidos: ${v.total_vendidos || 0} | Pagados: ${v.total_pagados || 0} | Recaudado: $${Number(v.total_recaudado || 0).toFixed(2)} | Pendiente: $${Number(v.total_pendiente || 0).toFixed(2)}`
+                );
+            });
+        }
+
+        doc.moveDown();
+        doc.fontSize(9).text(`Generado: ${new Date().toLocaleString('es-UY')}`, { align: 'right' });
+        doc.end();
+    } catch (error) {
+        console.error('Error generando PDF de liquidación:', error);
+        res.status(500).json({ error: 'Error al generar PDF de liquidación del grupo' });
+    }
+};
 
 async function assertGrupoPermisos(req, res, grupoId) {
     const checkRes = await pool.query('SELECT * FROM grupos WHERE id = $1', [grupoId]);

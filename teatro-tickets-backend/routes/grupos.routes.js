@@ -18,8 +18,11 @@ import {
     subirFotoGrupo,
     eliminarGrupo,
     finalizarGrupo,
+    obtenerResumenCierreGrupo,
+    cerrarGrupoDefinitivo,
     obtenerLiquidacionFinalGrupo,
     crearLiquidacionFinalGrupo,
+    generarPDFLiquidacionGrupo,
     generarPDFGrupo
 } from '../controllers/grupos.controller.js';
 
@@ -102,6 +105,18 @@ router.delete('/:id', requireRole('SUPER'), eliminarGrupo);
 router.post('/:id/finalizar', requireRole('SUPER', 'ADMIN'), finalizarGrupo);
 
 /**
+ * GET /api/grupos/:id/cierre-resumen
+ * Resumen para cierre definitivo (DIRECTOR/SUPER)
+ */
+router.get('/:id/cierre-resumen', requireRole('SUPER', 'ADMIN'), obtenerResumenCierreGrupo);
+
+/**
+ * POST /api/grupos/:id/cerrar
+ * Cierre definitivo irreversible (DIRECTOR/SUPER)
+ */
+router.post('/:id/cerrar', requireRole('SUPER', 'ADMIN'), cerrarGrupoDefinitivo);
+
+/**
  * GET /api/grupos/:id/liquidacion-final
  * Obtener liquidación final (live + snapshot si existe)
  * Roles: SUPER, ADMIN (directores del grupo)
@@ -114,6 +129,12 @@ router.get('/:id/liquidacion-final', requireRole('SUPER', 'ADMIN'), obtenerLiqui
  * Roles: SUPER, ADMIN (directores del grupo)
  */
 router.post('/:id/liquidacion-final', requireRole('SUPER', 'ADMIN'), crearLiquidacionFinalGrupo);
+
+/**
+ * GET /api/grupos/:id/liquidacion/pdf
+ * PDF de liquidación final (DIRECTOR/SUPER)
+ */
+router.get('/:id/liquidacion/pdf', requireRole('SUPER', 'ADMIN'), generarPDFLiquidacionGrupo);
 
 /**
  * GET /api/grupos/:id/pdf

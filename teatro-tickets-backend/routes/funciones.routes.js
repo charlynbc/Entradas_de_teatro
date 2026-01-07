@@ -18,6 +18,10 @@ import {
     generarPDFFuncion
 } from '../controllers/funciones.controller.js';
 import { authenticate, requireRole } from '../middleware/auth.middleware.js';
+import {
+    bloquearSiGrupoCerradoPorFuncionId,
+    bloquearSiGrupoCerradoPorObraId
+} from '../middleware/grupo-cierre.middleware.js';
 
 const router = express.Router();
 
@@ -41,6 +45,7 @@ router.get('/public', listarFuncionesPublicas);
 router.post('/', 
     authenticate, 
     requireRole(['SUPER', 'ADMIN']), 
+    bloquearSiGrupoCerradoPorObraId('obra_id'),
     crearFuncion
 );
 
@@ -101,6 +106,7 @@ router.get('/:id',
 router.put('/:id', 
     authenticate, 
     requireRole(['SUPER', 'ADMIN']), 
+    bloquearSiGrupoCerradoPorFuncionId({ paramName: 'id' }),
     actualizarFuncion
 );
 
@@ -112,6 +118,7 @@ router.put('/:id',
 router.delete('/:id', 
     authenticate, 
     requireRole(['SUPER', 'ADMIN']), 
+    bloquearSiGrupoCerradoPorFuncionId({ paramName: 'id' }),
     eliminarFuncion
 );
 
@@ -123,6 +130,7 @@ router.delete('/:id',
 router.post('/:id/cerrar', 
     authenticate, 
     requireRole(['SUPER', 'ADMIN']), 
+    bloquearSiGrupoCerradoPorFuncionId({ paramName: 'id' }),
     cerrarFuncion
 );
 

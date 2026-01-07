@@ -98,7 +98,7 @@ export async function crearFuncion(req, res) {
 
         // Verificar que la obra existe y obtener su grupo
         const obraResult = await client.query(
-            'SELECT o.*, g.director_cedula FROM obras o JOIN grupos g ON o.grupo_id = g.id WHERE o.id = $1',
+            'SELECT o.*, g.director_cedula, g.estado AS grupo_estado FROM obras o JOIN grupos g ON o.grupo_id = g.id WHERE o.id = $1',
             [obraId]
         );
 
@@ -108,6 +108,11 @@ export async function crearFuncion(req, res) {
         }
 
         const obra = obraResult.rows[0];
+
+        if (String(obra.grupo_estado || '').toUpperCase() === 'CERRADO') {
+            await client.query('ROLLBACK');
+            return res.status(409).json({ error: 'No se pueden crear funciones en un grupo CERRADO' });
+        }
 
         // Si es ADMIN, verificar que es director del grupo
         if (userRole === 'ADMIN' && obra.director_cedula !== userCedula) {

@@ -19,8 +19,12 @@ export async function createObra(obraData, userCedula, userRole) {
 
   const grupo = grupoResult.rows[0];
 
-  if (grupo.estado === 'ARCHIVADO') {
+  if (String(grupo.estado).toUpperCase() === 'ARCHIVADO') {
     throw new Error('No se pueden crear obras en grupos archivados');
+  }
+
+  if (String(grupo.estado).toUpperCase() === 'CERRADO') {
+    throw new Error('No se pueden crear obras en grupos cerrados');
   }
 
   // Verificar permisos: director del grupo o SUPER
