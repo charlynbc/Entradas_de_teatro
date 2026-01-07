@@ -563,8 +563,10 @@ export async function listarFuncionesPublicas(req, res) {
             JOIN obras o ON f.obra_id = o.id
             JOIN grupos g ON o.grupo_id = g.id
             LEFT JOIN tickets t ON t.funcion_id = f.id
-            WHERE f.estado IN ('PROGRAMADA', 'CONFIRMADA')
-              AND f.fecha >= CURRENT_TIMESTAMP
+                        WHERE f.fecha > CURRENT_TIMESTAMP
+                            AND f.estado = 'PROGRAMADA'
+                            AND o.estado = 'LISTA'
+                            AND g.estado = 'ACTIVO'
             GROUP BY f.id, o.nombre, o.descripcion, g.nombre
             ORDER BY f.fecha ASC`
         );
