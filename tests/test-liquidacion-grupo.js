@@ -89,7 +89,23 @@ async function main() {
   const stockData = await stockRes.json();
   if (!stockRes.ok) throw new Error(`Stock actor falló: ${JSON.stringify(stockData)}`);
 
-  const codes = (Array.isArray(stockData) ? stockData : (stockData?.tickets || stockData || [])).map(t => t.code || t.id).filter(Boolean);
+  // /api/tickets/stock puede devolver:
+  // - formato actual: [{ showId, tickets: [{code|id,...}] }, ...]
+  // - formato legacy: [{code|id,...}, ...] o { tickets: [...] }
+  let ticketsList = [];
+  if (Array.isArray(stockData)) {
+    const byFuncion = stockData.find(g => String(g?.showId) === String(funcionId));
+    if (byFuncion && Array.isArray(byFuncion.tickets)) {
+      ticketsList = byFuncion.tickets;
+    } else {
+      // Fallback: asumir lista plana
+      ticketsList = stockData;
+    }
+  } else if (stockData && Array.isArray(stockData.tickets)) {
+    ticketsList = stockData.tickets;
+  }
+
+  const codes = ticketsList.map(t => t?.code || t?.id).filter(Boolean);
   if (codes.length < 2) throw new Error(`Stock insuficiente: ${codes.length}`);
 
   for (const code of codes.slice(0, 2)) {

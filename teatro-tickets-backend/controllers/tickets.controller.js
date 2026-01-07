@@ -1,5 +1,6 @@
 import QRCode from 'qrcode';
 import { query } from '../db/postgres.js';
+import { logAction } from '../services/action-logs.service.js';
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 
@@ -325,6 +326,16 @@ export async function actualizarEstadoTicket(req, res) {
           haciaPhone: actorPhone,
           motivo: tipo === 'RESERVA' ? 'Reserva por vendedor' : 'Venta reportada por vendedor'
         });
+
+        // Log action for sales
+        if (tipo === 'VENTA_REPORTADA') {
+          await logAction(req, {
+            accion: 'venta',
+            entidad: 'ticket',
+            entidad_id: ticket.code,
+            descripcion: `Venta reportada - Comprador: ${comprador_nombre || 'N/A'}`
+          });
+        }
       }
     }
 
@@ -413,6 +424,14 @@ export async function transferirTicket(req, res) {
       // silencioso
     }
 
+    // Log action
+    await logAction(req, {
+      accion: 'transferencia',
+      entidad: 'ticket',
+      entidad_id: code,
+      descripcion: `Ticket transferido a ${u.rows[0].name || destinoCedula}`
+    });
+
     res.json({ ok: true, ticket: upd.rows[0] });
   } catch (error) {
     console.error('Error transferirTicket:', error);
@@ -450,6 +469,14 @@ export async function cobrarTickets(req, res) {
         desdePhone: actorPhone,
         haciaPhone: actorPhone,
         motivo: 'Pago aprobado por admin/super'
+      });
+
+      // Log de acción
+      await logAction(req, {
+        accion: 'cobro',
+        entidad: 'ticket',
+        entidad_id: row.code,
+        descripcion: `Pago aprobado para ticket ${row.code}`
       });
     }
 
@@ -630,6 +657,14 @@ export async function anularTicket(req, res) {
       desdePhone: req.user?.phone || req.user?.cedula || null,
       haciaPhone: null,
       motivo: finalMotivo
+    });
+
+    // Log action
+    await logAction(req, {
+      accion: 'anulacion',
+      entidad: 'ticket',
+      entidad_id: code,
+      descripcion: `Ticket anulado. Motivo: ${finalMotivo}`
     });
 
     return res.json({ ok: true, ticket });

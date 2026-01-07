@@ -6,6 +6,7 @@
 
 import pool, { transaction } from '../db/postgres.js';
 import PDFDocument from 'pdfkit';
+import { logAction } from '../services/action-logs.service.js';
 
 /**
  * Crear nuevo grupo
@@ -725,6 +726,15 @@ export const finalizarGrupo = async (req, res) => {
             'UPDATE grupos SET estado = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
             ['ARCHIVADO', id]
         );
+
+        // Log action
+        await logAction(req, {
+            accion: 'cierre_grupo',
+            entidad: 'grupo',
+            entidad_id: id,
+            grupo_id: id,
+            descripcion: `Grupo finalizado: ${grupo.nombre}`
+        });
 
         res.json({
             message: 'Grupo finalizado exitosamente',

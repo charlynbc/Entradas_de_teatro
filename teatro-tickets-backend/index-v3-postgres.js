@@ -18,6 +18,7 @@ import gruposRoutes from './routes/grupos.routes.js';
 import obrasRoutes from './routes/obras.routes.js';
 import uploadRoutes from './routes/upload.routes.js';
 import publicRoutes from './routes/public.routes.js';
+import auditoriaReportesRoutes from './routes/auditoria-reportes.routes.js';
 import { readData } from './utils/dataStore.js';
 
 const app = express();
@@ -27,7 +28,14 @@ const __dirname = path.dirname(__filename);
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
 // Middlewares
-app.use(cors());
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true,
+  optionsSuccessStatus: 200,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Servir fuentes desde /fonts para evitar problemas con node_modules
@@ -108,6 +116,7 @@ async function startServer() {
     app.use('/public', publicRoutes);
     app.use('/api/tickets', ticketsRoutes);
     app.use('/api/reportes', reportesRoutes);
+    app.use('/api/auditoria', auditoriaReportesRoutes);
     app.use('/api/reportes-obras', reportesObrasRoutes);
     app.use('/api/ensayos', ensayosRoutes);
     app.use('/api/admin', adminRoutes);

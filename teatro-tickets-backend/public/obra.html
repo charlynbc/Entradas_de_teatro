@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Obra - Baco Teatro</title>
+    <link rel="stylesheet" href="/css/baco-landing.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="main-nav">
+        <div class="container">
+            <div class="nav-brand" onclick="window.location.href='/'">
+                <img src="/images/logo-baco.svg" alt="Baco Teatro" class="logo">
+                <span class="brand-text">BACO TEATRO</span>
+            </div>
+            <div class="nav-menu" id="navMenu">
+                <a href="/" class="nav-link">Inicio</a>
+                <a href="/proximas-funciones.html" class="nav-link">Próximas Funciones</a>
+                <a href="/sobre-baco.html" class="nav-link">Sobre Baco</a>
+                <a href="/guia.html" class="nav-link">Cómo Comprar</a>
+                <a href="/desarrollador.html" class="nav-link">Desarrollador</a>
+                <button class="btn-login" onclick="window.location.href='/pages/auth/login.html'">
+                    <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                </button>
+            </div>
+            <button class="nav-toggle" id="navToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Obra Detalle -->
+    <section class="obra-detalle" style="padding-top: 120px;">
+        <div class="container">
+            <!-- Volver -->
+            <a href="/proximas-funciones.html" class="btn-volver">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
+
+            <!-- Header Obra -->
+            <div class="obra-header" id="obraHeader" style="display: none;">
+                <div class="obra-imagen">
+                    <img id="obraFoto" src="" alt="Obra" class="img-responsive">
+                </div>
+                <div class="obra-info">
+                    <h1 id="obraNombre"></h1>
+                    <p class="obra-grupo">
+                        <i class="fas fa-users"></i>
+                        <span id="obraGrupo"></span>
+                    </p>
+                    <p id="obraDescripcion" class="obra-descripcion"></p>
+
+                    <div class="obra-detalles">
+                        <div class="detalle-item" id="elencoItem" style="display: none;">
+                            <h3>Elenco</h3>
+                            <p id="obraElenco"></p>
+                        </div>
+                        <div class="detalle-item" id="duracionItem" style="display: none;">
+                            <h3>Duración</h3>
+                            <p id="obraDuracion"></p>
+                        </div>
+                        <div class="detalle-item">
+                            <h3>Estado</h3>
+                            <p><span id="obraEstado" class="badge badge-primary"></span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Funciones -->
+            <div class="obra-funciones" id="funcionesSection" style="display: none;">
+                <h2>Próximas Funciones</h2>
+                <div id="funcionesGrid" class="funciones-grid">
+                    <div class="loading">
+                        <i class="fas fa-theater-masks"></i> Cargando funciones...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sin datos -->
+            <div id="sinDatos" class="no-funciones">
+                <i class="fas fa-theater-masks"></i>
+                <h3>Obra no encontrada</h3>
+                <p>La obra que buscas no está disponible</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <img src="/images/logo-baco.svg" alt="Baco Teatro" class="footer-logo">
+                    <p>Baco Teatro Uruguay</p>
+                    <p class="footer-slogan">Donde el arte cobra vida</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Navegación</h4>
+                    <a href="/">Inicio</a>
+                    <a href="/proximas-funciones.html">Próximas Funciones</a>
+                    <a href="/sobre-baco.html">Sobre Baco</a>
+                    <a href="/guia.html">Cómo Comprar</a>
+                    <a href="/desarrollador.html">Desarrollador</a>
+                </div>
+                <div class="footer-contact">
+                    <h4>Contacto</h4>
+                    <p><i class="fas fa-phone"></i> 099 893 748</p>
+                    <p><i class="fab fa-whatsapp"></i> +598 94 687 473</p>
+                    <p><i class="fas fa-envelope"></i> bacoteatro@montevideo.com.uy</p>
+                    <div class="footer-social">
+                        <a href="https://www.instagram.com/bacoteatro" target="_blank">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="https://www.facebook.com/BACO.TEATRO.URUGUAY" target="_blank">
+                            <i class="fab fa-facebook"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Baco Teatro Uruguay. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <style>
+        .obra-header {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            margin: 2rem 0;
+            padding: 2rem 0;
+        }
+
+        .obra-imagen {
+            text-align: center;
+        }
+
+        .obra-imagen img {
+            max-width: 300px;
+            width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .obra-info h1 {
+            font-size: 2.5rem;
+            margin: 1rem 0;
+            color: #333;
+        }
+
+        .obra-grupo {
+            font-size: 1.1rem;
+            color: #666;
+            margin: 0.5rem 0;
+        }
+
+        .obra-descripcion {
+            margin: 1.5rem 0;
+            line-height: 1.6;
+            color: #555;
+        }
+
+        .obra-detalles {
+            margin-top: 2rem;
+        }
+
+        .detalle-item {
+            margin: 1.5rem 0;
+            padding: 1rem;
+            background: #f9f9f9;
+            border-left: 4px solid var(--primary-color);
+            border-radius: 4px;
+        }
+
+        .detalle-item h3 {
+            font-size: 0.9rem;
+            color: #999;
+            text-transform: uppercase;
+            margin: 0 0 0.5rem 0;
+        }
+
+        .detalle-item p {
+            margin: 0;
+            color: #333;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .badge-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .badge-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .obra-funciones {
+            margin: 3rem 0;
+        }
+
+        .obra-funciones h2 {
+            font-size: 1.8rem;
+            margin: 2rem 0 1rem 0;
+            color: #333;
+        }
+
+        .btn-volver {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+            transition: color 0.3s;
+        }
+
+        .btn-volver:hover {
+            color: var(--primary-dark);
+        }
+
+        @media (max-width: 768px) {
+            .obra-header {
+                grid-template-columns: 1fr;
+            }
+
+            .obra-info h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+
+    <script src="/js/obra-detalle.js"></script>
+</body>
+</html>

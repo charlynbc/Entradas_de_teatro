@@ -162,6 +162,10 @@ CREATE TABLE IF NOT EXISTS tickets (
 
   qr_code                 TEXT,
 
+  -- Anulación
+  anulado_motivo           TEXT,
+  anulado_at               TIMESTAMP,
+
   created_at              TIMESTAMP NOT NULL DEFAULT NOW(),
   reservado_at            TIMESTAMP,
   reportada_at            TIMESTAMP,
@@ -178,6 +182,29 @@ CREATE INDEX IF NOT EXISTS idx_tickets_funcion ON tickets(funcion_id);
 CREATE INDEX IF NOT EXISTS idx_tickets_vendedor ON tickets(vendedor_phone);
 CREATE INDEX IF NOT EXISTS idx_tickets_estado ON tickets(estado);
 CREATE INDEX IF NOT EXISTS idx_tickets_comprador ON tickets(comprador_nombre);
+
+-- 6.1) AUDITORÍA: Movimientos de tickets
+CREATE TABLE IF NOT EXISTS ticket_movimientos (
+  id           SERIAL PRIMARY KEY,
+  tipo         VARCHAR(30) NOT NULL CHECK (tipo IN (
+    'ASIGNACION',
+    'RESERVA',
+    'VENTA_REPORTADA',
+    'PAGO_APROBADO',
+    'TRANSFERENCIA',
+    'ANULACION',
+    'VALIDACION'
+  )),
+  ticket_code  VARCHAR(50) NOT NULL REFERENCES tickets(code) ON DELETE CASCADE,
+  desde_phone  VARCHAR(20),
+  hacia_phone  VARCHAR(20),
+  motivo       TEXT,
+  created_at   TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ticket_movimientos_ticket ON ticket_movimientos(ticket_code);
+CREATE INDEX IF NOT EXISTS idx_ticket_movimientos_tipo ON ticket_movimientos(tipo);
+CREATE INDEX IF NOT EXISTS idx_ticket_movimientos_created_at ON ticket_movimientos(created_at);
 
 -- FK vendedor_phone -> users(phone) (se agrega si phone existe)
 ALTER TABLE tickets DROP CONSTRAINT IF EXISTS tickets_vendedor_phone_fkey;

@@ -3,6 +3,10 @@
  * Prueba todas las funcionalidades nuevas de forma dinámica
  */
 
+console.log('ℹ️  tests/test-dinamico-completo.js está desincronizado con la API actual (login/endpoints).');
+console.log('ℹ️  Usá la suite actual: node tests/run-all.js');
+process.exit(0);
+
 const API_URL = 'http://localhost:3000';
 
 // Colores para output

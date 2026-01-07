@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BACÓ - Dashboard Actor/Actriz</title>
+    <!-- Actor Dashboard (ACTOR role) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/baco-common.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --negro: #0a0a0a;
+            --bordo: #8B1538;
+            --dorado: #D4AF37;
+            --blanco: #F8F8F8;
+            --gris-oscuro: #1a1a1a;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--negro);
+            color: var(--blanco);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--gris-oscuro) 0%, var(--negro) 100%);
+            padding: 20px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-text {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--dorado) 0%, #F4E3B5 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 2px;
+        }
+
+        .profile-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            padding: 8px 15px;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+        }
+
+        .profile-section:hover {
+            background: rgba(212, 175, 55, 0.1);
+        }
+
+        .profile-photo {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            border: 2px solid var(--dorado);
+            object-fit: cover;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+            background: var(--gris-oscuro);
+        }
+
+        .profile-info { display: flex; flex-direction: column; }
+        .profile-name { font-weight: 700; font-size: 0.95rem; }
+        .profile-role { font-size: 0.8rem; color: rgba(248, 248, 248, 0.7); }
+
+        .main { max-width: 1200px; margin: 0 auto; padding: 25px 20px 60px; }
+
+        .welcome {
+            background: linear-gradient(135deg, rgba(139, 21, 56, 0.18) 0%, rgba(212, 175, 55, 0.10) 100%);
+            border: 1px solid rgba(212, 175, 55, 0.25);
+            border-radius: 18px;
+            padding: 22px;
+            margin-bottom: 20px;
+        }
+
+        .welcome-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.6rem;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        .welcome-subtitle { color: rgba(248, 248, 248, 0.75); line-height: 1.35; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+            margin-top: 18px;
+        }
+
+        .card {
+            background: rgba(26, 26, 26, 0.65);
+            border: 1px solid rgba(212, 175, 55, 0.18);
+            border-radius: 16px;
+            padding: 18px;
+        }
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(212, 175, 55, 0.14);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            color: rgba(248, 248, 248, 0.9);
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .list { display: flex; flex-direction: column; gap: 10px; }
+
+        .item {
+            background: rgba(10, 10, 10, 0.35);
+            border: 1px solid rgba(212, 175, 55, 0.14);
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .item-title { font-weight: 800; margin-bottom: 4px; }
+        .item-sub { color: rgba(248, 248, 248, 0.7); font-size: 0.9rem; }
+
+        .actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+
+        .btn {
+            border: none;
+            cursor: pointer;
+            border-radius: 10px;
+            padding: 8px 10px;
+            font-weight: 800;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary { background: var(--dorado); color: #0a0a0a; }
+        .btn-secondary { background: rgba(248, 248, 248, 0.10); color: var(--blanco); border: 1px solid rgba(212, 175, 55, 0.18); }
+        .btn-danger { background: rgba(139, 21, 56, 0.85); color: var(--blanco); border: 1px solid rgba(139, 21, 56, 0.2); }
+
+        .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+        .form-row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        .input {
+            flex: 1;
+            min-width: 180px;
+            background: rgba(10, 10, 10, 0.35);
+            border: 1px solid rgba(212, 175, 55, 0.18);
+            border-radius: 10px;
+            padding: 10px 12px;
+            color: var(--blanco);
+            outline: none;
+        }
+
+        .muted { color: rgba(248, 248, 248, 0.7); font-size: 0.9rem; }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            border-radius: 999px;
+            border: 1px solid rgba(212, 175, 55, 0.18);
+            background: rgba(212, 175, 55, 0.10);
+            font-size: 0.8rem;
+            font-weight: 800;
+        }
+
+        @media (max-width: 520px) {
+            .logo-text { font-size: 1.6rem; }
+            .profile-info { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo-text">BACÓ</div>
+            </div>
+
+            <div class="profile-section" onclick="Baco.Auth.logout()" title="Cerrar sesión">
+                <img class="profile-photo" id="profilePhoto" alt="Foto" src="https://via.placeholder.com/80/1a1a1a/D4AF37?text=BA" />
+                <div class="profile-info">
+                    <div class="profile-name" id="profileName">Actor/Actriz</div>
+                    <div class="profile-role">Actor/Actriz (Vendedor)</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <section class="welcome">
+            <div class="welcome-title">Panel de Actor/Actriz</div>
+            <div class="welcome-subtitle">
+                Acceso a tus grupos, funciones y tickets asignados. Solo se muestran acciones permitidas para tu rol.
+            </div>
+        </section>
+
+        <div class="grid">
+            <section class="card">
+                <div class="card-title"><i class="fas fa-users"></i> Mis grupos</div>
+                <div id="gruposList" class="list">
+                    <div class="muted">Cargando…</div>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-title"><i class="fas fa-calendar-alt"></i> Mis funciones</div>
+                <div id="funcionesList" class="list">
+                    <div class="muted">Cargando…</div>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-title"><i class="fas fa-ticket-alt"></i> Stock y ventas</div>
+                <div class="list" style="gap: 12px;">
+                    <div class="form-row">
+                        <span class="pill" id="pillStock">Stock: …</span>
+                        <span class="pill" id="pillVendidas">Vendidas: …</span>
+                        <span class="pill" id="pillPagadas">Pagadas: …</span>
+                    </div>
+                    <div class="muted" id="pillDinero">Entregado: …</div>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-title"><i class="fas fa-bolt"></i> Acciones rápidas</div>
+                <div class="list" style="gap: 12px;">
+                    <div class="muted">Vender / reservar desde tu stock:</div>
+                    <div class="form-row">
+                        <input id="ticketCodeInput" class="input" placeholder="Código de ticket (ej: ABC123)" />
+                        <button class="btn btn-secondary" onclick="reservarTicket()">Reservar</button>
+                        <button class="btn btn-primary" onclick="reportarVenta()">Reportar venta</button>
+                    </div>
+
+                    <div class="muted">Transferir ticket (solo en STOCK):</div>
+                    <div class="form-row">
+                        <input id="transferCodeInput" class="input" placeholder="Código de ticket" />
+                        <input id="transferDestinoInput" class="input" placeholder="Cédula destino" />
+                        <button class="btn btn-secondary" onclick="transferirTicketUI()">Transferir</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card" style="grid-column: 1 / -1;">
+                <div class="card-title"><i class="fas fa-list"></i> Mis tickets</div>
+                <div class="muted" style="margin-bottom: 10px;">Se muestran tus tickets asignados (por función) y su estado actual.</div>
+                <div id="ticketsList" class="list">
+                    <div class="muted">Cargando…</div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script src="/js/baco-common.js?v=20251228"></script>
+    <script>
+        async function ensureActor() {
+            if (!Baco.Auth.requireAuth()) return null;
+            const user = await Baco.Auth.ensureUser();
+            if (!user) {
+                Baco.Auth.logout();
+                return null;
+            }
+            if (user.role !== 'ACTOR') {
+                // Respetar roles reales: SUPER/ADMIN => dashboards existentes
+                if (user.role === 'ADMIN') window.location.href = '/pages/admin/director-dashboard.html';
+                else window.location.href = '/pages/admin/admin-dashboard.html';
+                return null;
+            }
+            return user;
+        }
+
+        function setUserUI(user) {
+            const name = user?.name || user?.nombre || 'Actor/Actriz';
+            document.getElementById('profileName').textContent = name;
+        }
+
+        async function apiGet(url) {
+            const response = await fetch(url, { headers: Baco.Auth.getAuthHeaders() });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.error || 'Error');
+            return data;
+        }
+
+        async function apiPost(url, body) {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: Baco.Auth.getAuthHeaders(),
+                body: JSON.stringify(body || {})
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.error || 'Error');
+            return data;
+        }
+
+        async function cargarGrupos() {
+            const cont = document.getElementById('gruposList');
+            cont.innerHTML = '<div class="muted">Cargando…</div>';
+            const grupos = await apiGet('/api/grupos');
+
+            if (!Array.isArray(grupos) || grupos.length === 0) {
+                cont.innerHTML = '<div class="muted">No tenés grupos asignados.</div>';
+                return [];
+            }
+
+            cont.innerHTML = grupos.map(g => {
+                const nombre = g.nombre || `Grupo #${g.id}`;
+                const estado = g.estado || 'ACTIVO';
+                return `
+                    <div class="item">
+                        <div>
+                            <div class="item-title">${nombre}</div>
+                            <div class="item-sub"><span class="tag">${estado}</span></div>
+                        </div>
+                        <div class="actions">
+                            <button class="btn btn-secondary" onclick="window.location.href='/pages/grupos/ver-grupo.html?id=${g.id}'">Ver</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            return grupos;
+        }
+
+        async function cargarFunciones(grupos) {
+            const cont = document.getElementById('funcionesList');
+            cont.innerHTML = '<div class="muted">Cargando…</div>';
+
+            if (!Array.isArray(grupos) || grupos.length === 0) {
+                cont.innerHTML = '<div class="muted">Sin grupos: no hay funciones para mostrar.</div>';
+                return;
+            }
+
+            const funciones = [];
+            for (const g of grupos) {
+                try {
+                    const rows = await apiGet(`/api/funciones/grupo/${g.id}`);
+                    if (Array.isArray(rows)) funciones.push(...rows);
+                } catch {
+                    // silencioso: un grupo puede no tener funciones
+                }
+            }
+
+            if (funciones.length === 0) {
+                cont.innerHTML = '<div class="muted">No hay funciones registradas en tus grupos.</div>';
+                return;
+            }
+
+            // Ordenar por fecha
+            funciones.sort((a, b) => String(a.fecha).localeCompare(String(b.fecha)));
+
+            cont.innerHTML = funciones.slice(0, 12).map(f => {
+                const obra = f.obra_nombre || f.obra || 'Obra';
+                const fecha = f.fecha ? new Date(f.fecha).toLocaleString('es-UY') : '';
+                const lugar = f.lugar || '';
+                const estado = f.estado_funcion || f.estado || '';
+                return `
+                    <div class="item">
+                        <div>
+                            <div class="item-title">${obra}</div>
+                            <div class="item-sub">${fecha}${lugar ? ' · ' + lugar : ''}</div>
+                            ${estado ? `<div class="item-sub"><span class="tag">${estado}</span></div>` : ''}
+                        </div>
+                        <div class="actions">
+                            <button class="btn btn-secondary" onclick="window.location.href='/pages/admin/funciones.html'">Cartelera</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function cargarStats() {
+            const stock = await apiGet('/api/tickets/stock');
+            const hist = await apiGet('/api/reportes/vendedor');
+
+            document.getElementById('pillStock').textContent = `Stock: ${stock?.stock ?? 0}`;
+            document.getElementById('pillVendidas').textContent = `Vendidas: ${hist?.vendidas ?? 0}`;
+            document.getElementById('pillPagadas').textContent = `Pagadas: ${hist?.pagadas ?? 0}`;
+            const entregado = hist?.entregado ?? 0;
+            document.getElementById('pillDinero').textContent = `Entregado (pagadas/usadas): ${entregado}`;
+        }
+
+        function renderEstado(estado) {
+            const map = {
+                DISPONIBLE: 'Disponible',
+                STOCK_ACTOR: 'En stock',
+                RESERVADO: 'Reservado',
+                REPORTADA_VENDIDA: 'Vendida (reportada)',
+                PAGADO: 'Pagada',
+                USADO: 'Usada',
+                TRANSFERIDA: 'Transferida',
+                ANULADO: 'Anulado'
+            };
+            return map[estado] || estado || '';
+        }
+
+        async function cargarMisTickets() {
+            const cont = document.getElementById('ticketsList');
+            cont.innerHTML = '<div class="muted">Cargando…</div>';
+            const tickets = await apiGet('/api/tickets/mis-tickets');
+
+            if (!Array.isArray(tickets) || tickets.length === 0) {
+                cont.innerHTML = '<div class="muted">No tenés tickets asignados.</div>';
+                return;
+            }
+
+            cont.innerHTML = tickets.map(t => {
+                const obra = t.obra_nombre || 'Obra';
+                const fecha = t.funcion_fecha ? new Date(t.funcion_fecha).toLocaleString('es-UY') : '';
+                const lugar = t.funcion_lugar || '';
+                const precio = (t.precio !== null && t.precio !== undefined) ? ` · $${t.precio}` : '';
+                const estado = renderEstado(t.estado);
+
+                // Acciones permitidas para ACTOR:
+                // - Reservar o reportar venta si está en stock
+                // - Transferir solo si está en stock
+                const canReservar = t.estado === 'STOCK_ACTOR';
+                const canVender = t.estado === 'STOCK_ACTOR' || t.estado === 'RESERVADO';
+                const canTransferir = t.estado === 'STOCK_ACTOR';
+
+                return `
+                    <div class="item">
+                        <div>
+                            <div class="item-title">${t.code} · ${obra}</div>
+                            <div class="item-sub">${fecha}${lugar ? ' · ' + lugar : ''}${precio}</div>
+                            <div class="item-sub"><span class="tag">${estado}</span></div>
+                        </div>
+                        <div class="actions">
+                            <button class="btn btn-secondary" ${canReservar ? '' : 'disabled'} onclick="setEstadoTicket('${t.code}','RESERVADO')">Reservar</button>
+                            <button class="btn btn-primary" ${canVender ? '' : 'disabled'} onclick="setEstadoTicket('${t.code}','VENDIDA')">Vender</button>
+                            <button class="btn btn-secondary" ${canTransferir ? '' : 'disabled'} onclick="prefillTransfer('${t.code}')">Transferir</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function setEstadoTicket(code, estado) {
+            try {
+                await apiPost('/api/tickets/estado', { ticketId: code, estado });
+                Baco.UI.showSuccess('Ticket actualizado');
+                await Promise.all([cargarMisTickets(), cargarStats()]);
+            } catch (e) {
+                Baco.UI.showError(e.message || 'No se pudo actualizar');
+            }
+        }
+
+        async function reservarTicket() {
+            const code = String(document.getElementById('ticketCodeInput').value || '').trim();
+            if (!code) return Baco.UI.showError('Ingresá un código de ticket');
+            await setEstadoTicket(code, 'RESERVADO');
+        }
+
+        async function reportarVenta() {
+            const code = String(document.getElementById('ticketCodeInput').value || '').trim();
+            if (!code) return Baco.UI.showError('Ingresá un código de ticket');
+            await setEstadoTicket(code, 'VENDIDA');
+        }
+
+        function prefillTransfer(code) {
+            document.getElementById('transferCodeInput').value = code;
+        }
+
+        async function transferirTicketUI() {
+            const code = String(document.getElementById('transferCodeInput').value || '').trim();
+            const destino = String(document.getElementById('transferDestinoInput').value || '').trim();
+            if (!code || !destino) return Baco.UI.showError('Faltan datos: ticket y cédula destino');
+
+            try {
+                await apiPost('/api/tickets/transferir', { ticketCode: code, destino });
+                Baco.UI.showSuccess('Transferencia realizada');
+                await Promise.all([cargarMisTickets(), cargarStats()]);
+            } catch (e) {
+                Baco.UI.showError(e.message || 'No se pudo transferir');
+            }
+        }
+
+        (async function init() {
+            const user = await ensureActor();
+            if (!user) return;
+
+            setUserUI(user);
+
+            try {
+                Baco.UI.showLoading('Cargando panel…');
+                const grupos = await cargarGrupos();
+                await Promise.all([
+                    cargarFunciones(grupos),
+                    cargarStats(),
+                    cargarMisTickets()
+                ]);
+            } catch (e) {
+                Baco.UI.showError(e.message || 'Error cargando panel');
+            } finally {
+                Baco.UI.hideLoading();
+            }
+        })();
+    </script>
+</body>
+</html>

@@ -51,5 +51,16 @@ BEGIN
   END IF;
 END $$;
 
-CREATE INDEX IF NOT EXISTS idx_liquidaciones_grupo_grupo_id ON liquidaciones_grupo(grupo_id);
+-- Índices: crear solo si la tabla existe (CREATE INDEX IF NOT EXISTS falla si la tabla no existe)
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.tables
+    WHERE table_schema='public' AND table_name='liquidaciones_grupo'
+  ) THEN
+    CREATE INDEX IF NOT EXISTS idx_liquidaciones_grupo_grupo_id ON liquidaciones_grupo(grupo_id);
+  END IF;
+END $$;
+
 CREATE INDEX IF NOT EXISTS idx_grupos_estado ON grupos(estado);
