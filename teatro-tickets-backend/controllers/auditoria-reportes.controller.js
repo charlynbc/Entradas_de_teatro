@@ -142,7 +142,8 @@ export async function obtenerReportesVentas(req, res) {
     } else if (tipo === 'vendedor') {
       sql += ` GROUP BY u.name, t.vendedor_phone ORDER BY total_recaudado DESC NULLS LAST`;
     } else {
-      sql += ` GROUP BY o.nombre ORDER BY total_recaudado DESC NULLS LAST`;
+      // Agrupar por grupo (default)
+      sql += ` GROUP BY f.id, f.fecha, o.nombre, u.name, t.vendedor_phone ORDER BY f.fecha DESC`;
     }
 
     const result = await query(sql, params);
@@ -319,8 +320,7 @@ export async function obtenerObraPublica(req, res) {
 
     const result = await query(`
       SELECT 
-        o.id, o.nombre, o.descripcion, o.elenco, o.duracion,
-        o.foto_url, o.grupo_id,
+        o.id, o.nombre, o.descripcion, o.autor, o.genero, o.duracion_aprox as duracion,
         g.nombre as grupo_nombre,
         COUNT(DISTINCT f.id) as total_funciones,
         COUNT(DISTINCT CASE WHEN f.estado IN ('PROGRAMADA', 'CONFIRMADA') AND f.fecha >= CURRENT_DATE THEN f.id END) as funciones_proximas
@@ -342,9 +342,9 @@ export async function obtenerObraPublica(req, res) {
       id: obra.id,
       nombre: obra.nombre,
       descripcion: obra.descripcion,
-      elenco: obra.elenco,
+      autor: obra.autor,
+      genero: obra.genero,
       duracion: obra.duracion,
-      foto_url: obra.foto_url,
       grupo_nombre: obra.grupo_nombre,
       estado: obra.funciones_proximas > 0 ? 'ACTIVA' : 'FINALIZADA',
       funciones_proximas: obra.funciones_proximas
