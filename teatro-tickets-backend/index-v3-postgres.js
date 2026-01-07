@@ -17,6 +17,7 @@ import adminRoutes from './routes/admin.routes.js';
 import gruposRoutes from './routes/grupos.routes.js';
 import obrasRoutes from './routes/obras.routes.js';
 import uploadRoutes from './routes/upload.routes.js';
+import publicRoutes from './routes/public.routes.js';
 import { readData } from './utils/dataStore.js';
 
 const app = express();
@@ -104,6 +105,7 @@ async function startServer() {
     app.use('/api/users', usersRoutes); // Alias para compatibilidad con frontend
     app.use('/api/funciones', funcionesRoutes);
     app.use('/api/shows', funcionesRoutes); // Alias para compatibilidad con frontend antiguo
+    app.use('/public', publicRoutes);
     app.use('/api/tickets', ticketsRoutes);
     app.use('/api/reportes', reportesRoutes);
     app.use('/api/reportes-obras', reportesObrasRoutes);
