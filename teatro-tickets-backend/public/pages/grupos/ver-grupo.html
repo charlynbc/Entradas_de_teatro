@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle del Grupo - BACÓ</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/baco-common.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --negro: #0a0a0a;
+            --bordo: #8B1538;
+            --dorado: #D4AF37;
+            --blanco: #F8F8F8;
+            --gris-oscuro: #1a1a1a;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--negro);
+            color: var(--blanco);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--gris-oscuro), var(--negro));
+            padding: 20px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .btn-back {
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid var(--dorado);
+            color: var(--dorado);
+            padding: 10px 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-back:hover {
+            background: var(--dorado);
+            color: var(--negro);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 20px;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .grupo-header {
+            background: linear-gradient(135deg, var(--gris-oscuro), #252525);
+            border: 2px solid rgba(212, 175, 55, 0.3);
+            border-radius: 25px;
+            padding: 40px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .grupo-photo {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            border: 4px solid var(--dorado);
+            object-fit: cover;
+            box-shadow: 0 0 40px rgba(212, 175, 55, 0.4);
+            flex-shrink: 0;
+        }
+
+        .grupo-info {
+            flex: 1;
+        }
+
+        .grupo-nombre {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--blanco), var(--dorado));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .grupo-obra {
+            font-size: 1.3rem;
+            color: rgba(248, 248, 248, 0.8);
+            margin-bottom: 15px;
+        }
+
+        .grupo-meta {
+            display: flex;
+            gap: 25px;
+            flex-wrap: wrap;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: rgba(248, 248, 248, 0.7);
+        }
+
+        .meta-item i {
+            color: var(--dorado);
+            font-size: 1.1rem;
+        }
+
+        .section {
+            background: linear-gradient(135deg, var(--gris-oscuro), #1f1f1f);
+            border: 1.5px solid rgba(212, 175, 55, 0.2);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            color: var(--dorado);
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .miembros-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .miembro-card {
+            background: rgba(26, 26, 26, 0.6);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .miembro-card:hover {
+            border-color: var(--dorado);
+            background: rgba(26, 26, 26, 0.8);
+        }
+
+        .miembro-photo {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 2px solid var(--dorado);
+            object-fit: cover;
+        }
+
+        .miembro-info {
+            flex: 1;
+        }
+
+        .miembro-nombre {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .miembro-rol {
+            font-size: 0.85rem;
+            color: rgba(248, 248, 248, 0.6);
+        }
+
+        .funciones-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .funcion-item {
+            background: rgba(26, 26, 26, 0.6);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .funcion-item:hover {
+            border-color: var(--dorado);
+            background: rgba(26, 26, 26, 0.8);
+        }
+
+        .funcion-info {
+            flex: 1;
+        }
+
+        .funcion-fecha {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .funcion-detalles {
+            display: flex;
+            gap: 20px;
+            color: rgba(248, 248, 248, 0.7);
+            font-size: 0.9rem;
+        }
+
+        .funcion-stats {
+            display: flex;
+            gap: 20px;
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 10px 15px;
+            background: rgba(212, 175, 55, 0.1);
+            border-radius: 10px;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dorado);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: rgba(248, 248, 248, 0.6);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--dorado);
+        }
+
+        .loading i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grupo-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .grupo-meta {
+                justify-content: center;
+            }
+
+            .miembros-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .funcion-item {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .funcion-stats {
+                width: 100%;
+                justify-content: space-around;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <a href="listar-grupos.html" class="btn-back">
+                <i class="fas fa-arrow-left"></i>
+                Volver a Grupos
+            </a>
+        </div>
+    </header>
+
+    <div class="container">
+        <div id="grupoContainer">
+            <div class="loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                <div>Cargando grupo...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/baco-common.js?v=20251228"></script>
+    <script>
+        // Verificar autenticación
+        if (!Baco.Auth.requireAuth()) return;
+        
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        if (!['SUPER', 'ADMIN'].includes(user.role)) {
+            Baco.UI.showError('Acceso denegado');
+            setTimeout(() => window.location.href = '/admin-dashboard.html', 2000);
+            return;
+        }
+
+        // Obtener ID del grupo desde URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const grupoId = urlParams.get('id');
+
+        if (!grupoId) {
+            Baco.UI.showError('ID de grupo no especificado');
+            setTimeout(() => window.location.href = '/listar-grupos.html', 2000);
+            return;
+        }
+
+        // Cargar datos del grupo
+        async function loadGrupo() {
+            try {
+                const grupo = await Baco.API.get(`/grupos/${grupoId}`);
+                renderGrupo(grupo);
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Error al cargar el grupo');
+            }
+        }
+
+        async function loadResumenCierre() {
+            try {
+                return await Baco.API.get(`/grupos/${grupoId}/cierre-resumen`);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function money(n) {
+            const v = Number(n || 0);
+            return `$${v.toFixed(2)}`;
+        }
+
+        function renderGrupo(grupo) {
+            const container = document.getElementById('grupoContainer');
+            
+            const miembrosHTML = grupo.miembros && grupo.miembros.length > 0 ? `
+                <div class="section">
+                    <h3 class="section-title">
+                        <i class="fas fa-users"></i>
+                        Miembros del Grupo
+                    </h3>
+                    <div class="miembros-grid">
+                        ${grupo.miembros.map(miembro => `
+                            <div class="miembro-card">
+                                <img src="${miembro.foto_url || Baco.Image.getPlaceholder(miembro.nombre, 60)}" 
+                                     alt="${miembro.nombre}" 
+                                     class="miembro-photo photo-circular"
+                                     onerror="this.src='${Baco.Image.getPlaceholder(miembro.nombre, 60)}'">
+                                <div class="miembro-info">
+                                    <div class="miembro-nombre">${miembro.nombre}</div>
+                                    <div class="miembro-rol">${miembro.role === 'ADMIN' ? 'Director/a' : 'Actor/Actriz'}</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            ` : `
+                <div class="section">
+                    <h3 class="section-title">
+                        <i class="fas fa-users"></i>
+                        Miembros del Grupo
+                    </h3>
+                    <div class="empty-state" style="padding: 40px; text-align: center;">
+                        <i class="fas fa-user-plus" style="font-size: 3rem; color: rgba(212, 175, 55, 0.3); margin-bottom: 15px;"></i>
+                        <p style="color: rgba(248, 248, 248, 0.6);">No hay miembros en este grupo</p>
+                    </div>
+                </div>
+            `;
+
+            const funcionesHTML = grupo.funciones && grupo.funciones.length > 0 ? `
+                <div class="section">
+                    <h3 class="section-title">
+                        <i class="fas fa-calendar-alt"></i>
+                        Funciones
+                    </h3>
+                    <div class="funciones-list">
+                        ${grupo.funciones.map(funcion => `
+                            <div class="funcion-item">
+                                <div class="funcion-info">
+                                    <div class="funcion-fecha">${Baco.Format.date(funcion.fecha, 'long')}</div>
+                                    <div class="funcion-detalles">
+                                        <span><i class="fas fa-clock"></i> ${funcion.hora || 'Hora no definida'}</span>
+                                        <span><i class="fas fa-map-marker-alt"></i> ${funcion.lugar || 'Lugar no definido'}</span>
+                                    </div>
+                                </div>
+                                <div class="funcion-stats">
+                                    <div class="stat-box">
+                                        <div class="stat-number">${funcion.entradas_vendidas || 0}</div>
+                                        <div class="stat-label">Vendidas</div>
+                                    </div>
+                                    <div class="stat-box">
+                                        <div class="stat-number">${funcion.capacidad || 0}</div>
+                                        <div class="stat-label">Capacidad</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            ` : `
+                <div class="section">
+                    <h3 class="section-title">
+                        <i class="fas fa-calendar-alt"></i>
+                        Funciones
+                    </h3>
+                    <div class="empty-state" style="padding: 40px; text-align: center;">
+                        <i class="fas fa-calendar-plus" style="font-size: 3rem; color: rgba(212, 175, 55, 0.3); margin-bottom: 15px;"></i>
+                        <p style="color: rgba(248, 248, 248, 0.6);">No hay funciones programadas</p>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = `
+                <div class="grupo-header">
+                    <img src="${grupo.foto || Baco.Image.getPlaceholder(grupo.nombre, 180)}" 
+                         alt="${grupo.nombre}" 
+                         class="grupo-photo"
+                         onerror="this.src='${Baco.Image.getPlaceholder(grupo.nombre, 180)}'">
+                    <div class="grupo-info">
+                        <h1 class="grupo-nombre">${grupo.nombre}</h1>
+                        <div class="grupo-obra">${grupo.obra || 'Obra no especificada'}</div>
+                        <div class="grupo-meta">
+                            <div class="meta-item">
+                                <i class="fas fa-user-tie"></i>
+                                <span>Director: ${grupo.director || 'No asignado'}</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-calendar"></i>
+                                <span>${grupo.fecha_inicio ? Baco.Format.date(grupo.fecha_inicio) : 'Fecha no definida'}</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-users"></i>
+                                <span>${(grupo.miembros && grupo.miembros.length) || 0} miembros</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                ${miembrosHTML}
+                ${funcionesHTML}
+
+                <div class="section" id="cierreGrupoSection" style="display:none;">
+                    <h3 class="section-title">
+                        <i class="fas fa-lock"></i>
+                        Cierre de Grupo
+                    </h3>
+                    <div id="cierreGrupoBody">
+                        <div style="color: rgba(248, 248, 248, 0.7);">Cargando resumen...</div>
+                    </div>
+                </div>
+            `;
+
+            // Sección Cierre de Grupo (solo DIRECTOR/SUPER)
+            if (['SUPER', 'ADMIN'].includes(user.role)) {
+                const section = document.getElementById('cierreGrupoSection');
+                section.style.display = 'block';
+                renderCierreGrupo(grupo);
+            }
+        }
+
+        async function renderCierreGrupo(grupo) {
+            const body = document.getElementById('cierreGrupoBody');
+            if (!body) return;
+
+            const data = await loadResumenCierre();
+            if (!data || !data.ok) {
+                body.innerHTML = `<div style="color: rgba(248, 248, 248, 0.6);">No se pudo cargar el resumen financiero.</div>`;
+                return;
+            }
+
+            const calc = data.calculado || {};
+            const tot = calc.totales || {};
+            const fun = calc.funciones || {};
+            const vendedores = Array.isArray(calc.por_vendedor) ? calc.por_vendedor : [];
+            const sugerencia = calc.sugerencia_cierre || {};
+
+            const estadoGrupo = String(grupo?.estado || data?.grupo?.estado || '').toUpperCase();
+            const puedeCerrar = estadoGrupo !== 'CERRADO';
+
+            const sugerenciaHtml = sugerencia.habilitada
+                ? `<div style="margin-bottom: 15px; color: rgba(212, 175, 55, 0.9);">Sugerencia automática: el grupo está listo para cierre (todas las funciones REALIZADAS y sin pendientes).</div>`
+                : '';
+
+            const accionesHtml = `
+                <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top: 20px;">
+                    ${puedeCerrar ? `
+                        <button class="btn-back" id="btnCerrarGrupo" style="border-color: rgba(212, 175, 55, 0.6);">
+                            <i class="fas fa-ban"></i>
+                            Cerrar Grupo (irreversible)
+                        </button>
+                    ` : `
+                        <button class="btn-back" id="btnPDFLiquidacion" style="border-color: rgba(212, 175, 55, 0.6);">
+                            <i class="fas fa-file-pdf"></i>
+                            Exportar PDF
+                        </button>
+                    `}
+                </div>
+            `;
+
+            body.innerHTML = `
+                ${sugerenciaHtml}
+                <div class="funciones-list">
+                    <div class="funcion-item">
+                        <div class="funcion-info">
+                            <div class="funcion-fecha">Resumen</div>
+                            <div class="funcion-detalles">
+                                <span><i class="fas fa-calendar-check"></i> Funciones realizadas: ${Number(fun.funciones_realizadas || 0)}</span>
+                                <span><i class="fas fa-calendar"></i> Total funciones: ${Number(fun.total_funciones || 0)}</span>
+                            </div>
+                        </div>
+                        <div class="funcion-stats">
+                            <div class="stat-box">
+                                <div class="stat-number">${Number(tot.total_vendidos || 0)}</div>
+                                <div class="stat-label">Vendidos</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-number">${Number(tot.total_pagados || 0)}</div>
+                                <div class="stat-label">Pagados</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="funcion-item">
+                        <div class="funcion-info">
+                            <div class="funcion-fecha">Dinero</div>
+                            <div class="funcion-detalles">
+                                <span><i class="fas fa-coins"></i> Recaudado: ${money(tot.total_recaudado)}</span>
+                                <span><i class="fas fa-hourglass-half"></i> Pendiente: ${money(tot.total_pendiente)}</span>
+                            </div>
+                        </div>
+                        <div class="funcion-stats">
+                            <div class="stat-box">
+                                <div class="stat-number">${Number(tot.total_tickets || 0)}</div>
+                                <div class="stat-label">Tickets</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <div style="font-family: 'Playfair Display', serif; color: var(--dorado); font-size: 1.3rem; margin-bottom: 10px;">Ventas por vendedor</div>
+                    <div class="funciones-list">
+                        ${vendedores.length === 0 ? `
+                            <div style="color: rgba(248, 248, 248, 0.6);">Sin ventas por vendedor.</div>
+                        ` : vendedores.map(v => `
+                            <div class="funcion-item">
+                                <div class="funcion-info">
+                                    <div class="funcion-fecha">${v.vendedor_nombre || v.vendedor_phone || 'Vendedor'}</div>
+                                    <div class="funcion-detalles">
+                                        <span><i class="fas fa-hourglass-half"></i> Pendiente: ${money(v.total_pendiente)}</span>
+                                        <span><i class="fas fa-coins"></i> Recaudado: ${money(v.total_recaudado)}</span>
+                                    </div>
+                                </div>
+                                <div class="funcion-stats">
+                                    <div class="stat-box">
+                                        <div class="stat-number">${Number(v.total_vendidos || 0)}</div>
+                                        <div class="stat-label">Vendidos</div>
+                                    </div>
+                                    <div class="stat-box">
+                                        <div class="stat-number">${Number(v.total_pagados || 0)}</div>
+                                        <div class="stat-label">Pagados</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                ${accionesHtml}
+            `;
+
+            const btnCerrar = document.getElementById('btnCerrarGrupo');
+            if (btnCerrar) {
+                btnCerrar.onclick = async () => {
+                    const ok = confirm('¿Cerrar grupo definitivamente? Esta acción es irreversible y bloqueará ventas/asignaciones/cobros/transferencias.');
+                    if (!ok) return;
+
+                    try {
+                        await Baco.API.post(`/grupos/${grupoId}/cerrar`, {});
+                        Baco.UI.showSuccess('Grupo cerrado definitivamente');
+                        await loadGrupo();
+                    } catch (e) {
+                        // Baco.API ya muestra error
+                    }
+                };
+            }
+
+            const btnPdf = document.getElementById('btnPDFLiquidacion');
+            if (btnPdf) {
+                btnPdf.onclick = () => {
+                    const token = Baco.Auth.getToken();
+                    const url = `/api/grupos/${grupoId}/liquidacion/pdf?token=${encodeURIComponent(token || '')}`;
+                    window.open(url, '_blank');
+                };
+            }
+        }
+
+        function showError(message) {
+            document.getElementById('grupoContainer').innerHTML = `
+                <div class="empty-state" style="padding: 80px 20px; text-align: center;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 5rem; color: rgba(212, 175, 55, 0.3); margin-bottom: 20px;"></i>
+                    <h3 style="font-family: 'Playfair Display', serif; color: var(--dorado); font-size: 1.8rem; margin-bottom: 10px;">Error</h3>
+                    <p style="color: rgba(248, 248, 248, 0.6);">${message}</p>
+                </div>
+            `;
+        }
+
+        // Cargar al inicio
+        loadGrupo();
+    </script>
+</body>
+</html>

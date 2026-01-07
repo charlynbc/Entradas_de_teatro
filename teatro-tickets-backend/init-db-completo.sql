@@ -69,26 +69,28 @@ CREATE TABLE obras (
 CREATE INDEX idx_obras_grupo ON obras(grupo_id);
 CREATE INDEX idx_obras_estado ON obras(estado);
 
--- 5. FUNCIONES/SHOWS (después de obras)
-CREATE TABLE shows (
+-- 5. FUNCIONES (presentaciones de obras)
+CREATE TABLE funciones (
   id           SERIAL PRIMARY KEY,
-  obra_id      INT REFERENCES obras(id) ON DELETE SET NULL,
-  obra         VARCHAR(200) NOT NULL,
+  obra_id      INT NOT NULL REFERENCES obras(id) ON DELETE CASCADE,
   fecha        TIMESTAMP NOT NULL,
   lugar        VARCHAR(200),
   capacidad    INT NOT NULL,
-  base_price   NUMERIC(10,2) NOT NULL,
+  precio_base  NUMERIC(10,2) NOT NULL,
   foto_url     TEXT,
-  created_at   TIMESTAMP NOT NULL DEFAULT NOW()
+  estado       VARCHAR(20) NOT NULL CHECK (estado IN ('PROGRAMADA', 'CONFIRMADA', 'CANCELADA', 'REALIZADA')) DEFAULT 'PROGRAMADA',
+  created_at   TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at   TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_shows_fecha ON shows(fecha);
-CREATE INDEX idx_shows_obra_id ON shows(obra_id);
+CREATE INDEX idx_funciones_fecha ON funciones(fecha);
+CREATE INDEX idx_funciones_obra_id ON funciones(obra_id);
+CREATE INDEX idx_funciones_estado ON funciones(estado);
 
--- 6. TICKETS
+-- 6. TICKETS (entradas para funciones)
 CREATE TABLE tickets (
   code                    VARCHAR(50) PRIMARY KEY,
-  show_id                 INT NOT NULL REFERENCES shows(id) ON DELETE CASCADE,
+  funcion_id              INT NOT NULL REFERENCES funciones(id) ON DELETE CASCADE,
   estado                  VARCHAR(20) NOT NULL CHECK (estado IN ('DISPONIBLE', 'RESERVADO', 'PAGADO', 'USADO', 'ANULADO')) DEFAULT 'DISPONIBLE',
   precio                  NUMERIC(10,2) NOT NULL,
   comprador_phone         VARCHAR(20),
@@ -103,7 +105,7 @@ CREATE TABLE tickets (
   updated_at              TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_tickets_show ON tickets(show_id);
+CREATE INDEX idx_tickets_funcion ON tickets(funcion_id);
 CREATE INDEX idx_tickets_estado ON tickets(estado);
 CREATE INDEX idx_tickets_comprador_phone ON tickets(comprador_phone);
 CREATE INDEX idx_tickets_vendedor_phone ON tickets(vendedor_phone);
@@ -185,3 +187,50 @@ SELECT
   e.created_at
 FROM ensayos_generales e
 JOIN obras o ON o.id = e.obra_id;
+
+-- Vista: Resumen por vendedor y función (simplificada)
+CREATE OR REPLACE VIEW v_resumen_vendedor_funcion AS
+SELECT
+  t.funcion_id,
+  f.fecha,
+  t.vendedor_phone,
+  u.name AS vendedor_nombre,
+  o.nombre AS obra_nombre,
+  COUNT(*) FILTER (WHERE t.estado = 'DISPONIBLE') AS disponibles,
+  COUNT(*) FILTER (WHERE t.estado = 'RESERVADO') AS reservadas,
+  COUNT(*) FILTER (WHERE t.estado = 'PAGADO') AS pagadas,
+  COUNT(*) FILTER (WHERE t.estado = 'USADO') AS usadas,
+  SUM(CASE WHEN t.estado IN ('PAGADO', 'USADO') 
+           THEN COALESCE(t.precio, f.precio_base) 
+           ELSE 0 END) AS monto_total
+FROM tickets t
+JOIN funciones f ON f.id = t.funcion_id
+JOIN obras o ON o.id = f.obra_id
+LEFT JOIN users u ON u.phone = t.vendedor_phone
+WHERE t.vendedor_phone IS NOT NULL
+GROUP BY t.funcion_id, f.fecha, t.vendedor_phone, u.name, o.nombre;
+
+-- Vista: Resumen global por función (para admin)
+CREATE OR REPLACE VIEW v_resumen_funcion_admin AS
+SELECT
+  f.id,
+  f.fecha,
+  f.lugar,
+  f.capacidad,
+  f.precio_base,
+  f.estado AS estado_funcion,
+  o.nombre AS obra_nombre,
+  g.nombre AS grupo_nombre,
+  COUNT(t.code) AS total_generados,
+  COUNT(*) FILTER (WHERE t.estado = 'DISPONIBLE') AS disponibles,
+  COUNT(*) FILTER (WHERE t.estado = 'RESERVADO') AS reservadas,
+  COUNT(*) FILTER (WHERE t.estado = 'PAGADO') AS pagadas,
+  COUNT(*) FILTER (WHERE t.estado = 'USADO') AS usadas,
+  SUM(CASE WHEN t.estado IN ('PAGADO', 'USADO')
+           THEN COALESCE(t.precio, f.precio_base)
+           ELSE 0 END) AS recaudacion_total
+FROM funciones f
+JOIN obras o ON o.id = f.obra_id
+JOIN grupos g ON g.id = o.grupo_id
+LEFT JOIN tickets t ON t.funcion_id = f.id
+GROUP BY f.id, f.fecha, f.lugar, f.capacidad, f.precio_base, f.estado, o.nombre, g.nombre;

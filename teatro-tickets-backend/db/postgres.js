@@ -55,14 +55,14 @@ export async function initializeDatabase() {
     // Solo verificar que la base de datos esté disponible
     // El schema debe aplicarse manualmente usando schema.sql
     const result = await query(`
-      SELECT table_name 
-      FROM information_schema.tables 
-      WHERE table_schema = 'public' 
-      AND table_name IN ('users', 'shows', 'tickets')
+      SELECT table_name
+      FROM information_schema.tables
+      WHERE table_schema = 'public'
+      AND table_name IN ('users', 'grupos', 'obras', 'funciones', 'tickets')
     `);
     
     if (result.rows.length === 0) {
-      console.log('⚠️  Advertencia: No se encontraron tablas. Por favor aplique schema.sql manualmente.');
+      console.log('⚠️  No se encontraron tablas. Ejecuta: npm run db:migrate-phone-fk');
       return;
     }
     

@@ -1,7 +1,8 @@
 import fetch from 'node-fetch';
 import chalk from 'chalk';
 
-const API_URL = process.env.API_URL || 'https://baco-teatro-1jxj.onrender.com';
+// Por defecto, correr contra local. Para producción, setear API_URL explícitamente.
+const API_URL = process.env.API_URL || 'http://localhost:3000';
 const RENDER_URL = 'https://baco-teatro-1jxj.onrender.com';
 
 let testResults = {
@@ -30,12 +31,16 @@ const log = {
 
 async function makeRequest(method, endpoint, body = null, token = null, useRender = false) {
   const url = (useRender ? RENDER_URL : API_URL) + endpoint;
+  const timeoutMs = Number(process.env.REQUEST_TIMEOUT_MS || 5000);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
   const options = {
     method,
     headers: {
       'Content-Type': 'application/json',
       ...(token && { 'Authorization': `Bearer ${token}` })
-    }
+    },
+    signal: controller.signal
   };
 
   if (body) {
@@ -45,8 +50,13 @@ async function makeRequest(method, endpoint, body = null, token = null, useRende
   try {
     const response = await fetch(url, options);
     const data = await response.json().catch(() => ({}));
+    clearTimeout(timeout);
     return { status: response.status, data, ok: response.ok };
   } catch (error) {
+    clearTimeout(timeout);
+    if (error && (error.name === 'AbortError' || String(error.type || '') === 'aborted')) {
+      return { status: 0, data: { error: `timeout (${timeoutMs}ms)` }, ok: false };
+    }
     return { status: 0, data: { error: error.message }, ok: false };
   }
 }
@@ -80,16 +90,20 @@ async function testHealthCheck() {
     test('Health check tiene status ok', local.data.status === 'ok');
     test('Health check indica PostgreSQL', local.data.storage === 'postgresql');
     log.info(`  - Usuarios: ${local.data.totals?.users || 0}`);
-    log.info(`  - Shows: ${local.data.totals?.shows || 0}`);
+    log.info(`  - Funciones: ${local.data.totals?.funciones || local.data.totals?.shows || 0}`);
     log.info(`  - Tickets: ${local.data.totals?.tickets || 0}`);
   }
 
-  log.info('Probando Render...');
-  const render = await makeRequest('GET', '/health', null, null, true);
-  test('Health check Render responde', render.ok, `Status: ${render.status}`);
-  
-  if (render.ok) {
-    test('Render conectado a PostgreSQL', render.data.database === 'connected');
+  if (process.env.RUN_RENDER_TESTS === '1') {
+    log.info('Probando Render...');
+    const render = await makeRequest('GET', '/health', null, null, true);
+    test('Health check Render responde', render.ok, `Status: ${render.status}`);
+    
+    if (render.ok) {
+      test('Render conectado a PostgreSQL', render.data.database === 'connected');
+    }
+  } else {
+    log.warn('Saltando health-check de Render (RUN_RENDER_TESTS=1 para habilitar)');
   }
 }
 
@@ -500,6 +514,11 @@ async function testPermissions() {
 }
 
 async function testRender() {
+  if (process.env.RUN_RENDER_TESTS !== '1') {
+    log.warn('Saltando tests de Render (setear RUN_RENDER_TESTS=1 para habilitar)');
+    return;
+  }
+
   log.section('TEST 9: Verificación de Render');
 
   log.info('Probando endpoints en producción...');
@@ -564,9 +583,9 @@ async function testDatabase() {
   const health = await makeRequest('GET', '/health', null, authToken);
   test('Base de datos accesible', health.ok);
 
-  // Verificar que puede leer todas las tablas principales
-  const shows = await makeRequest('GET', '/api/shows', null, authToken);
-  test('Tabla shows accesible', shows.ok);
+  // Verificar que puede leer entidades principales (shows es alias de funciones)
+  const funciones = await makeRequest('GET', '/api/shows', null, authToken);
+  test('Funciones accesibles (alias /api/shows)', funciones.ok);
 
   const usuarios = await makeRequest('GET', '/api/usuarios/miembros', null, authToken);
   test('Tabla users accesible', usuarios.ok);

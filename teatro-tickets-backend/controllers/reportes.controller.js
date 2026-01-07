@@ -1,9 +1,212 @@
-import { readData } from '../utils/dataStore.js';
-import { query } from '../db/postgres.js';  // Import query for PostgreSQL operations
+import { query } from '../db/postgres.js';
 
-const SOLD_STATES = new Set(['REPORTADA_VENDIDA', 'PAGADO', 'USADO']);
-const STOCK_STATES = new Set(['STOCK_VENDEDOR', 'RESERVADO']);
+export async function resumenPorVendedor(req, res) {
+  try {
+    const funcionId = String(req.params.id);
+    const result = await query(
+      `SELECT
+        t.funcion_id AS show_id,
+        t.vendedor_phone,
+        COALESCE(u.name, t.vendedor_phone) AS vendedor_nombre,
+        COUNT(*) FILTER (WHERE t.estado = 'STOCK_ACTOR')::int AS asignados,
+        COUNT(*) FILTER (WHERE t.estado IN ('REPORTADA_VENDIDA', 'PAGADO', 'USADO'))::int AS vendidos,
+        COALESCE(SUM(CASE WHEN t.estado IN ('REPORTADA_VENDIDA', 'PAGADO', 'USADO')
+          THEN COALESCE(t.precio, f.precio_base) ELSE 0 END), 0)::numeric AS monto_reportado,
+        COALESCE(SUM(CASE WHEN t.aprobada_por_admin
+          THEN COALESCE(t.precio, f.precio_base) ELSE 0 END), 0)::numeric AS monto_pagado,
+        COALESCE(SUM(CASE WHEN t.reportada_por_vendedor AND NOT t.aprobada_por_admin
+          THEN COALESCE(t.precio, f.precio_base) ELSE 0 END), 0)::numeric AS monto_debe
+      FROM tickets t
+      JOIN funciones f ON f.id = t.funcion_id
+      LEFT JOIN users u ON u.phone = t.vendedor_phone
+      WHERE t.funcion_id = $1
+        AND t.vendedor_phone IS NOT NULL
+      GROUP BY t.funcion_id, t.vendedor_phone, u.name
+      ORDER BY vendedor_nombre ASC`,
+      [funcionId]
+    );
 
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error en resumen por vendedor:', error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
+export async function resumenAdmin(req, res) {
+  try {
+    const funcionId = String(req.params.id);
+    const result = await query(
+      `SELECT
+        f.id AS show_id,
+        f.fecha,
+        f.lugar,
+        f.capacidad,
+        f.precio_base,
+        f.estado AS estado_funcion,
+        o.nombre AS obra_nombre,
+        g.nombre AS grupo_nombre,
+        COUNT(t.code)::int AS total_generados,
+        COUNT(*) FILTER (WHERE t.estado = 'DISPONIBLE')::int AS disponibles,
+        COUNT(*) FILTER (WHERE t.estado = 'STOCK_ACTOR')::int AS en_stock_actores,
+        COUNT(*) FILTER (WHERE t.estado = 'RESERVADO')::int AS reservadas,
+        COUNT(*) FILTER (WHERE t.estado = 'REPORTADA_VENDIDA')::int AS reportadas_sin_aprobar,
+        COUNT(*) FILTER (WHERE t.estado IN ('PAGADO', 'USADO'))::int AS pagadas,
+        COUNT(*) FILTER (WHERE t.estado = 'USADO')::int AS usadas,
+        COALESCE(SUM(CASE WHEN t.estado IN ('REPORTADA_VENDIDA', 'PAGADO', 'USADO')
+          THEN COALESCE(t.precio, f.precio_base) ELSE 0 END), 0)::numeric AS recaudacion_teorica,
+        COALESCE(SUM(CASE WHEN t.aprobada_por_admin
+          THEN COALESCE(t.precio, f.precio_base) ELSE 0 END), 0)::numeric AS recaudacion_real,
+        COALESCE(SUM(CASE WHEN t.reportada_por_vendedor AND NOT t.aprobada_por_admin
+          THEN COALESCE(t.precio, f.precio_base) ELSE 0 END), 0)::numeric AS pendiente_aprobar
+      FROM funciones f
+      JOIN obras o ON o.id = f.obra_id
+      JOIN grupos g ON g.id = o.grupo_id
+      LEFT JOIN tickets t ON t.funcion_id = f.id
+      WHERE f.id = $1
+      GROUP BY f.id, o.nombre, g.nombre`,
+      [funcionId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Función no encontrada' });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error en resumen admin:', error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
+export async function deudores(req, res) {
+  try {
+    const funcionId = String(req.params.id);
+    const result = await query(
+      `SELECT
+        t.funcion_id AS show_id,
+        t.vendedor_phone,
+        COALESCE(u.name, t.vendedor_phone) AS vendedor_nombre,
+        COALESCE(SUM(CASE WHEN t.reportada_por_vendedor AND NOT t.aprobada_por_admin
+          THEN COALESCE(t.precio, f.precio_base) ELSE 0 END), 0)::numeric AS monto_debe
+      FROM tickets t
+      JOIN funciones f ON f.id = t.funcion_id
+      LEFT JOIN users u ON u.phone = t.vendedor_phone
+      WHERE t.funcion_id = $1
+        AND t.vendedor_phone IS NOT NULL
+      GROUP BY t.funcion_id, t.vendedor_phone, u.name
+      HAVING COALESCE(SUM(CASE WHEN t.reportada_por_vendedor AND NOT t.aprobada_por_admin
+        THEN COALESCE(t.precio, f.precio_base) ELSE 0 END), 0) > 0
+      ORDER BY monto_debe DESC`,
+      [funcionId]
+    );
+
+    const total = result.rows.reduce((sum, r) => sum + Number(r.monto_debe || 0), 0);
+    res.json({ show_id: Number(funcionId), total_deuda: total, vendedores_deudores: result.rows });
+  } catch (error) {
+    console.error('Error obteniendo deudores:', error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
+export async function resumenFuncion(req, res) {
+  return resumenAdmin(req, res);
+}
+
+export async function dashboardSuper(req, res) {
+  try {
+    const obrasResult = await query('SELECT COUNT(*)::int as total FROM obras');
+    const funcionesResult = await query('SELECT COUNT(*)::int as total FROM funciones');
+    const ticketsResult = await query('SELECT COUNT(*)::int as total FROM tickets');
+    const soldResult = await query(
+      `SELECT COUNT(*)::int as total
+       FROM tickets
+       WHERE estado IN ('REPORTADA_VENDIDA', 'PAGADO', 'USADO')`
+    );
+    const revenueResult = await query(
+      `SELECT COALESCE(SUM(COALESCE(t.precio, f.precio_base)), 0)::numeric as total
+       FROM tickets t
+       JOIN funciones f ON f.id = t.funcion_id
+       WHERE t.estado IN ('PAGADO', 'USADO')`
+    );
+
+    res.json({
+      ok: true,
+      totals: {
+        productions: obrasResult.rows[0]?.total || 0,
+        functions: funcionesResult.rows[0]?.total || 0,
+        tickets: ticketsResult.rows[0]?.total || 0,
+        sold: soldResult.rows[0]?.total || 0,
+        revenue: Number(revenueResult.rows[0]?.total || 0)
+      }
+    });
+  } catch (error) {
+    console.error('Error en dashboard super:', error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
+export async function dashboardDirector(req, res) {
+  try {
+    const directorCedula = String(req.user.cedula || req.user.phone || '').trim();
+    if (!directorCedula) {
+      return res.status(400).json({ error: 'Token inválido' });
+    }
+
+    const funciones = await query(
+      `SELECT
+        f.id,
+        f.fecha,
+        f.lugar,
+        o.nombre AS obra,
+        g.nombre AS grupo
+      FROM funciones f
+      JOIN obras o ON o.id = f.obra_id
+      JOIN grupos g ON g.id = o.grupo_id
+      WHERE g.director_cedula = $1
+      ORDER BY f.fecha ASC`,
+      [directorCedula]
+    );
+
+    const actores = await query(
+      `SELECT DISTINCT u.cedula AS id, u.cedula, u.name AS nombre, u.phone, u.role
+       FROM grupo_miembros gm
+       JOIN grupos g ON g.id = gm.grupo_id
+       JOIN users u ON u.cedula = gm.miembro_cedula
+       WHERE g.director_cedula = $1
+         AND gm.activo = TRUE
+         AND u.role = 'ACTOR'
+       ORDER BY u.name ASC`,
+      [directorCedula]
+    );
+
+    res.json({ ok: true, functions: funciones.rows, actors: actores.rows });
+  } catch (error) {
+    console.error('Error en dashboard director:', error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
+export async function historialVendedor(req, res) {
+  try {
+    const actorPhone = req.user.phone || req.user.cedula;
+    const stats = await query(
+      `SELECT
+        COUNT(*) FILTER (WHERE estado = 'REPORTADA_VENDIDA')::int AS vendidas,
+        COUNT(*) FILTER (WHERE estado IN ('PAGADO', 'USADO'))::int AS pagadas,
+        COALESCE(SUM(CASE WHEN estado IN ('PAGADO', 'USADO') THEN COALESCE(precio, 0) ELSE 0 END), 0)::numeric AS entregado
+      FROM tickets
+      WHERE vendedor_phone = $1`,
+      [String(actorPhone)]
+    );
+
+    res.json({ ok: true, ...stats.rows[0] });
+  } catch (error) {
+    console.error('Error historialVendedor:', error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
+/* LEGACY (deshabilitado)
 function buildVendorSummary(tickets, users) {
   const summary = new Map();
 
@@ -28,33 +231,36 @@ function buildVendorSummary(tickets, users) {
     }
     if (SOLD_STATES.has(ticket.estado)) {
       entry.vendidos += 1;
-      entry.monto_reportado += Number(ticket.precio) || 0;
-      if (ticket.estado === 'PAGADO' || ticket.estado === 'USADO') {
-        entry.monto_pagado += Number(ticket.precio) || 0;
+      const funcionId = String(req.params.id);
+      const row = await query(
+        `SELECT
+          id AS show_id,
+          fecha,
+          lugar,
+          capacidad,
+          precio_base,
+          estado_funcion,
+          obra_nombre,
+          grupo_nombre,
+          total_generados,
+          disponibles,
+          reservadas,
+          reportadas_sin_aprobar,
+          pagadas,
+          usadas,
+          recaudacion_teorica,
+          recaudacion_real,
+          pendiente_aprobar
+        FROM v_resumen_funcion_admin
+        WHERE id = $1`,
+        [funcionId]
+      );
+
+      if (row.rows.length === 0) {
+        return res.status(404).json({ error: 'Función no encontrada' });
       }
-    }
-  });
 
-  return Array.from(summary.values()).map(entry => ({
-    ...entry,
-    monto_debe: Math.max(entry.monto_reportado - entry.monto_pagado, 0)
-  }));
-}
-
-export async function resumenPorVendedor(req, res) {
-  try {
-    const showId = parseInt(req.params.id);
-    const data = await readData();
-    const show = data.shows.find(s => s.id === showId);
-    if (!show) {
-      return res.status(404).json({ error: 'Función no encontrada' });
-    }
-    const ticketsShow = data.tickets.filter(ticket => ticket.show_id === showId);
-    const resumen = buildVendorSummary(ticketsShow, data.users || []);
-    res.json(resumen);
-  } catch (error) {
-    console.error('Error en resumen por vendedor:', error);
-    res.status(500).json({ error: error.message });
+      res.json(row.rows[0]);
   }
 }
 
@@ -63,29 +269,22 @@ export async function resumenAdmin(req, res) {
     const showId = parseInt(req.params.id);
     const data = await readData();
     const show = data.shows.find(s => s.id === showId);
-    if (!show) {
-      return res.status(404).json({ error: 'Función no encontrada' });
-    }
-
-    const summary = data.tickets
-      .filter(ticket => ticket.show_id === showId)
-      .reduce(
-        (acc, ticket) => {
-          acc.total += 1;
-          acc.estados[ticket.estado] = (acc.estados[ticket.estado] || 0) + 1;
-          if (ticket.estado === 'PAGADO' || ticket.estado === 'USADO') {
-            acc.monto_total += Number(ticket.precio) || 0;
-          }
-          return acc;
-        },
-        { total: 0, estados: {}, monto_total: 0 }
+      const funcionId = String(req.params.id);
+      const result = await query(
+        `SELECT
+          funcion_id AS show_id,
+          vendedor_phone,
+          vendedor_nombre,
+          monto_debe
+        FROM v_resumen_vendedor_funcion
+        WHERE funcion_id = $1
+          AND monto_debe > 0
+        ORDER BY monto_debe DESC`,
+        [funcionId]
       );
 
-    res.json({
-      show,
-      total_tickets: summary.total,
-      estados: summary.estados,
-      monto_total: summary.monto_total
+      const total = result.rows.reduce((sum, r) => sum + Number(r.monto_debe || 0), 0);
+      res.json({ show_id: Number(funcionId), total_deuda: total, vendedores_deudores: result.rows });
     });
   } catch (error) {
     console.error('Error en resumen admin:', error);
@@ -94,53 +293,29 @@ export async function resumenAdmin(req, res) {
 }
 
 export async function deudores(req, res) {
-  try {
-    const showId = parseInt(req.params.id);
-    const data = await readData();
-    const show = data.shows.find(s => s.id === showId);
-    if (!show) {
-      return res.status(404).json({ error: 'Función no encontrada' });
-    }
-
-    const resumen = buildVendorSummary(
-      data.tickets.filter(ticket => ticket.show_id === showId),
-      data.users || []
-    );
-
-    const vendedoresDeudores = resumen
-      .filter(entry => entry.monto_debe > 0)
-      .sort((a, b) => b.monto_debe - a.monto_debe);
-
-    const totalDeuda = vendedoresDeudores.reduce((sum, entry) => sum + entry.monto_debe, 0);
-
-    res.json({
-      show_id: showId,
-      total_deuda: totalDeuda,
-      vendedores_deudores: vendedoresDeudores
-    });
-  } catch (error) {
-    console.error('Error obteniendo deudores:', error);
-    res.status(500).json({ error: error.message });
-  }
-}
-
-export async function resumenFuncion(req, res) {
-  try {
-    const showId = parseInt(req.params.id);
-    const data = await readData();
-    const show = data.shows.find(s => s.id === showId);
-    if (!show) {
-      return res.status(404).json({ error: 'Función no encontrada' });
-    }
-
-    const resumen = {
-      show,
-      disponibles: 0,
-      en_stock_vendedor: 0,
-      reservadas: 0,
-      reportadas_vendidas: 0,
-      pagadas: 0,
-      usadas: 0,
+      const funcionId = String(req.params.id);
+      const row = await query(
+        `SELECT
+          id AS show_id,
+          fecha,
+          lugar,
+          obra_nombre,
+          grupo_nombre,
+          total_generados,
+          disponibles,
+          reservadas,
+          reportadas_sin_aprobar,
+          pagadas,
+          usadas,
+          recaudacion_real AS monto_total
+        FROM v_resumen_funcion_admin
+        WHERE id = $1`,
+        [funcionId]
+      );
+      if (row.rows.length === 0) {
+        return res.status(404).json({ error: 'Función no encontrada' });
+      }
+      res.json(row.rows[0]);
       monto_total: 0
     };
 
@@ -150,64 +325,31 @@ export async function resumenFuncion(req, res) {
         const precio = Number(ticket.precio) || 0;
         switch (ticket.estado) {
           case 'DISPONIBLE':
-            resumen.disponibles += 1;
-            break;
-          case 'STOCK_VENDEDOR':
-            resumen.en_stock_vendedor += 1;
-            break;
-          case 'RESERVADO':
-            resumen.reservadas += 1;
-            break;
-          case 'REPORTADA_VENDIDA':
-            resumen.reportadas_vendidas += 1;
-            break;
-          case 'PAGADO':
-            resumen.pagadas += 1;
-            resumen.monto_total += precio;
-            break;
-          case 'USADO':
-            resumen.usadas += 1;
-            resumen.monto_total += precio;
-            break;
+      const obrasResult = await query('SELECT COUNT(*)::int as total FROM obras');
+      const funcionesResult = await query('SELECT COUNT(*)::int as total FROM funciones');
+      const ticketsResult = await query('SELECT COUNT(*)::int as total FROM tickets');
+      const soldResult = await query(
+        `SELECT COUNT(*)::int as total
+         FROM tickets
+         WHERE estado IN ('REPORTADA_VENDIDA', 'PAGADO', 'USADO')`
+      );
+      const revenueResult = await query(
+        `SELECT COALESCE(SUM(COALESCE(t.precio, f.precio_base)), 0)::numeric as total
+         FROM tickets t
+         JOIN funciones f ON f.id = t.funcion_id
+         WHERE t.estado IN ('PAGADO', 'USADO')`
+      );
+
+      res.json({
+        ok: true,
+        totals: {
+          productions: obrasResult.rows[0]?.total || 0,
+          functions: funcionesResult.rows[0]?.total || 0,
+          tickets: ticketsResult.rows[0]?.total || 0,
+          sold: soldResult.rows[0]?.total || 0,
+          revenue: Number(revenueResult.rows[0]?.total || 0)
         }
       });
-
-    res.json(resumen);
-  } catch (error) {
-    console.error('Error en resumen de función:', error);
-    res.status(500).json({ error: error.message });
-  }
-}
-
-// Dashboard global para usuario SUPER
-export async function dashboardSuper(req, res) {
-  try {
-    // Contar shows
-    const showsResult = await query('SELECT COUNT(*) as total FROM shows');
-    const functions = parseInt(showsResult.rows[0].total);
-    
-    // Contar directores únicos (productions = directores con shows)
-    const directoresResult = await query('SELECT COUNT(DISTINCT creado_por) as total FROM shows');
-    const productions = parseInt(directoresResult.rows[0].total);
-    
-    // Contar tickets totales
-    const ticketsResult = await query('SELECT COUNT(*) as total FROM tickets');
-    const totalTickets = parseInt(ticketsResult.rows[0].total);
-    
-    // Contar tickets vendidos (REPORTADA_VENDIDA, PAGADO, USADO)
-    const vendidosResult = await query(
-      `SELECT COUNT(*) as total FROM tickets 
-       WHERE estado IN ('REPORTADA_VENDIDA', 'PAGADO', 'USADO')`
-    );
-    const ticketsVendidos = parseInt(vendidosResult.rows[0].total);
-    
-    // Calcular ingresos totales (solo PAGADO y USADO)
-    const ingresosResult = await query(
-      `SELECT COALESCE(SUM(precio_venta), 0) as total FROM tickets 
-       WHERE estado IN ('PAGADO', 'USADO')`
-    );
-    const ingresosTotal = parseFloat(ingresosResult.rows[0].total);
-    
     // Contar vendedores activos (solo vendedores que son usuarios)
     const vendedoresResult = await query(
       `SELECT COUNT(*) as total FROM users WHERE rol = 'vendedor'`
@@ -217,20 +359,66 @@ export async function dashboardSuper(req, res) {
     // Información de ventas (simplificado - sin vendor tracking por ahora)
     const ventasResult = await query(
       `SELECT 
-        COUNT(*) as total_ventas
-       FROM tickets 
-       WHERE estado IN ('REPORTADA_VENDIDA', 'PAGADO', 'USADO')`
-    );
-    
-    res.json({
-      ok: true,
-      totals: {
-        productions: productions,
+      const directorCedula = String(req.user.cedula || req.user.phone || '').trim();
+      if (!directorCedula) {
+        return res.status(400).json({ error: 'Token inválido' });
+      }
+
+      // Funciones del director (por grupos/obras)
+      const funciones = await query(
+        `SELECT
+          f.id,
+          f.fecha,
+          f.lugar,
+          o.nombre AS obra,
+          g.nombre AS grupo
+        FROM funciones f
+        JOIN obras o ON o.id = f.obra_id
+        JOIN grupos g ON g.id = o.grupo_id
+        WHERE g.director_cedula = $1
+        ORDER BY f.fecha ASC`,
+        [directorCedula]
+      );
+
+      // Actores del/los grupos del director
+      const actores = await query(
+        `SELECT DISTINCT u.cedula AS id, u.cedula, u.name AS nombre, u.phone, u.role
+         FROM grupo_miembros gm
+         JOIN grupos g ON g.id = gm.grupo_id
+         JOIN users u ON u.cedula = gm.miembro_cedula
+         WHERE g.director_cedula = $1
+           AND gm.activo = TRUE
+           AND u.role = 'ACTOR'
+         ORDER BY u.name ASC`,
+        [directorCedula]
+      );
+
+      res.json({ ok: true, functions: funciones.rows, actors: actores.rows });
         functions: functions,
         tickets: totalTickets,
         sold: ticketsVendidos,
         revenue: ingresosTotal
       },
+
+  export async function historialVendedor(req, res) {
+    try {
+      const actorPhone = req.user.phone || req.user.cedula;
+      const stats = await query(
+        `SELECT
+          COUNT(*) FILTER (WHERE estado = 'REPORTADA_VENDIDA')::int AS vendidas,
+          COUNT(*) FILTER (WHERE estado IN ('PAGADO', 'USADO'))::int AS pagadas,
+          COALESCE(SUM(CASE WHEN estado IN ('PAGADO', 'USADO') THEN COALESCE(precio, 0) ELSE 0 END), 0)::numeric AS entregado
+        FROM tickets
+        WHERE vendedor_phone = $1`,
+        [String(actorPhone)]
+      );
+
+      res.json({ ok: true, ...stats.rows[0] });
+    } catch (error) {
+      console.error('Error historialVendedor:', error);
+      res.status(500).json({ error: error.message });
+    }
+  }
       vendedores: {
         activos: vendedoresActivos,
         con_ventas: 0  // Simplificado - tickets no tienen vendor tracking
@@ -280,3 +468,5 @@ export async function dashboardDirector(req, res) {
     res.status(500).json({ error: error.message });
   }
 }
+
+*/

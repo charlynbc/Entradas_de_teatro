@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Grupos - BACÓ Teatro</title>
+    <link rel="stylesheet" href="../../styles/main.css">
+    <style>
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .grupos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 24px;
+            margin-top: 24px;
+        }
+
+        .grupo-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .grupo-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        }
+
+        .grupo-foto {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .grupo-body {
+            padding: 20px;
+        }
+
+        .grupo-nombre {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .grupo-obra {
+            font-size: 16px;
+            color: #7f8c8d;
+            margin-bottom: 12px;
+        }
+
+        .grupo-info {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .grupo-info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #495057;
+        }
+
+        .grupo-stats {
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            border-top: 1px solid #e9ecef;
+            border-bottom: 1px solid #e9ecef;
+            margin-bottom: 16px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #6c757d;
+            text-transform: uppercase;
+        }
+
+        .grupo-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 13px;
+            flex: 1;
+        }
+
+        .estado-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .estado-activo {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .estado-finalizado {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .estado-cancelado {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            margin-bottom: 24px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .empty-state-text {
+            color: #6c757d;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>🎭 Gestión de Grupos</h1>
+                <p style="color: #6c757d;">Cada grupo representa una obra teatral</p>
+            </div>
+            <div style="display: flex; gap: 12px;">
+                <a href="../../admin-dashboard.html" class="btn btn-secondary">← Volver</a>
+                <button class="btn btn-primary" onclick="mostrarModalCrear()">
+                    ➕ Crear Grupo
+                </button>
+            </div>
+        </div>
+
+        <div id="loading" class="loading">
+            <p>⏳ Cargando grupos...</p>
+        </div>
+
+        <div id="grupos-container" class="grupos-grid" style="display: none;"></div>
+
+        <div id="empty-state" class="empty-state" style="display: none;">
+            <div class="empty-state-icon">📂</div>
+            <p class="empty-state-text">No hay grupos creados aún</p>
+            <button class="btn btn-primary" onclick="mostrarModalCrear()" style="margin-top: 20px;">
+                Crear primer grupo
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal Crear/Editar Grupo -->
+    <div id="modal-grupo" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modal-title">Crear Grupo</h2>
+            </div>
+            <form id="form-grupo" onsubmit="guardarGrupo(event)">
+                <input type="hidden" id="grupo-id">
+                
+                <div class="form-group">
+                    <label class="form-label">Nombre del Grupo *</label>
+                    <input type="text" class="form-control" id="grupo-nombre" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Obra *</label>
+                    <input type="text" class="form-control" id="grupo-obra" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Descripción</label>
+                    <textarea class="form-control" id="grupo-descripcion" rows="3"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Fecha Inicio *</label>
+                    <input type="date" class="form-control" id="grupo-fecha-inicio" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Fecha Fin *</label>
+                    <input type="date" class="form-control" id="grupo-fecha-fin" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Horarios</label>
+                    <input type="text" class="form-control" id="grupo-horarios" 
+                           placeholder="Ej: Lunes y Miércoles 18:00-20:00">
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="cerrarModal()">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+        let token = localStorage.getItem('token');
+        let grupos = [];
+
+        async function cargarGrupos() {
+            try {
+                const response = await fetch(`${API_URL}/grupos`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) throw new Error('Error al cargar grupos');
+
+                const data = await response.json();
+                grupos = data.grupos || [];
+
+                document.getElementById('loading').style.display = 'none';
+
+                if (grupos.length === 0) {
+                    document.getElementById('empty-state').style.display = 'block';
+                } else {
+                    renderizarGrupos();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al cargar grupos');
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        function renderizarGrupos() {
+            const container = document.getElementById('grupos-container');
+            container.style.display = 'grid';
+
+            container.innerHTML = grupos.map(grupo => `
+                <div class="grupo-card">
+                    ${grupo.foto_url ? 
+                        `<img src="${grupo.foto_url}" class="grupo-foto" alt="${grupo.nombre}">` :
+                        '<div class="grupo-foto"></div>'
+                    }
+                    <div class="grupo-body">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                            <h3 class="grupo-nombre">${grupo.nombre}</h3>
+                            <span class="estado-badge estado-${grupo.estado.toLowerCase()}">
+                                ${grupo.estado}
+                            </span>
+                        </div>
+                        <p class="grupo-obra">🎬 ${grupo.obra}</p>
+                        
+                        <div class="grupo-info">
+                            <div class="grupo-info-item">
+                                📅 ${formatearFecha(grupo.fecha_inicio)} - ${formatearFecha(grupo.fecha_fin)}
+                            </div>
+                            ${grupo.horarios ? `
+                                <div class="grupo-info-item">
+                                    🕐 ${grupo.horarios}
+                                </div>
+                            ` : ''}
+                            <div class="grupo-info-item">
+                                👨‍🎨 Director: ${grupo.director_principal_nombre || 'Sin asignar'}
+                            </div>
+                        </div>
+
+                        <div class="grupo-stats">
+                            <div class="stat">
+                                <div class="stat-value">${grupo.total_directores || 0}</div>
+                                <div class="stat-label">Directores</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-value">${grupo.total_actores || 0}</div>
+                                <div class="stat-label">Actores</div>
+                            </div>
+                        </div>
+
+                        <div class="grupo-actions">
+                            <a href="grupo-detalle.html?id=${grupo.id}" class="btn btn-primary btn-sm">
+                                👁️ Ver
+                            </a>
+                            <button class="btn btn-secondary btn-sm" onclick="editarGrupo(${grupo.id})">
+                                ✏️ Editar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function formatearFecha(fecha) {
+            return new Date(fecha).toLocaleDateString('es-ES', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+
+        function mostrarModalCrear() {
+            document.getElementById('modal-title').textContent = 'Crear Grupo';
+            document.getElementById('form-grupo').reset();
+            document.getElementById('grupo-id').value = '';
+            document.getElementById('modal-grupo').classList.add('active');
+        }
+
+        function cerrarModal() {
+            document.getElementById('modal-grupo').classList.remove('active');
+        }
+
+        async function editarGrupo(id) {
+            const grupo = grupos.find(g => g.id === id);
+            if (!grupo) return;
+
+            document.getElementById('modal-title').textContent = 'Editar Grupo';
+            document.getElementById('grupo-id').value = grupo.id;
+            document.getElementById('grupo-nombre').value = grupo.nombre;
+            document.getElementById('grupo-obra').value = grupo.obra;
+            document.getElementById('grupo-descripcion').value = grupo.descripcion || '';
+            document.getElementById('grupo-fecha-inicio').value = grupo.fecha_inicio.split('T')[0];
+            document.getElementById('grupo-fecha-fin').value = grupo.fecha_fin.split('T')[0];
+            document.getElementById('grupo-horarios').value = grupo.horarios || '';
+            document.getElementById('modal-grupo').classList.add('active');
+        }
+
+        async function guardarGrupo(event) {
+            event.preventDefault();
+
+            const id = document.getElementById('grupo-id').value;
+            const data = {
+                nombre: document.getElementById('grupo-nombre').value,
+                obra: document.getElementById('grupo-obra').value,
+                descripcion: document.getElementById('grupo-descripcion').value,
+                fecha_inicio: document.getElementById('grupo-fecha-inicio').value,
+                fecha_fin: document.getElementById('grupo-fecha-fin').value,
+                horarios: document.getElementById('grupo-horarios').value
+            };
+
+            try {
+                const url = id ? `${API_URL}/grupos/${id}` : `${API_URL}/grupos`;
+                const method = id ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Error al guardar grupo');
+                }
+
+                alert(id ? 'Grupo actualizado exitosamente' : 'Grupo creado exitosamente');
+                cerrarModal();
+                await cargarGrupos();
+            } catch (error) {
+                console.error('Error:', error);
+                alert(error.message);
+            }
+        }
+
+        // Verificar autenticación
+        if (!token) {
+            window.location.href = '../auth/login.html';
+        }
+
+        // Cargar grupos al iniciar
+        cargarGrupos();
+    </script>
+</body>
+</html>

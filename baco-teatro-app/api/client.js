@@ -24,12 +24,20 @@ async function request(path, { method = 'GET', body, token } = {}) {
 
     return response.json();
   } catch (error) {
-    if (error.name === 'AbortError') {
+    // Timeout
+    if (error?.name === 'AbortError') {
       const timeoutError = new Error('Tiempo de espera agotado');
       timeoutError.offline = true;
       throw timeoutError;
     }
-    error.offline = true;
+
+    // Solo marcar offline en fallas típicas de red (fetch)
+    // En RN suele venir como TypeError: Network request failed
+    const message = String(error?.message || '');
+    const isNetworkFailure = error instanceof TypeError || message.includes('Network request failed');
+    if (isNetworkFailure) {
+      error.offline = true;
+    }
     throw error;
   } finally {
     clearTimeout(timeout);

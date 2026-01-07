@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle del Grupo - BACÓ Teatro</title>
+    <link rel="stylesheet" href="../../styles/main.css">
+    <style>
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+        }
+
+        .grupo-titulo {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .grupo-subtitulo {
+            font-size: 20px;
+            color: #7f8c8d;
+            margin-bottom: 16px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .info-item {
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: #6c757d;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .info-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .section {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th {
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .table td {
+            padding: 12px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-primary {
+            background: #e7f3ff;
+            color: #0066cc;
+        }
+
+        .empty-message {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: #6c757d;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="margin-bottom: 20px;">
+            <a href="grupos.html" class="btn btn-secondary">← Volver a Grupos</a>
+        </div>
+
+        <div id="loading" style="text-align: center; padding: 40px;">
+            ⏳ Cargando...
+        </div>
+
+        <div id="content" style="display: none;">
+            <!-- Header del Grupo -->
+            <div class="header">
+                <div class="grupo-titulo" id="grupo-nombre"></div>
+                <div class="grupo-subtitulo" id="grupo-obra"></div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Estado</div>
+                        <div class="info-value" id="grupo-estado"></div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Fecha Inicio</div>
+                        <div class="info-value" id="grupo-fecha-inicio"></div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Fecha Fin</div>
+                        <div class="info-value" id="grupo-fecha-fin"></div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Horarios</div>
+                        <div class="info-value" id="grupo-horarios"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab active" onclick="cambiarTab('directores')">
+                    👨‍🎨 Directores
+                </button>
+                <button class="tab" onclick="cambiarTab('actores')">
+                    🎭 Actores
+                </button>
+            </div>
+
+            <!-- Sección Directores -->
+            <div id="tab-directores" class="section">
+                <div class="section-header">
+                    <h2 class="section-title">Directores del Grupo</h2>
+                    <button class="btn btn-primary btn-sm" onclick="mostrarModalAgregar('director')">
+                        ➕ Agregar Director
+                    </button>
+                </div>
+                <div id="directores-container"></div>
+            </div>
+
+            <!-- Sección Actores -->
+            <div id="tab-actores" class="section" style="display: none;">
+                <div class="section-header">
+                    <h2 class="section-title">Actores del Grupo</h2>
+                    <button class="btn btn-primary btn-sm" onclick="mostrarModalAgregar('actor')">
+                        ➕ Agregar Actor
+                    </button>
+                </div>
+                <div id="actores-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Agregar Director/Actor -->
+    <div id="modal-agregar" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-title" id="modal-agregar-title">Agregar</h2>
+            <form id="form-agregar" onsubmit="agregarMiembro(event)">
+                <input type="hidden" id="tipo-miembro">
+                
+                <div class="form-group">
+                    <label class="form-label">Buscar por Cédula *</label>
+                    <input type="text" class="form-control" id="miembro-cedula" required>
+                </div>
+
+                <div id="campo-personaje" class="form-group" style="display: none;">
+                    <label class="form-label">Personaje</label>
+                    <input type="text" class="form-control" id="miembro-personaje">
+                </div>
+
+                <div id="campo-principal" class="form-group" style="display: none;">
+                    <label>
+                        <input type="checkbox" id="director-principal">
+                        Es director principal
+                    </label>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="cerrarModal()">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        Agregar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+        const token = localStorage.getItem('token');
+        const urlParams = new URLSearchParams(window.location.search);
+        const grupoId = urlParams.get('id');
+        let grupo = null;
+
+        async function cargarGrupo() {
+            try {
+                const response = await fetch(`${API_URL}/grupos/${grupoId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) throw new Error('Error al cargar grupo');
+
+                grupo = await response.json();
+                renderizarGrupo();
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al cargar el grupo');
+                window.location.href = 'grupos.html';
+            }
+        }
+
+        function renderizarGrupo() {
+            document.getElementById('grupo-nombre').textContent = grupo.nombre;
+            document.getElementById('grupo-obra').textContent = `🎬 ${grupo.obra}`;
+            document.getElementById('grupo-estado').textContent = grupo.estado;
+            document.getElementById('grupo-fecha-inicio').textContent = formatearFecha(grupo.fecha_inicio);
+            document.getElementById('grupo-fecha-fin').textContent = formatearFecha(grupo.fecha_fin);
+            document.getElementById('grupo-horarios').textContent = grupo.horarios || 'No especificados';
+
+            renderizarDirectores();
+            renderizarActores();
+
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+        }
+
+        function renderizarDirectores() {
+            const container = document.getElementById('directores-container');
+            
+            if (!grupo.directores || grupo.directores.length === 0) {
+                container.innerHTML = '<div class="empty-message">No hay directores asignados</div>';
+                return;
+            }
+
+            container.innerHTML = `
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Cédula</th>
+                            <th>Nombre</th>
+                            <th>Rol</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${grupo.directores.map(d => `
+                            <tr>
+                                <td>${d.director_cedula}</td>
+                                <td>${d.nombre}</td>
+                                <td>
+                                    ${d.es_principal ? 
+                                        '<span class="badge badge-primary">Principal</span>' : 
+                                        'Colaborador'}
+                                </td>
+                                <td>
+                                    <button class="btn btn-danger btn-sm" 
+                                            onclick="quitarDirector('${d.director_cedula}')">
+                                        🗑️ Quitar
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function renderizarActores() {
+            const container = document.getElementById('actores-container');
+            
+            if (!grupo.actores || grupo.actores.length === 0) {
+                container.innerHTML = '<div class="empty-message">No hay actores asignados</div>';
+                return;
+            }
+
+            container.innerHTML = `
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Cédula</th>
+                            <th>Nombre</th>
+                            <th>Personaje</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${grupo.actores.map(a => `
+                            <tr>
+                                <td>${a.actor_cedula}</td>
+                                <td>${a.nombre}</td>
+                                <td>${a.personaje || '-'}</td>
+                                <td>
+                                    <button class="btn btn-danger btn-sm" 
+                                            onclick="quitarActor('${a.actor_cedula}')">
+                                        🗑️ Quitar
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function cambiarTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            document.getElementById('tab-directores').style.display = tab === 'directores' ? 'block' : 'none';
+            document.getElementById('tab-actores').style.display = tab === 'actores' ? 'block' : 'none';
+        }
+
+        function mostrarModalAgregar(tipo) {
+            document.getElementById('tipo-miembro').value = tipo;
+            document.getElementById('modal-agregar-title').textContent = 
+                tipo === 'director' ? 'Agregar Director' : 'Agregar Actor';
+            
+            document.getElementById('campo-personaje').style.display = 
+                tipo === 'actor' ? 'block' : 'none';
+            document.getElementById('campo-principal').style.display = 
+                tipo === 'director' ? 'block' : 'none';
+            
+            document.getElementById('form-agregar').reset();
+            document.getElementById('modal-agregar').classList.add('active');
+        }
+
+        function cerrarModal() {
+            document.getElementById('modal-agregar').classList.remove('active');
+        }
+
+        async function agregarMiembro(event) {
+            event.preventDefault();
+
+            const tipo = document.getElementById('tipo-miembro').value;
+            const cedula = document.getElementById('miembro-cedula').value;
+
+            try {
+                let url, data;
+
+                if (tipo === 'director') {
+                    url = `${API_URL}/grupos/${grupoId}/directores`;
+                    data = {
+                        director_cedula: cedula,
+                        es_principal: document.getElementById('director-principal').checked
+                    };
+                } else {
+                    url = `${API_URL}/grupos/${grupoId}/actores`;
+                    data = {
+                        actor_cedula: cedula,
+                        personaje: document.getElementById('miembro-personaje').value
+                    };
+                }
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Error al agregar miembro');
+                }
+
+                alert(`${tipo === 'director' ? 'Director' : 'Actor'} agregado exitosamente`);
+                cerrarModal();
+                await cargarGrupo();
+            } catch (error) {
+                console.error('Error:', error);
+                alert(error.message);
+            }
+        }
+
+        async function quitarDirector(cedula) {
+            if (!confirm('¿Estás seguro de quitar este director del grupo?')) return;
+
+            try {
+                const response = await fetch(`${API_URL}/grupos/${grupoId}/directores/${cedula}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) throw new Error('Error al quitar director');
+
+                alert('Director quitado exitosamente');
+                await cargarGrupo();
+            } catch (error) {
+                console.error('Error:', error);
+                alert(error.message);
+            }
+        }
+
+        async function quitarActor(cedula) {
+            if (!confirm('¿Estás seguro de quitar este actor del grupo?')) return;
+
+            try {
+                const response = await fetch(`${API_URL}/grupos/${grupoId}/actores/${cedula}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) throw new Error('Error al quitar actor');
+
+                alert('Actor quitado exitosamente');
+                await cargarGrupo();
+            } catch (error) {
+                console.error('Error:', error);
+                alert(error.message);
+            }
+        }
+
+        function formatearFecha(fecha) {
+            return new Date(fecha).toLocaleDateString('es-ES', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+
+        // Verificar autenticación
+        if (!token || !grupoId) {
+            window.location.href = '../auth/login.html';
+        }
+
+        // Cargar grupo
+        cargarGrupo();
+    </script>
+</body>
+</html>

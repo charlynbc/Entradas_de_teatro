@@ -1,5 +1,5 @@
 import express from 'express';
-import { crearUsuario, listarUsuarios, listarVendedores, desactivarUsuario, listarMiembros, resetPassword, crearActor, crearDirector, getWeeklyBirthdays, getMe, updateMe, changePassword } from '../controllers/users.controller.js';
+import { crearUsuario, listarUsuarios, listarVendedores as listarActores, desactivarUsuario, listarMiembros, resetPassword, crearActor, crearDirector, getWeeklyBirthdays, getMe, updateMe, changePassword } from '../controllers/users.controller.js';
 import { authenticate, requireRole } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
@@ -21,7 +21,8 @@ router.post('/directores', authenticate, requireRole('SUPER'), crearDirector);
 // Solo admin y super pueden crear usuarios (genérico)
 router.post('/', authenticate, requireRole('ADMIN', 'SUPER'), crearUsuario);
 router.get('/', authenticate, requireRole('ADMIN', 'SUPER'), listarUsuarios);
-router.get('/vendedores', authenticate, listarVendedores);
+router.get('/actores', authenticate, listarActores);
+router.get('/vendedores', authenticate, listarActores); // Compatibilidad
 router.get('/miembros', authenticate, listarMiembros); // Nueva ruta para todos los miembros
 router.delete('/:id', authenticate, requireRole('ADMIN', 'SUPER'), desactivarUsuario);
 // Resetear contraseña (solo SUPER). Acepta id o cedula en :id. Body opcional { newPassword }

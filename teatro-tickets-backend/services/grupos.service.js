@@ -27,7 +27,7 @@ export async function createGrupo({
  * Listar grupos según el rol del usuario
  * - SUPER: ve todos los grupos
  * - ADMIN (Director): ve los grupos que creó
- * - VENDEDOR (Actor): ve los grupos donde es miembro
+ * - ACTOR: ve los grupos donde es miembro
  */
 export async function listGrupos(userCedula, userRole) {
   let sqlQuery;
@@ -49,7 +49,7 @@ export async function listGrupos(userCedula, userRole) {
     `;
     params = [userCedula];
   } else {
-    // VENDEDOR ve grupos donde es miembro
+    // ACTOR ve grupos donde es miembro
     sqlQuery = `
       SELECT DISTINCT g.* FROM v_grupos_completos g
       JOIN grupo_miembros gm ON gm.grupo_id = g.id
@@ -169,17 +169,17 @@ export async function addMiembroToGrupo(grupoId, miembroCedula, userCedula, user
     throw new Error('No se pueden agregar miembros a un grupo archivado');
   }
 
-  // Verificar que el miembro sea VENDEDOR o ADMIN
+  // Verificar que el miembro sea ACTOR o ADMIN
   const miembro = await query(`SELECT role FROM users WHERE cedula = $1 AND active = true`, [miembroCedula]);
   if (miembro.rows.length === 0) {
     throw new Error('Usuario no encontrado o inactivo');
   }
 
-  if (miembro.rows[0].role !== 'VENDEDOR' && miembro.rows[0].role !== 'ADMIN') {
-    throw new Error('Solo se pueden agregar actores/actrices (VENDEDOR) o directores (ADMIN) al grupo');
+  if (miembro.rows[0].role !== 'ACTOR' && miembro.rows[0].role !== 'ADMIN') {
+    throw new Error('Solo se pueden agregar actores/actrices (ACTOR) o directores (ADMIN) al grupo');
   }
 
-  // Determinar rol en el grupo: DIRECTOR si es ADMIN, ACTOR si es VENDEDOR
+  // Determinar rol en el grupo: DIRECTOR si es ADMIN, ACTOR si es ACTOR
   const rolEnGrupo = miembro.rows[0].role === 'ADMIN' ? 'DIRECTOR' : 'ACTOR';
 
   // Insertar o reactivar miembro
@@ -269,7 +269,7 @@ export async function listActoresDisponibles(grupoId) {
   const result = await query(
     `SELECT u.cedula, u.name, u.role, u.genero, u.phone
      FROM users u
-     WHERE (u.role = 'VENDEDOR' OR u.role = 'ADMIN')
+     WHERE (u.role = 'ACTOR' OR u.role = 'ADMIN')
        AND u.active = TRUE
        AND u.cedula NOT IN (
          SELECT miembro_cedula FROM grupo_miembros 

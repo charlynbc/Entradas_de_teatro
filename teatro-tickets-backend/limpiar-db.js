@@ -37,12 +37,27 @@ async function limpiarBaseDatos() {
     const ticketsResult = await client.query('DELETE FROM tickets');
     console.log(`   ✅ ${ticketsResult.rowCount} tickets eliminados`);
     
-    // 4. Eliminar todos los shows
-    console.log('🎬 Eliminando shows...');
-    const showsResult = await client.query('DELETE FROM shows');
-    console.log(`   ✅ ${showsResult.rowCount} shows eliminados`);
+    // 4. Eliminar todas las funciones
+    console.log('🎬 Eliminando funciones...');
+    const funcionesResult = await client.query('DELETE FROM funciones');
+    console.log(`   ✅ ${funcionesResult.rowCount} funciones eliminadas`);
+
+    // 5. Eliminar obras (si quedan)
+    console.log('📚 Eliminando obras...');
+    const obrasResult = await client.query('DELETE FROM obras');
+    console.log(`   ✅ ${obrasResult.rowCount} obras eliminadas`);
+
+    // 6. Eliminar relaciones de miembros
+    console.log('👥 Eliminando miembros de grupos...');
+    const miembrosResult = await client.query('DELETE FROM grupo_miembros');
+    console.log(`   ✅ ${miembrosResult.rowCount} relaciones eliminadas`);
+
+    // 7. Eliminar grupos
+    console.log('🎭 Eliminando grupos...');
+    const gruposResult = await client.query('DELETE FROM grupos');
+    console.log(`   ✅ ${gruposResult.rowCount} grupos eliminados`);
     
-    // 5. Eliminar todos los usuarios EXCEPTO el SUPER
+    // 8. Eliminar todos los usuarios EXCEPTO el SUPER
     console.log('👥 Eliminando usuarios (manteniendo SUPER)...');
     const usersResult = await client.query(
       "DELETE FROM users WHERE rol != 'SUPER' RETURNING nombre, rol"
@@ -60,7 +75,9 @@ async function limpiarBaseDatos() {
     // 7. Resetear secuencias para que los IDs empiecen desde 1
     console.log('\n🔄 Reseteando secuencias de IDs...');
     try {
-      await client.query('ALTER SEQUENCE IF EXISTS shows_id_seq RESTART WITH 1');
+      await client.query('ALTER SEQUENCE IF EXISTS grupos_id_seq RESTART WITH 1');
+      await client.query('ALTER SEQUENCE IF EXISTS obras_id_seq RESTART WITH 1');
+      await client.query('ALTER SEQUENCE IF EXISTS funciones_id_seq RESTART WITH 1');
       await client.query('ALTER SEQUENCE IF EXISTS tickets_id_seq RESTART WITH 1');
       await client.query('ALTER SEQUENCE IF EXISTS ensayos_generales_id_seq RESTART WITH 1');
       await client.query('ALTER SEQUENCE IF EXISTS reportes_obras_id_seq RESTART WITH 1');

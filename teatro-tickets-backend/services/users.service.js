@@ -1,6 +1,6 @@
 import { query } from '../db/postgres.js';
 
-export async function createUser({ cedula, nombre, name, password, rol, role, requesterRole, genero }) {
+export async function createUser({ cedula, nombre, name, password, rol, role, requesterRole, genero, phone, email, fecha_nacimiento, apellido, foto_url, direccion, notas }) {
   const finalNombre = nombre || name;
   const finalRol = rol || role;
   const finalGenero = genero || 'otro';
@@ -11,15 +11,19 @@ export async function createUser({ cedula, nombre, name, password, rol, role, re
     throw error;
   }
 
-  // Normalizar rol a mayúsculas
-  const normalizedRole = finalRol.toUpperCase();
-  if (!['ADMIN', 'VENDEDOR', 'INVITADO'].includes(normalizedRole)) {
-    const error = new Error('rol debe ser ADMIN (director), VENDEDOR (actor) o INVITADO');
+  // Normalizar rol y aceptar alias legacy (frontend/tests)
+  const roleRaw = String(finalRol || '').trim().toUpperCase();
+  const normalizedRole = roleRaw === 'VENDEDOR' ? 'ACTOR'
+    : roleRaw === 'SUPREMO' ? 'SUPER'
+    : roleRaw;
+
+  if (!['ADMIN', 'ACTOR', 'INVITADO', 'SUPER'].includes(normalizedRole)) {
+    const error = new Error('rol debe ser ADMIN (director), ACTOR (actor/actriz) o INVITADO');
     error.status = 400;
     throw error;
   }
   
-  // Solo el SUPER puede crear otros roles, excepto que ADMIN puede crear VENDEDORES
+  // Solo el SUPER puede crear otros roles, excepto que ADMIN puede crear ACTORES
   if (normalizedRole === 'SUPER') {
     const error = new Error('No se puede crear otro usuario SUPER. Solo existe uno.');
     error.status = 403;
@@ -39,39 +43,95 @@ export async function createUser({ cedula, nombre, name, password, rol, role, re
     throw error;
   }
 
+  // Compatibilidad: si no viene phone, usar cedula (el login usa phone/cedula indistintamente)
+  const finalPhone = (phone !== undefined && phone !== null && String(phone).trim() !== '')
+    ? String(phone).trim()
+    : String(cedula);
+
+  // Validar unicidad de phone (hay índice único)
+  const phoneExists = await query('SELECT cedula FROM users WHERE phone = $1', [finalPhone]);
+  if (phoneExists.rows.length > 0) {
+    const error = new Error('Ya existe un usuario con ese teléfono');
+    error.status = 400;
+    throw error;
+  }
+
   const bcrypt = (await import('bcrypt')).default;
   const hashedPassword = await bcrypt.hash(password, 10);
 
+  // Construir query con campos opcionales
+  const fields = ['cedula', 'name', 'password_hash', 'role', 'genero', 'active'];
+  const values = [cedula, finalNombre, hashedPassword, normalizedRole, finalGenero, true];
+
+  // Siempre persistimos phone para flujos legacy
+  fields.push('phone');
+  values.push(finalPhone);
+  
+  // Agregar campos opcionales si están presentes
+  const optionalFields = { email, fecha_nacimiento, apellido, foto_url, direccion, notas };
+  Object.entries(optionalFields).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      fields.push(key);
+      values.push(value);
+    }
+  });
+
+  fields.push('created_at');
+  const placeholders = values.map((_, i) => `$${i + 1}`).join(', ') + ', NOW()';
+  
   const result = await query(
-    `INSERT INTO users (cedula, name, password_hash, role, genero, active, created_at)
-     VALUES ($1, $2, $3, $4, $5, TRUE, NOW())
-     RETURNING cedula, name, role, genero`,
-    [cedula, finalNombre, hashedPassword, normalizedRole, finalGenero]
+    `INSERT INTO users (${fields.join(', ')})
+     VALUES (${placeholders})
+     RETURNING cedula, name, role, genero, phone, email, fecha_nacimiento, apellido, foto_url`,
+    values
   );
 
   const user = result.rows[0];
   return {
+    id: user.cedula,
     cedula: user.cedula,
     name: user.name,
     role: user.role,
-    genero: user.genero
+    genero: user.genero,
+    phone: user.phone
   };
 }
 
 export async function listUsers(roleFilter) {
-  let sql = `SELECT cedula, name, role, genero, created_at, active
-     FROM users
-     WHERE role IN ('ADMIN', 'VENDEDOR')`;
   const params = [];
-  
+  let roleClause = '';
   if (roleFilter) {
-    sql += ` AND role = $1`;
-    params.push(roleFilter);
+    roleClause = ' AND u.role = $1';
+    params.push(String(roleFilter).trim().toUpperCase());
   }
-  
-  sql += ` ORDER BY name ASC`;
-  
-  const result = await query(sql, params);
+
+  const result = await query(
+    `SELECT
+        u.cedula,
+        u.name,
+        u.role,
+        u.genero,
+        u.created_at,
+        u.active,
+        COALESCE((
+          SELECT COUNT(*)
+          FROM obras o
+          JOIN grupos g ON g.id = o.grupo_id
+          WHERE g.director_cedula = u.cedula
+        ), 0)::int AS obras,
+        COALESCE((
+          SELECT COUNT(*)
+          FROM funciones f
+          JOIN obras o ON o.id = f.obra_id
+          JOIN grupos g ON g.id = o.grupo_id
+          WHERE g.director_cedula = u.cedula
+        ), 0)::int AS funciones
+     FROM users u
+     WHERE u.role IN ('ADMIN', 'ACTOR')
+       ${roleClause}
+     ORDER BY u.name ASC`,
+    params
+  );
   return result.rows;
 }
 
@@ -80,25 +140,31 @@ export async function listSellersWithStats() {
       SELECT 
         u.cedula,
         u.name,
+        u.email,
+        u.phone,
         u.role,
         u.genero,
-        COUNT(DISTINCT t.show_id) as total_shows,
-        COUNT(t.code) as total_tickets,
+        COUNT(*) FILTER (WHERE t.vendedor_phone = u.phone AND t.estado IN ('STOCK_VENDEDOR', 'RESERVADO'))::int as stock,
+        COUNT(*) FILTER (WHERE t.vendedor_phone = u.phone AND t.estado = 'REPORTADA_VENDIDA')::int as vendidas,
+        COUNT(*) FILTER (WHERE t.vendedor_phone = u.phone AND t.estado IN ('PAGADO', 'USADO'))::int as pagadas,
+        COUNT(DISTINCT t.funcion_id) FILTER (WHERE t.vendedor_phone = u.phone)::int as total_funciones,
+        COUNT(t.code) FILTER (WHERE t.vendedor_phone = u.phone)::int as total_tickets,
         json_agg(DISTINCT jsonb_build_object(
-          'show_id', s.id,
-          'show_obra', s.obra,
+          'funcion_id', f.id,
+          'funcion_obra', o.nombre,
           'tickets_asignados', (
             SELECT COUNT(*) 
             FROM tickets t2 
             WHERE t2.vendedor_phone = u.phone 
-            AND t2.show_id = s.id
+            AND t2.funcion_id = f.id
           )
-        )) FILTER (WHERE s.id IS NOT NULL) as shows
+        )) FILTER (WHERE f.id IS NOT NULL) as funciones
       FROM users u
       LEFT JOIN tickets t ON t.vendedor_phone = u.phone
-      LEFT JOIN shows s ON s.id = t.show_id
-      WHERE u.role = 'VENDEDOR'
-      GROUP BY u.cedula, u.name, u.role
+      LEFT JOIN funciones f ON f.id = t.funcion_id
+      LEFT JOIN obras o ON o.id = f.obra_id
+      WHERE u.role = 'ACTOR'
+      GROUP BY u.cedula, u.name, u.email, u.phone, u.role, u.genero
       ORDER BY u.name
   `);
   return result.rows;
@@ -127,9 +193,25 @@ export async function deleteUserByFlexibleId(idOrCedula, requesterRole) {
     error.status = 403;
     throw error;
   }
+
+  // Si es director y quien solicita es SUPER, re-asignar sus grupos al SUPER existente.
+  // Evita FK grupos.director_cedula -> users.cedula sin borrar contenido (ensayos/obras).
+  if (user.role === 'ADMIN' && requesterRole === 'SUPER') {
+    const superUser = await query("SELECT cedula FROM users WHERE role = 'SUPER' LIMIT 1");
+    const superCedula = superUser.rows[0]?.cedula;
+    if (!superCedula) {
+      const error = new Error('No existe usuario SUPER para reasignar grupos');
+      error.status = 500;
+      throw error;
+    }
+    await query('UPDATE grupos SET director_cedula = $1 WHERE director_cedula = $2', [superCedula, user.cedula]);
+  }
+
+  // Limpiar membresías (por si el usuario es miembro en otros grupos)
+  await query('DELETE FROM grupo_miembros WHERE miembro_cedula = $1', [user.cedula]);
   
-  // Primero eliminar o liberar todos los tickets del vendedor
-  // Cambiar vendedor_phone a NULL para liberar los tickets
+  // Primero eliminar o liberar todos los tickets del actor
+  // Cambiar vendedor_phone a NULL para liberar los tickets (campo de base de datos no cambiado)
   await query('UPDATE tickets SET vendedor_phone = NULL, estado = $1 WHERE vendedor_phone = $2', 
     ['DISPONIBLE', user.phone]);
   
@@ -156,34 +238,40 @@ export async function resetPasswordByFlexibleId(idOrCedula, newPassword) {
   return { ok: true };
 }
 
-// Listar todos los usuarios activos (incluye SUPER, ADMIN, VENDEDOR)
+// Listar todos los usuarios activos (incluye SUPER, ADMIN, ACTOR)
 export async function listAllMembers(currentRole) {
-  console.log('🔍 listAllMembers llamado - versión actualizada con SUPER incluido');
+  console.log('🔍 listAllMembers llamado - compatibilidad roles legacy');
   const result = await query(
     `SELECT 
         u.cedula,
         u.name,
         u.phone,
-        u.role as rol,
+        CASE u.role
+          WHEN 'ADMIN' THEN 'admin'
+          WHEN 'ACTOR' THEN 'vendedor'
+          WHEN 'INVITADO' THEN 'invitado'
+          ELSE LOWER(u.role)
+        END as rol,
         u.genero,
         u.created_at,
         u.active,
-        COUNT(DISTINCT t.show_id) as obras_activas,
+        COUNT(DISTINCT t.funcion_id) as obras_activas,
         json_agg(DISTINCT jsonb_build_object(
-          'show_id', s.id,
-          'show_obra', s.obra,
-          'show_fecha', s.fecha
-        )) FILTER (WHERE s.id IS NOT NULL) as obras
+          'funcion_id', f.id,
+          'funcion_obra', o.nombre,
+          'funcion_fecha', f.fecha
+        )) FILTER (WHERE f.id IS NOT NULL) as obras
       FROM users u
       LEFT JOIN tickets t ON t.vendedor_phone = u.phone AND t.estado != 'USADO'
-      LEFT JOIN shows s ON s.id = t.show_id
+      LEFT JOIN funciones f ON f.id = t.funcion_id
+      LEFT JOIN obras o ON o.id = f.obra_id
       WHERE u.active = true
+        AND u.role <> 'SUPER'
       GROUP BY u.cedula, u.name, u.phone, u.role, u.genero, u.created_at, u.active
       ORDER BY 
         CASE u.role 
-          WHEN 'SUPER' THEN 1
-          WHEN 'ADMIN' THEN 2 
-          WHEN 'VENDEDOR' THEN 3 
+          WHEN 'ADMIN' THEN 1 
+          WHEN 'ACTOR' THEN 2 
           ELSE 4 
         END,
         u.name`

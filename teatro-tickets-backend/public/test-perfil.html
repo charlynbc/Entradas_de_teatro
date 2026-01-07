@@ -13,7 +13,7 @@
     <script>
         const token = localStorage.getItem('token');
         if (!token) {
-            document.getElementById('status').innerHTML = '<p style="color:red">No hay token. <a href="/login.html">Login</a></p>';
+            document.getElementById('status').innerHTML = '<p style="color:red">No hay token. <a href="/pages/auth/login.html">Login</a></p>';
         }
         
         async function testGet() {

@@ -8,6 +8,22 @@ let currentSession = {
   user: null,
 };
 
+function normalizeRole(role) {
+  const r = String(role || '').toUpperCase();
+  // En el backend el rol del actor suele ser ACTOR; en la app se lo maneja como VENDEDOR
+  if (r === 'ACTOR') return 'VENDEDOR';
+  return r;
+}
+
+function authedRequest(path, init = {}) {
+  if (!currentSession?.token) {
+    const error = new Error('Sesion expirada. Volve a iniciar sesion.');
+    error.status = 401;
+    throw error;
+  }
+  return request(path, { ...init, token: currentSession.token });
+}
+
 function setSession(session) {
   currentSession = session ? { ...session } : { token: null, user: null };
 }
@@ -27,7 +43,9 @@ function requireUser() {
 
 function requireRole(roles) {
   const user = requireUser();
-  if (!roles.includes(user.role)) {
+  const userRole = normalizeRole(user.role);
+  const allowed = roles.map(normalizeRole);
+  if (!allowed.includes(userRole)) {
     const error = new Error('No tenes permisos para esta accion');
     error.status = 403;
     throw error;
@@ -40,13 +58,20 @@ export async function login(credentials) {
     // Intenta login contra el backend real
     const body = { phone: credentials.cedula, password: credentials.password };
     const response = await request('/api/auth/login', { method: 'POST', body });
-    
+
+    // Backend devuelve: { token, user: { cedula, role, name } }
+    const cedula = response?.user?.cedula || credentials.cedula;
+    const name = response?.user?.name || 'Usuario';
+    const role = normalizeRole(response?.user?.role);
+
     const user = {
-      id: response.user.phone,
-      nombre: response.user.name,
-      role: response.user.role,
-      email: response.user.phone + '@bacoteatro.com',
-      avatar: 'https://ui-avatars.com/api/?name=' + encodeURIComponent(response.user.name)
+      id: cedula,
+      cedula,
+      phone: cedula,
+      nombre: name,
+      role,
+      email: `${cedula}@bacoteatro.com`,
+      avatar: 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name),
     };
     
     const session = { token: response.token, user };
@@ -56,7 +81,8 @@ export async function login(credentials) {
     console.warn('Backend login failed, falling back to mock if offline', error);
     if (error.offline || error.message.includes('Network request failed')) {
        const session = await mock.login(credentials);
-       setSession(session);
+       // Normalizar role también en mock
+       setSession({ ...session, user: { ...session.user, role: normalizeRole(session.user?.role) } });
        return session;
     }
     throw error;
@@ -74,18 +100,43 @@ export function restoreSession(session) {
 }
 
 export async function getMyProfile() {
-  const user = requireUser();
-  // Si el usuario viene del backend (tiene phone como ID), usamos mock por ahora o implementamos endpoint
-  // Por simplicidad, devolvemos el usuario de la sesión
-  return { ...user, bio: 'Usuario del sistema' };
+  requireUser();
+  try {
+    // Backend real
+    const profile = await authedRequest('/api/usuarios/me');
+    return {
+      ...currentSession.user,
+      ...profile,
+      role: normalizeRole(profile?.role || currentSession.user?.role),
+    };
+  } catch (error) {
+    // Si está offline, usar sesión actual
+    if (error.offline) {
+      return { ...currentSession.user, bio: currentSession.user?.bio || 'Usuario del sistema' };
+    }
+    throw error;
+  }
 }
 
 export async function updateMyProfile(payload) {
   requireUser();
-  // Mock implementation for now
-  const updated = { ...currentSession.user, ...payload };
-  setSession({ token: currentSession.token, user: updated });
-  return updated;
+  try {
+    const updated = await authedRequest('/api/usuarios/me', { method: 'PUT', body: payload });
+    const merged = {
+      ...currentSession.user,
+      ...updated,
+      role: normalizeRole(updated?.role || currentSession.user?.role),
+    };
+    setSession({ token: currentSession.token, user: merged });
+    return merged;
+  } catch (error) {
+    if (error.offline) {
+      const merged = { ...currentSession.user, ...payload };
+      setSession({ token: currentSession.token, user: merged });
+      return merged;
+    }
+    throw error;
+  }
 }
 
 export async function getSuperDashboard() {
@@ -95,23 +146,60 @@ export async function getSuperDashboard() {
 
 export async function listDirectors() {
   requireRole(['SUPER']);
-  // TODO: Implementar backend /api/usuarios?role=ADMIN
-  return mock.listDirectors();
+  try {
+    const rows = await authedRequest('/api/usuarios?role=ADMIN');
+    return (rows || []).map((row) => ({
+      cedula: row.cedula,
+      nombre: row.nombre || row.name || row.cedula,
+      obras: Number(row.obras || 0),
+      funciones: Number(row.funciones || 0),
+    }));
+  } catch (error) {
+    if (error.offline) return mock.listDirectors();
+    console.warn('Backend listDirectors failed, falling back to mock', error);
+    return mock.listDirectors();
+  }
 }
 
 export async function createDirector(payload) {
   requireRole(['SUPER']);
-  return mock.createDirector(payload);
+  try {
+    const body = {
+      cedula: payload.cedula,
+      nombre: payload.nombre,
+      password: payload.password || 'admin123',
+      genero: payload.genero || 'otro',
+      email: payload.email,
+      phone: payload.telefono || payload.phone,
+    };
+    return await authedRequest('/api/usuarios/directores', { method: 'POST', body });
+  } catch (error) {
+    if (error.offline) return mock.createDirector(payload);
+    throw error;
+  }
 }
 
 export async function resetDirectorPassword(cedula) {
   requireRole(['SUPER']);
-  return mock.resetDirectorPassword(cedula);
+  try {
+    return await authedRequest(`/api/usuarios/${cedula}/reset-password`, {
+      method: 'POST',
+      body: { newPassword: 'admin123' },
+    });
+  } catch (error) {
+    if (error.offline) return mock.resetDirectorPassword(cedula);
+    throw error;
+  }
 }
 
 export async function deleteDirector(cedula) {
   requireRole(['SUPER']);
-  return mock.deleteDirector(cedula);
+  try {
+    return await authedRequest(`/api/usuarios/${cedula}`, { method: 'DELETE' });
+  } catch (error) {
+    if (error.offline) return mock.deleteDirector(cedula);
+    throw error;
+  }
 }
 
 export async function listProductions() {
@@ -126,12 +214,44 @@ export async function createProduction(payload) {
 
 export async function listVendors() {
   requireRole(['SUPER', 'ADMIN']);
-  return mock.listVendors();
+  try {
+    const rows = await authedRequest('/api/usuarios/vendedores');
+    return (rows || []).map((row) => {
+      const cedula = row.cedula || row.id;
+      return {
+        id: cedula,
+        cedula,
+        nombre: row.nombre || row.name || cedula,
+        email: row.email,
+        telefono: row.telefono || row.phone,
+        stock: Number(row.stock || 0),
+        vendidas: Number(row.vendidas || 0),
+        pagadas: Number(row.pagadas || 0),
+      };
+    });
+  } catch (error) {
+    if (error.offline) return mock.listVendors();
+    console.warn('Backend listVendors failed, falling back to mock', error);
+    return mock.listVendors();
+  }
 }
 
 export async function createVendor(payload) {
   requireRole(['SUPER', 'ADMIN']);
-  return mock.createVendor(payload);
+  try {
+    const body = {
+      cedula: payload.cedula,
+      nombre: payload.nombre,
+      email: payload.email,
+      phone: payload.telefono || payload.phone,
+      password: payload.password || 'admin123',
+      genero: payload.genero || 'otro',
+    };
+    return await authedRequest('/api/usuarios/actores', { method: 'POST', body });
+  } catch (error) {
+    if (error.offline) return mock.createVendor(payload);
+    throw error;
+  }
 }
 
 export async function getDirectorDashboard() {
@@ -167,7 +287,7 @@ export async function getDirectorReports() {
 export async function validateTicket(code) {
   requireRole(['ADMIN', 'SUPER']);
   try {
-    const response = await request(`/api/tickets/validar/${code}`);
+    const response = await authedRequest(`/api/tickets/validar/${code}`);
     return {
       ok: response.ok,
       message: response.mensaje || response.error,
@@ -216,7 +336,12 @@ export function getCurrentUser() {
 
 export async function deleteVendor(cedula) {
   requireRole(['SUPER', 'ADMIN']);
-  return mock.deleteVendor(cedula);
+  try {
+    return await authedRequest(`/api/usuarios/${cedula}`, { method: 'DELETE' });
+  } catch (error) {
+    if (error.offline) return mock.deleteVendor(cedula);
+    throw error;
+  }
 }
 
 // --- New Features ---

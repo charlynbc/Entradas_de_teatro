@@ -2,27 +2,10 @@ import { query } from './db/postgres.js';
 
 export async function seedMinimo() {
   try {
-    // Crear show mínimo si no existe ninguno
-    const shows = await query('SELECT COUNT(*)::int AS c FROM shows');
-    if (shows.rows[0].c === 0) {
-      const showResult = await query(
-        `INSERT INTO shows (obra, fecha, lugar, capacidad, base_price)
-         VALUES ($1, NOW() + INTERVAL '7 days', $2, $3, $4)
-         RETURNING id`,
-        ['Función de prueba', 'Teatro Principal', 10, 500]
-      );
-      const showId = showResult.rows[0].id;
-      
-      // Crear un ticket de prueba
-      await query(
-        `INSERT INTO tickets (code, show_id, estado, precio)
-         VALUES ($1, $2, 'DISPONIBLE', $3)`,
-        ['T-TEST-0001', showId, 500]
-      );
-      console.log('✅ Seed: show mínimo creado con ticket T-TEST-0001');
-    } else {
-      console.log('ℹ️ Seed: ya hay shows, no se crea otro');
-    }
+    // No crear funciones automáticamente ya que requieren obra_id
+    // Las funciones se crearán desde el dashboard cuando haya grupos y obras
+    console.log('ℹ️  Seed: No se crean funciones automáticamente (requieren grupo→obra)');
+    console.log('💡 Crea grupos y obras desde el dashboard, luego asocia funciones');
   } catch (error) {
     console.error('❌ Error en seed mínimo:', error.message);
     throw error;

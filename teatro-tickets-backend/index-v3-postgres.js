@@ -8,7 +8,7 @@ import { initSupremo } from './init-supremo.js';
 import { seedMinimo } from './seed-minimo-init.js';
 import authRoutes from './routes/auth.routes.js';
 import usersRoutes from './routes/users.routes.js';
-import showsRoutes from './routes/shows.routes.js';
+import funcionesRoutes from './routes/funciones.routes.js';
 import ticketsRoutes from './routes/tickets.routes.js';
 import reportesRoutes from './routes/reportes.routes.js';
 import reportesObrasRoutes from './routes/reportes-obras.routes.js';
@@ -17,6 +17,8 @@ import adminRoutes from './routes/admin.routes.js';
 import gruposRoutes from './routes/grupos.routes.js';
 import obrasRoutes from './routes/obras.routes.js';
 import uploadRoutes from './routes/upload.routes.js';
+import publicRoutes from './routes/public.routes.js';
+import auditoriaReportesRoutes from './routes/auditoria-reportes.routes.js';
 import { readData } from './utils/dataStore.js';
 
 const app = express();
@@ -26,7 +28,14 @@ const __dirname = path.dirname(__filename);
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
 // Middlewares
-app.use(cors());
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true,
+  optionsSuccessStatus: 200,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Servir fuentes desde /fonts para evitar problemas con node_modules
@@ -83,7 +92,9 @@ async function startServer() {
           database: process.env.DATABASE_URL ? 'connected' : 'not configured',
           totals: {
             users: data.users.length,
-            shows: data.shows.length,
+            funciones: data.funciones.length,
+            // Alias de compatibilidad: "shows" ya no es entidad, equivale a funciones
+            shows: data.funciones.length,
             tickets: data.tickets.length
           }
         });
@@ -100,15 +111,27 @@ async function startServer() {
     app.use('/api/auth', authRoutes);
     app.use('/api/usuarios', usersRoutes);
     app.use('/api/users', usersRoutes); // Alias para compatibilidad con frontend
-    app.use('/api/shows', showsRoutes);
+    app.use('/api/funciones', funcionesRoutes);
+    app.use('/api/shows', funcionesRoutes); // Alias para compatibilidad con frontend antiguo
+    app.use('/public', publicRoutes);
     app.use('/api/tickets', ticketsRoutes);
     app.use('/api/reportes', reportesRoutes);
+    app.use('/api/auditoria', auditoriaReportesRoutes);
     app.use('/api/reportes-obras', reportesObrasRoutes);
     app.use('/api/ensayos', ensayosRoutes);
     app.use('/api/admin', adminRoutes);
     app.use('/api/grupos', gruposRoutes);
     app.use('/api/obras', obrasRoutes);
     app.use('/api/upload', uploadRoutes);
+
+    // Rutas específicas para páginas (nueva estructura)
+    app.get('/login', (req, res) => {
+      res.sendFile(path.join(PUBLIC_DIR, 'pages/auth/login.html'));
+    });
+    
+    app.get('/admin-dashboard.html', (req, res) => {
+      res.sendFile(path.join(PUBLIC_DIR, 'pages/admin/admin-dashboard.html'));
+    });
 
     // Ruta explícita para pantalla 404 teatral
     app.get('/404', (req, res) => {

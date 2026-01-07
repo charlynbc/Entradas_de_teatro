@@ -39,6 +39,65 @@ const BacoAuth = {
     },
 
     /**
+     * Obtiene el usuario guardado en localStorage (si existe)
+     */
+    getUser() {
+        try {
+            const raw = localStorage.getItem('user');
+            return raw ? JSON.parse(raw) : null;
+        } catch {
+            return null;
+        }
+    },
+
+    /**
+     * Guarda el usuario en localStorage
+     */
+    setUser(user) {
+        if (!user) return;
+        localStorage.setItem('user', JSON.stringify(user));
+    },
+
+    /**
+     * Rehidrata el usuario desde el backend usando el token actual
+     * (evita redirects falsos por localStorage corrupto o viejo)
+     */
+    async fetchMe() {
+        const token = this.getToken();
+        if (!token) return null;
+
+        try {
+            const response = await fetch('/api/users/me', {
+                method: 'GET',
+                headers: this.getAuthHeaders()
+            });
+
+            if (!response.ok) {
+                return null;
+            }
+
+            const me = await response.json();
+            this.setUser(me);
+            return me;
+        } catch {
+            return null;
+        }
+    },
+
+    /**
+     * Devuelve un usuario confiable. Si localStorage no tiene role,
+     * intenta rehidratar desde /api/users/me.
+     */
+    async ensureUser() {
+        if (!this.isAuthenticated()) return null;
+
+        const user = this.getUser();
+        if (user && user.role) return user;
+
+        return await this.fetchMe();
+    },
+
+    /**
      * Obtiene headers para peticiones autenticadas
      */
     getAuthHeaders() {
@@ -54,7 +113,8 @@ const BacoAuth = {
      */
     requireAuth() {
         if (!this.isAuthenticated()) {
-            window.location.href = '/login.html';
+            // Usar el login “nuevo” para evitar inconsistencias
+            window.location.href = '/pages/auth/login.html';
             return false;
         }
         return true;
@@ -263,8 +323,9 @@ const BacoAPI = {
             });
             
             if (response.status === 401) {
-                BacoAuth.logout();
-                return null;
+                // No hacer logout automático - puede ser error de permisos, no sesión expirada
+                const error = { message: 'No autorizado. Verifica tus permisos.' };
+                throw new Error(error.message);
             }
             
             if (!response.ok) {
@@ -299,8 +360,9 @@ const BacoAPI = {
             });
             
             if (response.status === 401) {
-                BacoAuth.logout();
-                return null;
+                // No hacer logout automático - puede ser error de permisos, no sesión expirada
+                const error = { message: 'No autorizado. Verifica tus permisos.' };
+                throw new Error(error.message);
             }
             
             if (!response.ok) {
@@ -335,8 +397,9 @@ const BacoAPI = {
             });
             
             if (response.status === 401) {
-                BacoAuth.logout();
-                return null;
+                // No hacer logout automático - puede ser error de permisos, no sesión expirada
+                const error = { message: 'No autorizado. Verifica tus permisos.' };
+                throw new Error(error.message);
             }
             
             if (!response.ok) {
@@ -370,8 +433,9 @@ const BacoAPI = {
             });
             
             if (response.status === 401) {
-                BacoAuth.logout();
-                return null;
+                // No hacer logout automático - puede ser error de permisos, no sesión expirada
+                const error = { message: 'No autorizado. Verifica tus permisos.' };
+                throw new Error(error.message);
             }
             
             if (!response.ok) {
@@ -874,7 +938,7 @@ const BacoBirthdays = {
         const roles = {
             'SUPER': 'Super Usuario',
             'ADMIN': 'Director/a',
-            'VENDEDOR': 'Actor/Actriz',
+            'ACTOR': 'Actor/Actriz',
             'INVITADO': 'Invitado/a'
         };
         return roles[role] || role;

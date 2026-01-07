@@ -10,10 +10,9 @@
     "verificar-db": "node scripts/verificar-db.js",
     "limpiar-funciones-pasadas": "node scripts/limpiar-funciones-pasadas.js",
     "preparar-entrega": "node scripts/limpiar-db.js && node scripts/verificar-db.js",
-    "test": "node tests/test-funcionalidades.js",
-    "test:verificacion": "node tests/verificacion-completa.js",
-    "test:todo": "npm run test:verificacion && npm run test",
-    "pre-deploy": "npm run test:verificacion && npm run limpiar-db && npm run verificar-db"
+    "test": "node tests/run-all.js",
+    "test:todo": "node tests/run-all.js",
+    "pre-deploy": "node tests/run-all.js && npm run limpiar-db && npm run verificar-db"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
