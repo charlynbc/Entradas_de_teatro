@@ -1,28 +1,41 @@
 # 📚 ÍNDICE DE DOCUMENTACIÓN - BACÓ TEATRO
 
-**Última actualización:** 08/01/2026 - ✅ **Sistema Funcional y Limpio**
+**Última actualización:** 08/01/2025 - ✅ **Sistema Funcional, Limpio y Listo para Producción**
 
 ---
 
 ## 🚀 INICIO RÁPIDO
 
 ### Para Empezar
-1. Leer: [README.md](./README.md)
-2. Backend: `cd teatro-tickets-backend && npm run dev`
-3. Base de datos: `docker run -d --name teatro-postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=teatro -p 5432:5432 postgres:15`
-4. Crear datos: `node create-test-data.js`
-5. Acceder: http://localhost:3000
+**👉 PRIMERO LEE:** [GUIA-EJECUCION-RAPIDA.md](./GUIA-EJECUCION-RAPIDA.md)
+
+Con VS Code Tasks:
+1. Presiona: `Ctrl+Shift+B`
+2. Selecciona: "Dev: Start DB + Backend Dev (nodemon)"
+3. Accede: http://localhost:3000
+
+Manual:
+1. Backend: `cd teatro-tickets-backend && npm run dev`
+2. Base de datos: `docker run -d --name teatro-postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=teatro -p 5432:5432 postgres:15`
+3. Acceder: http://localhost:3000
 
 ### URLs Principales
 - **Inicio**: http://localhost:3000
-- **Funciones de Hoy**: http://localhost:3000/funciones-hoy.html
-- **Próximas Funciones**: http://localhost:3000/proximas-funciones.html
-- **Login**: http://localhost:3000/pages/auth/login.html
-- **Super Usuario**: http://localhost:3000/pages/roles/super.html
+- **Funciones de Hoy**: http://localhost:3000/funciones-hoy.html (✨ NUEVA)
+- **Próximas Funciones**: http://localhost:3000/proximas-funciones.html (✨ NUEVA)
+- **Dashboard SUPER**: http://localhost:3000/pages/roles/super.html
+- **Dashboard Director**: http://localhost:3000/pages/roles/admin.html
+- **Dashboard Actor**: http://localhost:3000/pages/roles/actor.html
 
 ---
 
 ## 📖 DOCUMENTACIÓN FUNCIONAL
+
+### ✨ Nuevas Características (Sesión 08/01)
+- **Navegación con Autenticación:** Sistema unificado de login/logout en todas las páginas
+- **Separación de Funciones:** Ahora hay 2 páginas (funciones-hoy vs próximas-funciones)
+- **28 Funciones Reales:** 5 grupos teatrales con datos de prueba realistas
+- **Datos Poblados:** Sistema viene con actores, directores y funciones lista para usar
 
 ### Guías de Usuario por Rol
 - [Manual Actor/Vendedor](./documentacion/manuales/MANUAL_ACTOR.md)
@@ -39,6 +52,10 @@
 
 ## 🏗️ DOCUMENTACIÓN TÉCNICA
 
+### Resúmenes Recientes
+- [Resumen Final de Sesión](./RESUMEN-FINAL-SESSION.md) ⭐ **LEER PRIMERO**
+- [Resumen Sesión 08/01](./RESUMEN-SESION-08-01.md)
+
 ### Arquitectura y Diseño
 - [Arquitectura del Sistema](./documentacion/arquitectura/ARCHITECTURE.md)
 - [Perfil Super Usuario](./documentacion/modulo-perfil-super-usuario.md)
@@ -51,43 +68,40 @@
 
 ## 🧪 Testing
 
-Ejecuta los scripts de test para validar el sistema:
+Ejecuta los tests para validar el sistema:
 
 ```bash
-# Test completo con datos
-bash test-completo.sh
+# Test completo de integración (RECOMENDADO)
+bash test-integracion.sh
 
-# Test de API
-bash test_api.sh
+# Regenerar datos reales
+node teatro-tickets-backend/create-theater-groups.js
 
-# Test de cumpleaños
-bash test-cumpleanos.sh
-
-# Demo visual del dashboard
-bash demo-visual.sh
+# Limpiar base de datos (solo SUPER)
+node scripts/borrar.sh
 ```
 
 ---
 
 ## 🧠 Referencia Rápida
 
-### Inicio Rápido (5 min)
+### Inicio Rápido (2 min)
 ```bash
-cd teatro-tickets-backend
-npm install
-npm run dev
+# Opción 1: VS Code Tasks (RECOMENDADO)
+Ctrl+Shift+B → "Dev: Start DB + Backend Dev (nodemon)"
+
+# Opción 2: Manual
+cd teatro-tickets-backend && npm run dev
 ```
 
-### Base de Datos
+### Base de Datos (Ya Poblada)
 ```bash
+# Base de datos con 28 funciones (preseleccionada)
 docker run -d --name teatro-postgres \
   -e POSTGRES_PASSWORD=postgres \
   -e POSTGRES_DB=teatro \
   -p 5432:5432 \
   postgres:15
-
-# Crear datos de prueba
-node create-test-data.js
 ```
 
 ### Credenciales de Prueba
