@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Baco Teatro Uruguay - Inicio</title>
     <link rel="stylesheet" href="/css/main-index.css">
+    <link rel="stylesheet" href="/css/nav-auth.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
@@ -33,13 +34,23 @@
 
         <!-- Menú de Navegación -->
         <nav class="main-navigation">
-            <a href="/funciones.html" class="nav-button">
+            <a href="/funciones-hoy.html" class="nav-button">
+                <div class="button-icon">
+                    <i class="fas fa-calendar-day"></i>
+                </div>
+                <div class="button-text">
+                    <h3>Ver funciones de hoy?</h3>
+                    
+                </div>
+            </a>
+
+            <a href="/proximas-funciones.html" class="nav-button">
                 <div class="button-icon">
                     <i class="fas fa-calendar-alt"></i>
                 </div>
                 <div class="button-text">
-                    <h3>Funciones</h3>
-                    <p>Ver todas las funciones disponibles</p>
+                    <h3>Ver próximas funciones</h3>
+                    
                 </div>
             </a>
 
@@ -49,7 +60,7 @@
                 </div>
                 <div class="button-text">
                     <h3>Sobre Baco</h3>
-                    <p>Conoce nuestra historia y misión</p>
+                    <p>Conoce nuestra historia</p>
                 </div>
             </a>
 
@@ -73,15 +84,17 @@
                 </div>
             </a>
 
-            <button class="nav-button login-button" onclick="window.location.href='/pages/auth/login.html'">
-                <div class="button-icon">
-                    <i class="fas fa-sign-in-alt"></i>
-                </div>
-                <div class="button-text">
-                    <h3>Iniciar Sesión</h3>
-                    <p>Acceso para el equipo</p>
-                </div>
-            </button>
+            <div id="authButtonContainer">
+                <button class="nav-button login-button" onclick="window.location.href='/pages/auth/login.html'">
+                    <div class="button-icon">
+                        <i class="fas fa-sign-in-alt"></i>
+                    </div>
+                    <div class="button-text">
+                        <h3>Iniciar Sesión</h3>
+                        <p>Acceso para el equipo</p>
+                    </div>
+                </button>
+            </div>
         </nav>
 
         <!-- Footer -->
@@ -213,6 +226,57 @@
 
         // Mostrar frase al cargar la página
         showRandomQuote();
+    </script>
+    
+    <!-- Sistema de autenticación de navegación -->
+    <script>
+        // Verificar si hay usuario autenticado y mostrar menú personalizado
+        const token = localStorage.getItem('token');
+        const authContainer = document.getElementById('authButtonContainer');
+        
+        if (token && authContainer) {
+            fetch('/api/auth/perfil', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Token inválido');
+                return res.json();
+            })
+            .then(user => {
+                let dashboard = 'actor';
+                if (user.rol === 'super' || user.rol === 'SUPER') dashboard = 'super';
+                else if (user.rol === 'director' || user.rol === 'ADMIN') dashboard = 'director';
+                
+                authContainer.innerHTML = `
+                    <button class="nav-button login-button" onclick="window.location.href='/pages/roles/${dashboard}.html'">
+                        <div class="button-icon">
+                            <i class="fas fa-tachometer-alt"></i>
+                        </div>
+                        <div class="button-text">
+                            <h3>${user.nombre || 'Usuario'}</h3>
+                            <p>Ir a mi dashboard</p>
+                        </div>
+                    </button>
+                    <button class="nav-button" onclick="cerrarSesion()" style="margin-top: 10px; background: #dc3545;">
+                        <div class="button-icon">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </div>
+                        <div class="button-text">
+                            <h3>Cerrar Sesión</h3>
+                            <p>Salir del sistema</p>
+                        </div>
+                    </button>
+                `;
+            })
+            .catch(() => localStorage.removeItem('token'));
+        }
+        
+        function cerrarSesion() {
+            if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+                localStorage.removeItem('token');
+                location.reload();
+            }
+        }
     </script>
     
     <!-- Placeholder para compatibilidad con tests SPA -->

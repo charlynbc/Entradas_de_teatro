@@ -115,36 +115,29 @@ export const listarGrupos = async (req, res) => {
         const userRole = req.user.role;
         const userCedula = req.user.cedula;
 
-        // En schema v3 la vista canónica es v_grupos_completos.
-        // Devolvemos un ARRAY (compat con frontend y tests: response.data.grupos || response.data)
-        let query = 'SELECT * FROM v_grupos_completos WHERE 1=1';
+        // Usar tabla grupos directamente
+        let query = 'SELECT * FROM grupos WHERE 1=1';
         const params = [];
         let paramIndex = 1;
 
-        // Filtros
-        if (estado) {
-            query += ` AND estado = $${paramIndex}`;
-            params.push(estado);
-            paramIndex++;
-        } else if (!includeHistorico) {
-            // Por defecto: no mostrar grupos CERRADOS en flujos activos.
-            query += ` AND estado <> 'CERRADO'`;
-        }
+        // Nota: La tabla grupos del schema actual no tiene columna 'estado'
+        // Si se necesita filtrar por estado, hay que agregar la columna primero
 
         // ACTOR solo ve grupos donde está asignado
         if (userRole === 'ACTOR') {
             query += ` AND id IN (
-                SELECT grupo_id FROM grupo_actores WHERE actor_cedula = $${paramIndex}
+                SELECT grupo_id FROM grupo_integrantes WHERE cedula = $${paramIndex}
             )`;
             params.push(userCedula);
             paramIndex++;
         }
 
         // Filtro por director (solo SUPER y ADMIN)
+        // Nota: En schema actual no hay tabla grupo_directores, 
+        // el director está en grupos.director_cedula (si existe la columna)
         if (director_cedula && ['SUPER', 'ADMIN'].includes(userRole)) {
-            query += ` AND id IN (
-                SELECT grupo_id FROM grupo_directores WHERE director_cedula = $${paramIndex}
-            )`;
+            // Verificar si existe columna director_cedula en grupos
+            query += ` AND director_cedula = $${paramIndex}`;
             params.push(director_cedula);
             paramIndex++;
         }

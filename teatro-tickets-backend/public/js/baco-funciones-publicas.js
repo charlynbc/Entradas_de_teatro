@@ -8,8 +8,21 @@ const PUBLIC_API_URL = '/public';
 document.addEventListener('DOMContentLoaded', () => {
     initializeApp();
     setupNavigation();
-    loadFuncionesHoy();
-    loadProximasFunciones();
+    
+    // Detectar página actual y cargar datos correspondientes
+    const currentPage = window.location.pathname;
+    
+    if (currentPage.includes('funciones-hoy')) {
+        // Página de funciones de hoy - cargar solo hoy
+        loadFuncionesHoy();
+    } else if (currentPage.includes('proximas-funciones')) {
+        // Página de próximas funciones - cargar solo futuras
+        loadProximasFunciones();
+    } else {
+        // Página original funciones.html - cargar ambas
+        loadFuncionesHoy();
+        loadProximasFunciones();
+    }
 });
 
 function setupNavigation() {
@@ -78,7 +91,7 @@ async function loadFuncionesHoy() {
                     <i class="fas fa-theater-masks"></i>
                     <h3>🎭 El telón permanece cerrado hoy</h3>
                     <p>No hay funciones programadas para hoy</p>
-                    <a href="#proximas" class="btn btn-outline">✨ Ver próximas funciones</a>
+                    <a href="proximas-funciones.html" class="btn btn-outline">✨ Ver próximas funciones</a>
                 </div>
             `;
             return;
@@ -147,10 +160,8 @@ function createFuncionCard(funcion) {
         month: 'long',
         day: 'numeric'
     });
-    const horaStr = fecha.toLocaleTimeString('es-UY', {
-        hour: '2-digit',
-        minute: '2-digit'
-    });
+    // Usar la hora directamente del objeto función
+    const horaStr = funcion.hora || '20:00';
 
     const precio = Number(funcion.precio);
     const showPrecio = Number.isFinite(precio) && precio > 0;

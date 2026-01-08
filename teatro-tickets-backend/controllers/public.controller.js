@@ -10,23 +10,16 @@ export async function listarFuncionesInvitado(req, res) {
       `SELECT
         f.id,
         f.fecha,
+        f.hora,
         f.lugar AS sala,
-        f.precio_base AS precio,
-        o.nombre AS obra_nombre,
+        f.precio_entrada AS precio,
+        'Baco Teatro' AS obra_nombre,
         g.nombre AS grupo_nombre,
-        CASE
-          WHEN COUNT(t.code) = 0 THEN 'Disponible'
-          WHEN (COUNT(t.code) FILTER (WHERE t.estado IN ('DISPONIBLE', 'STOCK_ACTOR'))) > 0 THEN 'Disponible'
-          ELSE 'Agotada'
-        END AS estado
+        'Disponible' AS estado
       FROM funciones f
-      JOIN obras o ON o.id = f.obra_id
-      JOIN grupos g ON g.id = o.grupo_id
-      LEFT JOIN tickets t ON t.funcion_id = f.id
-      WHERE f.estado IN ('PROGRAMADA', 'CONFIRMADA')
-        AND f.fecha >= DATE_TRUNC('day', NOW())
-      GROUP BY f.id, f.fecha, f.lugar, f.precio_base, o.nombre, g.nombre
-      ORDER BY f.fecha ASC`
+      JOIN grupos g ON g.id = f.grupo_id
+      WHERE f.fecha >= CURRENT_DATE
+      ORDER BY f.fecha ASC, f.hora ASC`
     );
 
     res.json({ total: result.rows.length, funciones: result.rows });

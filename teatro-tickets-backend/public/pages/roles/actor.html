@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BACO - Actor</title>
+    <link rel="stylesheet" href="/css/main-index.css">
+    <link rel="stylesheet" href="/css/fotos-circulares.css">
+    <link rel="stylesheet" href="/css/cumpleanos.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* Estilos específicos para Actor - interfaz simplificada */
+        .dashboard-actor {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header-actor {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 30px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(106, 4, 15, 0.3);
+            text-align: center;
+        }
+
+        .header-actor-foto {
+            margin-bottom: 16px;
+        }
+
+        .header-actor-info h1 {
+            margin: 0 0 8px 0;
+            color: var(--secondary);
+        }
+
+        .header-actor-info p {
+            margin: 0;
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .resumen-actor {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .resumen-card {
+            background: linear-gradient(135deg, rgba(244, 140, 6, 0.1), rgba(106, 4, 15, 0.1));
+            border: 1px solid rgba(244, 140, 6, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .resumen-card-icon {
+            font-size: 32px;
+            color: var(--secondary);
+            margin-bottom: 12px;
+        }
+
+        .resumen-card-valor {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--secondary);
+            margin-bottom: 4px;
+        }
+
+        .resumen-card-label {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .mis-grupos-lista {
+            display: grid;
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .grupo-card-simple {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .grupo-card-simple:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(244, 140, 6, 0.3);
+        }
+
+        .grupo-card-simple-info h3 {
+            margin: 0 0 4px 0;
+            color: var(--secondary);
+            font-size: 16px;
+        }
+
+        .grupo-card-simple-info p {
+            margin: 0;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .mi-cuota-card {
+            background: linear-gradient(135deg, rgba(244, 140, 6, 0.1), rgba(106, 4, 15, 0.1));
+            border: 2px solid;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .mi-cuota-card.al-dia {
+            border-color: var(--success);
+        }
+
+        .mi-cuota-card.parcial {
+            border-color: var(--warning);
+        }
+
+        .mi-cuota-card.adeuda {
+            border-color: var(--danger);
+        }
+
+        .mi-cuota-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .mi-cuota-grupo {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--secondary);
+        }
+
+        .mi-cuota-estado {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .resumen-actor {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <div class="dashboard-actor">
+            <!-- Header -->
+            <div class="header-actor">
+                <div class="header-actor-foto">
+                    <img src="/assets/baco.png" alt="Actor" class="foto-perfil-grande" id="fotoUsuario">
+                </div>
+                <div class="header-actor-info">
+                    <h1 id="nombreUsuario">🎭 Cargando...</h1>
+                    <p id="cedulaUsuario">Cédula: ...</p>
+                </div>
+                <div class="header-actions" style="margin-top: 16px;">
+                    <button class="btn-header" onclick="verCumpleanos()">
+                        <i class="fas fa-birthday-cake"></i> Cumpleaños
+                    </button>
+                    <button class="btn-header" onclick="verPerfil()">
+                        <i class="fas fa-user-circle"></i> Mi Perfil
+                    </button>
+                    <button class="btn-header" onclick="cerrarSesion()">
+                        <i class="fas fa-sign-out-alt"></i> Salir
+                    </button>
+                </div>
+            </div>
+
+            <!-- Resumen Rápido -->
+            <div class="resumen-actor">
+                <div class="resumen-card">
+                    <div class="resumen-card-icon"><i class="fas fa-users"></i></div>
+                    <div class="resumen-card-valor" id="total-grupos">0</div>
+                    <div class="resumen-card-label">Mis Grupos</div>
+                </div>
+                <div class="resumen-card">
+                    <div class="resumen-card-icon"><i class="fas fa-calendar"></i></div>
+                    <div class="resumen-card-valor" id="total-funciones">0</div>
+                    <div class="resumen-card-label">Funciones</div>
+                </div>
+                <div class="resumen-card">
+                    <div class="resumen-card-icon"><i class="fas fa-ticket-alt"></i></div>
+                    <div class="resumen-card-valor" id="total-entradas">0</div>
+                    <div class="resumen-card-label">Mis Entradas</div>
+                </div>
+                <div class="resumen-card">
+                    <div class="resumen-card-icon"><i class="fas fa-money-bill-wave"></i></div>
+                    <div class="resumen-card-valor" id="total-cuotas-dia">0</div>
+                    <div class="resumen-card-label">Cuotas al Día</div>
+                </div>
+            </div>
+
+            <!-- Tabs de Navegación -->
+            <div class="tabs">
+                <button class="tab activo" onclick="mostrarTab('grupos')">
+                    <i class="fas fa-users"></i> Mis Grupos
+                </button>
+                <button class="tab" onclick="mostrarTab('ensayos')">
+                    <i class="fas fa-theater-masks"></i> Ensayos
+                </button>
+                <button class="tab" onclick="mostrarTab('funciones')">
+                    <i class="fas fa-calendar"></i> Funciones
+                </button>
+                <button class="tab" onclick="mostrarTab('entradas')">
+                    <i class="fas fa-ticket-alt"></i> Mis Entradas
+                </button>
+                <button class="tab" onclick="mostrarTab('cuotas')">
+                    <i class="fas fa-money-bill-wave"></i> Mis Cuotas
+                </button>
+                <button class="tab" onclick="mostrarTab('historial')">
+                    <i class="fas fa-history"></i> Historial
+                </button>
+            </div>
+
+            <!-- Contenido: Mis Grupos -->
+            <div id="tab-grupos" class="tab-contenido activo">
+                <div class="seccion">
+                    <div class="seccion-titulo">
+                        <i class="fas fa-users"></i>
+                        <span>Mis Grupos</span>
+                    </div>
+                    <div id="lista-mis-grupos" class="mis-grupos-lista">
+                        <div class="estado-vacio">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Cargando grupos...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenido: Ensayos -->
+            <div id="tab-ensayos" class="tab-contenido">
+                <div class="seccion">
+                    <div class="seccion-titulo">
+                        <i class="fas fa-theater-masks"></i>
+                        <span>Próximos Ensayos</span>
+                    </div>
+                    <div id="lista-mis-ensayos" class="lista-elementos">
+                        <div class="estado-vacio">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Cargando ensayos...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenido: Funciones -->
+            <div id="tab-funciones" class="tab-contenido">
+                <div class="seccion">
+                    <div class="seccion-titulo">
+                        <i class="fas fa-calendar"></i>
+                        <span>Funciones Programadas</span>
+                    </div>
+                    <div id="lista-mis-funciones" class="lista-elementos">
+                        <div class="estado-vacio">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Cargando funciones...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenido: Mis Entradas -->
+            <div id="tab-entradas" class="tab-contenido">
+                <div class="seccion">
+                    <div class="seccion-titulo">
+                        <i class="fas fa-ticket-alt"></i>
+                        <span>Entradas Asignadas</span>
+                    </div>
+                    <div id="lista-mis-entradas" class="lista-elementos">
+                        <div class="estado-vacio">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Cargando entradas...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenido: Mis Cuotas -->
+            <div id="tab-cuotas" class="tab-contenido">
+                <div class="seccion">
+                    <div class="seccion-titulo">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <span>Estado de Mis Cuotas</span>
+                    </div>
+                    <div id="lista-mis-cuotas">
+                        <div class="estado-vacio">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Cargando cuotas...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenido: Historial -->
+            <div id="tab-historial" class="tab-contenido">
+                <div class="seccion">
+                    <div class="seccion-titulo">
+                        <i class="fas fa-history"></i>
+                        <span>Mi Historial</span>
+                    </div>
+                    <div id="lista-mi-historial" class="lista-elementos">
+                        <div class="estado-vacio">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Cargando historial...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/utils/fechas.js"></script>
+    <script src="/js/cumpleanos.js"></script>
+    <script src="/js/actor.js"></script>
+</body>
+</html>

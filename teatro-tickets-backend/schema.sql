@@ -2,445 +2,274 @@
 -- BACO TEATRO - SCHEMA v3.0 con PostgreSQL
 -- ========================================
 
+-- ========================================
+-- BACO TEATRO - SCHEMA DEFINITIVO
+-- Sistema de Usuarios, Grupos, Entradas, Cuotas
+-- Formato de fechas: DD/MM/YYYY en frontend
+-- Fotos circulares estilo WhatsApp
+-- ========================================
+
 -- 1. USUARIOS (cedula como ID único)
-CREATE TABLE users (
-  cedula         VARCHAR(20) PRIMARY KEY,   -- número de cédula
-  name          VARCHAR(100) NOT NULL,
-  role          VARCHAR(20) NOT NULL CHECK (role IN ('SUPER', 'ADMIN', 'ACTOR', 'INVITADO')),
-  password_hash TEXT,                       -- NULL si es invitado
-  created_at    TIMESTAMP NOT NULL DEFAULT NOW(),
-  active        BOOLEAN NOT NULL DEFAULT TRUE,
-  -- agregado para relacionar tickets con vendedores
-  phone         VARCHAR(20),
-  -- género del usuario (masculino, femenino, otro)
-  genero        VARCHAR(20) DEFAULT 'otro'
+CREATE TABLE usuarios (
+  cedula              VARCHAR(20) PRIMARY KEY,
+  rol                 VARCHAR(20) NOT NULL CHECK (rol IN ('super', 'director', 'actor')),
+  nombre              VARCHAR(100) NOT NULL,
+  apellido            VARCHAR(100) NOT NULL,
+  fecha_nacimiento    DATE NOT NULL,
+  celular             VARCHAR(30),
+  foto_url            TEXT DEFAULT '/assets/baco.png',
+  descripcion         TEXT,
+  password_hash       TEXT NOT NULL,
+  created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  active              BOOLEAN NOT NULL DEFAULT TRUE
 );
 
--- Índice único opcional para phone si se usa como identificador de login
-CREATE UNIQUE INDEX IF NOT EXISTS idx_users_phone_unique ON users(phone);
+CREATE INDEX idx_usuarios_rol ON usuarios(rol);
+CREATE INDEX idx_usuarios_fecha_nacimiento ON usuarios(fecha_nacimiento);
 
--- Usuario Super (único) - password por defecto: admin123
--- Tipos de usuario: SUPER (único), ADMIN (directores), ACTOR (actores/actrices), INVITADO (sin login)
-INSERT INTO users (cedula, name, role, password_hash, phone, active) VALUES
-  ('48376669', 'Super Usuario', 'SUPER', '$2b$10$ZXH8vT/SpnVBDGDjj3L7M.7BKMCuQC19V5Ieou0Rv25KTk3lHIT1e', '48376669', TRUE)
-ON CONFLICT (cedula) DO UPDATE SET role = 'SUPER', password_hash = '$2b$10$ZXH8vT/SpnVBDGDjj3L7M.7BKMCuQC19V5Ieou0Rv25KTk3lHIT1e';
+-- Usuario Super (único) - password: Teamomama91
+-- Se puede cambiar la contraseña y borrar todo el sistema
+INSERT INTO usuarios (cedula, rol, nombre, apellido, fecha_nacimiento, foto_url, descripcion, password_hash) VALUES
+  ('48376669', 'super', 'Charly', 'Barrios', '1991-10-29', '/assets/baco.png', 'Guardián del teatro', '$2b$10$ZXH8vT/SpnVBDGDjj3L7M.7BKMCuQC19V5Ieou0Rv25KTk3lHIT1e')
+ON CONFLICT (cedula) DO UPDATE SET rol = 'super', password_hash = '$2b$10$ZXH8vT/SpnVBDGDjj3L7M.7BKMCuQC19V5Ieou0Rv25KTk3lHIT1e';
 
--- 2. FUNCIONES (presentaciones de obras)
-CREATE TABLE funciones (
-  id           SERIAL PRIMARY KEY,
-  obra_id      INT NOT NULL REFERENCES obras(id) ON DELETE CASCADE,
-  fecha        TIMESTAMP NOT NULL,
-  lugar        VARCHAR(200),
-  capacidad    INT NOT NULL,
-  precio_base  NUMERIC(10,2) NOT NULL,
-  foto_url     TEXT,
-  estado       VARCHAR(20) NOT NULL CHECK (estado IN ('PROGRAMADA', 'CONFIRMADA', 'CANCELADA', 'REALIZADA')) DEFAULT 'PROGRAMADA',
-  created_at   TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at   TIMESTAMP NOT NULL DEFAULT NOW()
-);
 
-CREATE INDEX idx_funciones_fecha ON funciones(fecha);
-CREATE INDEX idx_funciones_obra_id ON funciones(obra_id);
-CREATE INDEX idx_funciones_estado ON funciones(estado);
-
--- 3. TICKETS (entradas para funciones)
-CREATE TABLE tickets (
-  code                    VARCHAR(50) PRIMARY KEY,  -- T-XXXXXXXX
-  funcion_id              INT NOT NULL REFERENCES funciones(id) ON DELETE CASCADE,
-  
-  -- ESTADOS:
-  -- DISPONIBLE: recién creado, sin asignar
-  -- STOCK_ACTOR: asignado a un actor/actriz
-  -- RESERVADO: actor puso nombre de comprador pero no cobró
-  -- REPORTADA_VENDIDA: actor dice "cobré", admin aún no aprobó
-  -- PAGADO: admin confirmó que recibió la plata
-  -- USADO: entrada validada en puerta
-  estado                  VARCHAR(20) NOT NULL CHECK (
-                            estado IN (
-                              'DISPONIBLE',
-                              'STOCK_ACTOR',
-                              'RESERVADO',
-                              'REPORTADA_VENDIDA',
-                              'VENDIDO',
-                              'PAGADO',
-                              'USADO',
-                              'ANULADO'
-                            )
-                          ) DEFAULT 'DISPONIBLE',
-  
-  -- Propietario
-  vendedor_phone          VARCHAR(20) REFERENCES users(phone),
-  
-  -- Comprador
-  comprador_nombre        VARCHAR(150),
-  comprador_contacto      VARCHAR(150),
-  
-  -- Dinero
-  precio                  NUMERIC(10,2),           -- precio efectivo (puede diferir de precio_base)
-  medio_pago              VARCHAR(50),
-  
-  -- Control de plata
-  reportada_por_vendedor  BOOLEAN NOT NULL DEFAULT FALSE,  -- actor dice "vendí esto"
-  aprobada_por_admin      BOOLEAN NOT NULL DEFAULT FALSE,  -- admin confirma pago recibido
-  
-  -- QR code (data URL)
-  qr_code                 TEXT,
-
-  -- Anulación
-  anulado_motivo           TEXT,
-  anulado_at               TIMESTAMP,
-  
-  -- Timestamps
-  created_at              TIMESTAMP NOT NULL DEFAULT NOW(),
-  reservado_at            TIMESTAMP,
-  reportada_at            TIMESTAMP,
-  pagado_at               TIMESTAMP,
-  usado_at                TIMESTAMP
-);
-
-CREATE INDEX idx_tickets_funcion ON tickets(funcion_id);
-CREATE INDEX idx_tickets_vendedor ON tickets(vendedor_phone);
-CREATE INDEX idx_tickets_estado ON tickets(estado);
-CREATE INDEX idx_tickets_comprador ON tickets(comprador_nombre);
-
--- 3.1 AUDITORÍA: Movimientos de tickets
-CREATE TABLE IF NOT EXISTS ticket_movimientos (
-  id           SERIAL PRIMARY KEY,
-  tipo         VARCHAR(30) NOT NULL CHECK (tipo IN (
-    'ASIGNACION',
-    'RESERVA',
-    'VENTA_REPORTADA',
-    'PAGO_APROBADO',
-    'TRANSFERENCIA',
-    'ANULACION',
-    'VALIDACION'
-  )),
-  ticket_code  VARCHAR(50) NOT NULL REFERENCES tickets(code) ON DELETE CASCADE,
-  desde_phone  VARCHAR(20),
-  hacia_phone  VARCHAR(20),
-  motivo       TEXT,
-  created_at   TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS idx_ticket_movimientos_ticket ON ticket_movimientos(ticket_code);
-CREATE INDEX IF NOT EXISTS idx_ticket_movimientos_tipo ON ticket_movimientos(tipo);
-CREATE INDEX IF NOT EXISTS idx_ticket_movimientos_created_at ON ticket_movimientos(created_at);
-
--- 4. VISTA: Resumen por vendedor y función
-CREATE VIEW v_resumen_vendedor_funcion AS
-SELECT
-  t.funcion_id,
-  f.fecha,
-  t.vendedor_phone,
-  u.name AS vendedor_nombre,
-  o.nombre AS obra_nombre,
-  
-  -- Conteos
-  COUNT(*) FILTER (WHERE t.estado = 'STOCK_ACTOR') AS para_vender,
-  COUNT(*) FILTER (WHERE t.estado = 'RESERVADO') AS reservadas,
-  COUNT(*) FILTER (WHERE t.estado = 'REPORTADA_VENDIDA') AS reportadas_vendidas,
-  COUNT(*) FILTER (WHERE t.estado IN ('PAGADO', 'USADO')) AS pagadas,
-  COUNT(*) FILTER (WHERE t.estado = 'USADO') AS usadas,
-  
-  -- Dinero
-  SUM(CASE WHEN t.estado IN ('REPORTADA_VENDIDA', 'PAGADO', 'USADO') 
-           THEN COALESCE(t.precio, f.precio_base) 
-           ELSE 0 END) AS monto_reportado,
-  
-  SUM(CASE WHEN t.aprobada_por_admin 
-           THEN COALESCE(t.precio, f.precio_base) 
-           ELSE 0 END) AS monto_aprobado,
-  
-  SUM(CASE WHEN t.reportada_por_vendedor AND NOT t.aprobada_por_admin
-           THEN COALESCE(t.precio, f.precio_base) 
-           ELSE 0 END) AS monto_debe
-           
-FROM tickets t
-JOIN funciones f ON f.id = t.funcion_id
-JOIN obras o ON o.id = f.obra_id
-LEFT JOIN users u ON u.phone = t.vendedor_phone
-WHERE t.vendedor_phone IS NOT NULL
-GROUP BY t.funcion_id, f.fecha, t.vendedor_phone, u.name, o.nombre;
-
--- 5. VISTA: Resumen global por función (para admin)
-CREATE VIEW v_resumen_funcion_admin AS
-SELECT
-  f.id,
-  f.fecha,
-  f.lugar,
-  f.capacidad,
-  f.precio_base,
-  f.estado AS estado_funcion,
-  o.nombre AS obra_nombre,
-  g.nombre AS grupo_nombre,
-  
-  -- Conteos de tickets
-  COUNT(t.code) AS total_generados,
-  COUNT(*) FILTER (WHERE t.estado = 'DISPONIBLE') AS disponibles,
-  COUNT(*) FILTER (WHERE t.estado = 'STOCK_ACTOR') AS en_stock_actores,
-  COUNT(*) FILTER (WHERE t.estado = 'RESERVADO') AS reservadas,
-  COUNT(*) FILTER (WHERE t.estado = 'REPORTADA_VENDIDA') AS reportadas_sin_aprobar,
-  COUNT(*) FILTER (WHERE t.estado IN ('PAGADO', 'USADO')) AS pagadas,
-  COUNT(*) FILTER (WHERE t.estado = 'USADO') AS usadas,
-  
-  -- Dinero
-  SUM(CASE WHEN t.estado IN ('REPORTADA_VENDIDA', 'PAGADO', 'USADO')
-           THEN COALESCE(t.precio, f.precio_base)
-           ELSE 0 END) AS recaudacion_teorica,
-  
-  SUM(CASE WHEN t.aprobada_por_admin
-           THEN COALESCE(t.precio, f.precio_base)
-           ELSE 0 END) AS recaudacion_real,
-  
-  SUM(CASE WHEN t.reportada_por_vendedor AND NOT t.aprobada_por_admin
-           THEN COALESCE(t.precio, f.precio_base)
-           ELSE 0 END) AS pendiente_aprobar
-
-FROM funciones f
-JOIN obras o ON o.id = f.obra_id
-JOIN grupos g ON g.id = o.grupo_id
-LEFT JOIN tickets t ON t.funcion_id = f.id
-GROUP BY f.id, f.fecha, f.lugar, f.capacidad, f.precio_base, f.estado, o.nombre, g.nombre;
-
--- 6. GRUPOS (para clases de teatro)
+-- 2. GRUPOS (para clases de teatro)
 CREATE TABLE grupos (
-  id                SERIAL PRIMARY KEY,
-  nombre            VARCHAR(200) NOT NULL,
-  descripcion       TEXT,
-  director_cedula   VARCHAR(20) NOT NULL REFERENCES users(cedula),  -- creador y director del grupo
-  
-  -- Horario fijo de clases (NO se puede cambiar)
-  dia_semana        VARCHAR(20) NOT NULL CHECK (dia_semana IN ('Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo')),
-  hora_inicio       TIME NOT NULL,
-  
-  -- Período del grupo
-  fecha_inicio      DATE NOT NULL,
-  fecha_fin         DATE NOT NULL,
-  
-  -- Obra que trabajarán
-  obra_a_realizar   VARCHAR(200),
-  
-  -- Estado
-  estado            VARCHAR(20) NOT NULL CHECK (estado IN ('ACTIVO', 'ARCHIVADO')) DEFAULT 'ACTIVO',
-  
-  -- Foto del grupo (elenco)
-  foto_url          TEXT,
-  
-  created_at        TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at        TIMESTAMP NOT NULL DEFAULT NOW()
+  id                  SERIAL PRIMARY KEY,
+  nombre              VARCHAR(150) NOT NULL,
+  horario_fijo        VARCHAR(100),
+  director_cedula     VARCHAR(20) NOT NULL REFERENCES usuarios(cedula),
+  obra_nombre         VARCHAR(150) DEFAULT 'BACO',
+  foto_url            TEXT DEFAULT '/assets/baco.png',
+  created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX idx_grupos_director ON grupos(director_cedula);
-CREATE INDEX idx_grupos_estado ON grupos(estado);
-CREATE INDEX idx_grupos_fecha_fin ON grupos(fecha_fin);
 
--- 7. MIEMBROS DE GRUPOS (relación many-to-many, incluye directores)
-CREATE TABLE grupo_miembros (
-  id              SERIAL PRIMARY KEY,
-  grupo_id        INT NOT NULL REFERENCES grupos(id) ON DELETE CASCADE,
-  miembro_cedula  VARCHAR(20) NOT NULL REFERENCES users(cedula),
-  rol_en_grupo    VARCHAR(20) NOT NULL CHECK (rol_en_grupo IN ('DIRECTOR', 'ACTOR')) DEFAULT 'ACTOR',
-  
-  fecha_ingreso   TIMESTAMP NOT NULL DEFAULT NOW(),
-  fecha_salida    TIMESTAMP,           -- NULL si sigue activo
-  activo          BOOLEAN NOT NULL DEFAULT TRUE,
-  
-  UNIQUE(grupo_id, miembro_cedula)     -- Un miembro no puede estar duplicado en un grupo
+-- 3. INTEGRANTES DE GRUPO
+CREATE TABLE grupo_integrantes (
+  id                  SERIAL PRIMARY KEY,
+  grupo_id            INT NOT NULL REFERENCES grupos(id) ON DELETE CASCADE,
+  usuario_cedula      VARCHAR(20) NOT NULL REFERENCES usuarios(cedula),
+  rol_en_grupo        VARCHAR(30),
+  created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (grupo_id, usuario_cedula)
 );
 
-CREATE INDEX idx_grupo_miembros_grupo ON grupo_miembros(grupo_id);
-CREATE INDEX idx_grupo_miembros_miembro ON grupo_miembros(miembro_cedula);
-CREATE INDEX idx_grupo_miembros_activo ON grupo_miembros(activo);
+CREATE INDEX idx_grupo_integrantes_grupo ON grupo_integrantes(grupo_id);
+CREATE INDEX idx_grupo_integrantes_usuario ON grupo_integrantes(usuario_cedula);
 
--- 8. VISTA: Grupos con información completa
-CREATE VIEW v_grupos_completos AS
-SELECT
-  g.id,
-  g.nombre,
-  g.descripcion,
-  g.director_cedula,
-  u.name AS director_nombre,
-  g.dia_semana,
-  g.hora_inicio,
-  g.fecha_inicio,
-  g.fecha_fin,
-  g.obra_a_realizar,
-  g.estado,
-  g.created_at,
-  g.updated_at,
-  
-  -- Contar miembros activos
-  COUNT(gm.id) FILTER (WHERE gm.activo = TRUE) AS miembros_activos,
-  
-  -- Lista de miembros activos
-  json_agg(
-    json_build_object(
-      'cedula', um.cedula,
-      'nombre', um.name,
-      'genero', um.genero,
-      'fecha_ingreso', gm.fecha_ingreso
-    ) ORDER BY um.name
-  ) FILTER (WHERE gm.activo = TRUE) AS miembros
-  
-FROM grupos g
-JOIN users u ON u.cedula = g.director_cedula
-LEFT JOIN grupo_miembros gm ON gm.grupo_id = g.id
-LEFT JOIN users um ON um.cedula = gm.miembro_cedula
-GROUP BY g.id, g.nombre, g.descripcion, g.director_cedula, u.name, 
-         g.dia_semana, g.hora_inicio, g.fecha_inicio, g.fecha_fin, 
-         g.obra_a_realizar, g.estado, g.created_at, g.updated_at;
-
--- 9. OBRAS (creadas por grupos)
-CREATE TABLE obras (
-  id              SERIAL PRIMARY KEY,
-  grupo_id        INT NOT NULL REFERENCES grupos(id) ON DELETE CASCADE,
-  nombre          VARCHAR(200) NOT NULL,
-  descripcion     TEXT,
-  autor           VARCHAR(200),
-  genero          VARCHAR(100),
-  duracion_aprox  INT,                          -- Duración en minutos
-  estado          VARCHAR(20) NOT NULL CHECK (estado IN ('EN_DESARROLLO', 'LISTA', 'ARCHIVADA')) DEFAULT 'EN_DESARROLLO',
-  created_at      TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at      TIMESTAMP NOT NULL DEFAULT NOW()
+-- 4. ENSAYOS
+CREATE TABLE ensayos (
+  id                  SERIAL PRIMARY KEY,
+  grupo_id            INT NOT NULL REFERENCES grupos(id) ON DELETE CASCADE,
+  fecha               DATE NOT NULL,
+  hora                TIME NOT NULL,
+  lugar               VARCHAR(200),
+  descripcion         TEXT,
+  created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_obras_grupo ON obras(grupo_id);
-CREATE INDEX idx_obras_estado ON obras(estado);
+CREATE INDEX idx_ensayos_grupo ON ensayos(grupo_id);
+CREATE INDEX idx_ensayos_fecha ON ensayos(fecha);
 
--- 10. ENSAYOS (vinculados a obras)
-CREATE TABLE ensayos_generales (
-  id              SERIAL PRIMARY KEY,
-  obra_id         INT NOT NULL REFERENCES obras(id) ON DELETE CASCADE,
-  titulo          VARCHAR(200) NOT NULL,
-  fecha           TIMESTAMP NOT NULL,
-  hora_fin        TIME,
-  lugar           VARCHAR(200) NOT NULL,
-  descripcion     TEXT,
-  created_at      TIMESTAMP NOT NULL DEFAULT NOW()
+-- 5. FUNCIONES (presentaciones)
+CREATE TABLE funciones (
+  id                  SERIAL PRIMARY KEY,
+  grupo_id            INT NOT NULL REFERENCES grupos(id) ON DELETE CASCADE,
+  fecha               DATE NOT NULL,
+  hora                TIME NOT NULL,
+  lugar               VARCHAR(200) NOT NULL,
+  precio_entrada      NUMERIC(10,2) NOT NULL,
+  created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_ensayos_obra ON ensayos_generales(obra_id);
-CREATE INDEX idx_ensayos_fecha ON ensayos_generales(fecha);
+CREATE INDEX idx_funciones_grupo ON funciones(grupo_id);
+CREATE INDEX idx_funciones_fecha ON funciones(fecha);
 
--- 11. VISTA: Obras con información del grupo
-CREATE VIEW v_obras_completas AS
-SELECT
-  o.id,
-  o.grupo_id,
-  o.nombre,
-  o.descripcion,
-  o.autor,
-  o.genero,
-  o.duracion_aprox,
-  o.estado,
-  o.created_at,
-  o.updated_at,
-  g.nombre as grupo_nombre,
-  g.director_cedula,
-  g.director_nombre,
-  g.dia_semana as grupo_dia_semana,
-  g.hora_inicio as grupo_hora_inicio,
-  g.miembros_activos
-FROM obras o
-LEFT JOIN v_grupos_completos g ON g.id = o.grupo_id;
+-- 6. ENTRADAS
+CREATE TABLE entradas (
+  id                      SERIAL PRIMARY KEY,
+  funcion_id              INT NOT NULL REFERENCES funciones(id) ON DELETE CASCADE,
+  vendedor_cedula         VARCHAR(20) REFERENCES usuarios(cedula),
+  estado                  VARCHAR(20) NOT NULL CHECK (
+                            estado IN ('sin_asignar', 'asignada', 'reservada', 'pagada')
+                          ) DEFAULT 'sin_asignar',
+  invitado_nombre         VARCHAR(150),
+  invitado_celular        VARCHAR(30),
+  precio                  NUMERIC(10,2) NOT NULL,
+  qr_code                 TEXT,
+  created_at              TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  reservado_at            TIMESTAMP,
+  pagado_at               TIMESTAMP
+);
 
--- 12. VISTA: Ensayos con información completa (obra + grupo)
-CREATE VIEW v_ensayos_completos AS
-SELECT 
-  e.id,
-  e.obra_id,
-  e.titulo,
-  e.fecha,
-  e.hora_fin,
-  e.lugar,
-  e.descripcion,
-  e.created_at,
-  o.nombre as obra_nombre,
-  o.grupo_id,
-  g.nombre as grupo_nombre,
-  g.director_cedula as grupo_director_cedula,
-  g.director_nombre as grupo_director_nombre,
-  g.dia_semana as grupo_dia_semana,
-  g.miembros_activos,
-  g.miembros as grupo_miembros
-FROM ensayos_generales e
-LEFT JOIN obras o ON o.id = e.obra_id
-LEFT JOIN v_grupos_completos g ON g.id = o.grupo_id
-ORDER BY e.fecha DESC, e.hora_fin DESC;
+CREATE INDEX idx_entradas_funcion ON entradas(funcion_id);
+CREATE INDEX idx_entradas_vendedor ON entradas(vendedor_cedula);
+CREATE INDEX idx_entradas_estado ON entradas(estado);
+
+-- 7. GASTOS
+CREATE TABLE gastos (
+  id                  SERIAL PRIMARY KEY,
+  funcion_id          INT NOT NULL REFERENCES funciones(id) ON DELETE CASCADE,
+  descripcion         VARCHAR(200) NOT NULL,
+  monto               NUMERIC(10,2) NOT NULL,
+  created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_gastos_funcion ON gastos(funcion_id);
+
+-- 8. CUOTAS (escuela)
+CREATE TABLE cuotas (
+  id                  SERIAL PRIMARY KEY,
+  grupo_id            INT NOT NULL REFERENCES grupos(id) ON DELETE CASCADE,
+  actor_cedula        VARCHAR(20) NOT NULL REFERENCES usuarios(cedula),
+  monto               NUMERIC(10,2) NOT NULL,
+  vencimiento         DATE NOT NULL,
+  estado              VARCHAR(20) NOT NULL CHECK (
+                        estado IN ('al_dia', 'parcial', 'adeuda')
+                      ) DEFAULT 'al_dia',
+  created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_cuotas_grupo ON cuotas(grupo_id);
+CREATE INDEX idx_cuotas_actor ON cuotas(actor_cedula);
+CREATE INDEX idx_cuotas_vencimiento ON cuotas(vencimiento);
 
 -- ========================================
--- COMENTARIOS PARA ENTENDER EL FLUJO
+-- TRIGGERS Y FUNCIONES
+-- ========================================
+
+-- Trigger: Crear cuota automáticamente al agregar actor a grupo
+CREATE OR REPLACE FUNCTION crear_cuota_automatica()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Solo si el usuario es actor
+  IF EXISTS (SELECT 1 FROM usuarios WHERE cedula = NEW.usuario_cedula AND rol = 'actor') THEN
+    INSERT INTO cuotas (grupo_id, actor_cedula, monto, vencimiento)
+    VALUES (NEW.grupo_id, NEW.usuario_cedula, 0, CURRENT_DATE + INTERVAL '30 days');
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_crear_cuota
+AFTER INSERT ON grupo_integrantes
+FOR EACH ROW
+EXECUTE FUNCTION crear_cuota_automatica();
+
+-- ========================================
+-- VISTAS ÚTILES
+-- ========================================
+
+-- Vista: Recaudación por función
+CREATE OR REPLACE VIEW v_recaudacion_funcion AS
+SELECT
+  f.id AS funcion_id,
+  TO_CHAR(f.fecha, 'DD/MM/YYYY') AS fecha,
+  TO_CHAR(f.hora, 'HH24:MI') AS hora,
+  f.lugar,
+  g.nombre AS grupo,
+  g.obra_nombre,
+  COUNT(e.id) FILTER (WHERE e.estado = 'pagada') AS entradas_pagadas,
+  COUNT(e.id) FILTER (WHERE e.estado = 'reservada') AS entradas_reservadas,
+  COUNT(e.id) FILTER (WHERE e.estado = 'asignada') AS entradas_asignadas,
+  COUNT(e.id) FILTER (WHERE e.estado = 'sin_asignar') AS entradas_sin_asignar,
+  COALESCE(SUM(CASE WHEN e.estado = 'pagada' THEN e.precio END), 0) AS total_recaudado
+FROM funciones f
+JOIN grupos g ON g.id = f.grupo_id
+LEFT JOIN entradas e ON e.funcion_id = f.id
+GROUP BY f.id, f.fecha, f.hora, f.lugar, g.nombre, g.obra_nombre;
+
+-- Vista: Balance por función
+CREATE OR REPLACE VIEW v_balance_funcion AS
+SELECT
+  f.id AS funcion_id,
+  TO_CHAR(f.fecha, 'DD/MM/YYYY') AS fecha,
+  g.obra_nombre,
+  COALESCE(SUM(CASE WHEN e.estado = 'pagada' THEN e.precio END), 0) AS ingresos,
+  COALESCE(SUM(ga.monto), 0) AS egresos,
+  COALESCE(SUM(CASE WHEN e.estado = 'pagada' THEN e.precio END), 0) - COALESCE(SUM(ga.monto), 0) AS balance
+FROM funciones f
+JOIN grupos g ON g.id = f.grupo_id
+LEFT JOIN entradas e ON e.funcion_id = f.id
+LEFT JOIN gastos ga ON ga.funcion_id = f.id
+GROUP BY f.id, f.fecha, g.obra_nombre;
+
+-- Vista: Entradas por actor
+CREATE OR REPLACE VIEW v_entradas_actor AS
+SELECT
+  u.cedula,
+  u.nombre,
+  u.apellido,
+  u.foto_url,
+  COUNT(e.id) AS total_entradas,
+  COUNT(*) FILTER (WHERE e.estado = 'pagada') AS entradas_pagadas,
+  COUNT(*) FILTER (WHERE e.estado = 'reservada') AS entradas_reservadas,
+  COUNT(*) FILTER (WHERE e.estado = 'asignada') AS entradas_asignadas,
+  SUM(CASE WHEN e.estado = 'pagada' THEN e.precio ELSE 0 END) AS recaudado
+FROM usuarios u
+LEFT JOIN entradas e ON e.vendedor_cedula = u.cedula
+WHERE u.rol = 'actor'
+GROUP BY u.cedula, u.nombre, u.apellido, u.foto_url;
+
+-- Vista: Cumpleaños del día
+CREATE OR REPLACE VIEW v_cumpleanos_hoy AS
+SELECT
+  cedula,
+  nombre,
+  apellido,
+  foto_url,
+  TO_CHAR(fecha_nacimiento, 'DD/MM') AS cumpleanos,
+  EXTRACT(YEAR FROM AGE(CURRENT_DATE, fecha_nacimiento)) AS edad
+FROM usuarios
+WHERE EXTRACT(DAY FROM fecha_nacimiento) = EXTRACT(DAY FROM CURRENT_DATE)
+AND EXTRACT(MONTH FROM fecha_nacimiento) = EXTRACT(MONTH FROM CURRENT_DATE)
+ORDER BY nombre, apellido;
+
+-- Vista: Historial de funciones por usuario
+CREATE OR REPLACE VIEW v_historial_funciones AS
+SELECT
+  gi.usuario_cedula,
+  TO_CHAR(f.fecha, 'DD/MM/YYYY') AS fecha,
+  TO_CHAR(f.hora, 'HH24:MI') AS hora,
+  f.lugar,
+  g.nombre AS grupo,
+  g.obra_nombre,
+  g.foto_url AS grupo_foto
+FROM grupo_integrantes gi
+JOIN grupos g ON g.id = gi.grupo_id
+JOIN funciones f ON f.grupo_id = g.id
+ORDER BY f.fecha DESC, f.hora DESC;
+
+-- Vista: Cuotas por actor
+CREATE OR REPLACE VIEW v_cuotas_actor AS
+SELECT
+  c.actor_cedula,
+  g.nombre AS grupo,
+  c.monto,
+  TO_CHAR(c.vencimiento, 'DD/MM/YYYY') AS vencimiento,
+  c.estado,
+  c.created_at
+FROM cuotas c
+JOIN grupos g ON g.id = c.grupo_id
+ORDER BY c.vencimiento ASC;
+
+-- ========================================
+-- COMENTARIOS FINALES
 -- ========================================
 
 /*
-FLUJO COMPLETO TICKETS:
+SISTEMA BACO - REGLAS CLAVE:
 
-1. ADMIN crea función (show)
-   └─> Se generan N tickets con estado DISPONIBLE
-
-2. ADMIN asigna 10 tickets a vendedor
-   └─> Pasan a STOCK_VENDEDOR (vendedor_phone se llena)
-
-3. VENDEDOR reserva ticket con nombre de comprador
-   └─> Pasa a RESERVADO
-   └─> comprador_nombre, comprador_contacto se llenan
-
-4. VENDEDOR cobra y reporta venta
-   └─> Pasa a REPORTADA_VENDIDA
-   └─> reportada_por_vendedor = TRUE
-   └─> reportada_at = NOW()
-   └─> precio, medio_pago se llenan
-   ⚠️ ADMIN ve: "este vendedor me debe plata"
-
-5. ADMIN recibe plata y aprueba
-   └─> Pasa a PAGADO
-   └─> aprobada_por_admin = TRUE
-   └─> pagado_at = NOW()
-   ✅ Ticket listo para entrar al show
-
-6. ADMIN escanea QR en puerta
-   └─> Pasa a USADO
-   └─> usado_at = NOW()
-   🎭 Cliente entra
-
-ESTADOS CLAVE:
-- REPORTADA_VENDIDA + reportada_por_vendedor=true + aprobada_por_admin=false
-  => "El vendedor me debe esta plata"
-  
-- PAGADO + aprobada_por_admin=true
-  => "Ya recibí el dinero, ticket listo para usar"
-*/
-
-/*
-FLUJO COMPLETO GRUPOS:
-
-1. DIRECTOR o SUPER crea grupo
-   └─> Se llena: nombre, día_semana, hora_inicio, fecha_inicio, fecha_fin, obra_a_realizar
-   └─> director_cedula = cedula del creador
-   └─> estado = ACTIVO
-
-2. DIRECTOR agrega miembros (actores/actrices)
-   └─> Se crea registro en grupo_miembros
-   └─> activo = TRUE
-   └─> fecha_ingreso = NOW()
-
-3. DIRECTOR puede:
-   ✅ Agregar/eliminar miembros
-   ✅ Cambiar obra_a_realizar
-   ✅ Ver lista de miembros
-   ❌ NO puede cambiar dia_semana ni hora_inicio (horario fijo)
-
-4. Cuando pasa fecha_fin:
-   └─> El grupo pasa a ARCHIVADO automáticamente
-   └─> Los miembros pueden ver histórico
-
-PERMISOS:
-- SUPER: puede crear grupos, ver todos, modificar cualquiera
-- ADMIN (Director): puede crear grupos, ver los suyos, modificar solo los que creó
-- VENDEDOR (Actor/Actriz): puede ver grupos donde es miembro
-
-ARCHIVADO:
-- Un grupo archivado mantiene su historial
-- No se pueden agregar nuevos miembros
-- Se puede consultar para ver qué obra trabajaron
+1. CÉDULA = ID único e inmutable
+2. Contraseña por defecto: "admin"
+3. Fotos circulares estilo WhatsApp
+4. Formato de fechas: DD/MM/YYYY en frontend
+5. Cuotas se crean automáticamente al agregar actor
+6. Estados de entrada pueden volver atrás
+7. Director es dueño de sus grupos
+8. Super tiene control total
+9. Identidad visual: BACO (teatral, humano, mobile-first)
 */
