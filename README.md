@@ -1,228 +1,238 @@
-# 🎭 Baco Teatro - Sistema de Venta de Entradas
+# 🎭 BACO TEATRO - Sistema de Gestión de Entradas
 
-Sistema completo de gestión y venta de entradas para teatro con diseño teatral profesional.
+Sistema integral de gestión y venta de entradas para teatro con autenticación por roles y dashboards personalizados.
 
-## 📚 Documentación
+---
 
-Toda la documentación funcional, técnica y operativa está centralizada en:
- - [documentacion/README.md](documentacion/README.md)
- - Guía de tareas de VS Code: [./.vscode/README.md](.vscode/README.md)
- - **NUEVA Arquitectura Grupos → Obras → Ensayos/Funciones:** [docs/ARQUITECTURA-GRUPOS-OBRAS.md](docs/ARQUITECTURA-GRUPOS-OBRAS.md)
- - Migración 2025-12-12 (users.phone + FK tickets): ver `documentacion/deploy/MIGRACION-2025-12-12-phone-fk.md`
-Incluye guía de entorno, deploy en Render, manuales, arquitectura y reportes de testing.
+## 🚀 Ejecución Rápida (2 pasos)
 
-## 🚀 Características
+### Opción 1: Con VS Code Tasks (Recomendado ⭐)
 
-### Sistema de Gestión Teatral Completo
-- 🎭 **Grupos Teatrales** - Gestión de compañías con directores y actores
-- 📚 **Obras** - Administración de trabajos teatrales (EN_DESARROLLO → LISTA → ARCHIVADA)
-- 🎵 **Ensayos** - Programación de ensayos por obra
-- 🎪 **Funciones** - Creación de presentaciones públicas
-- 👥 **Co-directores** - Permite colaboración entre directores
-- 🎯 **Permisos por rol** - SUPER, ADMIN (Director), VENDEDOR (Actor), INVITADO
+1. **Abre la paleta de comandos:** `Ctrl+Shift+B`
+2. **Selecciona:** "Dev: Start DB + Backend Dev (nodemon)"
+3. **Accede a:** http://localhost:3000
 
-### Venta y Distribución
-- 🎫 **Venta de entradas** con generación de PDF y QR
-- 📧 **Envío por Email** y WhatsApp
-- 💳 **Distribución de tickets** entre actores/vendedores
-- 📊 **Reportes de ventas** por obra y vendedor
-
-### Experiencia de Usuario
-- ✨ **Sistema virgen** - Se entrega sin datos precargados
-- 👤 **Usuario supremo** inicial para configuración
-- 🎨 **Diseño teatral** profesional y responsive
-- 📱 **Optimizado para móviles**
-
-## 📦 Instalación
+### Opción 2: Manual
 
 ```bash
-# Clonar repositorio
-git clone <url-del-repo>
-cd Entradas_de_teatro
+# Terminal 1: Base de datos
+cd /workspaces/Entradas_de_teatro
+docker run -d --name teatro-postgres \
+  -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_DB=teatro \
+  -p 5432:5432 \
+  postgres:15
 
-# Instalar dependencias
+# Terminal 2: Backend
+cd teatro-tickets-backend
 npm install
+npm run dev
 
-# Configurar variables de entorno
-cp .env.example .env
-# Editar .env con tus configuraciones
-
-# Iniciar servidor
-npm start
+# Acceder a http://localhost:3000
 ```
 
-## 🎯 Primera Configuración
+---
 
-El sistema se entrega **completamente virgen** con solo:
+## 📍 URLs Principales
 
-### Usuario Supremo Inicial
+| Sección | URL |
+|---------|-----|
+| Inicio | http://localhost:3000 |
+| Funciones de Hoy | http://localhost:3000/funciones-hoy.html |
+| Próximas Funciones | http://localhost:3000/proximas-funciones.html |
+| Dashboard Super | http://localhost:3000/pages/roles/super.html |
+| Dashboard Director | http://localhost:3000/pages/roles/admin.html |
+| Dashboard Actor | http://localhost:3000/pages/roles/actor.html |
 
-- **Cédula:** `48376669`
-- **Password:** `Teamomama91`
-- **Rol:** Supremo
+---
 
-⚠️ **IMPORTANTE:** Cambiar la contraseña inmediatamente después del primer acceso.
+## 👤 Credenciales de Prueba
+
+| Rol | Cédula | Contraseña |
+|-----|--------|-----------|
+| SUPER | 48376669 | Teamomama91 |
+| DIRECTOR | 11111111 | Teamomama91 |
+| ACTOR | 55555555 | Teamomama91 |
+
+⚠️ **En producción:** Cambiar estas contraseñas inmediatamente.
+
+---
+
+## 📊 Datos Iniciales
+
+El sistema viene **completamente poblado** con:
+
+- ✅ **5 grupos teatrales:** La Candela, Los Trágicos, Etapas, Máscaras Teatro, Baco
+- ✅ **9 directores** (1 por grupo + usuarios de prueba)
+- ✅ **5 actores** integrados en los grupos
+- ✅ **28 funciones próximas** (listas para vender entradas)
+- ✅ **Usuario SUPER** para administración completa
+
+### Regenerar datos
+
+Para reiniciar con datos frescos:
+
+```bash
+node scripts/borrar.sh                    # Borra todo menos usuario SUPER
+node teatro-tickets-backend/create-theater-groups.js  # Crea 28 funciones nuevas
+```
+
+---
+
+## 🧪 Testing
+
+```bash
+# Ejecutar test de integración completo
+bash test-integracion.sh
+```
+
+Este test valida:
+- Conectividad del servidor
+- Endpoints públicos (funciones)
+- Autenticación (3 roles)
+- Acceso a datos por rol
+- Estado de páginas frontend
+- Sistema de autenticación en navegación
+
+---
 
 ## 🛠️ Scripts Disponibles
 
 ```bash
-# Iniciar servidor
-npm start
+# Backend
+npm run dev           # Desarrollo con auto-reinicio (nodemon)
+npm run build         # Compilar proyecto
+npm run debug         # Modo debug con inspector
 
-# Desarrollo con auto-reinicio
-npm run dev
+# Base de datos
+npm run migrate-phone-fk   # Aplicar migraciones
+npm run verificar-db       # Verificar estado de BD
 
-# Limpiar base de datos (mantiene usuario supremo)
-npm run limpiar-db
-
-# Verificar estado de la base de datos
-npm run verificar-db
-
-# Limpiar funciones pasadas manualmente
-npm run limpiar-funciones-pasadas
-
-# Preparar para entrega (limpiar + verificar)
-npm run preparar-entrega
+# Limpiar datos
+npm run limpiar-db        # Borra todo excepto usuario SUPER
+npm run limpiar-funciones-pasadas  # Elimina funciones con fecha pasada
 ```
 
-## 🕒 Limpieza Automática
+---
 
-El sistema incluye limpieza automática de funciones pasadas:
+## 🎯 Características
 
-- ✅ Se ejecuta al iniciar el servidor
-- ✅ Se ejecuta cada 24 horas automáticamente
-- ✅ Solo muestra funciones actuales y futuras
-- ✅ Las funciones pasadas se ocultan automáticamente
+✅ Autenticación por roles (SUPER, DIRECTOR, ACTOR, INVITADO)
+✅ Gestión de grupos teatrales y funciones
+✅ Sistema de venta de entradas y reservas
+✅ Dashboards personalizados por rol
+✅ Sitio público de funciones (hoy y próximas)
+✅ API REST completa (40+ endpoints)
+✅ Navegación con autenticación integrada
+✅ Página "Cerrar Sesión" con dropdown de usuario
+✅ Página de guía por rol
 
-### Limpieza Manual
+---
 
-Para limpiar funciones pasadas manualmente:
-
-```bash
-npm run limpiar-funciones-pasadas
-```
-
-### Configurar Limpieza con Cron (Opcional)
-
-En producción, puedes configurar un cron job:
-
-```bash
-# Ejecutar todos los días a las 00:00
-0 0 * * * cd /path/to/proyecto && npm run limpiar-funciones-pasadas
-```
-
-## 📊 Verificar Sistema Virgen
-
-Para verificar que el sistema está virgen:
-
-```bash
-npm run verificar-db
-```
-
-Debe mostrar:
-- ✅ Obras: 0
-- ✅ Entradas: 0
-- ✅ Usuarios: 1 (solo supremo)
-- ✅ Estado: VIRGEN
-
-## 🗂️ Estructura del Proyecto
+## 📁 Estructura del Proyecto
 
 ```
 Entradas_de_teatro/
-├── models/              # Modelos de MongoDB
-│   ├── Obra.js
-│   ├── Entrada.js
-│   └── Usuario.js
-├── public/              # Archivos estáticos
-│   ├── styles/
-│   │   ├── common.css
-│   │   ├── index.css
-│   │   └── contacto.css
-│   ├── images/
-│   │   └── logo-baco.svg
-│   ├── index.html
-│   ├── contacto.html
-│   └── script.js
-├── scripts/             # Scripts de utilidad
-│   ├── limpiar-db.js
-│   └── verificar-db.js
-├── server.js            # Servidor principal
-├── package.json
-└── README.md
+├── public/                  # Frontend (HTML/CSS/JS estático)
+│   ├── index.html          # Página de inicio
+│   ├── funciones-hoy.html  # Funciones de hoy solamente
+│   ├── proximas-funciones.html  # Próximas funciones
+│   ├── sobre-baco.html     # Quiénes somos
+│   ├── guia.html           # Guía de uso
+│   ├── js/
+│   │   ├── nav-auth.js     # Sistema de autenticación en navegación
+│   │   ├── baco-funciones-publicas.js  # Cargar funciones dinámicamente
+│   │   └── ...
+│   └── css/
+│       ├── baco-landing.css   # Estilos principales (DO NOT MODIFY)
+│       ├── nav-auth.css       # Estilos del sistema de auth
+│       └── ...
+├── teatro-tickets-backend/
+│   ├── index-v3-postgres.js   # Entry point del servidor
+│   ├── controllers/            # Lógica de HTTP
+│   ├── routes/                 # Definición de rutas
+│   ├── db/                     # Conexión y helpers PostgreSQL
+│   ├── middleware/             # Middlewares Express
+│   ├── config/                 # Configuración
+│   ├── create-theater-groups.js  # Script para crear datos de ejemplo
+│   └── package.json
+├── scripts/                    # Utilidades de línea de comando
+├── tests/                      # Tests por rol
+└── test-integracion.sh        # Test de integración general
 ```
 
-### Estructura (backend actual)
+---
 
-```
-teatro-tickets-backend/
-├── config/        # Configuración (auth, middlewares comunes)
-├── controllers/   # Controladores HTTP (capa de entrada)
-├── db/            # Conexión y helpers PostgreSQL
-├── factories/     # Creación/ensamblado de objetos (a migrar gradualmente)
-├── middleware/    # Middlewares Express
-├── public/        # Frontend web empaquetado (build)
-├── routes/        # Definición de rutas y wiring de controladores
-├── services/      # Lógica de negocio reutilizable (a migrar gradualmente)
-├── utils/         # Utilidades compartidas
-└── index-v3-postgres.js  # Entry point del servidor
-```
+## 🔐 Autenticación
 
-Nota: si en el futuro adoptamos TypeScript, las “interfaces” vivirán en `src/types/` o `@types/`. Por ahora, se modela con JSDoc y tipado implícito.
+El sistema utiliza:
 
-## 🎨 Características del Diseño
+- **JWT tokens:** Almacenados en `localStorage`
+- **Duración:** 30 días
+- **Roles:** SUPER, DIRECTOR, ACTOR, INVITADO
+- **Logout:** Botón "Cerrar Sesión" en navegación, borra token automáticamente
 
-- 🎭 Logo de Baco Teatro en todas las páginas
-- 🎪 Cortina teatral animada
-- 🎨 Paleta de colores: Rojo oscuro y Dorado
-- 📱 Diseño responsive
-- ✨ Efectos hover y animaciones sutiles
+---
 
-## 📧 Configuración de Email (Opcional)
+## 🌐 API REST
 
-Para habilitar envío de entradas por email:
+Base URL: `http://localhost:3000/api`
 
-1. Configurar en `.env`:
-```bash
-EMAIL_USER=tu-email@gmail.com
-EMAIL_PASSWORD=tu-app-password
-```
+**Público (sin autenticación):**
+- `GET /public/funciones` - Listado de todas las funciones
 
-2. Para Gmail, crear App Password:
-   - Ir a Cuenta Google → Seguridad
-   - Verificación en dos pasos → Contraseñas de aplicaciones
+**Autenticado (requiere JWT):**
+- `GET /auth/perfil` - Datos del usuario logueado
+- `POST /auth/login` - Autenticación
+- `POST /auth/logout` - Cerrar sesión (frontend)
+- Y 35+ endpoints más por rol...
 
-## 📱 WhatsApp
+Documentación completa en [INDICE-DOCUMENTACION.md](./INDICE-DOCUMENTACION.md)
 
-El sistema genera enlaces de WhatsApp para enviar entradas directamente.
+---
 
-## 🔒 Seguridad
+## 📚 Documentación Adicional
 
-- ⚠️ Cambiar contraseña del usuario supremo
-- 🔐 Configurar variables de entorno en producción
-- 🛡️ No compartir credenciales de email
+- [Índice de Documentación](./INDICE-DOCUMENTACION.md)
+- [Resumen de Sesión 08/01](./RESUMEN-SESION-08-01.md)
+- [Cambios Recientes](./CHANGELOG.md)
+- [Guías por Rol](./documentacion/)
+
+---
 
 ## 🐛 Solución de Problemas
 
-### Base de datos no se conecta
+### Error: "Cannot connect to database"
 ```bash
-# Verificar que MongoDB está corriendo
-sudo systemctl status mongodb
+# Verificar que PostgreSQL está corriendo
+docker ps | grep teatro-postgres
+
+# Reiniciar si es necesario
+docker rm -f teatro-postgres
+docker run -d --name teatro-postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_USER=postgres -e POSTGRES_DB=teatro -p 5432:5432 postgres:15
 ```
 
-### Limpiar datos de prueba
+### Error: "localhost:3000 not accessible"
 ```bash
-npm run limpiar-db
+# Verificar que el backend está corriendo
+curl http://localhost:3000/public/funciones
+
+# Si no responde, reiniciar backend con npm run dev
 ```
 
-### Verificar estado
+### Limpiar datos y empezar de cero
 ```bash
-npm run verificar-db
+node scripts/borrar.sh
+node teatro-tickets-backend/create-theater-groups.js
 ```
+
+---
 
 ## 📄 Licencia
 
 Baco Teatro © 2024 - Todos los derechos reservados
 
-## 👥 Soporte
+## 👥 Contacto
 
-Para consultas: info@bacoteatro.com.ar
+info@bacoteatro.com.ar
