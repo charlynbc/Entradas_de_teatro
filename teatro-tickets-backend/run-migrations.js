@@ -22,7 +22,13 @@ async function runMigrations() {
             '003-grupos-update.sql',
             '004-funciones-grupos.sql',
             '007-ticket-auditoria-anulacion.sql',
-            '009-obra-prof-boleteria.sql'
+            '009-obra-prof-boleteria.sql',
+            '010-users-role-actor.sql',
+            '011-obra-prof-cierres-boleteria.sql',
+            '012-obra-prof-descripcion-funcion.sql',
+            '013-pro-triggers-views-roles.sql',
+            '014-procedimientos-auditoria.sql',
+            '015-vistas-permisos-pro.sql'
         ];
         
         for (const file of files) {

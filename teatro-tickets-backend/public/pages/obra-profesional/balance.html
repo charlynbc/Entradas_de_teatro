@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Balance - Obra Profesional</title>
+  <link rel="stylesheet" href="/css/baco-landing.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    body { background: var(--bg-dark); color: #fff; min-height: 100vh; }
+    .page { max-width: 1100px; margin: 0 auto; padding: 24px; }
+    .title { color: var(--secondary); margin: 0; }
+    .card { background: rgba(255,255,255,0.05); border: 1px solid rgba(244,140,6,0.25); border-radius: 12px; padding: 18px; margin-bottom: 14px; }
+    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 12px; }
+    .metric { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px; }
+    .metric .label { color: rgba(255,255,255,0.7); font-size: 0.9rem; }
+    .metric .value { font-size: 1.4rem; font-weight: 700; color: var(--secondary); }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.08); text-align: left; }
+    th { color: rgba(255,255,255,0.8); font-weight: 600; }
+    tbody tr:hover { background: rgba(255,255,255,0.04); }
+    .back { color: var(--secondary); text-decoration: none; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <a class="back" href="/pages/roles/director.html"><i class="fas fa-arrow-left"></i> Volver</a>
+    <h1 class="title" id="obraTitulo">Balance de obra</h1>
+
+    <div class="card">
+      <div class="metrics">
+        <div class="metric">
+          <div class="label">Ingresos</div>
+          <div class="value" id="mIngresos">$0</div>
+        </div>
+        <div class="metric">
+          <div class="label">Gastos</div>
+          <div class="value" id="mGastos">$0</div>
+        </div>
+        <div class="metric">
+          <div class="label">Balance</div>
+          <div class="value" id="mBalance">$0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0; color: var(--secondary);">Detalle por función</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Lugar</th>
+            <th>Ingresos</th>
+            <th>Gastos</th>
+          </tr>
+        </thead>
+        <tbody id="tablaFunc">
+          <tr><td colspan="4">Cargando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="/js/nav-auth.js"></script>
+  <script>
+    const token = localStorage.getItem('token');
+    const params = new URLSearchParams(window.location.search);
+    const obraId = params.get('obraId');
+    if (!token || !obraId) window.location.href = '/pages/auth/login.html';
+
+    function fmt(n) { return `$${Number(n || 0).toLocaleString('es-UY', { minimumFractionDigits: 0 })}`; }
+
+    async function loadBalance() {
+      const res = await fetch(`/api/boleteria/obra/${obraId}/balance`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error || 'Error al cargar balance'); return; }
+      document.getElementById('obraTitulo').textContent = data.obra?.nombre || 'Obra profesional';
+      document.getElementById('mIngresos').textContent = fmt(data.resumen?.ingresos || 0);
+      document.getElementById('mGastos').textContent = fmt(data.resumen?.gastos || 0);
+      document.getElementById('mBalance').textContent = fmt(data.resumen?.balance || 0);
+
+      const tbody = document.getElementById('tablaFunc');
+      if (!data.funciones || data.funciones.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4">Sin funciones registradas</td></tr>';
+      } else {
+        tbody.innerHTML = data.funciones.map(f => `
+          <tr>
+            <td>${new Date(f.fecha).toLocaleString('es-UY')}</td>
+            <td>${f.lugar || '-'}</td>
+            <td>${fmt(f.ingresos || 0)}</td>
+            <td>${fmt(f.gastos || 0)}</td>
+          </tr>
+        `).join('');
+      }
+    }
+
+    loadBalance().catch(console.error);
+  </script>
+</body>
+</html>

@@ -19,12 +19,16 @@ function checkAuth() {
             if (!res.ok) throw new Error('Token inválido');
             return res.json();
         })
-        .then(user => {
+        .then(perfil => {
+            const stored = JSON.parse(localStorage.getItem('user') || '{}');
+            const rol = (perfil.rol || perfil.role || stored.role || '').toUpperCase();
+            const nombre = perfil.nombre || perfil.name || stored.name || 'Usuario';
+
             // Determinar dashboard según rol
             let dashboard = 'actor';
-            if (user.rol === 'super' || user.rol === 'SUPER') {
+            if (rol === 'SUPER') {
                 dashboard = 'super';
-            } else if (user.rol === 'director' || user.rol === 'ADMIN') {
+            } else if (rol === 'ADMIN' || rol === 'DIRECTOR') {
                 dashboard = 'director';
             }
 
@@ -32,7 +36,7 @@ function checkAuth() {
             authButtons.innerHTML = `
                 <div class="user-menu" id="userMenu">
                     <button class="btn-login" onclick="toggleUserMenu(event)">
-                        <i class="fas fa-user-circle"></i> ${user.nombre || 'Usuario'}
+                        <i class="fas fa-user-circle"></i> ${nombre}
                     </button>
                     <div class="user-dropdown">
                         <a href="/pages/roles/${dashboard}.html">

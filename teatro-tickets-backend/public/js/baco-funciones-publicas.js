@@ -168,6 +168,8 @@ function createFuncionCard(funcion) {
     const showPrecio = Number.isFinite(precio) && precio > 0;
 
     const esProfesional = Boolean(funcion.es_profesional);
+    const cupo = Number(funcion.entradas_disponibles || 0);
+    const descripcion = truncate(funcion.descripcion || '', 160);
 
     card.innerHTML = `
         <div class="funcion-header">
@@ -195,7 +197,15 @@ function createFuncionCard(funcion) {
                     <i class="fas fa-ticket-alt"></i>
                     <span>${escapeHtml(funcion.estado || 'Disponible')}</span>
                 </div>
+                ${esProfesional ? `
+                <div class="info-item">
+                    <i class="fas fa-chair"></i>
+                    <span>${cupo > 0 ? `${cupo} entradas disponibles` : 'Cupo limitado'}</span>
+                </div>` : ''}
             </div>
+            ${descripcion ? `
+            <div class="funcion-desc">${escapeHtml(descripcion)}</div>
+            ` : ''}
             ${showPrecio ? `
             <div class="funcion-price">
                 <i class="fas fa-ticket-alt"></i> $${escapeHtml(formatPrice(precio))}
@@ -208,7 +218,7 @@ function createFuncionCard(funcion) {
             </button>
             ${esProfesional
                 ? `<button class="btn-reservar" onclick="event.stopPropagation(); comprarEnBoleteria(${safeJson(funcion)})">
-                        <i class=\"fas fa-cash-register\"></i> Comprar en Boletería
+                        <i class=\"fas fa-ticket\"></i> 🎟️ Comprar en Boletería BACO
                    </button>`
                 : `<button class="btn-reservar" onclick="event.stopPropagation(); startReserva(${safeJson(funcion)})">
                         <i class=\"fas fa-ticket\"></i> Reservar Entrada
@@ -241,6 +251,8 @@ function showFuncionDetail(funcion) {
     const showPrecio = Number.isFinite(precio) && precio > 0;
 
     const esProfesional = Boolean(funcion.es_profesional);
+    const cupo = Number(funcion.entradas_disponibles || 0);
+    const descripcion = funcion.descripcion || '';
 
     content.innerHTML = `
         <div class="modal-header">
@@ -282,6 +294,16 @@ function showFuncionDetail(funcion) {
                     </div>
                 </div>
 
+                ${esProfesional ? `
+                <div class="detail-item">
+                    <i class="fas fa-chair"></i>
+                    <div>
+                        <h4>Entradas disponibles</h4>
+                        <p>${cupo > 0 ? `${cupo} en boletería` : 'Consultar boletería'}</p>
+                    </div>
+                </div>
+                ` : ''}
+
                 ${showPrecio ? `
                 <div class="detail-item">
                     <i class="fas fa-dollar-sign"></i>
@@ -291,22 +313,45 @@ function showFuncionDetail(funcion) {
                     </div>
                 </div>
                 ` : ''}
+            ${descripcion ? `
+            <div class="detail-item" style="align-items:flex-start;">
+                <i class="fas fa-align-left" style="margin-top:4px;"></i>
+                <div>
+                    <h4>Descripción</h4>
+                    <p style="margin:6px 0; color:#4b5563; line-height:1.5;">${escapeHtml(descripcion)}</p>
+                </div>
             </div>
-                        ${esProfesional ? `
-                        <div class="elenco-section" style="background:#fff3cd;border-left:4px solid #ffcc00;padding:16px;border-radius:6px;margin-top:12px;">
-                            <h3 style="margin:0 0 8px 0;"><i class="fas fa-cash-register"></i> Venta exclusiva en Boletería</h3>
-                            <p style="margin:0 0 8px 0;">Para esta obra profesional, la venta se realiza únicamente a través de boletería.</p>
-                            <button class="btn-contactar" onclick="window.open('${escapeHtml(MP_FALLBACK_LINK)}','_blank')">
-                                <i class="fas fa-link"></i> Ver opciones de pago
-                            </button>
-                        </div>
-                        ` : ''}
+            ` : ''}
+            </div>
+            ${esProfesional ? `
+            <div class="elenco-section" style="background:#fff3cd;border-left:4px solid #ffcc00;padding:16px;border-radius:6px;margin-top:12px;">
+                <h3 style="margin:0 0 8px 0;"><i class="fas fa-cash-register"></i> Venta exclusiva en Boletería</h3>
+                <p style="margin:0 0 8px 0;">Para esta obra profesional, la venta se realiza únicamente a través de boletería.</p>
+            </div>
+            ` : ''}
 
             <div id="vendedores-section"></div>
         </div>
     `;
 
     modal.classList.add('active');
+
+    // Profesional: mostrar contacto directo de boletería y no cargar vendedores
+    const vendedoresContainer = document.getElementById('vendedores-section');
+    if (esProfesional) {
+        const contacto = funcion.boleteria_contacto || '';
+        const nombreBoleteria = funcion.boleteria_nombre || 'Boletería BACO';
+        const waLink = contacto ? buildWhatsAppLink(contacto, funcion, nombreBoleteria) : '';
+        vendedoresContainer.innerHTML = `
+            <div class="elenco-section" style="background:#fff3cd;border-left:4px solid #ffcc00;padding:16px;border-radius:6px;">
+                <h3 style="margin:0 0 8px 0;"><i class="fas fa-cash-register"></i> Venta exclusiva en boletería</h3>
+                <p style="margin:0 0 6px 0;">Contactá directamente a ${escapeHtml(nombreBoleteria)} para comprar tu entrada.</p>
+                ${waLink ? `<a class="btn-contactar" style="display:inline-flex;align-items:center;gap:8px;" href="${escapeHtml(waLink)}" target="_blank"><i class="fab fa-whatsapp"></i> Hablar por WhatsApp</a>` : ''}
+                <p style="margin:8px 0 0 0;color:#6b7280;">Mostrá tu comprobante en sala para validar el pago.</p>
+            </div>
+        `;
+        return;
+    }
 
     // Cargar vendedores públicos (sin login) y mostrar sección solo si hay
     loadVendedoresPublicos(funcion).catch(err => {
@@ -447,6 +492,12 @@ function formatPrice(value) {
     } catch {
         return String(value);
     }
+}
+
+function truncate(text, maxLength) {
+    const t = String(text || '');
+    if (t.length <= maxLength) return t;
+    return `${t.slice(0, maxLength - 1)}…`;
 }
 
 function escapeHtml(text) {

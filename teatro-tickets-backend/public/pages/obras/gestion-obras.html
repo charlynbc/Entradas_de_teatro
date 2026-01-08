@@ -475,7 +475,7 @@
         const token = localStorage.getItem('token');
         const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-        if (!token || user.role !== 'SUPER') {
+        if (!token || (user.role !== 'SUPER' && user.role !== 'ADMIN')) {
             window.location.href = '/pages/auth/login.html';
         }
 
@@ -547,6 +547,7 @@
                     <div class="obra-content">
                         <h3 class="obra-title">${obra.nombre}</h3>
                         <span class="obra-genre">${obra.genero}</span>
+                        ${obra.es_profesional ? '<span class="obra-genre" style="background: rgba(106,4,15,0.2); border-color:#B91C1C; color:#ff6b6b; margin-left:8px;">Profesional</span>' : ''}
                         <p class="obra-description">${obra.descripcion}</p>
                         <div class="obra-meta">
                             ${obra.duracion ? `
@@ -565,6 +566,15 @@
                                 <i class="fas fa-trash"></i>
                                 Eliminar
                             </button>
+                            ${obra.es_profesional ? `
+                            <button class="btn-action btn-edit" style="border-color:#22c55e; color:#22c55e;" onclick="irBoleteria(${obra.id})">
+                                <i class="fas fa-ticket-alt"></i>
+                                Boletería
+                            </button>
+                            <button class="btn-action btn-edit" style="border-color:#c084fc; color:#c084fc;" onclick="irBalance(${obra.id})">
+                                <i class="fas fa-scale-balanced"></i>
+                                Balance
+                            </button>` : ''}
                         </div>
                     </div>
                 `;
@@ -670,6 +680,14 @@
                 console.error('Error:', error);
                 alert('Error al eliminar la obra');
             }
+        }
+
+        function irBoleteria(id) {
+            window.location.href = `/pages/obra-profesional/boleteria.html?obraId=${id}`;
+        }
+
+        function irBalance(id) {
+            window.location.href = `/pages/obra-profesional/balance.html?obraId=${id}`;
         }
 
         // Búsqueda

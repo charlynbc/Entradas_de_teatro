@@ -4,6 +4,18 @@ import { logAction } from '../services/action-logs.service.js';
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 
+async function isObraCerradaByFuncion(funcionId) {
+  const cerrado = await query(
+    `SELECT 1
+     FROM funciones f
+     JOIN cierre_obras_profesionales cop ON cop.obra_id = f.obra_id
+     WHERE f.id = $1
+     LIMIT 1`,
+    [String(funcionId)]
+  );
+  return cerrado.rows.length > 0;
+}
+
 async function safeInsertMovimiento({ tipo, ticketCode, desdePhone, haciaPhone, motivo }) {
   try {
     await query(
@@ -57,17 +69,52 @@ export async function asignarTickets(req, res) {
 
     // Payload LEGACY (tests): { ticketIds: [code], vendedorId: cedula }
     if (Array.isArray(body.ticketIds) && body.ticketIds.length > 0 && body.vendedorId) {
+      // Bloquear asignación si alguno de los tickets pertenece a una obra profesional
+      try {
+        const profesionalCheck = await query(
+          `SELECT COUNT(*) AS cnt
+           FROM tickets t
+           JOIN funciones f ON f.id = t.funcion_id
+           JOIN obras o ON o.id = f.obra_id
+           WHERE t.code = ANY($1::varchar[])
+             AND COALESCE(o.es_profesional, FALSE) = TRUE`,
+          [body.ticketIds.map(String)]
+        );
+        const cnt = Number(profesionalCheck.rows[0]?.cnt || 0);
+        if (cnt > 0) {
+          return res.status(403).json({ error: 'Asignación no permitida: obra profesional (solo boletería)' });
+        }
+
+        const cierreCheck = await query(
+          `SELECT DISTINCT f.id AS funcion_id
+           FROM tickets t
+           JOIN funciones f ON f.id = t.funcion_id
+           JOIN cierre_obras_profesionales cop ON cop.obra_id = f.obra_id
+           WHERE t.code = ANY($1::varchar[])`,
+          [body.ticketIds.map(String)]
+        );
+        if (cierreCheck.rows.length > 0) {
+          return res.status(403).json({ error: 'Obra cerrada: no se pueden asignar tickets' });
+        }
+      } catch (e) {
+        // si falla el check, continuar y que el update condicional actúe
+      }
+
       const vendedorCedula = String(body.vendedorId);
       const u = await query('SELECT phone FROM users WHERE cedula = $1 LIMIT 1', [vendedorCedula]);
       const destinoPhone = u.rows[0]?.phone || vendedorCedula;
 
       const codes = body.ticketIds.map(String);
       const updated = await query(
-        `UPDATE tickets
+        `UPDATE tickets t
          SET estado = 'STOCK_ACTOR', vendedor_phone = $1, reservado_at = NOW()
-         WHERE code = ANY($2::varchar[])
-           AND estado = 'DISPONIBLE'
-         RETURNING code AS id, code, funcion_id, estado, vendedor_phone`,
+         FROM funciones f, obras o
+         WHERE t.code = ANY($2::varchar[])
+           AND t.estado = 'DISPONIBLE'
+           AND f.id = t.funcion_id
+           AND o.id = f.obra_id
+           AND COALESCE(o.es_profesional, FALSE) = FALSE
+         RETURNING t.code AS id, t.code, t.funcion_id, t.estado, t.vendedor_phone`,
         [String(destinoPhone), codes]
       );
 
@@ -89,6 +136,24 @@ export async function asignarTickets(req, res) {
     const cantidadNum = Number(cantidad);
     if (!cantidadNum || !funcion_id || !(actor_cedula || actor_phone)) {
       return res.status(400).json({ error: 'Faltan datos' });
+    }
+
+    // Bloquear asignación para funciones de obras profesionales
+    const isProfesionalRes = await query(
+      `SELECT COALESCE(o.es_profesional, FALSE) AS es_profesional
+       FROM funciones f
+       JOIN obras o ON o.id = f.obra_id
+       WHERE f.id = $1`,
+      [String(funcion_id)]
+    );
+    const esProfesional = Boolean(isProfesionalRes.rows[0]?.es_profesional);
+    if (esProfesional) {
+      return res.status(403).json({ error: 'Asignación no permitida: obra profesional (solo boletería)' });
+    }
+
+    const obraCerrada = await isObraCerradaByFuncion(funcion_id);
+    if (obraCerrada) {
+      return res.status(403).json({ error: 'Obra cerrada: no se pueden asignar tickets' });
     }
 
     // Resolver phone destino (vendedor_phone usa users.phone)
@@ -151,7 +216,7 @@ export async function stockActor(req, res) {
         t.estado,
         t.precio,
         t.comprador_nombre,
-        t.comprador_contacto,
+        t.comprador_phone,
         f.fecha,
         f.lugar,
         o.nombre AS obra
@@ -183,7 +248,7 @@ export async function stockActor(req, res) {
         estado: ticket.estado,
         precio: ticket.precio,
         comprador_nombre: ticket.comprador_nombre,
-        comprador_telefono: ticket.comprador_contacto
+        comprador_telefono: ticket.comprador_phone
       });
     }
 
@@ -263,6 +328,26 @@ export async function actualizarEstadoTicket(req, res) {
     if (!current) {
       return res.status(404).json({ error: 'Ticket no encontrado' });
     }
+    const cierre = await isObraCerradaByFuncion(current.funcion_id);
+    if (cierre) {
+      return res.status(403).json({ error: 'Obra cerrada: no se pueden modificar tickets' });
+    }
+    // Bloqueo por obra profesional: actores no pueden reservar ni reportar ventas
+    try {
+      const obraRes = await query(
+        `SELECT COALESCE(o.es_profesional, FALSE) AS es_profesional
+         FROM funciones f
+         JOIN obras o ON o.id = f.obra_id
+         WHERE f.id = $1`,
+        [String(current.funcion_id)]
+      );
+      const esProfesional = Boolean(obraRes.rows[0]?.es_profesional);
+      if (esProfesional) {
+        return res.status(403).json({ error: 'Operación no permitida: obra profesional (gestión sólo por boletería)' });
+      }
+    } catch (e) {
+      // si falla el check, continuar con validaciones estándar
+    }
     if (current.vendedor_phone !== actorPhone) {
       return res.status(403).json({ error: 'Ticket no pertenece a tu stock' });
     }
@@ -294,7 +379,7 @@ export async function actualizarEstadoTicket(req, res) {
       values.push(comprador_nombre || null);
     }
     if (comprador_telefono !== undefined) {
-      updates.push(`comprador_contacto = $${i++}`);
+      updates.push(`comprador_phone = $${i++}`);
       values.push(comprador_telefono || null);
     }
 
@@ -393,6 +478,26 @@ export async function transferirTicket(req, res) {
     if (!current) {
       return res.status(404).json({ error: 'Ticket no encontrado' });
     }
+    const cierre = await isObraCerradaByFuncion(current.funcion_id);
+    if (cierre) {
+      return res.status(403).json({ error: 'Obra cerrada: no se pueden transferir tickets' });
+    }
+    // No permitir transferir tickets de obras profesionales
+    try {
+      const obraRes = await query(
+        `SELECT COALESCE(o.es_profesional, FALSE) AS es_profesional
+         FROM funciones f
+         JOIN obras o ON o.id = f.obra_id
+         WHERE f.id = $1`,
+        [String(current.funcion_id)]
+      );
+      const esProfesional = Boolean(obraRes.rows[0]?.es_profesional);
+      if (esProfesional) {
+        return res.status(403).json({ error: 'Transferencia no permitida: obra profesional (solo boletería)' });
+      }
+    } catch (e) {
+      // continuar si falla check
+    }
     if (current.vendedor_phone !== actorPhone) {
       return res.status(403).json({ error: 'Ticket no pertenece a tu stock' });
     }
@@ -447,6 +552,11 @@ export async function cobrarTickets(req, res) {
 
     if (!funcionId || !actorCedula) {
       return res.status(400).json({ error: 'Faltan datos: showId, actorId' });
+    }
+
+    const obraCerrada = await isObraCerradaByFuncion(funcionId);
+    if (obraCerrada) {
+      return res.status(403).json({ error: 'Obra cerrada: no se pueden cobrar tickets' });
     }
 
     const u = await query('SELECT phone FROM users WHERE cedula = $1 LIMIT 1', [actorCedula]);

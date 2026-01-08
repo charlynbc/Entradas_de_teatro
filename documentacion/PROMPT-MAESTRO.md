@@ -118,6 +118,131 @@ Baco Teatro gestiona:
 ### VENDEDOR
 
 * Historial de ventas
+
+---
+
+### PROMPT — DESCRIPCIÓN DE OBRA Y CORRECCIÓN DE COMPRA
+
+Ajustar el sistema con las siguientes reglas obligatorias:
+
+1. Las obras profesionales tienen una única descripción general.
+2. Al crear una función de obra profesional:
+
+  * la descripción de la obra se copia automáticamente en la función
+  * la función NO edita esa descripción
+3. El invitado ve la descripción desde la función, sin distinguir el origen.
+4. Corregir la vista de compra en obras profesionales:
+
+  * debe existir UN SOLO botón “Comprar en Boletería BACO”
+  * no mostrar selector de vendedor
+  * no duplicar botones ni acciones
+5. En funciones comunes:
+
+  * mantener selector de actores + boletería
+6. Validar coherencia visual y eliminar redundancias.
+
+No modificar colores, diseño ni identidad BACO.
+
+---
+
+## 🎭 PROMPT — CIERRE DE FUNCIÓN Y BALANCE (BACO)
+
+Implementar sección **Cierre de Función**, visible SOLO para:
+
+* Director
+* Super usuario
+* Boletería (solo lectura)
+
+---
+
+### 📊 CIERRE DE FUNCIÓN
+
+Por cada función mostrar:
+
+**Ingresos**
+
+* Entradas vendidas
+* Total recaudado
+
+**Gastos**
+
+* Listado de gastos cargados por director
+* Total de gastos
+
+**Resultado**
+
+* Ganancia / Pérdida
+* Mensaje teatral automático:
+
+  * “La función fue un éxito”
+  * “Función a pérdida”
+
+---
+
+### 🎭 OBRA PROFESIONAL — BOLETERÍA
+
+* La boletería:
+
+  * NO crea gastos
+  * NO edita
+  * SOLO visualiza balance
+* Director y super:
+
+  * editan
+  * cierran función
+  * bloquean cambios
+
+---
+
+### 📆 CIERRE ANUAL (DIRECTOR / SUPER)
+
+Nueva sección: **Balance Anual**
+
+Agrupa:
+
+* Todas las funciones del año
+* Obras profesionales
+* Grupos
+* Cuotas de alumnos
+* Gastos totales
+
+Mostrar:
+
+* Total ingresos
+* Total gastos
+* Resultado final anual
+
+Texto final:
+
+> “Este fue el balance anual de BACO.
+> El teatro también se sostiene con números.”
+
+---
+
+### 🔐 PERMISOS ABSOLUTOS
+
+* Super usuario:
+
+  * ve TODO
+  * cualquier director
+  * cualquier año
+* Director:
+
+  * solo lo suyo
+
+---
+
+## FIN DEL PROMPT
+
+---
+
+## 🔒 DECISIÓN DE DISEÑO (MUY BUENA, QUEDA ASÍ)
+
+✔ Boletería como **sección interna** de Obra Profesional
+✔ No visible al público
+✔ No duplicada
+✔ Balance claro
+✔ Profesionalismo real
 * Estado de tickets
 * Devolución de tickets
 

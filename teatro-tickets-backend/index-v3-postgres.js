@@ -22,6 +22,9 @@ import publicRoutes from './routes/public.routes.js';
 import auditoriaReportesRoutes from './routes/auditoria-reportes.routes.js';
 import cuotasRoutes from './routes/cuotas.routes.js';
 import gastosRoutes from './routes/gastos.routes.js';
+import boleteriaRoutes from './routes/boleteria.routes.js';
+import contabilidadRoutes from './routes/contabilidad.routes.js';
+import pagosRoutes from './routes/pagos.routes.js';
 import { readData } from './utils/dataStore.js';
 
 const app = express();
@@ -128,6 +131,9 @@ async function startServer() {
     app.use('/api/upload', uploadRoutes);
     app.use('/api/cuotas', cuotasRoutes); // Nuevo: Sistema de cuotas
     app.use('/api/gastos', gastosRoutes); // Nuevo: Gastos por función
+    app.use('/api/boleteria', boleteriaRoutes);
+    app.use('/api/contabilidad', contabilidadRoutes);
+    app.use('/api/pagos', pagosRoutes);
 
     // Rutas específicas para páginas (nueva estructura)
     app.get('/login', (req, res) => {

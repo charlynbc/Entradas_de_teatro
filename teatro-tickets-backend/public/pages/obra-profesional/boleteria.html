@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Boletería - Obra Profesional</title>
+  <link rel="stylesheet" href="/css/baco-landing.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    body { background: var(--bg-dark); color: #fff; min-height: 100vh; }
+    .page { max-width: 1100px; margin: 0 auto; padding: 24px; }
+    .header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+    .title { font-size: 1.6rem; color: var(--secondary); margin: 0; }
+    .pill { padding: 6px 12px; border-radius: 999px; background: rgba(244,140,6,0.14); color: var(--secondary); font-weight: 600; font-size: 0.85rem; }
+    .card { background: rgba(255,255,255,0.05); border: 1px solid rgba(244,140,6,0.25); border-radius: 12px; padding: 18px; margin-bottom: 14px; }
+    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 12px; }
+    .metric { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; padding: 14px; }
+    .metric .label { color: rgba(255,255,255,0.7); font-size: 0.9rem; }
+    .metric .value { font-size: 1.5rem; font-weight: 700; color: var(--secondary); }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.08); text-align: left; }
+    th { color: rgba(255,255,255,0.8); font-weight: 600; }
+    tbody tr:hover { background: rgba(255,255,255,0.04); }
+    .back { color: var(--secondary); text-decoration: none; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+    .warn { color: #fbbf24; font-size: 0.95rem; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <a class="back" href="/pages/roles/director.html"><i class="fas fa-arrow-left"></i> Volver</a>
+    <div class="header">
+      <div>
+        <p class="pill">Obra Profesional · Boletería</p>
+        <h1 class="title" id="obraTitulo">Cargando...</h1>
+      </div>
+      <button id="btnCierre" class="btn-login" style="display:none" onclick="cerrarObra()">
+        <i class="fas fa-lock"></i> Cerrar Obra
+      </button>
+    </div>
+
+    <div class="card">
+      <div class="metrics">
+        <div class="metric">
+          <div class="label">Entradas vendidas</div>
+          <div class="value" id="mVendidas">0</div>
+        </div>
+        <div class="metric">
+          <div class="label">Entradas pagadas</div>
+          <div class="value" id="mPagadas">0</div>
+        </div>
+        <div class="metric">
+          <div class="label">Total recaudado</div>
+          <div class="value" id="mRecaudado">$0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0; color: var(--secondary);">Funciones</h3>
+      <div class="warn">Solo lectura. La boletería opera desde su panel; aquí ves el consolidado.</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Lugar</th>
+            <th>Vendidas</th>
+            <th>Pagadas</th>
+            <th>Recaudado</th>
+          </tr>
+        </thead>
+        <tbody id="tablaFunciones">
+          <tr><td colspan="5">Cargando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="/js/nav-auth.js"></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const obraId = params.get('obraId');
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+    if (!token || !obraId) {
+      window.location.href = '/pages/auth/login.html';
+    }
+
+    function formatMoney(n) {
+      return `$${Number(n || 0).toLocaleString('es-UY', { minimumFractionDigits: 0 })}`;
+    }
+
+    async function loadResumen() {
+      const res = await fetch(`/api/boleteria/obra/${obraId}/resumen`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) {
+        const msg = (await res.json()).error || 'Error cargando boletería';
+        alert(msg);
+        return;
+      }
+      const data = await res.json();
+      document.getElementById('obraTitulo').textContent = data.obra?.nombre || 'Obra';
+      document.getElementById('mVendidas').textContent = data.totales?.vendidas || 0;
+      document.getElementById('mPagadas').textContent = data.totales?.pagadas || 0;
+      document.getElementById('mRecaudado').textContent = formatMoney(data.totales?.recaudado || 0);
+
+      const tbody = document.getElementById('tablaFunciones');
+      if (!data.funciones || data.funciones.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5">Sin funciones registradas</td></tr>';
+      } else {
+        tbody.innerHTML = data.funciones.map(f => `
+          <tr>
+            <td>${new Date(f.fecha).toLocaleString('es-UY')}</td>
+            <td>${f.lugar || '-'}</td>
+            <td>${f.vendidas || 0}</td>
+            <td>${f.pagadas || 0}</td>
+            <td>${formatMoney(f.recaudado || 0)}</td>
+          </tr>
+        `).join('');
+      }
+
+      if (user.role === 'SUPER' || user.role === 'ADMIN') {
+        document.getElementById('btnCierre').style.display = 'inline-flex';
+      }
+    }
+
+    async function cerrarObra() {
+      if (!confirm('Al cerrar la obra se bloquean ventas y modificaciones. ¿Continuar?')) return;
+      const res = await fetch(`/api/boleteria/obra/${obraId}/cierre`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || 'No se pudo cerrar la obra');
+        return;
+      }
+      alert('Obra cerrada correctamente');
+      await loadResumen();
+    }
+
+    loadResumen().catch(err => console.error(err));
+  </script>
+</body>
+</html>
