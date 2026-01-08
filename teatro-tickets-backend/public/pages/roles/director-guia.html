@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía del Director - Gestión de Funciones</title>
+    <link rel="stylesheet" href="/css/baco-landing.css">
+    <link rel="stylesheet" href="/css/nav-auth.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .guia-container {
+            max-width: 800px;
+            margin: 80px auto 40px;
+            padding: 20px;
+        }
+        .guia-section {
+            margin-bottom: 40px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #6A040F;
+        }
+        .guia-section h3 {
+            color: #6A040F;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .guia-section p {
+            color: #666;
+            line-height: 1.6;
+            margin: 10px 0;
+        }
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        .feature-list li {
+            padding: 10px 0;
+            color: #666;
+        }
+        .feature-list li:before {
+            content: "✓ ";
+            color: #6A040F;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="main-nav">
+        <div class="container">
+            <div class="nav-brand" onclick="window.location.href='/'">
+                <img src="/images/logo-baco.svg" alt="Baco Teatro" class="logo">
+                <span class="brand-text">BACO TEATRO</span>
+            </div>
+            <div class="nav-menu" id="navMenu">
+                <a href="/pages/roles/admin.html" class="nav-link">Dashboard</a>
+                <a href="/pages/roles/admin.html#funciones" class="nav-link">Mis Funciones</a>
+                <a href="/pages/user-guia.html" class="nav-link">Cómo Usar</a>
+                <a href="/pages/roles/director-guia.html" class="nav-link active">Guía Director</a>
+                <div id="authButtons"></div>
+            </div>
+            <button class="nav-toggle" id="navToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <div class="guia-container container">
+        <h1 style="text-align: center; color: #6A040F; margin-bottom: 30px;">
+            <i class="fas fa-theater-masks"></i> Guía del Director
+        </h1>
+
+        <!-- Sección 1: Panel Director -->
+        <div class="guia-section">
+            <h3><i class="fas fa-tachometer-alt"></i> Tu Panel de Control</h3>
+            <p>El dashboard es tu centro de operaciones para gestionar tu grupo teatral:</p>
+            <ul class="feature-list">
+                <li>Ve resumen de tus funciones próximas</li>
+                <li>Acceso rápido a crear nuevas funciones</li>
+                <li>Monitorea ventas de entradas</li>
+                <li>Gestiona costos y balance del grupo</li>
+            </ul>
+        </div>
+
+        <!-- Sección 2: Crear Funciones -->
+        <div class="guia-section">
+            <h3><i class="fas fa-plus-circle"></i> Crear una Nueva Función</h3>
+            <p>Para crear una función:</p>
+            <ul class="feature-list">
+                <li>Haz clic en "Nueva Función" desde el dashboard</li>
+                <li>Completa: fecha, hora, sala, precio de entrada</li>
+                <li>Asigna vendedores/actores que venderán entradas</li>
+                <li>Describe la obra con título y detalles</li>
+                <li>Guarda y la función aparecerá en la cartelera pública</li>
+            </ul>
+            <p><strong>Nota:</strong> Las funciones futuras se publican automáticamente. Las pasadas se ocultan después de 24 horas.</p>
+        </div>
+
+        <!-- Sección 3: Editar Funciones -->
+        <div class="guia-section">
+            <h3><i class="fas fa-edit"></i> Editar una Función</h3>
+            <p>Puedes modificar funciones hasta que comiencen:</p>
+            <ul class="feature-list">
+                <li>Haz clic en la función que deseas editar</li>
+                <li>Actualiza: precio, hora, sala, vendedores</li>
+                <li>Los cambios se reflejan inmediatamente en la cartelera</li>
+                <li>NO puedes editar una función que ya pasó</li>
+            </ul>
+        </div>
+
+        <!-- Sección 4: Vendedores de Entradas -->
+        <div class="guia-section">
+            <h3><i class="fas fa-user-tie"></i> Asignar Vendedores</h3>
+            <p>Los vendedores son quienes venderán entradas para tu función:</p>
+            <ul class="feature-list">
+                <li>Puedes asignar actores del grupo como vendedores</li>
+                <li>Los vendedores aparecerán en la función para ser contactados</li>
+                <li>Solo agregá actores registrados en tu grupo</li>
+                <li>El público los contactará por WhatsApp para coordinar</li>
+            </ul>
+        </div>
+
+        <!-- Sección 5: Balance y Costos -->
+        <div class="guia-section">
+            <h3><i class="fas fa-chart-bar"></i> Control Financiero</h3>
+            <p>Mantén un control de tus costos y balance:</p>
+            <ul class="feature-list">
+                <li>Registra todos los gastos de tu grupo (alquiler, iluminación, etc.)</li>
+                <li>Ve automáticamente cuánto ganaste por función</li>
+                <li>Balance = Ingresos - Gastos</li>
+                <li>Exporta reportes mensuales si lo necesitas</li>
+            </ul>
+        </div>
+
+        <!-- Sección 6: Actores de tu Grupo -->
+        <div class="guia-section">
+            <h3><i class="fas fa-masks-theater"></i> Gestión de Actores</h3>
+            <p>Administra a los integrantes de tu grupo:</p>
+            <ul class="feature-list">
+                <li>Agrega nuevos actores/actrices a tu grupo</li>
+                <li>Asígnalos como vendedores en funciones</li>
+                <li>Crea roles específicos (actor principal, secundario, etc.)</li>
+                <li>Los actores podrán ver funciones de tu grupo en su perfil</li>
+            </ul>
+        </div>
+
+        <!-- Sección 7: Disponibilidad de Entradas -->
+        <div class="guia-section">
+            <h3><i class="fas fa-ticket-alt"></i> Tickets y Disponibilidad</h3>
+            <p>Controla la disponibilidad de entradas:</p>
+            <ul class="feature-list">
+                <li>Define cuántas entradas hay disponibles por función</li>
+                <li>El sistema marca "Agotadas" cuando no hay más</li>
+                <li>Puedes ver cuántas se vendieron en tiempo real</li>
+                <li>Ajusta disponibilidad hasta que comience la función</li>
+            </ul>
+        </div>
+
+        <!-- Sección 8: Reportes y Estadísticas -->
+        <div class="guia-section">
+            <h3><i class="fas fa-chart-line"></i> Reportes</h3>
+            <p>Analiza el desempeño de tus funciones:</p>
+            <ul class="feature-list">
+                <li>Ve cuántas entradas vendió cada vendedor</li>
+                <li>Compara asistencia por función</li>
+                <li>Identifica horarios/fechas más populares</li>
+                <li>Descarga reportes en Excel para análisis</li>
+            </ul>
+        </div>
+
+        <!-- Sección 9: Mejores Prácticas -->
+        <div class="guia-section">
+            <h3><i class="fas fa-lightbulb"></i> Mejores Prácticas</h3>
+            <ul class="feature-list">
+                <li>🎬 Publica funciones con al menos 2 semanas de anticipación</li>
+                <li>💰 Establece precios competitivos pero realistas</li>
+                <li>👥 Asigna vendedores confiables y comprometidos</li>
+                <li>📱 Asegúrate que vendedores tengan WhatsApp activo</li>
+                <li>📅 Mantén actualizado el estado de entradas disponibles</li>
+                <li>📊 Revisa reportes regularmente para mejorar</li>
+            </ul>
+        </div>
+
+        <!-- Sección 10: Soporte -->
+        <div class="guia-section">
+            <h3><i class="fas fa-headset"></i> ¿Necesitas Ayuda?</h3>
+            <p>Si tienes dudas o problemas:</p>
+            <ul class="feature-list">
+                <li>Contacta al administrador del sistema</li>
+                <li>WhatsApp: +598 94 687 473</li>
+                <li>Email: bacoteatro@montevideo.com.uy</li>
+                <li>Disponibles de lunes a viernes, 10 a 18hs</li>
+            </ul>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div style="text-align: center; margin-top: 50px;">
+            <a href="/pages/roles/admin.html" class="btn btn-primary" style="display: inline-block; padding: 15px 30px; margin-right: 15px;">
+                <i class="fas fa-tachometer-alt"></i> Ir al Dashboard
+            </a>
+            <a href="/" class="btn btn-outline" style="display: inline-block; padding: 15px 30px;">
+                <i class="fas fa-home"></i> Volver al Inicio
+            </a>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <img src="/images/logo-baco.svg" alt="Baco Teatro" class="footer-logo">
+                    <p>Baco Teatro Uruguay</p>
+                    <p class="footer-slogan">Donde el arte cobra vida</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Enlaces</h4>
+                    <a href="/pages/roles/admin.html">Mi Dashboard</a>
+                    <a href="/funciones-hoy.html">Funciones Públicas</a>
+                    <a href="/sobre-baco.html">Sobre Baco</a>
+                </div>
+                <div class="footer-contact">
+                    <h4>Contacto</h4>
+                    <p><i class="fas fa-phone"></i> 099 893 748</p>
+                    <p><i class="fab fa-whatsapp"></i> +598 94 687 473</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Baco Teatro Uruguay. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/js/nav-auth.js"></script>
+    <script>
+        // Toggle móvil menu
+        document.getElementById('navToggle')?.addEventListener('click', function() {
+            document.getElementById('navMenu')?.classList.toggle('active');
+        });
+    </script>
+</body>
+</html>
