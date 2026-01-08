@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Boletería BACO – Venta oficial</title>
+  <link rel="stylesheet" href="/css/baco-landing.css">
+  <link rel="stylesheet" href="/css/nav-auth.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root {
+      --primary:#6A040F;
+      --accent:#d97706;
+      --gold:#f3b34c;
+      --muted:#9ca3af;
+      --bg:#0f0a0a;
+      --card:#181111;
+      --text:#f9fafb;
+    }
+    body { margin:0; background:radial-gradient(circle at 20% 20%, rgba(243,179,76,0.12), transparent 35%), radial-gradient(circle at 80% 0%, rgba(106,4,15,0.2), transparent 35%), #0b0808; color:var(--text); }
+    .page { max-width:1100px; margin:0 auto; padding:96px 16px 64px; }
+    .hero { background:linear-gradient(135deg, #6A040F, #370617); border-radius:18px; padding:18px; display:flex; align-items:center; gap:12px; box-shadow:0 14px 28px rgba(0,0,0,0.35); position:sticky; top:0; z-index:2; }
+    .hero-icon { width:54px; height:54px; border-radius:14px; background:rgba(0,0,0,0.25); display:flex; align-items:center; justify-content:center; font-size:26px; color:var(--gold); }
+    .hero h1 { margin:0; font-size:1.6rem; }
+    .hero p { margin:4px 0 0 0; color:rgba(249,250,251,0.78); }
+    .toolbar { margin-top:14px; background:rgba(24,17,17,0.7); border:1px solid rgba(255,255,255,0.05); border-radius:14px; padding:12px; display:grid; grid-template-columns:1fr; gap:10px; }
+    .toggle-group { display:flex; gap:8px; }
+    .pill-btn { flex:1; border:none; border-radius:999px; padding:10px 12px; background:rgba(255,255,255,0.05); color:var(--text); font-weight:600; cursor:pointer; }
+    .pill-btn.active { background:rgba(243,179,76,0.18); color:var(--gold); border:1px solid rgba(243,179,76,0.6); }
+    .search { width:100%; border-radius:12px; border:1px solid rgba(255,255,255,0.08); padding:10px 12px; background:rgba(0,0,0,0.25); color:var(--text); }
+    .cards { margin-top:16px; display:grid; gap:12px; }
+    .card { background:var(--card); border-radius:16px; padding:16px; border:1px solid rgba(255,255,255,0.06); box-shadow:0 12px 24px rgba(0,0,0,0.25); display:flex; flex-direction:column; gap:10px; transition:transform 160ms ease, box-shadow 160ms ease; }
+    .card:hover { transform:scale(1.01); box-shadow:0 18px 30px rgba(243,179,76,0.25); }
+    .card:active { transform:scale(0.985); }
+    .badge { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; font-weight:700; font-size:0.85rem; letter-spacing:0.2px; }
+    .badge.pro { background:rgba(243,179,76,0.18); color:var(--gold); border:1px solid rgba(243,179,76,0.5); }
+    .badge.grp { background:rgba(106,4,15,0.18); color:#fca5a5; border:1px solid rgba(106,4,15,0.5); }
+    .title { margin:0; font-size:1.1rem; color:#fff; }
+    .meta { display:grid; grid-template-columns:repeat(auto-fit, minmax(160px,1fr)); gap:6px; color:var(--muted); font-size:0.95rem; }
+    .meta div { display:flex; gap:6px; align-items:center; }
+    .desc { color:#d1d5db; font-size:0.95rem; line-height:1.45; }
+    .cta { display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; }
+    .price { font-weight:700; color:var(--gold); }
+    .cta-btn { flex:1; min-width:220px; border:none; border-radius:12px; padding:12px; background:linear-gradient(135deg, #f59e0b, #fbbf24); color:#2f1b0c; font-weight:800; font-size:1rem; cursor:pointer; box-shadow:0 12px 20px rgba(251,191,36,0.25); }
+    .cta-btn:active { transform:translateY(1px); }
+    .state { display:inline-flex; align-items:center; gap:6px; font-weight:700; }
+    .state.green { color:#34d399; }
+    .state.yellow { color:#fcd34d; }
+    .state.red { color:#9ca3af; }
+    .stamp { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:10px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); font-size:0.9rem; color:#fbbf24; }
+    .micro-fade { animation:fadeIn 0.35s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+    .note { color:#fbbf24; font-size:0.9rem; display:flex; gap:6px; align-items:center; }
+    .empty { text-align:center; padding:18px; color:var(--muted); background:rgba(0,0,0,0.2); border-radius:14px; }
+    /* Modal */
+    .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.65); display:none; align-items:flex-end; justify-content:center; z-index:10; animation:fadeIn 0.2s ease; }
+    .modal { width:100%; max-width:520px; background:#111; border-radius:18px 18px 0 0; padding:18px; box-shadow:0 -8px 24px rgba(0,0,0,0.35); }
+    .modal h3 { margin:0 0 8px 0; color:#fff; }
+    .modal .field { display:flex; flex-direction:column; gap:6px; margin-top:10px; }
+    .modal input { width:100%; border-radius:10px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.05); padding:10px; color:#fff; }
+    .modal-actions { display:flex; gap:10px; margin-top:14px; }
+    .btn-secondary { flex:1; border:none; border-radius:10px; padding:11px; background:rgba(255,255,255,0.08); color:#fff; font-weight:700; }
+    .btn-primary { flex:1; border:none; border-radius:10px; padding:11px; background:linear-gradient(135deg, #f59e0b, #fbbf24); color:#2f1b0c; font-weight:800; }
+    @media (min-width: 720px) {
+      .hero { padding:22px; }
+      .toolbar { grid-template-columns:2fr 1.5fr; align-items:center; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="main-nav">
+    <div class="container">
+      <div class="nav-brand" onclick="window.location.href='/'">
+        <img src="/images/logo-baco.svg" alt="Baco Teatro" class="logo">
+        <span class="brand-text">BACO TEATRO</span>
+      </div>
+      <div class="nav-menu" id="navMenu">
+        <a href="/" class="nav-link">Inicio</a>
+        <a href="/funciones-hoy.html" class="nav-link">Funciones de Hoy</a>
+        <a href="/proximas-funciones.html" class="nav-link">Próximas Funciones</a>
+        <a href="/guia.html" class="nav-link">Cómo Usar</a>
+      </div>
+      <button class="nav-toggle" id="navToggle">
+        <i class="fas fa-bars"></i>
+      </button>
+    </div>
+  </nav>
+
+  <div class="page">
+    <div class="hero">
+      <div class="hero-icon">🎟️</div>
+      <div>
+        <h1>🎟️ Boletería BACO</h1>
+        <p>Venta oficial de entradas</p>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="toggle-group">
+        <button class="pill-btn active" id="filterHoy">Funciones de hoy</button>
+        <button class="pill-btn" id="filterProx">Próximas funciones</button>
+      </div>
+      <input class="search" id="search" type="search" placeholder="Buscar por obra o fecha" />
+    </div>
+
+    <div class="cards" id="cards"></div>
+    <div class="empty" id="empty" style="display:none;">Sin funciones para este filtro.</div>
+  </div>
+
+  <footer class="main-footer">
+    <div class="container">
+      <div class="footer-bottom">
+        <p>&copy; 2026 Baco Teatro Uruguay. Todos los derechos reservados.</p>
+      </div>
+    </div>
+  </footer>
+
+  <div class="modal-backdrop" id="modal">
+    <div class="modal">
+      <h3 id="modalTitle">Vender entrada</h3>
+      <p id="modalMeta" style="margin:0;color:#9ca3af;font-size:0.95rem;"></p>
+      <div class="field">
+        <label>Datos del espectador</label>
+        <input type="text" id="buyerName" placeholder="Nombre y contacto para vivir la experiencia" />
+      </div>
+      <div class="field">
+        <label>Teléfono</label>
+        <input type="tel" id="buyerPhone" placeholder="Ej: 099 123 456" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="cancelModal">Cancelar</button>
+        <button class="btn-primary" id="confirmSale">👉 Confirmar venta</button>
+      </div>
+      <div id="waSection" style="display:none; margin-top:10px;" class="micro-fade">
+        <button class="btn-primary" style="width:100%;" id="waButton"><i class="fab fa-whatsapp"></i> 📲 Enviar entrada por WhatsApp</button>
+        <p style="color:#9ca3af; margin:6px 0 0 0; font-size:0.9rem;">🎉 Entrada vendida con éxito. El telón se levanta.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const allowed = ['SUPER','ADMIN'];
+    if (!token || !allowed.includes(user.role)) {
+      window.location.href = '/pages/auth/login.html';
+    }
+
+    const PUBLIC_API_URL = '/public/funciones';
+    const cardsEl = document.getElementById('cards');
+    const emptyEl = document.getElementById('empty');
+    const filterHoy = document.getElementById('filterHoy');
+    const filterProx = document.getElementById('filterProx');
+    const searchEl = document.getElementById('search');
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalMeta = document.getElementById('modalMeta');
+    const buyerName = document.getElementById('buyerName');
+    const buyerPhone = document.getElementById('buyerPhone');
+    const waSection = document.getElementById('waSection');
+    const waButton = document.getElementById('waButton');
+
+    let funciones = [];
+    let selectedFuncion = null;
+
+    const params = new URLSearchParams(window.location.search);
+    const mpLink = params.get('link') || window.MP_LINK || '/pages/boleteria/index.html';
+
+    filterHoy.addEventListener('click', () => setFilter('hoy'));
+    filterProx.addEventListener('click', () => setFilter('prox'));
+    searchEl.addEventListener('input', render);
+    document.getElementById('cancelModal').addEventListener('click', closeModal);
+    document.getElementById('confirmSale').addEventListener('click', confirmSale);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+    fetchFunciones().catch(console.error);
+
+    function setFilter(type) {
+      filterHoy.classList.toggle('active', type === 'hoy');
+      filterProx.classList.toggle('active', type === 'prox');
+      render();
+    }
+
+    async function fetchFunciones() {
+      const res = await fetch(PUBLIC_API_URL);
+      const data = await res.json();
+      funciones = Array.isArray(data) ? data : (data.funciones || []);
+      render();
+    }
+
+    function render() {
+      const q = (searchEl.value || '').toLowerCase();
+      const now = new Date();
+      const isHoy = filterHoy.classList.contains('active');
+
+      const filtered = funciones.filter(f => {
+        const fecha = new Date(f.fecha);
+        const isToday = sameDay(fecha, now);
+        if (isHoy && !isToday) return false;
+        if (!isHoy && fecha < now) return false;
+        const txt = `${f.obra_nombre} ${fecha.toLocaleDateString('es-UY')}`.toLowerCase();
+        return txt.includes(q);
+      });
+
+      cardsEl.innerHTML = filtered.map(renderCard).join('');
+      emptyEl.style.display = filtered.length ? 'none' : 'block';
+    }
+
+    function renderCard(f) {
+      const fecha = new Date(f.fecha);
+      const fechaStr = fecha.toLocaleDateString('es-UY', { weekday:'short', day:'2-digit', month:'short' });
+      const horaStr = f.hora || fecha.toLocaleTimeString('es-UY', { hour:'2-digit', minute:'2-digit' });
+      const pro = Boolean(f.es_profesional);
+      const desc = truncate(f.descripcion || '', 140);
+      const cupo = Number(f.entradas_disponibles || 0);
+
+      const availability = cupo <= 0
+        ? { cls:'red', text:'Agotada' }
+        : cupo <= 5
+          ? { cls:'yellow', text:'Últimas entradas' }
+          : { cls:'green', text:'Disponible' };
+
+      const meta = [
+        `<div><i class="fas fa-calendar"></i> ${fechaStr} · ${horaStr}</div>`,
+        `<div><i class="fas fa-map-marker-alt"></i> ${escapeHtml(f.sala || 'Sala a confirmar')}</div>`,
+        `<div class="state ${availability.cls}"><i class="fas fa-circle"></i> ${availability.text}</div>`
+      ].join('');
+
+      return `
+        <article class="card">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+            <div>
+              <div class="badge ${pro ? 'pro' : 'grp'}">${pro ? '🎭 Obra Profesional' : '🎓 Grupo BACO'}</div>
+              <h3 class="title">${escapeHtml(f.obra_nombre || 'Obra')}</h3>
+            </div>
+            <span class="price">$${formatPrice(f.precio || 0)}</span>
+          </div>
+          ${pro ? `<span class="stamp">Venta exclusiva por boletería</span>` : `<span class="stamp">Entradas gestionadas por elenco y boletería</span>`}
+          ${desc ? `<p class="desc">${escapeHtml(desc)}</p>` : ''}
+          <div class="meta">${meta}</div>
+          <div class="cta">
+            <div class="note">${pro ? '<i class="fas fa-lock"></i> Venta exclusiva por boletería' : '<i class="fas fa-user-check"></i> Boletería + actores'}</div>
+            <button class="cta-btn" onclick='openModal(${JSON.stringify(f).replace(/</g,"\\u003c").replace(/>/g,"\\u003e").replace(/&/g,"\\u0026")})'>🎟️ Vender entrada</button>
+          </div>
+        </article>`;
+    }
+
+    function openModal(funcion) {
+      selectedFuncion = funcion;
+      modalTitle.textContent = `Vender entrada – ${funcion.obra_nombre || 'Obra'}`;
+      const fecha = new Date(funcion.fecha);
+      modalMeta.textContent = `${fecha.toLocaleDateString('es-UY')} · ${fecha.toLocaleTimeString('es-UY',{hour:'2-digit',minute:'2-digit'})} · ${funcion.sala || 'Sala a confirmar'}`;
+      buyerName.value = '';
+      buyerPhone.value = '';
+      waSection.style.display = 'none';
+      modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+      modal.style.display = 'none';
+      selectedFuncion = null;
+    }
+
+    async function confirmSale() {
+      if (!selectedFuncion) return;
+      const nombre = buyerName.value.trim();
+      const phone = buyerPhone.value.trim();
+      if (!nombre || !phone) {
+        alert('Completa nombre y teléfono');
+        return;
+      }
+      try {
+        const resp = await fetch('/api/pagos/mp/preference', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            funcion_id: selectedFuncion.id || selectedFuncion.funcion_id,
+            buyer_name: nombre,
+            buyer_phone: phone,
+            price: selectedFuncion.precio || selectedFuncion.precio_base
+          })
+        });
+        if (!resp.ok) {
+          const t = await resp.text();
+          console.error('MP preference error:', t);
+          alert('No fue posible iniciar el pago. Intenta nuevamente.');
+          return;
+        }
+        const data = await resp.json();
+        if (data.init_point) {
+          window.location.href = data.init_point;
+        } else {
+          alert('No fue posible obtener el enlace de pago.');
+        }
+      } catch (e) {
+        console.error(e);
+        alert('Error iniciando pago. Revisa tu conexión.');
+      }
+    }
+
+    // WhatsApp ya no se usa para venta PRO; flujo via MP
+
+    function formatPrice(value) {
+      try {
+        return new Intl.NumberFormat('es-UY', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
+      } catch { return value; }
+    }
+
+    function truncate(text, max) {
+      const t = String(text || '');
+      return t.length > max ? `${t.slice(0, max - 1)}…` : t;
+    }
+
+    function escapeHtml(text) {
+      return String(text ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function sameDay(a, b) {
+      return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+    }
+
+    document.getElementById('navToggle')?.addEventListener('click', () => {
+      document.getElementById('navMenu')?.classList.toggle('active');
+    });
+  </script>
+</body>
+</html>

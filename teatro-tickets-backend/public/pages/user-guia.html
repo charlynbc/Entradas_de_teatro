@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía de Usuario - Cómo Usar Mi Cuenta</title>
+    <link rel="stylesheet" href="/css/baco-landing.css">
+    <link rel="stylesheet" href="/css/nav-auth.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .guia-container {
+            max-width: 800px;
+            margin: 80px auto 40px;
+            padding: 20px;
+        }
+        .guia-section {
+            margin-bottom: 40px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #6A040F;
+        }
+        .guia-section h3 {
+            color: #6A040F;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .guia-section p {
+            color: #666;
+            line-height: 1.6;
+            margin: 10px 0;
+        }
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        .feature-list li {
+            padding: 10px 0;
+            color: #666;
+        }
+        .feature-list li:before {
+            content: "✓ ";
+            color: #6A040F;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="main-nav">
+        <div class="container">
+            <div class="nav-brand" onclick="window.location.href='/'">
+                <img src="/images/logo-baco.svg" alt="Baco Teatro" class="logo">
+                <span class="brand-text">BACO TEATRO</span>
+            </div>
+            <div class="nav-menu" id="navMenu">
+                <a href="/" class="nav-link">Inicio</a>
+                <a href="/funciones-hoy.html" class="nav-link">Funciones de Hoy</a>
+                <a href="/proximas-funciones.html" class="nav-link">Próximas Funciones</a>
+                <a href="/sobre-baco.html" class="nav-link">Sobre Baco</a>
+                <a href="/guia.html" class="nav-link">Cómo Usar</a>
+                <div id="authButtons"></div>
+            </div>
+            <button class="nav-toggle" id="navToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <div class="guia-container container">
+        <h1 style="text-align: center; color: #6A040F; margin-bottom: 30px;">
+            <i class="fas fa-user-circle"></i> Guía del Usuario Registrado
+        </h1>
+
+        <!-- Sección 1: Mi Perfil -->
+        <div class="guia-section">
+            <h3><i class="fas fa-user"></i> Mi Perfil</h3>
+            <p>Tu perfil contiene tu información personal. Puedes:</p>
+            <ul class="feature-list">
+                <li>Ver y editar tus datos personales</li>
+                <li>Cambiar tu contraseña en cualquier momento</li>
+                <li>Actualizar tu foto de perfil</li>
+                <li>Ver tu rol y permisos en el sistema</li>
+            </ul>
+            <p><strong>Acceso:</strong> Haz clic en tu nombre en la esquina superior derecha → "Mi Perfil"</p>
+        </div>
+
+        <!-- Sección 2: Ver Funciones -->
+        <div class="guia-section">
+            <h3><i class="fas fa-calendar-alt"></i> Ver Funciones</h3>
+            <p>Explora todas las funciones disponibles:</p>
+            <ul class="feature-list">
+                <li>Filtra por "Funciones de Hoy" o "Próximas Funciones"</li>
+                <li>Haz clic en cualquier función para ver detalles</li>
+                <li>Verás información: fecha, hora, sala, precio, grupo teatral</li>
+                <li>Contacta directamente a un vendedor por WhatsApp para reservar</li>
+            </ul>
+        </div>
+
+        <!-- Sección 3: Mis Funciones Favoritas -->
+        <div class="guia-section">
+            <h3><i class="fas fa-heart"></i> Mis Funciones Favoritas</h3>
+            <p>Guarda las funciones que te interesan para verlas después:</p>
+            <ul class="feature-list">
+                <li>Haz clic en el corazón en una función para guardarla</li>
+                <li>Accede a tus favoritos desde "Mi Perfil"</li>
+                <li>Recibe recordatorios de las fechas importantes</li>
+            </ul>
+        </div>
+
+        <!-- Sección 4: Historial de Funciones -->
+        <div class="guia-section">
+            <h3><i class="fas fa-history"></i> Historial de Funciones</h3>
+            <p>Mantén un registro de las funciones que haz visto y comprado:</p>
+            <ul class="feature-list">
+                <li>Todas tus funciones asistidas aparecen en tu historial</li>
+                <li>Puedes ver detalles de entradas compradas</li>
+                <li>Acceso rápido desde "Mi Perfil" → "Historial"</li>
+            </ul>
+        </div>
+
+        <!-- Sección 5: Grupos Teatrales -->
+        <div class="guia-section">
+            <h3><i class="fas fa-masks-theater"></i> Grupos Teatrales</h3>
+            <p>Conoce a los grupos teatrales que crean las funciones:</p>
+            <ul class="feature-list">
+                <li>Ve todos los grupos disponibles</li>
+                <li>Mira las funciones de tu grupo favorito</li>
+                <li>Conoce a los integrantes y actores</li>
+                <li>Síguelos para recibir notificaciones</li>
+            </ul>
+        </div>
+
+        <!-- Sección 6: Seguridad y Privacidad -->
+        <div class="guia-section">
+            <h3><i class="fas fa-lock"></i> Seguridad y Privacidad</h3>
+            <p>Protege tu cuenta:</p>
+            <ul class="feature-list">
+                <li>Cambia tu contraseña regularmente desde "Mi Perfil"</li>
+                <li>Nunca compartas tu contraseña con nadie</li>
+                <li>Cierra sesión al terminar, especialmente en computadoras públicas</li>
+                <li>Tu información personal está protegida y nunca se comparte</li>
+            </ul>
+        </div>
+
+        <!-- Sección 7: Contacting Support -->
+        <div class="guia-section">
+            <h3><i class="fas fa-headset"></i> ¿Tienes Dudas?</h3>
+            <p>Si necesitas ayuda o tienes preguntas sobre cómo usar tu cuenta:</p>
+            <ul class="feature-list">
+                <li>Contacta a nuestro equipo por WhatsApp: +598 94 687 473</li>
+                <li>Envía un email a: bacoteatro@montevideo.com.uy</li>
+                <li>Lee nuestra <a href="/guia.html">Guía General de Cómo Usar</a> para más información</li>
+            </ul>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div style="text-align: center; margin-top: 50px;">
+            <a href="/funciones-hoy.html" class="btn btn-primary" style="display: inline-block; padding: 15px 30px; margin-right: 15px;">
+                <i class="fas fa-calendar-alt"></i> Ver Funciones
+            </a>
+            <a href="/" class="btn btn-outline" style="display: inline-block; padding: 15px 30px;">
+                <i class="fas fa-home"></i> Volver al Inicio
+            </a>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <img src="/images/logo-baco.svg" alt="Baco Teatro" class="footer-logo">
+                    <p>Baco Teatro Uruguay</p>
+                    <p class="footer-slogan">Donde el arte cobra vida</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Navegación</h4>
+                    <a href="/">Inicio</a>
+                    <a href="/funciones-hoy.html">Funciones de Hoy</a>
+                    <a href="/proximas-funciones.html">Próximas Funciones</a>
+                    <a href="/sobre-baco.html">Sobre Baco</a>
+                    <a href="/guia.html">Cómo Usar</a>
+                </div>
+                <div class="footer-contact">
+                    <h4>Contacto</h4>
+                    <p><i class="fas fa-phone"></i> 099 893 748</p>
+                    <p><i class="fab fa-whatsapp"></i> +598 94 687 473</p>
+                    <p><i class="fas fa-envelope"></i> bacoteatro@montevideo.com.uy</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Baco Teatro Uruguay. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/js/nav-auth.js"></script>
+    <script>
+        // Toggle móvil menu
+        document.getElementById('navToggle')?.addEventListener('click', function() {
+            document.getElementById('navMenu')?.classList.toggle('active');
+        });
+    </script>
+</body>
+</html>

@@ -1,11 +1,35 @@
 import { query } from '../db/postgres.js';
 
+const BOLETERIA_PHONE = process.env.BOLETERIA_PHONE
+  || process.env.BOLETERIA_CONTACTO
+  || process.env.BOLETERIA_CEDULA
+  || '99999999';
+
+async function autoAsignarBoleteriaEnObra(obraId) {
+  try {
+    await query(
+      `UPDATE tickets t
+       SET estado = 'STOCK_ACTOR',
+           vendedor_phone = $1,
+           reservado_at = COALESCE(t.reservado_at, NOW())
+       FROM funciones f
+       WHERE f.id = t.funcion_id
+         AND f.obra_id = $2
+         AND t.estado = 'DISPONIBLE'
+         AND (t.vendedor_phone IS NULL OR t.vendedor_phone = '')`,
+      [String(BOLETERIA_PHONE), obraId]
+    );
+  } catch (e) {
+    console.error('Error asignando boletería a obra profesional:', e.message);
+  }
+}
+
 /**
  * Crear una nueva obra en un grupo
  * Solo el director del grupo o SUPER pueden crear obras
  */
 export async function createObra(obraData, userCedula, userRole) {
-  const { grupo_id, nombre, descripcion, autor, genero, duracion_aprox } = obraData;
+  const { grupo_id, nombre, descripcion, autor, genero, duracion_aprox, es_profesional } = obraData;
 
   // Verificar que el grupo existe y el usuario tiene permisos
   const grupoResult = await query(
@@ -42,10 +66,10 @@ export async function createObra(obraData, userCedula, userRole) {
 
   // Crear obra
   const result = await query(
-    `INSERT INTO obras (grupo_id, nombre, descripcion, autor, genero, duracion_aprox)
-     VALUES ($1, $2, $3, $4, $5, $6)
+    `INSERT INTO obras (grupo_id, nombre, descripcion, autor, genero, duracion_aprox, es_profesional)
+     VALUES ($1, $2, $3, $4, $5, $6, COALESCE($7, FALSE))
      RETURNING *`,
-    [grupo_id, nombre, descripcion, autor, genero, duracion_aprox]
+    [grupo_id, nombre, descripcion, autor, genero, duracion_aprox, es_profesional]
   );
 
   return result.rows[0];
@@ -160,7 +184,7 @@ export async function listObrasByGrupo(grupoId, userCedula, userRole) {
  * Actualizar una obra
  */
 export async function updateObra(obraId, obraData, userCedula, userRole) {
-  const { nombre, descripcion, autor, genero, duracion_aprox, estado } = obraData;
+  const { nombre, descripcion, autor, genero, duracion_aprox, estado, es_profesional } = obraData;
 
   // Obtener obra y verificar permisos
   const obraResult = await query(
@@ -194,13 +218,20 @@ export async function updateObra(obraId, obraData, userCedula, userRole) {
          genero = COALESCE($4, genero),
          duracion_aprox = COALESCE($5, duracion_aprox),
          estado = COALESCE($6, estado),
+         es_profesional = COALESCE($7, es_profesional),
          updated_at = NOW()
-     WHERE id = $7
+     WHERE id = $8
      RETURNING *`,
-    [nombre, descripcion, autor, genero, duracion_aprox, estado, obraId]
+    [nombre, descripcion, autor, genero, duracion_aprox, estado, es_profesional, obraId]
   );
 
-  return result.rows[0];
+  const updated = result.rows[0];
+
+  if (!obra.es_profesional && updated?.es_profesional) {
+    await autoAsignarBoleteriaEnObra(obraId);
+  }
+
+  return updated;
 }
 
 /**

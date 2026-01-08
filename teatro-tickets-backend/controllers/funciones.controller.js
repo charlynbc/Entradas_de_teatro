@@ -8,6 +8,37 @@ import pool from '../db/postgres.js';
 import crypto from 'crypto';
 import PDFDocument from 'pdfkit';
 
+const BOLETERIA_PHONE = process.env.BOLETERIA_PHONE
+    || process.env.BOLETERIA_CONTACTO
+    || process.env.BOLETERIA_CEDULA
+    || '48376668'; // ADMIN por defecto
+
+async function autoAsignarBoleteriaProfesional(client, funcionId) {
+    if (!funcionId) return;
+
+    // Verificar que existe el usuario de boletería
+    const userCheck = await client.query(
+        'SELECT cedula FROM users WHERE cedula = $1 LIMIT 1',
+        [String(BOLETERIA_PHONE)]
+    );
+    
+    if (userCheck.rows.length === 0) {
+        console.warn(`Usuario de boletería ${BOLETERIA_PHONE} no existe, no se auto-asigna stock`);
+        return;
+    }
+
+    await client.query(
+        `UPDATE tickets
+         SET estado = 'STOCK_ACTOR',
+                 vendedor_phone = $1,
+                 reservado_at = NOW()
+         WHERE funcion_id = $2
+             AND estado = 'DISPONIBLE'
+             AND (vendedor_phone IS NULL OR vendedor_phone = '')`,
+        [String(BOLETERIA_PHONE), funcionId]
+    );
+}
+
 /**
  * Crear función dentro de un grupo
  * Solo SUPER y ADMIN (directores del grupo)
@@ -126,10 +157,10 @@ export async function crearFuncion(req, res) {
         const result = await client.query(
             `INSERT INTO funciones (
                 obra_id, fecha, lugar, capacidad, precio_base, foto_url,
-                estado, created_at, updated_at
-            ) VALUES ($1, $2, $3, $4, $5, $6, 'PROGRAMADA', NOW(), NOW())
+                estado, creada_por, created_at, updated_at
+            ) VALUES ($1, $2, $3, $4, $5, $6, 'PROGRAMADA', $7, NOW(), NOW())
             RETURNING *`,
-            [obraId, fecha, lugar, capacidad, precioBase, foto_url]
+            [obraId, fecha, lugar, capacidad, precioBase, foto_url, userCedula]
         );
 
         const funcion = result.rows[0];
@@ -152,6 +183,11 @@ export async function crearFuncion(req, res) {
                  VALUES ${valuesPlaceholder}`,
                 tickets.flat()
             );
+        }
+
+        // Para obras profesionales, mover stock inicial a la boletería
+        if (obra.es_profesional) {
+            await autoAsignarBoleteriaProfesional(client, funcion.id);
         }
 
         await client.query('COMMIT');
@@ -255,7 +291,7 @@ export async function obtenerFuncion(req, res) {
                 estado,
                 vendedor_phone,
                 comprador_nombre,
-                comprador_contacto,
+                     comprador_phone,
                 precio
              FROM tickets
              WHERE funcion_id = $1
@@ -599,12 +635,14 @@ export async function listarFuncionesPublicas(req, res) {
  * POST /api/funciones/:id/cerrar
  */
 export async function cerrarFuncion(req, res) {
+    const client = await pool.connect();
     try {
         const { id } = req.params;
         const userRole = req.user.role;
+        const userCedula = req.user.cedula;
 
         // Verificar que la función existe
-        const checkRes = await pool.query(
+        const checkRes = await client.query(
             'SELECT f.*, o.grupo_id FROM funciones f JOIN obras o ON f.obra_id = o.id WHERE f.id = $1',
             [id]
         );
@@ -617,30 +655,44 @@ export async function cerrarFuncion(req, res) {
 
         // Solo SUPER o director del grupo pueden cerrar
         if (userRole === 'ADMIN') {
-            const grupoRes = await pool.query(
+            const grupoRes = await client.query(
                 'SELECT director_cedula FROM grupos WHERE id = $1',
                 [funcion.grupo_id]
             );
-            
-            if (grupoRes.rows[0]?.director_cedula !== req.user.cedula) {
+            if (grupoRes.rows[0]?.director_cedula !== userCedula) {
                 return res.status(403).json({ error: 'No tienes permiso para cerrar esta función' });
             }
         }
 
-        // Actualizar estado a REALIZADA
-        const result = await pool.query(
-            'UPDATE funciones SET estado = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
-            ['REALIZADA', id]
+        await client.query('BEGIN');
+        // Setear GUC para auditoría
+        await client.query("SELECT set_config('app.usuario', $1, true)", [String(userCedula)]);
+
+        // Procedimiento seguro: calcula ingresos/gastos y marca cerrada
+        await client.query('CALL cerrar_funcion($1, $2)', [String(id), String(userCedula)]);
+
+        // Obtener resumen del cierre
+        const cierre = await client.query(
+            `SELECT cf.*, f.estado, f.cerrada
+             FROM cierre_funcion cf
+             JOIN funciones f ON f.id = cf.funcion_id
+             WHERE cf.funcion_id = $1`,
+            [String(id)]
         );
+
+        await client.query('COMMIT');
 
         res.json({
             message: 'Función cerrada exitosamente',
-            funcion: result.rows[0]
+            cierre: cierre.rows[0] || null
         });
 
     } catch (error) {
+        try { await client.query('ROLLBACK'); } catch {}
         console.error('Error cerrando función:', error);
         res.status(500).json({ error: 'Error al cerrar función' });
+    } finally {
+        client.release();
     }
 }
 

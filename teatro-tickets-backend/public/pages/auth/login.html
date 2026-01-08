@@ -253,16 +253,16 @@
                 
                 // Redirigir según el rol del usuario
                 const role = data.user.role;
-                let redirectUrl = '/pages/admin/admin-dashboard.html'; // Default para SUPER
-                
+                let redirectUrl = '/pages/roles/super.html'; // Default para SUPER
+
                 if (role === 'ADMIN') {
-                    redirectUrl = '/pages/admin/director-dashboard.html';
+                    redirectUrl = '/pages/roles/director.html';
                 } else if (role === 'ACTOR') {
-                    redirectUrl = '/pages/admin/actor-dashboard.html';
+                    redirectUrl = '/pages/roles/actor.html';
                 } else if (role === 'SUPER') {
-                    redirectUrl = '/pages/admin/admin-dashboard.html';
+                    redirectUrl = '/pages/roles/super.html';
                 }
-                
+
                 window.location.href = redirectUrl;
                 
             } catch (error) {

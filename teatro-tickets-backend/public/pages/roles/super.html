@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BACO - Super Usuario</title>
+    <link rel="stylesheet" href="/css/main-index.css">
+    <link rel="stylesheet" href="/css/fotos-circulares.css">
+    <link rel="stylesheet" href="/css/cumpleanos.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* Estilos específicos para Super Usuario */
+        .dashboard-super {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header-super {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(106, 4, 15, 0.3);
+        }
+
+        .header-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-header {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .btn-header:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn-header i {
+            margin-right: 6px;
+        }
+
+        .titulo-principal {
+            font-size: 28px;
+            margin: 0;
+            color: white;
+        }
+
+        .subtitulo {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 4px;
+        }
+
+        /* Cards de acciones rápidas */
+        .acciones-rapidas {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card-accion {
+            background: linear-gradient(135deg, rgba(244, 140, 6, 0.1), rgba(106, 4, 15, 0.1));
+            border: 1px solid rgba(244, 140, 6, 0.3);
+            border-radius: 12px;
+            padding: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .card-accion:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(244, 140, 6, 0.3);
+            border-color: var(--secondary);
+        }
+
+        .card-accion-icon {
+            font-size: 48px;
+            color: var(--secondary);
+            margin-bottom: 12px;
+        }
+
+        .card-accion-titulo {
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 8px;
+        }
+
+        .card-accion-descripcion {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Sección principal */
+        .seccion {
+            background: rgba(18, 9, 13, 0.6);
+            border: 1px solid rgba(244, 140, 6, 0.2);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .seccion-titulo {
+            font-size: 20px;
+            color: var(--secondary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .seccion-titulo i {
+            font-size: 24px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            font-size: 14px;
+        }
+
+        .tab.activo {
+            background: var(--secondary);
+            border-color: var(--secondary);
+            color: var(--primary-dark);
+            font-weight: 600;
+        }
+
+        .tab:hover:not(.activo) {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Contenido de tabs */
+        .tab-contenido {
+            display: none;
+        }
+
+        .tab-contenido.activo {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* Lista de elementos */
+        .lista-elementos {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .elemento {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .elemento:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(244, 140, 6, 0.5);
+        }
+
+        /* Estado vacío */
+        .estado-vacio {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .estado-vacio i {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        .estado-vacio p {
+            font-size: 16px;
+        }
+
+        /* Botones de acción */
+        .btn-accion {
+            padding: 10px 20px;
+            background: var(--secondary);
+            color: var(--primary-dark);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .btn-accion:hover {
+            background: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(244, 140, 6, 0.4);
+        }
+
+        .btn-accion i {
+            margin-right: 6px;
+        }
+
+        .btn-peligro {
+            background: #DC2626;
+            color: white;
+        }
+
+        .btn-peligro:hover {
+            background: #B91C1C;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.activo {
+            display: flex;
+        }
+
+        .modal-contenido {
+            background: linear-gradient(135deg, var(--primary-dark), #12090D);
+            border: 2px solid var(--secondary);
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-titulo {
+            font-size: 24px;
+            color: var(--secondary);
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: white;
+            font-weight: 500;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--secondary);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+        }
+
+        .modal-acciones {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-super {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .acciones-rapidas {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                flex-wrap: wrap;
+            }
+
+            .titulo-principal {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <div class="dashboard-super">
+            <!-- Header -->
+            <div class="header-super">
+                <div class="header-info">
+                    <img src="/assets/baco.png" alt="Super Usuario" class="foto-perfil-mediana" id="fotoUsuario">
+                    <div>
+                        <h1 class="titulo-principal">👑 Super Usuario</h1>
+                        <p class="subtitulo" id="nombreUsuario">Guardián del Teatro</p>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-header" onclick="verCumpleanos()">
+                        <i class="fas fa-birthday-cake"></i> Cumpleaños
+                    </button>
+                    <button class="btn-header" onclick="verPerfil()">
+                        <i class="fas fa-user-circle"></i> Mi Perfil
+                    </button>
+                    <button class="btn-header" onclick="cerrarSesion()">
+                        <i class="fas fa-sign-out-alt"></i> Salir
+                    </button>
+                </div>
+            </div>
+
+            <!-- Acciones Rápidas -->
+            <div class="acciones-rapidas">
+                <div class="card-accion" onclick="abrirModal('crearUsuario')">
+                    <div class="card-accion-icon"><i class="fas fa-user-plus"></i></div>
+                    <div class="card-accion-titulo">Crear Usuario</div>
+                    <div class="card-accion-descripcion">Agregar nuevo integrante al sistema</div>
+                </div>
+
+                <div class="card-accion" onclick="abrirModal('crearGrupo')">
+                    <div class="card-accion-icon"><i class="fas fa-users"></i></div>
+                    <div class="card-accion-titulo">Crear Grupo</div>
+                    <div class="card-accion-descripcion">Formar nuevo grupo de teatro</div>
+                </div>
+
+                <div class="card-accion" onclick="abrirModal('crearFuncion')">
+                    <div class="card-accion-icon"><i class="fas fa-calendar-plus"></i></div>
+                    <div class="card-accion-titulo">Crear Función</div>
+                    <div class="card-accion-descripcion">Programar nueva presentación</div>
+                </div>
+
+                <div class="card-accion" onclick="mostrarTab('escanear')">
+                    <div class="card-accion-icon"><i class="fas fa-qrcode"></i></div>
+                    <div class="card-accion-titulo">Escanear Entrada</div>
+                    <div class="card-accion-descripcion">Validar entradas en puerta</div>
+                </div>
+
+                <div class="card-accion" onclick="window.location.href='/pages/director/contabilidad.html'">
+                    <div class="card-accion-icon"><i class="fas fa-scale-balanced"></i></div>
+                    <div class="card-accion-titulo">Contabilidad anual</div>
+                    <div class="card-accion-descripcion">Balance global por director</div>
+                </div>
+            </div>
+
+            <!-- Tabs de Navegación -->
+            <div class="tabs">
+                <button class="tab activo" onclick="mostrarTab('usuarios')">
+                    <i class="fas fa-users"></i> Usuarios
+                </button>
+                <button class="tab" onclick="mostrarTab('grupos')">
+                    <i class="fas fa-theater-masks"></i> Grupos
+                </button>
+                <button class="tab" onclick="mostrarTab('funciones')">
+                    <i class="fas fa-calendar"></i> Funciones
+                </button>
+                <button class="tab" onclick="mostrarTab('entradas')">
+                    <i class="fas fa-ticket-alt"></i> Entradas
+                </button>
+                <button class="tab" onclick="mostrarTab('cuotas')">
+                    <i class="fas fa-money-bill-wave"></i> Cuotas
+                </button>
+                <button class="tab" onclick="mostrarTab('balance')">
+                    <i class="fas fa-chart-line"></i> Balance
+                </button>
+                <button class="tab" onclick="mostrarTab('escanear')">
+                    <i class="fas fa-qrcode"></i> Escanear
+                </button>
+            </div>
+
+            <!-- Contenido: Usuarios -->
+            <div id="tab-usuarios" class="tab-contenido activo">
+                <div class="seccion">
+                    <div class="seccion-titulo">
+                        <i class="fas fa-users"></i>
+                        <span>Todos los Usuarios</span>
+                        <button class="btn-accion" style="margin-left: auto;" onclick="abrirModal('crearUsuario')">
+                            <i class="fas fa-plus"></i> Crear Usuario
+                        </button>
+                    </div>
+                    <div id="lista-usuarios" class="lista-elementos">
+                        <div class="estado-vacio">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Cargando usuarios...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenido: Grupos -->
+            <div id="tab-grupos" class="tab-contenido">
+                <div class="seccion">
+                    <div class="seccion-titulo">
+                        <i class="fas fa-theater-masks"></i>
+                        <span>Todos los Grupos</span>
+                        <button class="btn-accion" style="margin-left: auto;" onclick="abrirModal('crearGrupo')">
+                            <i class="fas fa-plus"></i> Crear Grupo
+                        </button>
+                    </div>
+                    <div id="lista-grupos" class="lista-elementos">
+                        <div class="estado-vacio">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Cargando grupos...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenido: Funciones -->
+            <div id="tab-funciones" class="tab-contenido">
+                <div class="seccion">
+                    <div class="seccion-titulo">
+                        <i class="fas fa-calendar"></i>
+                        <span>Todas las Funciones</span>
+                        <button class="btn-accion" style="margin-left: auto;" onclick="abrirModal('crearFuncion')">
+                            <i class="fas fa-plus"></i> Crear Función
+                        </button>
+                    </div>
+                    <div id="lista-funciones" class="lista-elementos">
+                        <div class="estado-vacio">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Cargando funciones...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenido: Entradas -->
+            <div id="tab-entradas" class="tab-contenido">
+                <div class="seccion">
+                    <div class="seccion-titulo">
+                        <i class="fas fa-ticket-alt"></i>
+                        <span>Gestión de Entradas</span>
+                    </div>
+                    <div id="lista-entradas" class="lista-elementos">
+                        <div class="estado-vacio">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Cargando entradas...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenido: Cuotas -->
+            <div id="tab-cuotas" class="tab-contenido">
+                <div class="seccion">
+                    <div class="seccion-titulo">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <span>Control de Cuotas</span>
+                    </div>
+                    <div id="lista-cuotas" class="lista-elementos">
+                        <div class="estado-vacio">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Cargando cuotas...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenido: Balance -->
+            <div id="tab-balance" class="tab-contenido">
+                <div class="seccion">
+                    <div class="seccion-titulo">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Balance Económico</span>
+                    </div>
+                    <div id="lista-balance" class="lista-elementos">
+                        <div class="estado-vacio">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Cargando balance...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenido: Escanear -->
+            <div id="tab-escanear" class="tab-contenido">
+                <div class="seccion">
+                    <div class="seccion-titulo">
+                        <i class="fas fa-qrcode"></i>
+                        <span>Escanear Entradas</span>
+                    </div>
+                    <div style="text-align: center; padding: 40px;">
+                        <i class="fas fa-qrcode" style="font-size: 120px; color: var(--secondary); margin-bottom: 24px;"></i>
+                        <p style="font-size: 18px; margin-bottom: 20px;">Escáner de QR para validar entradas</p>
+                        <button class="btn-accion" onclick="iniciarEscaneo()">
+                            <i class="fas fa-camera"></i> Iniciar Escaneo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Crear Usuario -->
+    <div id="modal-crearUsuario" class="modal">
+        <div class="modal-contenido">
+            <h2 class="modal-titulo"><i class="fas fa-user-plus"></i> Crear Usuario</h2>
+            <form id="form-crear-usuario">
+                <div class="form-group">
+                    <label class="form-label">Cédula (ID único)</label>
+                    <input type="text" class="form-input" name="cedula" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nombre</label>
+                    <input type="text" class="form-input" name="nombre" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Apellido</label>
+                    <input type="text" class="form-input" name="apellido" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Fecha de Nacimiento (DD/MM/YYYY)</label>
+                    <input type="text" class="form-input" name="fecha_nacimiento" placeholder="29/10/1991" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Celular</label>
+                    <input type="text" class="form-input" name="celular">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Rol</label>
+                    <select class="form-select" name="rol" required>
+                        <option value="director">Director</option>
+                        <option value="actor">Actor/Actriz</option>
+                    </select>
+                </div>
+                <div class="modal-acciones">
+                    <button type="button" class="btn-header" onclick="cerrarModal('crearUsuario')">Cancelar</button>
+                    <button type="submit" class="btn-accion">Crear Usuario</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/utils/fechas.js"></script>
+    <script src="/js/cumpleanos.js"></script>
+    <script src="/js/super-usuario.js"></script>
+</body>
+</html>

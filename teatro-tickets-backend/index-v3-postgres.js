@@ -8,6 +8,7 @@ import { initSupremo } from './init-supremo.js';
 import { seedMinimo } from './seed-minimo-init.js';
 import authRoutes from './routes/auth.routes.js';
 import usersRoutes from './routes/users.routes.js';
+import usuariosRoutes from './routes/usuarios.routes.js';
 import funcionesRoutes from './routes/funciones.routes.js';
 import ticketsRoutes from './routes/tickets.routes.js';
 import reportesRoutes from './routes/reportes.routes.js';
@@ -19,6 +20,11 @@ import obrasRoutes from './routes/obras.routes.js';
 import uploadRoutes from './routes/upload.routes.js';
 import publicRoutes from './routes/public.routes.js';
 import auditoriaReportesRoutes from './routes/auditoria-reportes.routes.js';
+import cuotasRoutes from './routes/cuotas.routes.js';
+import gastosRoutes from './routes/gastos.routes.js';
+import boleteriaRoutes from './routes/boleteria.routes.js';
+import contabilidadRoutes from './routes/contabilidad.routes.js';
+import pagosRoutes from './routes/pagos.routes.js';
 import { readData } from './utils/dataStore.js';
 
 const app = express();
@@ -109,8 +115,8 @@ async function startServer() {
     });
 
     app.use('/api/auth', authRoutes);
-    app.use('/api/usuarios', usersRoutes);
-    app.use('/api/users', usersRoutes); // Alias para compatibilidad con frontend
+    app.use('/api/usuarios', usuariosRoutes); // Nuevo modelo BACO
+    app.use('/api/users', usersRoutes); // Alias para compatibilidad con frontend antiguo
     app.use('/api/funciones', funcionesRoutes);
     app.use('/api/shows', funcionesRoutes); // Alias para compatibilidad con frontend antiguo
     app.use('/public', publicRoutes);
@@ -123,6 +129,11 @@ async function startServer() {
     app.use('/api/grupos', gruposRoutes);
     app.use('/api/obras', obrasRoutes);
     app.use('/api/upload', uploadRoutes);
+    app.use('/api/cuotas', cuotasRoutes); // Nuevo: Sistema de cuotas
+    app.use('/api/gastos', gastosRoutes); // Nuevo: Gastos por función
+    app.use('/api/boleteria', boleteriaRoutes);
+    app.use('/api/contabilidad', contabilidadRoutes);
+    app.use('/api/pagos', pagosRoutes);
 
     // Rutas específicas para páginas (nueva estructura)
     app.get('/login', (req, res) => {

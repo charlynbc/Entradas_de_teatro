@@ -63,3 +63,31 @@ export async function verificarToken(req, res) {
     user: req.user 
   });
 }
+
+export async function obtenerPerfil(req, res) {
+  try {
+    const { cedula } = req.user;
+    // Primero intentar buscar en tabla usuarios (si existiera)
+    let result;
+    try {
+      result = await query('SELECT cedula, rol, nombre, apellido, celular, fecha_nacimiento, foto_url as foto FROM usuarios WHERE cedula = $1', [cedula]);
+    } catch (e) {
+      // Tabla no existe en este esquema: usar fallback
+      result = { rows: [] };
+    }
+
+    // Si no existe, buscar en users (legacy)
+    if (result.rows.length === 0) {
+      result = await query(`SELECT cedula, role as rol, name as nombre, phone as celular, '' as apellido, NULL as fecha_nacimiento, photo as foto FROM users WHERE cedula = $1`, [cedula]);
+    }
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al obtener perfil:', error);
+    res.status(500).json({ error: error.message });
+  }
+}

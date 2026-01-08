@@ -5,15 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sobre Baco Teatro - Historia y Misión</title>
     <link rel="stylesheet" href="/css/baco-landing.css">
+    <link rel="stylesheet" href="/css/nav-auth.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
-    <!-- Botón Volver al Inicio -->
-    <a href="/" class="back-to-home">
-        <i class="fas fa-home"></i>
-        <span>Volver al Inicio</span>
-    </a>
-
     <!-- Navigation -->
     <nav class="main-nav">
         <div class="container">
@@ -27,9 +22,13 @@
                 <a href="/sobre-baco.html" class="nav-link active">Sobre Baco</a>
                 <a href="/guia.html" class="nav-link">Cómo Usar</a>
                 <a href="/desarrollador.html" class="nav-link">Desarrollador</a>
-                <button class="btn-login" onclick="window.location.href='/pages/auth/login.html'">
-                    <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
-                </button>
+                
+                <!-- Mostrar botón de login o menú de usuario según estado -->
+                <div id="authButtons">
+                    <button class="btn-login" onclick="window.location.href='/pages/auth/login.html'">
+                        <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                    </button>
+                </div>
             </div>
             <button class="nav-toggle" id="navToggle">
                 <i class="fas fa-bars"></i>
@@ -46,9 +45,46 @@
                         <i class="fas fa-masks-theater"></i>
                         Sobre Baco Teatro
                     </h2>
-                    <p class="lead">BACO Teatro es una compañía teatral independiente uruguaya con sede en Montevideo, con más de 25 años de trayectoria en la escena teatral local. Desde sus inicios se caracteriza por producir obras que combinan humor, crítica social y una mirada profunda sobre la realidad contemporánea, manteniendo siempre un lenguaje accesible y directo.</p>
                     
-                    <p>Surgida a fines de los años 90 como un proyecto colectivo de jóvenes formados en talleres de teatro, BACO Teatro asumió desde el comienzo el control integral del hecho teatral: dramaturgia, dirección, producción y puesta en escena. Su propuesta de teatro social y reflexivo aborda temáticas como la desigualdad, la marginalidad, los vínculos humanos y las tensiones de la vida urbana, con el humor como herramienta central. Entre sus obras destacadas se encuentran Rescatate (2006), RescataMe y Episodios X (en colaboración con Cía. Complot). La dirección artística está a cargo de Gustavo Bouzas y Horacio Nieves, y el elenco varía según cada producción manteniendo un núcleo estable. La compañía desarrolla su actividad principalmente en Montevideo, en salas del circuito independiente como el Teatro La Candela, y también funciona como espacio de formación, ensayo y producción.</p>
+                    <p class="lead">
+                        BACO Teatro es una compañía teatral independiente uruguaya con sede en Montevideo, 
+                        con más de 25 años de trayectoria en la escena teatral local.
+                    </p>
+                    
+                    <p>
+                        Desde sus inicios se caracteriza por producir obras que combinan humor, crítica social 
+                        y una mirada profunda sobre la realidad contemporánea, manteniendo siempre un lenguaje 
+                        accesible y directo.
+                    </p>
+                    
+                    <p>
+                        Surgida a fines de los años 90 como un proyecto colectivo de jóvenes formados en talleres 
+                        de teatro, BACO Teatro asumió desde el comienzo el control integral del hecho teatral: 
+                        dramaturgia, dirección, producción y puesta en escena.
+                    </p>
+                    
+                    <p>
+                        Su propuesta de teatro social y reflexivo aborda temáticas como la desigualdad, 
+                        la marginalidad, los vínculos humanos y las tensiones de la vida urbana, con el humor 
+                        como herramienta central.
+                    </p>
+                    
+                    <p>
+                        Entre sus obras destacadas se encuentran <strong>Rescatate (2006)</strong>, 
+                        <strong>RescataMe</strong> y <strong>Episodios X</strong> (en colaboración con Cía. Complot).
+                    </p>
+                    
+                    <p>
+                        La dirección artística está a cargo de <strong>Gustavo Bouzas</strong> y 
+                        <strong>Horacio Nieves</strong>, y el elenco varía según cada producción manteniendo 
+                        un núcleo estable.
+                    </p>
+                    
+                    <p>
+                        La compañía desarrolla su actividad principalmente en Montevideo, en salas del circuito 
+                        independiente como el <strong>Teatro La Candela</strong>, y también funciona como espacio 
+                        de formación, ensayo y producción.
+                    </p>
                     
                     <div class="sobre-features">
                         <div class="feature">
@@ -135,6 +171,7 @@
         </div>
     </footer>
 
+    <script src="/js/nav-auth.js"></script>
     <script>
         // Toggle móvil menu
         document.getElementById('navToggle')?.addEventListener('click', function() {

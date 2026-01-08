@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contabilidad Anual</title>
+  <link rel="stylesheet" href="/css/baco-landing.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    body { background: var(--bg-dark); color: #fff; min-height: 100vh; }
+    .page { max-width: 960px; margin: 0 auto; padding: 24px; }
+    .title { color: var(--secondary); margin: 0 0 4px 0; }
+    .card { background: rgba(255,255,255,0.05); border: 1px solid rgba(244,140,6,0.25); border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+    .form-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .form-row label { font-size: 0.95rem; color: rgba(255,255,255,0.75); }
+    .input { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; color: #fff; }
+    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 12px; margin-top: 10px; }
+    .metric { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px; }
+    .metric .label { color: rgba(255,255,255,0.7); font-size: 0.9rem; }
+    .metric .value { font-size: 1.4rem; font-weight: 700; color: var(--secondary); }
+    .back { color: var(--secondary); text-decoration: none; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <a class="back" href="/pages/roles/director.html"><i class="fas fa-arrow-left"></i> Volver</a>
+    <h1 class="title">Contabilidad anual</h1>
+    <p style="color: rgba(255,255,255,0.75);">Solo lectura. Director ve su año; SUPER puede elegir director.</p>
+
+    <div class="card">
+      <div class="form-row">
+        <div>
+          <label>Año</label><br>
+          <input class="input" type="number" id="inputAnio" min="2000" max="2100" value="" />
+        </div>
+        <div id="wrapDirector" style="display:none">
+          <label>Cédula director</label><br>
+          <input class="input" type="text" id="inputDirector" placeholder="Ej: 12345678" />
+        </div>
+        <div style="align-self: flex-end;">
+          <button class="btn-login" onclick="loadContabilidad()"><i class="fas fa-sync"></i> Consultar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="metrics">
+        <div class="metric">
+          <div class="label">Ingresos por funciones</div>
+          <div class="value" id="mFunc">$0</div>
+        </div>
+        <div class="metric">
+          <div class="label">Ingresos por cuotas</div>
+          <div class="value" id="mCuotas">$0</div>
+        </div>
+        <div class="metric">
+          <div class="label">Gastos</div>
+          <div class="value" id="mGastos">$0</div>
+        </div>
+        <div class="metric">
+          <div class="label">Balance final</div>
+          <div class="value" id="mBalance">$0</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/nav-auth.js"></script>
+  <script>
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    if (!token) {
+      window.location.href = '/pages/auth/login.html';
+    }
+    const year = new Date().getFullYear();
+    document.getElementById('inputAnio').value = year;
+
+    if (user.role === 'SUPER') {
+      document.getElementById('wrapDirector').style.display = 'block';
+    }
+
+    function fmt(n) { return `$${Number(n || 0).toLocaleString('es-UY', { minimumFractionDigits: 0 })}`; }
+
+    async function loadContabilidad() {
+      const anio = document.getElementById('inputAnio').value || year;
+      const params = new URLSearchParams({ anio });
+      if (user.role === 'SUPER') {
+        const dir = document.getElementById('inputDirector').value.trim();
+        if (dir) params.set('director', dir);
+      }
+
+      const res = await fetch(`/api/contabilidad/anual?${params.toString()}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || 'No se pudo cargar contabilidad');
+        return;
+      }
+      document.getElementById('mFunc').textContent = fmt(data.ingresos_funciones);
+      document.getElementById('mCuotas').textContent = fmt(data.ingresos_cuotas);
+      document.getElementById('mGastos').textContent = fmt(data.gastos_totales);
+      document.getElementById('mBalance').textContent = fmt(data.balance_final);
+    }
+
+    loadContabilidad().catch(console.error);
+  </script>
+</body>
+</html>

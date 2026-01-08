@@ -4,12 +4,26 @@
 // ========================================
 
 const PUBLIC_API_URL = '/public';
+const MP_FALLBACK_LINK = '/pages/boleteria/index.html';
 
 document.addEventListener('DOMContentLoaded', () => {
     initializeApp();
     setupNavigation();
-    loadFuncionesHoy();
-    loadProximasFunciones();
+    
+    // Detectar página actual y cargar datos correspondientes
+    const currentPage = window.location.pathname;
+    
+    if (currentPage.includes('funciones-hoy')) {
+        // Página de funciones de hoy - cargar solo hoy
+        loadFuncionesHoy();
+    } else if (currentPage.includes('proximas-funciones')) {
+        // Página de próximas funciones - cargar solo futuras
+        loadProximasFunciones();
+    } else {
+        // Página original funciones.html - cargar ambas
+        loadFuncionesHoy();
+        loadProximasFunciones();
+    }
 });
 
 function setupNavigation() {
@@ -78,7 +92,7 @@ async function loadFuncionesHoy() {
                     <i class="fas fa-theater-masks"></i>
                     <h3>🎭 El telón permanece cerrado hoy</h3>
                     <p>No hay funciones programadas para hoy</p>
-                    <a href="#proximas" class="btn btn-outline">✨ Ver próximas funciones</a>
+                    <a href="proximas-funciones.html" class="btn btn-outline">✨ Ver próximas funciones</a>
                 </div>
             `;
             return;
@@ -147,13 +161,15 @@ function createFuncionCard(funcion) {
         month: 'long',
         day: 'numeric'
     });
-    const horaStr = fecha.toLocaleTimeString('es-UY', {
-        hour: '2-digit',
-        minute: '2-digit'
-    });
+    // Usar la hora directamente del objeto función
+    const horaStr = funcion.hora || '20:00';
 
     const precio = Number(funcion.precio);
     const showPrecio = Number.isFinite(precio) && precio > 0;
+
+    const esProfesional = Boolean(funcion.es_profesional);
+    const cupo = Number(funcion.entradas_disponibles || 0);
+    const descripcion = truncate(funcion.descripcion || '', 160);
 
     card.innerHTML = `
         <div class="funcion-header">
@@ -181,7 +197,15 @@ function createFuncionCard(funcion) {
                     <i class="fas fa-ticket-alt"></i>
                     <span>${escapeHtml(funcion.estado || 'Disponible')}</span>
                 </div>
+                ${esProfesional ? `
+                <div class="info-item">
+                    <i class="fas fa-chair"></i>
+                    <span>${cupo > 0 ? `${cupo} entradas disponibles` : 'Cupo limitado'}</span>
+                </div>` : ''}
             </div>
+            ${descripcion ? `
+            <div class="funcion-desc">${escapeHtml(descripcion)}</div>
+            ` : ''}
             ${showPrecio ? `
             <div class="funcion-price">
                 <i class="fas fa-ticket-alt"></i> $${escapeHtml(formatPrice(precio))}
@@ -190,8 +214,16 @@ function createFuncionCard(funcion) {
         </div>
         <div class="funcion-footer">
             <button class="btn-reservar" onclick="event.stopPropagation(); showFuncionDetail(${safeJson(funcion)})">
-                <i class="fas fa-hand-pointer"></i> Ver Detalles
+                <i class="fas fa-eye"></i> Ver Detalle
             </button>
+            ${esProfesional
+                ? `<button class="btn-reservar" onclick="event.stopPropagation(); comprarEnBoleteria(${safeJson(funcion)})">
+                        <i class=\"fas fa-ticket\"></i> 🎟️ Comprar en Boletería BACO
+                   </button>`
+                : `<button class="btn-reservar" onclick="event.stopPropagation(); startReserva(${safeJson(funcion)})">
+                        <i class=\"fas fa-ticket\"></i> Reservar Entrada
+                   </button>`
+            }
         </div>
     `;
 
@@ -217,6 +249,10 @@ function showFuncionDetail(funcion) {
 
     const precio = Number(funcion.precio);
     const showPrecio = Number.isFinite(precio) && precio > 0;
+
+    const esProfesional = Boolean(funcion.es_profesional);
+    const cupo = Number(funcion.entradas_disponibles || 0);
+    const descripcion = funcion.descripcion || '';
 
     content.innerHTML = `
         <div class="modal-header">
@@ -258,6 +294,16 @@ function showFuncionDetail(funcion) {
                     </div>
                 </div>
 
+                ${esProfesional ? `
+                <div class="detail-item">
+                    <i class="fas fa-chair"></i>
+                    <div>
+                        <h4>Entradas disponibles</h4>
+                        <p>${cupo > 0 ? `${cupo} en boletería` : 'Consultar boletería'}</p>
+                    </div>
+                </div>
+                ` : ''}
+
                 ${showPrecio ? `
                 <div class="detail-item">
                     <i class="fas fa-dollar-sign"></i>
@@ -267,7 +313,22 @@ function showFuncionDetail(funcion) {
                     </div>
                 </div>
                 ` : ''}
+            ${descripcion ? `
+            <div class="detail-item" style="align-items:flex-start;">
+                <i class="fas fa-align-left" style="margin-top:4px;"></i>
+                <div>
+                    <h4>Descripción</h4>
+                    <p style="margin:6px 0; color:#4b5563; line-height:1.5;">${escapeHtml(descripcion)}</p>
+                </div>
             </div>
+            ` : ''}
+            </div>
+            ${esProfesional ? `
+            <div class="elenco-section" style="background:#fff3cd;border-left:4px solid #ffcc00;padding:16px;border-radius:6px;margin-top:12px;">
+                <h3 style="margin:0 0 8px 0;"><i class="fas fa-cash-register"></i> Venta exclusiva en Boletería</h3>
+                <p style="margin:0 0 8px 0;">Para esta obra profesional, la venta se realiza únicamente a través de boletería.</p>
+            </div>
+            ` : ''}
 
             <div id="vendedores-section"></div>
         </div>
@@ -275,10 +336,59 @@ function showFuncionDetail(funcion) {
 
     modal.classList.add('active');
 
+    // Profesional: mostrar contacto directo de boletería y no cargar vendedores
+    const vendedoresContainer = document.getElementById('vendedores-section');
+    if (esProfesional) {
+        const contacto = funcion.boleteria_contacto || '';
+        const nombreBoleteria = funcion.boleteria_nombre || 'Boletería BACO';
+        const waLink = contacto ? buildWhatsAppLink(contacto, funcion, nombreBoleteria) : '';
+        vendedoresContainer.innerHTML = `
+            <div class="elenco-section" style="background:#fff3cd;border-left:4px solid #ffcc00;padding:16px;border-radius:6px;">
+                <h3 style="margin:0 0 8px 0;"><i class="fas fa-cash-register"></i> Venta exclusiva en boletería</h3>
+                <p style="margin:0 0 6px 0;">Contactá directamente a ${escapeHtml(nombreBoleteria)} para comprar tu entrada.</p>
+                ${waLink ? `<a class="btn-contactar" style="display:inline-flex;align-items:center;gap:8px;" href="${escapeHtml(waLink)}" target="_blank"><i class="fab fa-whatsapp"></i> Hablar por WhatsApp</a>` : ''}
+                <p style="margin:8px 0 0 0;color:#6b7280;">Mostrá tu comprobante en sala para validar el pago.</p>
+            </div>
+        `;
+        return;
+    }
+
     // Cargar vendedores públicos (sin login) y mostrar sección solo si hay
     loadVendedoresPublicos(funcion).catch(err => {
         console.error('Error cargando vendedores públicos:', err);
     });
+}
+
+function startReserva(funcion) {
+        const modal = document.getElementById('reservaModal');
+        const content = document.getElementById('reservaModalContent');
+        if (!modal || !content) return;
+
+        const fecha = new Date(funcion.fecha);
+        const fechaStr = fecha.toLocaleDateString('es-UY', { year: 'numeric', month: '2-digit', day: '2-digit' });
+        const horaStr = (funcion.hora || fecha.toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' }));
+
+        content.innerHTML = `
+            <h3 style="margin-top:0;">Reservar Entrada</h3>
+            <p>Vas a reservar para <strong>${escapeHtml(funcion.obra_nombre || '')}</strong> (${escapeHtml(fechaStr)} ${escapeHtml(horaStr)}).</p>
+            <div style="margin-top:12px;">
+                <p>Podés iniciar la reserva ahora y completar el proceso al iniciar sesión.</p>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+                    <a class="btn-reservar" href="/pages/auth/login.html">
+                        <i class="fas fa-sign-in-alt"></i> Iniciar sesión para confirmar
+                    </a>
+                    <button class="btn-reservar" onclick="closeReservaModal(); showFuncionDetail(${safeJson(funcion)})">
+                        <i class="fab fa-whatsapp"></i> Contactar vendedor
+                    </button>
+                </div>
+            </div>
+        `;
+        modal.classList.add('active');
+}
+
+function comprarEnBoleteria(funcion) {
+        // Redirigir a página informativa/QR de boletería
+        window.open(MP_FALLBACK_LINK, '_blank');
 }
 
 function closeFuncionModal() {
@@ -300,21 +410,34 @@ async function loadVendedoresPublicos(funcion) {
 
     const response = await fetch(`${PUBLIC_API_URL}/funciones/${encodeURIComponent(funcionId)}/vendedores`);
     if (!response.ok) {
-        // No mostramos sección si falla
+        // Mostrar mensaje si no hay vendedores
+        container.innerHTML = `
+            <div class="elenco-section" style="background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center;">
+                <i class="fas fa-info-circle" style="font-size: 24px; color: #6A040F; margin-bottom: 10px;"></i>
+                <p style="color: #666;"><strong>Aún no hay vendedores registrados para esta función.</strong></p>
+                <p style="color: #999; font-size: 14px;">Por favor, vuelve pronto para ver las opciones de compra.</p>
+            </div>
+        `;
         return;
     }
     const data = await response.json();
     const vendedores = Array.isArray(data) ? data : (data.vendedores || []);
     if (!Array.isArray(vendedores) || vendedores.length === 0) {
-        // Requisito: solo mostrar si hay vendedores
-        container.innerHTML = '';
+        // Mostrar mensaje si no hay vendedores
+        container.innerHTML = `
+            <div class="elenco-section" style="background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center;">
+                <i class="fas fa-info-circle" style="font-size: 24px; color: #6A040F; margin-bottom: 10px;"></i>
+                <p style="color: #666;"><strong>Aún no hay vendedores registrados para esta función.</strong></p>
+                <p style="color: #999; font-size: 14px;">Por favor, vuelve pronto para ver las opciones de compra.</p>
+            </div>
+        `;
         return;
     }
 
     container.innerHTML = `
         <div class="elenco-section">
-            <h3><i class="fas fa-users"></i> Contactar vendedores</h3>
-            <p class="elenco-help">Contactá directamente a un vendedor para consultar por entradas</p>
+            <h3><i class="fas fa-user-tie"></i> Vendedores de Entradas</h3>
+            <p class="elenco-help"><strong>Contacta directamente con un vendedor a través de WhatsApp para coordinar tu compra y reserva.</strong></p>
             <div class="elenco-grid">
                 ${vendedores.map(v => renderVendedorCard(v, funcion)).join('')}
             </div>
@@ -369,6 +492,12 @@ function formatPrice(value) {
     } catch {
         return String(value);
     }
+}
+
+function truncate(text, maxLength) {
+    const t = String(text || '');
+    if (t.length <= maxLength) return t;
+    return `${t.slice(0, maxLength - 1)}…`;
 }
 
 function escapeHtml(text) {
