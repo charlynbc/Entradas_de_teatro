@@ -78,7 +78,7 @@ export async function obtenerPerfil(req, res) {
 
     // Si no existe, buscar en users (legacy)
     if (result.rows.length === 0) {
-      result = await query(`SELECT cedula, role as rol, name as nombre, phone as celular, '' as apellido, NULL as fecha_nacimiento, photo as foto FROM users WHERE cedula = $1`, [cedula]);
+      result = await query(`SELECT cedula, role as rol, name as nombre, phone as celular, '' as apellido, NULL as fecha_nacimiento, foto_url as foto FROM users WHERE cedula = $1`, [cedula]);
     }
     
     if (result.rows.length === 0) {

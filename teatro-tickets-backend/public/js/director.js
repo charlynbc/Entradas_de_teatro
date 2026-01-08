@@ -33,8 +33,17 @@ async function inicializar() {
 
 async function cargarUsuario() {
     const token = localStorage.getItem('token');
-    if (!token) {
-        window.location.href = '/';
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    
+    if (!token || !user.role) {
+        window.location.href = '/pages/auth/login.html';
+        return;
+    }
+
+    // Verificar que sea ADMIN (director)
+    if (user.role !== 'ADMIN') {
+        alert('Acceso denegado. Solo para directores.');
+        cerrarSesion();
         return;
     }
 
@@ -47,21 +56,21 @@ async function cargarUsuario() {
 
         estado.usuario = await response.json();
 
-        // Verificar rol
-        if (estado.usuario.rol !== 'director') {
-            alert('Acceso denegado. Solo directores.');
-            cerrarSesion();
-            return;
-        }
-
         // Actualizar UI
-        document.getElementById('nombreUsuario').textContent = estado.usuario.nombre;
+        document.getElementById('nombreUsuario').textContent = estado.usuario.nombre || user.name;
         if (estado.usuario.foto) {
             document.getElementById('fotoUsuario').src = estado.usuario.foto;
         }
     } catch (error) {
         console.error('Error al cargar usuario:', error);
-        cerrarSesion();
+        // No cerrar sesión por error al cargar perfil completo
+        // Usar datos de localStorage
+        estado.usuario = {
+            cedula: user.cedula,
+            nombre: user.name,
+            rol: user.role
+        };
+        document.getElementById('nombreUsuario').textContent = user.name;
     }
 }
 

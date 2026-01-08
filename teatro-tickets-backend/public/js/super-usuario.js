@@ -17,12 +17,22 @@ document.addEventListener('DOMContentLoaded', () => {
 async function verificarAutenticacion() {
     try {
         const token = localStorage.getItem('token');
-        if (!token) {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        
+        if (!token || !user.role) {
             window.location.href = '/pages/auth/login.html';
             return;
         }
 
-        const response = await fetch('/api/auth/me', {
+        // Verificar que sea SUPER
+        if (user.role !== 'SUPER') {
+            alert('Acceso denegado. Solo para Super Usuario.');
+            window.location.href = '/';
+            return;
+        }
+
+        // Obtener perfil completo
+        const response = await fetch('/api/auth/perfil', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -31,28 +41,28 @@ async function verificarAutenticacion() {
         }
 
         usuarioActual = await response.json();
-
-        if (usuarioActual.rol !== 'super') {
-            alert('Acceso denegado. Solo para Super Usuario.');
-            window.location.href = '/';
-            return;
-        }
-
         mostrarDatosUsuario();
     } catch (error) {
         console.error('Error de autenticación:', error);
         localStorage.removeItem('token');
+        localStorage.removeItem('user');
         window.location.href = '/pages/auth/login.html';
     }
 }
 
 // Mostrar datos del usuario
 function mostrarDatosUsuario() {
-    if (!usuarioActual) return;
-
-    document.getElementById('nombreUsuario').textContent = `${usuarioActual.nombre} ${usuarioActual.apellido}`;
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
     
-    if (usuarioActual.foto_url) {
+    if (!usuarioActual && !user.name) return;
+
+    // Usar datos del perfil completo o del localStorage
+    const nombre = (usuarioActual?.nombre || user.name) || 'Usuario';
+    const apellido = usuarioActual?.apellido || '';
+    
+    document.getElementById('nombreUsuario').textContent = apellido ? `${nombre} ${apellido}` : nombre;
+    
+    if (usuarioActual?.foto_url) {
         document.getElementById('fotoUsuario').src = usuarioActual.foto_url;
     }
 }
