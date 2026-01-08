@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Boletería BACO – Opciones de Pago</title>
+  <link rel="stylesheet" href="/css/baco-landing.css">
+  <link rel="stylesheet" href="/css/nav-auth.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    .pay-card { background:#fff; border-radius:12px; padding:20px; box-shadow:0 4px 14px rgba(0,0,0,.08); max-width:720px; margin:24px auto; }
+    .pay-title { margin:0 0 12px 0; }
+    .qr { width:240px; height:240px; background:#f1f1f1; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#999; margin:12px 0; }
+    .pay-actions { display:flex; gap:12px; flex-wrap:wrap; margin-top:8px; }
+    .btn { background:#6A040F; color:#fff; border:none; padding:10px 14px; border-radius:8px; cursor:pointer; }
+    .btn-outline { background:#fff; color:#6A040F; border:1px solid #6A040F; }
+  </style>
+</head>
+<body>
+  <nav class="main-nav">
+    <div class="container">
+      <div class="nav-brand" onclick="window.location.href='/'">
+        <img src="/images/logo-baco.svg" alt="Baco Teatro" class="logo">
+        <span class="brand-text">BACO TEATRO</span>
+      </div>
+      <div class="nav-menu" id="navMenu">
+        <a href="/" class="nav-link">Inicio</a>
+        <a href="/funciones-hoy.html" class="nav-link">Funciones de Hoy</a>
+        <a href="/proximas-funciones.html" class="nav-link">Próximas Funciones</a>
+        <a href="/guia.html" class="nav-link">Cómo Usar</a>
+      </div>
+      <button class="nav-toggle" id="navToggle">
+        <i class="fas fa-bars"></i>
+      </button>
+    </div>
+  </nav>
+
+  <section style="padding-top:120px;">
+    <div class="container">
+      <div class="pay-card">
+        <h2 class="pay-title"><i class="fas fa-cash-register"></i> Boletería – Opciones de Pago</h2>
+        <p>Para obras profesionales, la venta es exclusiva por boletería. Podés pagar por Mercado Pago o en efectivo en sala.</p>
+        <div class="qr">QR Mercado Pago</div>
+        <div class="pay-actions">
+          <a class="btn" href="#" target="_blank" id="mpLink"><i class="fas fa-link"></i> Ir a Mercado Pago</a>
+          <a class="btn btn-outline" href="/proximas-funciones.html"><i class="fas fa-calendar"></i> Ver funciones</a>
+        </div>
+        <p style="margin-top:12px; color:#666;">Tras el pago, presentá tu comprobante en la entrada. El estado se valida manualmente.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="main-footer">
+    <div class="container">
+      <div class="footer-bottom">
+        <p>&copy; 2026 Baco Teatro Uruguay. Todos los derechos reservados.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Permite configurar el link por querystring o variable global inyectada
+    const params = new URLSearchParams(window.location.search);
+    const mp = params.get('link') || window.MP_LINK || '';
+    if (mp) {
+      document.getElementById('mpLink').href = mp;
+    } else {
+      document.getElementById('mpLink').href = '#';
+      document.getElementById('mpLink').innerText = 'Consultar en boletería';
+    }
+    document.getElementById('navToggle')?.addEventListener('click', () => {
+      document.getElementById('navMenu')?.classList.toggle('active');
+    });
+  </script>
+</body>
+</html>

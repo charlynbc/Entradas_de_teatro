@@ -4,6 +4,7 @@
 // ========================================
 
 const PUBLIC_API_URL = '/public';
+const MP_FALLBACK_LINK = '/pages/boleteria/index.html';
 
 document.addEventListener('DOMContentLoaded', () => {
     initializeApp();
@@ -166,6 +167,8 @@ function createFuncionCard(funcion) {
     const precio = Number(funcion.precio);
     const showPrecio = Number.isFinite(precio) && precio > 0;
 
+    const esProfesional = Boolean(funcion.es_profesional);
+
     card.innerHTML = `
         <div class="funcion-header">
             <h3 class="funcion-title">${escapeHtml(funcion.obra_nombre || 'Obra sin título')}</h3>
@@ -201,8 +204,16 @@ function createFuncionCard(funcion) {
         </div>
         <div class="funcion-footer">
             <button class="btn-reservar" onclick="event.stopPropagation(); showFuncionDetail(${safeJson(funcion)})">
-                <i class="fas fa-hand-pointer"></i> Ver Detalles
+                <i class="fas fa-eye"></i> Ver Detalle
             </button>
+            ${esProfesional
+                ? `<button class="btn-reservar" onclick="event.stopPropagation(); comprarEnBoleteria(${safeJson(funcion)})">
+                        <i class=\"fas fa-cash-register\"></i> Comprar en Boletería
+                   </button>`
+                : `<button class="btn-reservar" onclick="event.stopPropagation(); startReserva(${safeJson(funcion)})">
+                        <i class=\"fas fa-ticket\"></i> Reservar Entrada
+                   </button>`
+            }
         </div>
     `;
 
@@ -228,6 +239,8 @@ function showFuncionDetail(funcion) {
 
     const precio = Number(funcion.precio);
     const showPrecio = Number.isFinite(precio) && precio > 0;
+
+    const esProfesional = Boolean(funcion.es_profesional);
 
     content.innerHTML = `
         <div class="modal-header">
@@ -279,6 +292,15 @@ function showFuncionDetail(funcion) {
                 </div>
                 ` : ''}
             </div>
+                        ${esProfesional ? `
+                        <div class="elenco-section" style="background:#fff3cd;border-left:4px solid #ffcc00;padding:16px;border-radius:6px;margin-top:12px;">
+                            <h3 style="margin:0 0 8px 0;"><i class="fas fa-cash-register"></i> Venta exclusiva en Boletería</h3>
+                            <p style="margin:0 0 8px 0;">Para esta obra profesional, la venta se realiza únicamente a través de boletería.</p>
+                            <button class="btn-contactar" onclick="window.open('${escapeHtml(MP_FALLBACK_LINK)}','_blank')">
+                                <i class="fas fa-link"></i> Ver opciones de pago
+                            </button>
+                        </div>
+                        ` : ''}
 
             <div id="vendedores-section"></div>
         </div>
@@ -290,6 +312,38 @@ function showFuncionDetail(funcion) {
     loadVendedoresPublicos(funcion).catch(err => {
         console.error('Error cargando vendedores públicos:', err);
     });
+}
+
+function startReserva(funcion) {
+        const modal = document.getElementById('reservaModal');
+        const content = document.getElementById('reservaModalContent');
+        if (!modal || !content) return;
+
+        const fecha = new Date(funcion.fecha);
+        const fechaStr = fecha.toLocaleDateString('es-UY', { year: 'numeric', month: '2-digit', day: '2-digit' });
+        const horaStr = (funcion.hora || fecha.toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' }));
+
+        content.innerHTML = `
+            <h3 style="margin-top:0;">Reservar Entrada</h3>
+            <p>Vas a reservar para <strong>${escapeHtml(funcion.obra_nombre || '')}</strong> (${escapeHtml(fechaStr)} ${escapeHtml(horaStr)}).</p>
+            <div style="margin-top:12px;">
+                <p>Podés iniciar la reserva ahora y completar el proceso al iniciar sesión.</p>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+                    <a class="btn-reservar" href="/pages/auth/login.html">
+                        <i class="fas fa-sign-in-alt"></i> Iniciar sesión para confirmar
+                    </a>
+                    <button class="btn-reservar" onclick="closeReservaModal(); showFuncionDetail(${safeJson(funcion)})">
+                        <i class="fab fa-whatsapp"></i> Contactar vendedor
+                    </button>
+                </div>
+            </div>
+        `;
+        modal.classList.add('active');
+}
+
+function comprarEnBoleteria(funcion) {
+        // Redirigir a página informativa/QR de boletería
+        window.open(MP_FALLBACK_LINK, '_blank');
 }
 
 function closeFuncionModal() {

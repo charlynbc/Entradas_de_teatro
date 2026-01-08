@@ -21,7 +21,8 @@ async function runMigrations() {
             '003-grupos.sql',
             '003-grupos-update.sql',
             '004-funciones-grupos.sql',
-            '007-ticket-auditoria-anulacion.sql'
+            '007-ticket-auditoria-anulacion.sql',
+            '009-obra-prof-boleteria.sql'
         ];
         
         for (const file of files) {
