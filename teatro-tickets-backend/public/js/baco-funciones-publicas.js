@@ -311,21 +311,34 @@ async function loadVendedoresPublicos(funcion) {
 
     const response = await fetch(`${PUBLIC_API_URL}/funciones/${encodeURIComponent(funcionId)}/vendedores`);
     if (!response.ok) {
-        // No mostramos sección si falla
+        // Mostrar mensaje si no hay vendedores
+        container.innerHTML = `
+            <div class="elenco-section" style="background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center;">
+                <i class="fas fa-info-circle" style="font-size: 24px; color: #6A040F; margin-bottom: 10px;"></i>
+                <p style="color: #666;"><strong>Aún no hay vendedores registrados para esta función.</strong></p>
+                <p style="color: #999; font-size: 14px;">Por favor, vuelve pronto para ver las opciones de compra.</p>
+            </div>
+        `;
         return;
     }
     const data = await response.json();
     const vendedores = Array.isArray(data) ? data : (data.vendedores || []);
     if (!Array.isArray(vendedores) || vendedores.length === 0) {
-        // Requisito: solo mostrar si hay vendedores
-        container.innerHTML = '';
+        // Mostrar mensaje si no hay vendedores
+        container.innerHTML = `
+            <div class="elenco-section" style="background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center;">
+                <i class="fas fa-info-circle" style="font-size: 24px; color: #6A040F; margin-bottom: 10px;"></i>
+                <p style="color: #666;"><strong>Aún no hay vendedores registrados para esta función.</strong></p>
+                <p style="color: #999; font-size: 14px;">Por favor, vuelve pronto para ver las opciones de compra.</p>
+            </div>
+        `;
         return;
     }
 
     container.innerHTML = `
         <div class="elenco-section">
-            <h3><i class="fas fa-users"></i> Contactar vendedores</h3>
-            <p class="elenco-help">Contactá directamente a un vendedor para consultar por entradas</p>
+            <h3><i class="fas fa-user-tie"></i> Vendedores de Entradas</h3>
+            <p class="elenco-help"><strong>Contacta directamente con un vendedor a través de WhatsApp para coordinar tu compra y reserva.</strong></p>
             <div class="elenco-grid">
                 ${vendedores.map(v => renderVendedorCard(v, funcion)).join('')}
             </div>
