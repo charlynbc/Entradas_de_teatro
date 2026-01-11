@@ -12,7 +12,7 @@ const PUBLIC_API_URL = '/api/public';
  * @param {Boolean} esProfesional - Flag de tipo de función
  * @param {String} fechaIso - Fecha en ISO (para mensajes)
  */
-async function iniciarFlujoreserva(funcionId, esProfesional, fechaIso = '') {
+async function iniciarFlujoReserva(funcionId, esProfesional, fechaIso = '') {
   console.log('🎬 Iniciando flujo de reserva:', { funcionId, esProfesional, fechaIso });
 
   if (!funcionId) {
