@@ -17,6 +17,8 @@ function debugLog(msg) {
 
 document.addEventListener('DOMContentLoaded', () => {
     debugLog('[Funciones Hoy] DOM Cargado');
+    debugLog('[Funciones Hoy] iniciarFlujoReserva disponible: ' + (typeof window.iniciarFlujoReserva === 'function' ? 'SI' : 'NO'));
+    debugLog('[Funciones Hoy] reservaFlujoLoaded: ' + (window.reservaFlujoLoaded ? 'SI' : 'NO'));
     initFecha();
     loadFuncionesHoy();
 });
@@ -154,8 +156,14 @@ function renderHoyCard(f, index) {
 }
 
 async function handleReservaHoy(funcionId, esProfesional) {
-    // Usar nuevo flujo unificado
-    await iniciarFlujoReserva(funcionId, esProfesional);
+    // Verificar que la función esté disponible
+    if (typeof window.iniciarFlujoReserva !== 'function') {
+        debugLog('[Funciones Hoy] ERROR: iniciarFlujoReserva no está definida');
+        alert('Error al iniciar reserva. Por favor, recarga la página.');
+        return;
+    }
+    // Usar flujo unificado
+    await window.iniciarFlujoReserva(funcionId, esProfesional);
 }
 
 function fFechaTxtFromId(_) {

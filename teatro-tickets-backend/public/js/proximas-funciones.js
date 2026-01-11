@@ -17,6 +17,8 @@ function debugLog(msg) {
 
 document.addEventListener('DOMContentLoaded', () => {
     debugLog('[Próximas Funciones] DOM Cargado, iniciando carga...');
+    debugLog('[Próximas Funciones] iniciarFlujoReserva disponible: ' + (typeof window.iniciarFlujoReserva === 'function' ? 'SI' : 'NO'));
+    debugLog('[Próximas Funciones] reservaFlujoLoaded: ' + (window.reservaFlujoLoaded ? 'SI' : 'NO'));
     loadProximasFunciones();
 });
 
@@ -158,8 +160,14 @@ function renderTimelineItem(f, index) {
 }
 
 async function handleReserva(funcionId, esProfesional, fechaIso) {
+    // Verificar que la función esté disponible
+    if (typeof window.iniciarFlujoReserva !== 'function') {
+        debugLog('[Próximas Funciones] ERROR: iniciarFlujoReserva no está definida');
+        alert('Error al iniciar reserva. Por favor, recarga la página.');
+        return;
+    }
     // Usar nuevo flujo unificado
-    await iniciarFlujoReserva(funcionId, esProfesional, fechaIso);
+    await window.iniciarFlujoReserva(funcionId, esProfesional, fechaIso);
 }
 
 function fFecha(f) {
