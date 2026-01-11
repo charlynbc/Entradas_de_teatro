@@ -257,8 +257,12 @@
             <!-- Header -->
             <div class="header-actor">
                 <div class="header-actor-foto">
-                    <img src="/images/logo-baco.svg" alt="Actor" class="foto-perfil-grande" id="fotoUsuario">
-                </div>
+                    <div style="position: relative; display: inline-block;">
+                        <img src="/images/logo-baco.svg" alt="Actor" class="foto-perfil-grande" id="fotoUsuario" style="cursor: pointer;" onclick="abrirModalFoto()">
+                        <button class="btn-camara-icon" onclick="abrirModalFoto()" title="Cambiar foto" style="width: 40px; height: 40px; bottom: 5px; right: 5px;">
+                            <i class="fas fa-camera"></i>
+                        </button>
+                    </div>
                 <div class="header-actor-info">
                     <h1 id="nombreUsuario">🎭 Cargando...</h1>
                     <p id="cedulaUsuario">Cédula: ...</p>
@@ -455,6 +459,7 @@
     <script src="/js/utils/fechas.js"></script>
     <script src="/js/cumpleanos.js"></script>
     <script src="/js/actor.js"></script>
+    <script src="/js/foto-perfil-modal.js"></script>
 
     <!-- Disclaimer legal + Footer compartido -->
     <div id="legalDisclaimer"></div>

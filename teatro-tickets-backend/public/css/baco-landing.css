@@ -1614,6 +1614,51 @@ section {
     object-fit: cover;
 }
 
+.btn-camara-icon {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: var(--secondary, #F48C06);
+    color: white;
+    border: 2px solid white;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn-camara-icon:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(244, 140, 6, 0.4);
+}
+
+.btn-camara-icon:active {
+    transform: scale(0.95);
+}
+
+#modalFotoPerfil {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: none !important;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+#modalFotoPerfil.active {
+    display: flex !important;
+}
+
 .reserva-info li {
     margin-bottom: 8px;
     line-height: 1.6;

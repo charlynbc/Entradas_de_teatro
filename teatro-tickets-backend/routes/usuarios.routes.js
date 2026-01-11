@@ -312,4 +312,32 @@ router.get('/:cedula', authenticate, async (req, res) => {
     }
 });
 
-export default router;
+// ==========================================
+// ACTUALIZAR FOTO DE PERFIL
+// ==========================================
+router.post('/foto', authenticate, async (req, res) => {
+    try {
+        const userId = req.user.cedula || req.user.id;
+        const { imageUrl } = req.body;
+
+        if (!imageUrl || !imageUrl.startsWith('/uploads/')) {
+            return res.status(400).json({ error: 'URL de imagen inválida' });
+        }
+
+        // Actualizar foto en base de datos
+        await query(
+            'UPDATE usuarios SET foto_url = $1 WHERE cedula = $2 RETURNING foto_url',
+            [imageUrl, userId]
+        );
+
+        res.json({
+            ok: true,
+            message: 'Foto de perfil actualizada',
+            foto_url: imageUrl
+        });
+    } catch (error) {
+        console.error('Error actualizando foto:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+

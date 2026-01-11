@@ -508,7 +508,12 @@
             <!-- Header -->
             <div class="header-super">
                 <div class="header-info">
-                    <img src="/images/logo-baco.svg" alt="Super Usuario" class="foto-perfil-mediana" id="fotoUsuario">
+                    <div style="position: relative; display: inline-block;">
+                        <img src="/images/logo-baco.svg" alt="Super Usuario" class="foto-perfil-mediana" id="fotoUsuario" style="cursor: pointer;" onclick="abrirModalFoto()">
+                        <button class="btn-camara-icon" onclick="abrirModalFoto()" title="Cambiar foto">
+                            <i class="fas fa-camera"></i>
+                        </button>
+                    </div>
                     <div>
                         <h1 class="titulo-principal">👑 Super Usuario</h1>
                         <p class="subtitulo" id="nombreUsuario">Guardián del Teatro</p>
@@ -826,6 +831,7 @@
     <script src="/js/utils/fechas.js"></script>
     <script src="/js/cumpleanos.js"></script>
     <script src="/js/super-usuario.js"></script>
+    <script src="/js/foto-perfil-modal.js"></script>
 
     <!-- Disclaimer legal + Footer compartido -->
     <div id="legalDisclaimer"></div>

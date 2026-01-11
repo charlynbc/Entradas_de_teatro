@@ -280,7 +280,12 @@
             <!-- Header -->
             <div class="header-director">
                 <div class="header-info">
-                    <img src="/images/logo-baco.svg" alt="Director" class="foto-perfil-mediana" id="fotoUsuario">
+                    <div style="position: relative; display: inline-block;">
+                        <img src="/images/logo-baco.svg" alt="Director" class="foto-perfil-mediana" id="fotoUsuario" style="cursor: pointer;" onclick="abrirModalFoto()">
+                        <button class="btn-camara-icon" onclick="abrirModalFoto()" title="Cambiar foto">
+                            <i class="fas fa-camera"></i>
+                        </button>
+                    </div>
                     <div>
                         <h1 class="titulo-principal">🎬 Panel de Director</h1>
                         <p class="subtitulo" id="nombreUsuario">Cargando...</p>
@@ -619,6 +624,7 @@
     <script src="/js/utils/fechas.js"></script>
     <script src="/js/cumpleanos.js"></script>
     <script src="/js/director.js"></script>
+    <script src="/js/foto-perfil-modal.js"></script>
 
     <!-- Disclaimer legal -->
     <div id="legalDisclaimer"></div>
