@@ -3,46 +3,58 @@
 
 const PUBLIC_API_URL = '/api/public';
 
+// Debug visual
+const debugLogs = [];
+function debugLog(msg) {
+    console.log(msg);
+    debugLogs.push(`${new Date().toISOString().substr(14, 9)} - ${msg}`);
+    const debugEl = document.getElementById('debug-info');
+    if (debugEl) {
+        debugEl.innerHTML = '<pre style="background:#000;color:#0f0;padding:10px;font-size:10px;max-height:200px;overflow:auto;">' + 
+            debugLogs.join('\n') + '</pre>';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('[Próximas Funciones] DOM Cargado, iniciando carga...');
+    debugLog('[Próximas Funciones] DOM Cargado, iniciando carga...');
     loadProximasFunciones();
 });
 
 async function loadProximasFunciones() {
-    console.log('[Próximas Funciones] loadProximasFunciones() iniciada');
+    debugLog('[Próximas Funciones] loadProximasFunciones() iniciada');
     const container = document.getElementById('proximasTimeline');
     const badge = document.getElementById('totalProximas');
     
-    console.log('[Próximas Funciones] Container:', container);
-    console.log('[Próximas Funciones] Badge:', badge);
+    debugLog('[Próximas Funciones] Container: ' + (container ? 'OK' : 'NULL'));
+    debugLog('[Próximas Funciones] Badge: ' + (badge ? 'OK' : 'NULL'));
     
     try {
-        console.log('[Próximas Funciones] Haciendo fetch a:', `${PUBLIC_API_URL}/funciones`);
+        debugLog('[Próximas Funciones] Haciendo fetch a: ' + `${PUBLIC_API_URL}/funciones`);
         const response = await fetch(`${PUBLIC_API_URL}/funciones`);
-        console.log('[Próximas Funciones] Response:', response.status);
+        debugLog('[Próximas Funciones] Response status: ' + response.status);
         
         if (!response.ok) throw new Error('Error al cargar funciones');
         
         const data = await response.json();
-        console.log('[Próximas Funciones] Data recibida:', data);
+        debugLog('[Próximas Funciones] Data recibida: ' + data.length + ' funciones');
         
         const funciones = Array.isArray(data) ? data : (data.funciones || []);
-        console.log('[Próximas Funciones] Funciones parseadas:', funciones.length);
+        debugLog('[Próximas Funciones] Funciones parseadas: ' + funciones.length);
         
         // Filtrar futuras y ordenar
         const now = new Date();
-        console.log('[Próximas Funciones] Fecha actual:', now);
+        debugLog('[Próximas Funciones] Fecha actual: ' + now.toISOString());
         
         const proximas = funciones
             .filter(f => {
                 const fechaFuncion = new Date(f.fecha);
                 const esFutura = fechaFuncion >= now;
-                console.log(`[Próximas Funciones] Función ${f.id}: ${f.fecha} -> ${esFutura ? 'FUTURA' : 'PASADA'}`);
+                debugLog(`[Próximas Funciones] Función ${f.id}: ${f.fecha} -> ${esFutura ? 'FUTURA' : 'PASADA'}`);
                 return esFutura;
             })
             .sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
         
-        console.log('[Próximas Funciones] Funciones futuras:', proximas.length);
+        debugLog('[Próximas Funciones] Funciones futuras: ' + proximas.length);
         
         if (proximas.length === 0) {
             container.innerHTML = `
