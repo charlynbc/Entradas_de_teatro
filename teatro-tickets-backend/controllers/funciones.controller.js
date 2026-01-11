@@ -156,11 +156,10 @@ export async function crearFuncion(req, res) {
         // Insertar función
         const result = await client.query(
             `INSERT INTO funciones (
-                obra_id, fecha, lugar, capacidad, precio_base, foto_url,
-                estado, creada_por, created_at, updated_at
-            ) VALUES ($1, $2, $3, $4, $5, $6, 'PROGRAMADA', $7, NOW(), NOW())
+                obra_id, fecha, lugar, capacidad, precio_base, foto_url, estado
+            ) VALUES ($1, $2, $3, $4, $5, $6, 'PROGRAMADA')
             RETURNING *`,
-            [obraId, fecha, lugar, capacidad, precioBase, foto_url, userCedula]
+            [obraId, fecha, lugar, capacidad, precioBase, foto_url]
         );
 
         const funcion = result.rows[0];
@@ -182,6 +181,23 @@ export async function crearFuncion(req, res) {
                 `INSERT INTO tickets (code, funcion_id, precio, estado)
                  VALUES ${valuesPlaceholder}`,
                 tickets.flat()
+            );
+        }
+
+        // Crear entradas v2 con estados nuevos (sin_asignar)
+        const entradasV2 = [];
+        for (let i = 1; i <= capacidad; i++) {
+            const code = `E-${funcion.id}-${i.toString().padStart(4, '0')}`;
+            const qrToken = crypto.randomUUID ? crypto.randomUUID() : crypto.randomBytes(16).toString('hex');
+            entradasV2.push([code, funcion.id, userCedula, precioBase, qrToken]);
+        }
+
+        if (entradasV2.length > 0) {
+            const placeholders = entradasV2.map((_, idx) => `($${idx * 5 + 1}, $${idx * 5 + 2}, $${idx * 5 + 3}, $${idx * 5 + 4}, $${idx * 5 + 5})`).join(',');
+            await client.query(
+                `INSERT INTO entradas_v2 (code, funcion_id, creador_cedula, precio, qr_token)
+                 VALUES ${placeholders}`,
+                entradasV2.flat()
             );
         }
 

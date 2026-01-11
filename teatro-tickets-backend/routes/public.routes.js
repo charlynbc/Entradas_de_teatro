@@ -1,5 +1,5 @@
 import express from 'express';
-import { listarFuncionesInvitado, listarVendedoresPublicosPorFuncion } from '../controllers/public.controller.js';
+import { listarFuncionesInvitado, listarVendedoresPublicosPorFuncion, reservarEntradaInvitado } from '../controllers/public.controller.js';
 import { 
   comprarTicket, 
   obtenerDetallesCompra,
@@ -21,6 +21,10 @@ router.get('/funciones', listarFuncionesInvitado);
 // GET /public/funciones/:funcionId/vendedores
 // Lista vendedores de una función (solo INDEPENDIENTE)
 router.get('/funciones/:funcionId/vendedores', listarVendedoresPublicosPorFuncion);
+
+// POST /public/funciones/:funcionId/reservas
+// Reserva de invitado con vendedor asignado (funciones de muestra)
+router.post('/funciones/:funcionId/reservas', reservarEntradaInvitado);
 
 // POST /public/comprar-ticket
 // 🛒 INVITADO compra entrada directa (PROFESIONAL + permite_compra_online)

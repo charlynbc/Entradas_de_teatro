@@ -73,8 +73,8 @@ export const crearGrupo = async (req, res) => {
                     directorPrincipal,
                     fecha_inicio,
                     fecha_fin,
-                    req.body.dia_semana,
-                    req.body.hora_inicio,
+                    req.body.dia_semana || 'N/A',  // Default para evitar NOT NULL violation
+                    req.body.hora_inicio || '00:00',  // Default para evitar NOT NULL violation
                     obra || req.body.obra_a_realizar,
                 ]
             );

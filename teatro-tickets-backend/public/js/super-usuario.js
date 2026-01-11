@@ -11,6 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
     verificarAutenticacion();
     cargarDatos();
     configurarFormularios();
+    prepararModalPerfil();
+    mostrarBannerCumpleanosAuto();
 });
 
 // Verificar autenticación
@@ -60,10 +62,20 @@ function mostrarDatosUsuario() {
     const nombre = (usuarioActual?.nombre || user.name) || 'Usuario';
     const apellido = usuarioActual?.apellido || '';
     
-    document.getElementById('nombreUsuario').textContent = apellido ? `${nombre} ${apellido}` : nombre;
+    const nombreCompleto = apellido ? `${nombre} ${apellido}` : nombre;
+    document.getElementById('nombreUsuario').textContent = nombreCompleto;
     
-    if (usuarioActual?.foto_url) {
-        document.getElementById('fotoUsuario').src = usuarioActual.foto_url;
+    const fotoPerfil = usuarioActual?.foto || usuarioActual?.foto_url || '/assets/baco.png';
+    const fotoEl = document.getElementById('fotoUsuario');
+    if (fotoEl) fotoEl.src = fotoPerfil;
+
+    // Prellenar modal de perfil con datos actuales
+    if (usuarioActual) {
+        document.getElementById('perfil-nombre').value = usuarioActual.nombre || '';
+        document.getElementById('perfil-apellido').value = usuarioActual.apellido || '';
+        document.getElementById('perfil-celular').value = usuarioActual.celular || '';
+        document.getElementById('perfil-foto').value = fotoPerfil;
+        document.getElementById('perfil-descripcion').value = usuarioActual.descripcion || '';
     }
 }
 
@@ -104,15 +116,20 @@ async function cargarUsuarios() {
             <div class="elemento usuario-con-foto">
                 <img src="${u.foto_url || '/assets/baco.png'}" alt="${u.nombre}" class="foto-perfil-mediana">
                 <div class="usuario-info" style="flex: 1;">
-                    <p class="usuario-nombre">${u.nombre} ${u.apellido}</p>
+                    <p class="usuario-nombre nombre-dorado">${u.nombre} ${u.apellido}</p>
                     <p class="usuario-descripcion">
                         <span class="badge-rol badge-${u.rol}">${traducirRol(u.rol)}</span>
                         ${u.celular ? ' • ' + u.celular : ''}
                     </p>
                 </div>
-                <button class="btn-accion" onclick="editarUsuario('${u.cedula}')">
-                    <i class="fas fa-edit"></i>
-                </button>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn-header" onclick="verPerfilUsuario('${u.cedula}')">
+                        <i class="fas fa-eye"></i> Ver perfil
+                    </button>
+                    <button class="btn-accion" onclick="editarUsuario('${u.cedula}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </div>
             </div>
         `).join('');
     } catch (error) {
@@ -146,7 +163,7 @@ async function cargarGrupos() {
                 <div style="display: flex; gap: 16px; align-items: center;">
                     <img src="${g.foto_url || '/assets/baco.png'}" alt="${g.nombre}" class="foto-perfil-mediana">
                     <div style="flex: 1;">
-                        <h3 style="margin: 0 0 4px 0; color: var(--secondary);">${g.nombre}</h3>
+                        <h3 style="margin: 0 0 4px 0; color: var(--secondary);" class="nombre-dorado">${g.nombre}</h3>
                         <p style="margin: 0; font-size: 14px; color: rgba(255,255,255,0.7);">
                             ${g.horario_fijo || 'Sin horario definido'} • Obra: ${g.obra_nombre}
                         </p>
@@ -170,7 +187,8 @@ async function cargarFunciones() {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
-        const funciones = await response.json();
+        const data = await response.json();
+        const funciones = Array.isArray(data) ? data : (data.funciones || []);
         const container = document.getElementById('lista-funciones');
 
         if (funciones.length === 0) {
@@ -187,7 +205,7 @@ async function cargarFunciones() {
             <div class="elemento">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div>
-                        <h3 style="margin: 0 0 4px 0; color: var(--secondary);">${f.obra_nombre || 'Sin título'}</h3>
+                        <h3 style="margin: 0 0 4px 0; color: var(--secondary);" class="nombre-dorado">${f.obra_nombre || 'Sin título'}</h3>
                         <p style="margin: 0; font-size: 14px; color: rgba(255,255,255,0.7);">
                             <i class="fas fa-calendar"></i> ${f.fecha} a las ${f.hora}
                             <i class="fas fa-map-marker-alt" style="margin-left: 12px;"></i> ${f.lugar}
@@ -301,6 +319,100 @@ function configurarFormularios() {
     });
 }
 
+// Modal perfil del super
+function prepararModalPerfil() {
+    const form = document.getElementById('form-perfil-super');
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const cedula = usuarioActual?.cedula || user.cedula;
+
+        const payload = {
+            celular: document.getElementById('perfil-celular').value || null,
+            foto_url: document.getElementById('perfil-foto').value || null,
+            descripcion: document.getElementById('perfil-descripcion').value || null,
+            nueva_password: document.getElementById('perfil-password').value || undefined
+        };
+
+        // Filtrar campos vacíos para no sobreescribir con null
+        Object.keys(payload).forEach((k) => {
+            if (payload[k] === null || payload[k] === '') delete payload[k];
+        });
+
+        try {
+            const resp = await fetch(`/api/usuarios/${cedula}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!resp.ok) {
+                const err = await resp.json();
+                alert(err.error || 'No se pudo actualizar el perfil');
+                return;
+            }
+
+            alert('Perfil actualizado');
+            document.getElementById('perfil-password').value = '';
+            cerrarModal('perfilSuper');
+            await verificarAutenticacion();
+        } catch (error) {
+            console.error('Error actualizando perfil:', error);
+            alert('Error de red al actualizar');
+        }
+    });
+}
+
+async function readFileAsDataURL(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+async function subirFotoPerfil() {
+    const input = document.getElementById('perfil-foto-file');
+    if (!input?.files?.length) {
+        alert('Selecciona una imagen primero');
+        return;
+    }
+
+    const file = input.files[0];
+    if (!file) return;
+
+    try {
+        const base64 = await readFileAsDataURL(file);
+        const token = localStorage.getItem('token');
+        const resp = await fetch('/api/upload/image', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ image: base64, filename: file.name })
+        });
+
+        const data = await resp.json();
+        if (!resp.ok) {
+            alert(data.error || 'No se pudo subir la imagen');
+            return;
+        }
+
+        document.getElementById('perfil-foto').value = data.url;
+        document.getElementById('fotoUsuario').src = data.url;
+        alert('Imagen subida. Guarda para aplicar al perfil.');
+    } catch (error) {
+        console.error('Error subiendo foto:', error);
+        alert('No se pudo subir la imagen');
+    }
+}
+
 // Utilidades
 function traducirRol(rol) {
     const roles = {
@@ -329,6 +441,31 @@ function editarUsuario(cedula) {
     alert('Editar usuario: ' + cedula);
 }
 
+async function verPerfilUsuario(cedula) {
+    try {
+        const token = localStorage.getItem('token');
+        const resp = await fetch(`/api/usuarios/${cedula}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await resp.json();
+        if (!resp.ok) {
+            alert(data.error || 'No se pudo cargar el perfil');
+            return;
+        }
+
+        document.getElementById('ver-usuario-foto').src = data.foto || data.foto_url || '/assets/baco.png';
+        document.getElementById('ver-usuario-nombre').textContent = `${data.nombre || ''} ${data.apellido || ''}`.trim();
+        document.getElementById('ver-usuario-rol').textContent = traducirRol(data.rol);
+        document.getElementById('ver-usuario-cedula').textContent = data.cedula || '';
+        document.getElementById('ver-usuario-celular').textContent = data.celular || 'Sin celular';
+        document.getElementById('ver-usuario-descripcion').textContent = data.descripcion || 'Sin descripción';
+        abrirModal('ver-usuario');
+    } catch (error) {
+        console.error('Error cargando perfil:', error);
+        alert('No se pudo cargar el perfil');
+    }
+}
+
 function verGrupo(id) {
     // TODO: Implementar vista de grupo
     alert('Ver grupo: ' + id);
@@ -345,6 +482,24 @@ function gestionarEntradas(funcionId) {
 }
 
 function iniciarEscaneo() {
-    // TODO: Implementar escáner QR
-    alert('Escáner QR en desarrollo');
+    const codigo = prompt('Código de entrada a escanear:');
+    if (!codigo) return;
+    const funcionId = prompt('ID de función activa:');
+    if (!funcionId) return;
+
+    fetchAPI(`/api/entradas-v2/${codigo}/escanear`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ funcion_id: funcionId })
+    }).then(async (resp) => {
+        if (!resp.ok) {
+            const err = await resp.json();
+            alert(err.error || 'No se pudo validar la entrada');
+            return;
+        }
+        alert('Entrada válida y marcada como utilizada');
+    }).catch((error) => {
+        console.error('Error escaneando:', error);
+        alert('Error de red al escanear');
+    });
 }

@@ -5,23 +5,18 @@
 
 const PUBLIC_API_URL = '/public';
 const MP_FALLBACK_LINK = '/pages/boleteria/index.html';
+const reservasCache = new Map();
+let reservaContext = { funcion: null, vendedor: null };
 
 document.addEventListener('DOMContentLoaded', () => {
     initializeApp();
     setupNavigation();
-    
-    // Detectar página actual y cargar datos correspondientes
-    const currentPage = window.location.pathname;
-    
-    if (currentPage.includes('funciones-hoy')) {
-        // Página de funciones de hoy - cargar solo hoy
+
+    // Cargar según elementos presentes (robusto a rutas alternativas)
+    if (document.getElementById('funciones-hoy-grid')) {
         loadFuncionesHoy();
-    } else if (currentPage.includes('proximas-funciones')) {
-        // Página de próximas funciones - cargar solo futuras
-        loadProximasFunciones();
-    } else {
-        // Página original funciones.html - cargar ambas
-        loadFuncionesHoy();
+    }
+    if (document.getElementById('proximas-grid')) {
         loadProximasFunciones();
     }
 });
@@ -360,30 +355,38 @@ function showFuncionDetail(funcion) {
 }
 
 function startReserva(funcion) {
-        const modal = document.getElementById('reservaModal');
-        const content = document.getElementById('reservaModalContent');
-        if (!modal || !content) return;
+    showFuncionDetail(funcion);
+    setTimeout(() => {
+        document.getElementById('vendedores-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 200);
 
-        const fecha = new Date(funcion.fecha);
-        const fechaStr = fecha.toLocaleDateString('es-UY', { year: 'numeric', month: '2-digit', day: '2-digit' });
-        const horaStr = (funcion.hora || fecha.toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' }));
+    const modal = document.getElementById('reservaModal');
+    const content = document.getElementById('reservaModalContent');
+    if (!modal || !content) return;
 
-        content.innerHTML = `
-            <h3 style="margin-top:0;">Reservar Entrada</h3>
-            <p>Vas a reservar para <strong>${escapeHtml(funcion.obra_nombre || '')}</strong> (${escapeHtml(fechaStr)} ${escapeHtml(horaStr)}).</p>
-            <div style="margin-top:12px;">
-                <p>Podés iniciar la reserva ahora y completar el proceso al iniciar sesión.</p>
-                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
-                    <a class="btn-reservar" href="/pages/auth/login.html">
-                        <i class="fas fa-sign-in-alt"></i> Iniciar sesión para confirmar
-                    </a>
-                    <button class="btn-reservar" onclick="closeReservaModal(); showFuncionDetail(${safeJson(funcion)})">
-                        <i class="fab fa-whatsapp"></i> Contactar vendedor
-                    </button>
-                </div>
-            </div>
-        `;
-        modal.classList.add('active');
+    const fecha = new Date(funcion.fecha);
+    const fechaStr = fecha.toLocaleDateString('es-UY', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    const horaStr = (funcion.hora || fecha.toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' }));
+
+    content.innerHTML = `
+        <h3 style="margin-top:0;">¿Cómo reservar tu entrada?</h3>
+        <p>Función de muestra: <strong>${escapeHtml(funcion.obra_nombre || '')}</strong> (${escapeHtml(fechaStr)} ${escapeHtml(horaStr)}).</p>
+        <ol style="margin:12px 0 0 18px; color:#4b5563; line-height:1.6;">
+            <li>Elige un vendedor con stock (actor o director).</li>
+            <li>Abre WhatsApp y confirma disponibilidad.</li>
+            <li>Completa tus datos para bloquear la entrada (el vendedor la marca como reservada).</li>
+            <li>El director valida el pago. Solo pagada = válida para escaneo.</li>
+        </ol>
+        <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn-reservar" onclick="closeReservaModal(); document.getElementById('vendedores-section')?.scrollIntoView({behavior:'smooth'});">
+                <i class="fas fa-user-check"></i> Ver vendedores disponibles
+            </button>
+            <a class="btn-reservar" href="/pages/auth/login.html">
+                <i class="fas fa-sign-in-alt"></i> Si eres actor/director, inicia sesión
+            </a>
+        </div>
+    `;
+    modal.classList.add('active');
 }
 
 function comprarEnBoleteria(funcion) {
@@ -445,11 +448,26 @@ async function loadVendedoresPublicos(funcion) {
     `;
 }
 
+function registrarContextoReserva(funcion, vendedor) {
+    const key = `${funcion.id}-${vendedor.cedula || vendedor.contacto_publico}-${Math.random().toString(36).slice(2, 7)}`;
+    reservasCache.set(key, { funcion, vendedor });
+    return key;
+}
+
+function abrirReservaConKey(key) {
+    const ctx = reservasCache.get(key);
+    if (!ctx) return;
+    abrirReservaConVendedor(ctx.funcion, ctx.vendedor);
+}
+
 function renderVendedorCard(vendedor, funcion) {
     const nombre = vendedor?.nombre || 'Vendedor';
     const contacto = vendedor?.contacto_publico || '';
     const waLink = buildWhatsAppLink(contacto, funcion, nombre);
     if (!waLink) return '';
+
+    const disponibles = Number.isFinite(Number(vendedor.disponibles)) ? Number(vendedor.disponibles) : null;
+    const contextKey = registrarContextoReserva(funcion, vendedor);
 
     return `
         <div class="actor-card" onclick="window.open('${escapeHtml(waLink)}','_blank')">
@@ -458,11 +476,120 @@ function renderVendedorCard(vendedor, funcion) {
             </div>
             <div class="actor-info">
                 <h4>${escapeHtml(nombre)}</h4>
-                <p class="actor-role">Vendedor</p>
+                <p class="actor-role">${escapeHtml(vendedor.rol || 'Vendedor')}</p>
+                ${disponibles !== null ? `<span class="badge badge-info">${disponibles} disp.</span>` : ''}
             </div>
             <button class="btn-contactar" onclick="event.stopPropagation(); window.open('${escapeHtml(waLink)}','_blank')">
                 <i class="fab fa-whatsapp"></i> WhatsApp
             </button>
+            <button class="btn-reservar" onclick="event.stopPropagation(); abrirReservaConKey('${contextKey}')">
+                <i class="fas fa-ticket-alt"></i> Reservar con datos
+            </button>
+        </div>
+    `;
+}
+
+function abrirReservaConVendedor(funcion, vendedor) {
+    reservaContext = { funcion, vendedor };
+    const modal = document.getElementById('reservaModal');
+    const content = document.getElementById('reservaModalContent');
+    if (!modal || !content) return;
+
+    const nombreGuardado = localStorage.getItem('reservaNombre') || '';
+    const telefonoGuardado = localStorage.getItem('reservaTelefono') || '';
+
+    content.innerHTML = `
+        <h3 style="margin-top:0;">Reserva para invitados</h3>
+        <p style="color:#4b5563;">Vendedor: <strong>${escapeHtml(vendedor.nombre || 'Vendedor')}</strong> (${escapeHtml(vendedor.rol || 'Actor')}). La entrada queda bloqueada a su nombre.</p>
+        <div class="form-group">
+            <label>Nombre del invitado</label>
+            <input id="reserva-nombre" class="form-input" placeholder="Nombre y apellido" value="${escapeHtml(nombreGuardado)}" />
+        </div>
+        <div class="form-group">
+            <label>Teléfono del invitado</label>
+            <input id="reserva-telefono" class="form-input" placeholder="09xx xxx xxx" value="${escapeHtml(telefonoGuardado)}" />
+        </div>
+        <p style="font-size:13px;color:#6b7280;margin-top:6px;">El pago lo valida solo el director. Hasta que no esté en estado pagada, la entrada <strong>NO es válida</strong> para escanear.</p>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
+            <button class="btn-reservar" onclick="enviarReservaInvitado()">
+                <i class="fas fa-lock"></i> Bloquear entrada con este vendedor
+            </button>
+            <button class="btn-contactar" onclick="closeReservaModal()">
+                <i class="fas fa-times"></i> Cancelar
+            </button>
+        </div>
+        <div id="reserva-resultado" style="margin-top:12px;"></div>
+    `;
+
+    modal.classList.add('active');
+}
+
+async function enviarReservaInvitado() {
+    const { funcion, vendedor } = reservaContext;
+    if (!funcion || !vendedor) {
+        alert('Selecciona una función y un vendedor');
+        return;
+    }
+
+    const nombre = document.getElementById('reserva-nombre')?.value?.trim();
+    const telefono = document.getElementById('reserva-telefono')?.value?.trim();
+    const resultado = document.getElementById('reserva-resultado');
+
+    if (!nombre || !telefono) {
+        alert('Completa nombre y teléfono');
+        return;
+    }
+
+    localStorage.setItem('reservaNombre', nombre);
+    localStorage.setItem('reservaTelefono', telefono);
+    reservaContext = { funcion, vendedor, nombre, telefono };
+
+    try {
+        resultado.innerHTML = '<div class="estado-vacio"><i class="fas fa-spinner fa-spin"></i> Registrando reserva...</div>';
+        const resp = await fetch(`/public/funciones/${encodeURIComponent(funcion.id)}/reservas`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                nombre,
+                telefono,
+                vendedor_cedula: vendedor.cedula,
+                vendedor_phone: vendedor.contacto_publico
+            })
+        });
+
+        const data = await resp.json();
+        if (!resp.ok) {
+            resultado.innerHTML = `<div class="estado-vacio" style="color:#b00020;"><i class="fas fa-times-circle"></i> ${escapeHtml(data.error || 'No se pudo reservar')}</div>`;
+            return;
+        }
+
+        mostrarResultadoReserva(data, vendedor, funcion);
+    } catch (error) {
+        console.error('Error reservando entrada:', error);
+        if (resultado) resultado.innerHTML = `<div class="estado-vacio" style="color:#b00020;"><i class="fas fa-times-circle"></i> Error de red al reservar</div>`;
+    }
+}
+
+function mostrarResultadoReserva(data, vendedor, funcion) {
+    const resultado = document.getElementById('reserva-resultado');
+    if (!resultado) return;
+
+    const contacto = vendedor?.contacto_publico || '';
+    const mensaje = data.whatsapp_mensaje || `Hola ${vendedor?.nombre || 'equipo'}, confirmo mi reserva para ${funcion?.obra_nombre || 'la función'} con ${reservaContext.nombre || 'invitado'}.`;
+    const waLink = contacto ? `https://wa.me/${String(contacto).replace(/\D/g, '')}?text=${encodeURIComponent(mensaje)}` : null;
+
+    resultado.innerHTML = `
+        <div class="estado-vacio" style="align-items:flex-start;gap:10px;">
+            <div>
+                <p style="margin:0;color:#0f5132;"><strong>${escapeHtml(data.message || 'Reserva creada')}</strong></p>
+                <p style="margin:4px 0; color:#1f2937;">Código: <strong>${escapeHtml(data.code || '')}</strong> • Estado: ${escapeHtml(data.estado || '')}</p>
+                <p style="margin:4px 0; color:#6b7280;">Envío sugerido por WhatsApp al vendedor para confirmar.</p>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    ${waLink ? `<a class="btn-contactar" href="${escapeHtml(waLink)}" target="_blank"><i class="fab fa-whatsapp"></i> Abrir WhatsApp</a>` : ''}
+                    <button class="btn-reservar" data-mensaje="${escapeHtml(mensaje)}" onclick="copiarTexto(this.dataset.mensaje)"><i class="fas fa-copy"></i> Copiar mensaje</button>
+                </div>
+                <p style="margin:6px 0 0 0; color:#b00020; font-size:13px;">Solo el director confirma el pago. Hasta entonces la entrada no es válida para escanear.</p>
+            </div>
         </div>
     `;
 }
@@ -481,7 +608,7 @@ function buildWhatsAppLink(rawPhone, funcion, vendedorNombre) {
 
     const obra = funcion?.obra_nombre || '';
 
-    const msg = `Hola ${vendedorNombre}!\n\nVi la función "${obra}" (${fechaStr} ${horaStr}).\n¿Me podés pasar info de cómo conseguir entradas?\n\nGracias.`;
+    const msg = `Hola ${vendedorNombre}!\n\nVi la función "${obra}" (${fechaStr} ${horaStr}).\nQuiero reservar una entrada de muestra contigo. El director validará el pago.\n\nGracias!`;
     return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
 }
 
@@ -512,4 +639,13 @@ function escapeHtml(text) {
 function safeJson(obj) {
     // JSON en atributo onclick: evita romper el HTML por comillas
     return JSON.stringify(obj).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
+}
+
+async function copiarTexto(texto) {
+    try {
+        await navigator.clipboard.writeText(texto);
+        alert('Mensaje copiado. Pégalo en WhatsApp.');
+    } catch (error) {
+        console.error('No se pudo copiar el texto:', error);
+    }
 }

@@ -93,9 +93,9 @@ router.put('/:id/foto', requireRole('SUPER', 'ADMIN'), subirFotoGrupo);
 
 /**
  * DELETE /api/grupos/:id
- * Eliminar grupo - SUPER
+ * Eliminar grupo - SUPER o ADMIN (si es director del grupo)
  */
-router.delete('/:id', requireRole('SUPER'), eliminarGrupo);
+router.delete('/:id', requireRole('SUPER', 'ADMIN'), eliminarGrupo);
 
 /**
  * POST /api/grupos/:id/finalizar

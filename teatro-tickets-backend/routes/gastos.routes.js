@@ -93,7 +93,7 @@ router.get('/', authenticate, async (req, res) => {
 // ==========================================
 // OBTENER UN GASTO POR ID
 // ==========================================
-router.get('/:id', authenticate, requireRole(['super', 'director']), async (req, res) => {
+router.get('/:id', authenticate, requireRole(['SUPER', 'ADMIN']), async (req, res) => {
     try {
         const { id } = req.params;
         const { rol, cedula } = req.user;
@@ -136,7 +136,7 @@ router.get('/:id', authenticate, requireRole(['super', 'director']), async (req,
 // ==========================================
 // CREAR GASTO (Director o Super)
 // ==========================================
-router.post('/', authenticate, requireRole(['super', 'director']), async (req, res) => {
+router.post('/', authenticate, requireRole(['SUPER', 'ADMIN']), async (req, res) => {
     try {
         const { funcion_id, descripcion, monto } = req.body;
         const { rol, cedula } = req.user;
@@ -188,7 +188,7 @@ router.post('/', authenticate, requireRole(['super', 'director']), async (req, r
 // ==========================================
 // ACTUALIZAR GASTO
 // ==========================================
-router.put('/:id', authenticate, requireRole(['super', 'director']), async (req, res) => {
+router.put('/:id', authenticate, requireRole(['SUPER', 'ADMIN']), async (req, res) => {
     try {
         const { id } = req.params;
         const { descripcion, monto } = req.body;
@@ -253,7 +253,7 @@ router.put('/:id', authenticate, requireRole(['super', 'director']), async (req,
 // ==========================================
 // ELIMINAR GASTO
 // ==========================================
-router.delete('/:id', authenticate, requireRole(['super', 'director']), async (req, res) => {
+router.delete('/:id', authenticate, requireRole(['SUPER', 'ADMIN']), async (req, res) => {
     try {
         const { id } = req.params;
         const { rol, cedula } = req.user;
@@ -290,7 +290,7 @@ router.delete('/:id', authenticate, requireRole(['super', 'director']), async (r
 // ==========================================
 // OBTENER BALANCE DE UNA FUNCIÓN
 // ==========================================
-router.get('/funcion/:funcion_id/balance', authenticate, requireRole(['super', 'director']), async (req, res) => {
+router.get('/funcion/:funcion_id/balance', authenticate, requireRole(['SUPER', 'ADMIN']), async (req, res) => {
     try {
         const { funcion_id } = req.params;
         const { rol, cedula } = req.user;

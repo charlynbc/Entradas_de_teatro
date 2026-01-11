@@ -77,9 +77,11 @@
   transform: scale(1.05);
 }
 
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap');
+
 /* ==========================================
-   FOTO CON NOMBRE (LAYOUT WHATSAPP)
-   ========================================== */
+  FOTO CON NOMBRE (LAYOUT WHATSAPP)
+  ========================================== */
 
 .usuario-con-foto {
   display: flex;
@@ -107,13 +109,15 @@
 }
 
 .usuario-nombre {
-  font-weight: 600;
+  font-weight: 700;
   font-size: 15px;
-  color: #2c1810;
+  color: var(--secondary);
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-family: 'Playfair Display', 'Georgia', serif;
+  letter-spacing: 0.2px;
 }
 
 .usuario-descripcion {
@@ -123,6 +127,12 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.nombre-dorado {
+  color: var(--secondary) !important;
+  font-family: 'Playfair Display', 'Georgia', serif;
+  font-weight: 700;
 }
 
 /* ==========================================

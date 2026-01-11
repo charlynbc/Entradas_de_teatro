@@ -21,6 +21,7 @@ async function inicializar() {
         await cargarUsuario();
         await cargarDatos();
         configurarEventos();
+        mostrarBannerCumpleanosAuto();
     } catch (error) {
         console.error('Error al inicializar:', error);
         mostrarError('Error al cargar el dashboard');
@@ -58,9 +59,8 @@ async function cargarUsuario() {
 
         // Actualizar UI
         document.getElementById('nombreUsuario').textContent = estado.usuario.nombre || user.name;
-        if (estado.usuario.foto) {
-            document.getElementById('fotoUsuario').src = estado.usuario.foto;
-        }
+        const fotoPerfil = estado.usuario.foto || estado.usuario.foto_url || '/assets/baco.png';
+        document.getElementById('fotoUsuario').src = fotoPerfil;
     } catch (error) {
         console.error('Error al cargar usuario:', error);
         // No cerrar sesión por error al cargar perfil completo
@@ -91,6 +91,31 @@ async function cargarDatos() {
         cargarCuotas(),
         cargarBalance()
     ]);
+    actualizarOverview();
+}
+
+// Actualizar estadísticas del overview
+function actualizarOverview() {
+    // Grupos
+    const statGrupos = document.getElementById('stat-grupos');
+    if (statGrupos) statGrupos.textContent = estado.grupos.length;
+
+    // Funciones
+    const statFunciones = document.getElementById('stat-funciones');
+    if (statFunciones) statFunciones.textContent = estado.funciones?.length || 0;
+
+    // Ensayos
+    const statEnsayos = document.getElementById('stat-ensayos');
+    if (statEnsayos) statEnsayos.textContent = estado.ensayos?.length || 0;
+
+    // Balance
+    const statBalance = document.getElementById('stat-balance');
+    if (statBalance && estado.balance?.length > 0) {
+        const total = estado.balance.reduce((sum, item) => {
+            return sum + (parseFloat(item.ingresos || 0) - parseFloat(item.gastos || 0));
+        }, 0);
+        statBalance.textContent = `$${total.toFixed(0)}`;
+    }
 }
 
 async function cargarGrupos() {
@@ -495,6 +520,14 @@ function configurarEventos() {
             await crearGrupo(new FormData(formGrupo));
         });
     }
+    
+    const formPerfil = document.getElementById('form-perfil-director');
+    if (formPerfil) {
+        formPerfil.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await guardarPerfilDirector(new FormData(formPerfil));
+        });
+    }
 }
 
 async function crearGrupo(formData) {
@@ -525,11 +558,93 @@ async function crearGrupo(formData) {
     }
 }
 
+function verPerfil() {
+    if (!estado.usuario) return;
+
+    const foto = estado.usuario.foto || estado.usuario.foto_url;
+    document.getElementById('perfil-dir-nombre').value = estado.usuario.nombre || '';
+    document.getElementById('perfil-dir-apellido').value = estado.usuario.apellido || '';
+    document.getElementById('perfil-dir-celular').value = estado.usuario.celular || '';
+    document.getElementById('perfil-dir-foto').value = foto || '';
+    document.getElementById('perfil-dir-descripcion').value = estado.usuario.descripcion || estado.usuario.bio || '';
+    document.getElementById('perfil-dir-password').value = '';
+    abrirModal('perfilDirector');
+}
+
+async function guardarPerfilDirector(formData) {
+    try {
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const cedula = estado.usuario?.cedula || user.cedula;
+
+        const payload = {
+            nombre: formData.get('nombre')?.trim() || undefined,
+            apellido: formData.get('apellido')?.trim() || undefined,
+            celular: formData.get('celular')?.trim() || undefined,
+            foto_url: formData.get('foto_url')?.trim() || undefined,
+            descripcion: formData.get('descripcion')?.trim() || undefined,
+            nueva_password: formData.get('nueva_password')?.trim() || undefined
+        };
+
+        Object.keys(payload).forEach((k) => {
+            if (payload[k] === undefined || payload[k] === '') delete payload[k];
+        });
+
+        const resp = await fetch(`/api/usuarios/${cedula}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await resp.json();
+        if (!resp.ok) {
+            throw new Error(data.error || 'No se pudo actualizar el perfil');
+        }
+
+        await refrescarPerfilDirector();
+
+        mostrarExito('Perfil actualizado');
+        document.getElementById('perfil-dir-password').value = '';
+        cerrarModal('perfilDirector');
+    } catch (error) {
+        console.error('Error al actualizar perfil:', error);
+        mostrarError(error.message || 'No se pudo actualizar el perfil');
+    }
+}
+
+async function refrescarPerfilDirector() {
+    try {
+        const token = localStorage.getItem('token');
+        const resp = await fetch('/api/auth/perfil', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!resp.ok) return;
+        const perfil = await resp.json();
+        estado.usuario = perfil;
+        const fotoEl = document.getElementById('fotoUsuario');
+        if (fotoEl) fotoEl.src = perfil.foto || perfil.foto_url || '/assets/baco.png';
+    } catch (error) {
+        console.error('No se pudo refrescar perfil:', error);
+    }
+}
+
 // ============================================
 // NAVEGACIÓN TABS
 // ============================================
 
 function mostrarTab(tabName) {
+    // Ocultar overview y cards de acciones al navegar a una sección específica
+    const overview = document.querySelector('.overview-card');
+    const seccionesAcciones = document.querySelectorAll('.seccion-acciones');
+    const tabsNav = document.querySelector('.tabs');
+    
+    if (overview) overview.style.display = 'none';
+    seccionesAcciones.forEach(s => s.style.display = 'none');
+    if (tabsNav) tabsNav.style.display = 'flex';
+
     // Ocultar todos los tabs
     document.querySelectorAll('.tab-contenido').forEach(tab => {
         tab.classList.remove('activo');
@@ -545,7 +660,33 @@ function mostrarTab(tabName) {
     }
 
     // Activar botón correspondiente
-    event.target.closest('.tab')?.classList.add('activo');
+    const buttons = document.querySelectorAll('.tabs .tab');
+    buttons.forEach(btn => {
+        if (btn.onclick && btn.onclick.toString().includes(tabName)) {
+            btn.classList.add('activo');
+        }
+    });
+}
+
+// Función para volver al dashboard principal
+function volverAlDashboard() {
+    const overview = document.querySelector('.overview-card');
+    const seccionesAcciones = document.querySelectorAll('.seccion-acciones');
+    const tabsNav = document.querySelector('.tabs');
+    
+    // Mostrar overview y acciones
+    if (overview) overview.style.display = 'block';
+    seccionesAcciones.forEach(s => s.style.display = 'block');
+    
+    // Ocultar tabs de navegación
+    if (tabsNav) tabsNav.style.display = 'none';
+    
+    // Mostrar tab de grupos por defecto
+    document.querySelectorAll('.tab-contenido').forEach(tab => {
+        tab.classList.remove('activo');
+    });
+    const tabGrupos = document.getElementById('tab-grupos');
+    if (tabGrupos) tabGrupos.classList.add('activo');
 }
 
 // ============================================
@@ -599,14 +740,54 @@ function mostrarError(mensaje) {
     alert(mensaje);
 }
 
+async function readFileAsDataURL(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+async function subirFotoPerfilDirector() {
+    const input = document.getElementById('perfil-dir-foto-file');
+    if (!input?.files?.length) {
+        mostrarError('Selecciona una imagen primero');
+        return;
+    }
+
+    const file = input.files[0];
+    try {
+        const base64 = await readFileAsDataURL(file);
+        const token = localStorage.getItem('token');
+        const resp = await fetch('/api/upload/image', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ image: base64, filename: file.name })
+        });
+
+        const data = await resp.json();
+        if (!resp.ok) {
+            mostrarError(data.error || 'No se pudo subir la imagen');
+            return;
+        }
+
+        document.getElementById('perfil-dir-foto').value = data.url;
+        const fotoEl = document.getElementById('fotoUsuario');
+        if (fotoEl) fotoEl.src = data.url;
+        mostrarExito('Imagen subida. Guarda para aplicar al perfil.');
+    } catch (error) {
+        console.error('Error subiendo foto:', error);
+        mostrarError('No se pudo subir la imagen');
+    }
+}
+
 // Funciones de navegación
 function verCumpleanos() {
     abrirModalCumpleanos();
-}
-
-function verPerfil() {
-    // TODO: Implementar modal de perfil
-    console.log('Ver perfil');
 }
 
 function iniciarEscaneo() {

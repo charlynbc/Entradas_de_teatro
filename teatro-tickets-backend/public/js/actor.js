@@ -11,7 +11,8 @@ let estado = {
     funciones: [],
     entradas: [],
     cuotas: [],
-    historial: []
+    historial: [],
+    statsEntradas: null
 };
 
 // Inicialización
@@ -21,6 +22,8 @@ async function inicializar() {
     try {
         await cargarUsuario();
         await cargarDatos();
+        mostrarBannerCumpleanosAuto();
+        prepararPerfilActor();
     } catch (error) {
         console.error('Error al inicializar:', error);
         mostrarError('Error al cargar el dashboard');
@@ -59,9 +62,8 @@ async function cargarUsuario() {
         // Actualizar UI
         document.getElementById('nombreUsuario').textContent = `🎭 ${estado.usuario.nombre || user.name}`;
         document.getElementById('cedulaUsuario').textContent = `Cédula: ${estado.usuario.cedula || user.cedula}`;
-        if (estado.usuario.foto) {
-            document.getElementById('fotoUsuario').src = estado.usuario.foto;
-        }
+        const fotoPerfil = estado.usuario.foto || estado.usuario.foto_url || '/assets/baco.png';
+        document.getElementById('fotoUsuario').src = fotoPerfil;
     } catch (error) {
         console.error('Error al cargar usuario:', error);
         // No cerrar sesión por error al cargar perfil completo
@@ -92,9 +94,22 @@ async function cargarDatos() {
         cargarFunciones(),
         cargarEntradas(),
         cargarCuotas(),
-        cargarHistorial()
+        cargarHistorial(),
+        cargarStatsEntradas()
     ]);
     actualizarResumen();
+}
+
+async function cargarStatsEntradas() {
+    try {
+        const resp = await fetchAPI(`/api/entradas-v2/estadisticas/actor/${estado.usuario.cedula}`);
+        if (resp.ok) {
+            estado.statsEntradas = await resp.json();
+            actualizarResumenEntradas();
+        }
+    } catch (error) {
+        console.error('Error cargando stats de entradas:', error);
+    }
 }
 
 async function cargarGrupos() {
@@ -145,7 +160,7 @@ async function cargarFunciones() {
 
 async function cargarEntradas() {
     try {
-        const response = await fetchAPI(`/api/entradas?actor_cedula=${estado.usuario.cedula}`);
+        const response = await fetchAPI(`/api/entradas-v2`);
         if (response.ok) {
             estado.entradas = await response.json();
             renderizarEntradas();
@@ -190,6 +205,19 @@ function actualizarResumen() {
     
     const cuotasAlDia = estado.cuotas.filter(c => c.estado === 'al_dia').length;
     document.getElementById('total-cuotas-dia').textContent = cuotasAlDia;
+}
+
+function actualizarResumenEntradas() {
+    if (!estado.statsEntradas) return;
+    const s = estado.statsEntradas;
+    const set = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+    };
+    set('stats-entradas-vendidas', s.vendidas || 0);
+    set('stats-entradas-prontas', s.prontas || 0);
+    set('stats-entradas-no', s.no_vendidas || 0);
+    set('stats-entradas-perdonadas', s.perdonadas || s.deuda_perdonada || 0);
 }
 
 // ============================================
@@ -333,13 +361,15 @@ function renderizarEntradas() {
     }
 
     container.innerHTML = estado.entradas.map(entrada => {
-        const funcion = estado.funciones.find(f => f.id === entrada.funcion_id);
+        const funcion = estado.funciones.find(f => String(f.id) === String(entrada.funcion_id));
         const grupo = estado.grupos.find(g => g.id === funcion?.grupo_id);
-        
+        const puedeReservar = entrada.estado === 'asignada';
+        const puedePronta = entrada.estado === 'reservada';
+
         return `
             <div class="elemento-card">
                 <div class="elemento-info">
-                    <div class="elemento-titulo">Entrada #${entrada.numero}</div>
+                    <div class="elemento-titulo">Entrada ${entrada.code}</div>
                     <div class="elemento-subtitulo">
                         <i class="fas fa-calendar"></i> ${funcion?.nombre || 'Función'}
                         <i class="fas fa-users"></i> ${grupo?.nombre || 'Grupo'}
@@ -347,13 +377,19 @@ function renderizarEntradas() {
                     ${funcion ? `<div><i class="fas fa-calendar-day"></i> ${formatearFecha(funcion.fecha)} ${formatearHora(funcion.hora)}</div>` : ''}
                     <div class="elemento-stats">
                         <span class="badge ${getBadgeEstadoEntrada(entrada.estado)}">${formatearEstadoEntrada(entrada.estado)}</span>
-                        ${entrada.comprador_nombre ? `<span class="badge badge-info">${entrada.comprador_nombre}</span>` : ''}
+                        ${entrada.reservante_nombre ? `<span class="badge badge-info">${entrada.reservante_nombre}</span>` : ''}
+                        ${entrada.reservante_telefono ? `<span class="badge badge-secondary"><i class="fas fa-phone"></i> ${entrada.reservante_telefono}</span>` : ''}
                     </div>
                 </div>
                 <div class="elemento-acciones">
-                    ${entrada.estado === 'asignada' ? `
-                        <button class="btn-accion" onclick="verDetalleEntrada(${entrada.id})">
-                            <i class="fas fa-eye"></i> Ver
+                    ${puedeReservar ? `
+                        <button class="btn-accion" onclick="reservarEntradaActor('${entrada.code}')">
+                            <i class="fas fa-user-plus"></i> Reservar
+                        </button>
+                    ` : ''}
+                    ${puedePronta ? `
+                        <button class="btn-accion" onclick="marcarProntaActor('${entrada.code}')">
+                            <i class="fas fa-check-circle"></i> Pronta
                         </button>
                     ` : ''}
                 </div>
@@ -367,7 +403,11 @@ function getBadgeEstadoEntrada(estado) {
         'sin_asignar': 'badge-secondary',
         'asignada': 'badge-info',
         'reservada': 'badge-warning',
-        'pagada': 'badge-success'
+        'pronta': 'badge-primary',
+        'pagada': 'badge-success',
+        'utilizada': 'badge-success',
+        'no_vendida': 'badge-danger',
+        'perdonada': 'badge-success'
     };
     return badges[estado] || 'badge-secondary';
 }
@@ -377,9 +417,50 @@ function formatearEstadoEntrada(estado) {
         'sin_asignar': 'Sin asignar',
         'asignada': 'Asignada',
         'reservada': 'Reservada',
-        'pagada': 'Pagada'
+        'pronta': 'Pronta para pagar',
+        'pagada': 'Pagada',
+        'utilizada': 'Utilizada',
+        'no_vendida': 'No vendida',
+        'perdonada': 'Perdonada'
     };
     return estados[estado] || estado;
+}
+
+async function reservarEntradaActor(code) {
+    const nombre = prompt('Nombre de la persona que reserva:');
+    const telefono = prompt('Teléfono de la persona:');
+    if (!nombre || !telefono) return;
+    try {
+        const resp = await fetchAPI(`/api/entradas-v2/${code}/reservar`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nombre, telefono })
+        });
+        if (!resp.ok) {
+            const err = await resp.json();
+            alert(err.error || 'No se pudo reservar');
+            return;
+        }
+        await cargarEntradas();
+    } catch (error) {
+        console.error('Error reservando entrada:', error);
+        alert('Error reservando entrada');
+    }
+}
+
+async function marcarProntaActor(code) {
+    try {
+        const resp = await fetchAPI(`/api/entradas-v2/${code}/pronta`, { method: 'POST' });
+        if (!resp.ok) {
+            const err = await resp.json();
+            alert(err.error || 'No se pudo marcar pronta');
+            return;
+        }
+        await cargarEntradas();
+    } catch (error) {
+        console.error('Error marcando pronta:', error);
+        alert('Error marcando entrada');
+    }
 }
 
 // ============================================
@@ -542,14 +623,147 @@ function mostrarError(mensaje) {
     alert(mensaje);
 }
 
-// Funciones de navegación
-function verCumpleanos() {
-    abrirModalCumpleanos();
+// ============================================
+// PERFIL
+// ============================================
+
+function prepararPerfilActor() {
+    const form = document.getElementById('form-perfil-actor');
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await guardarPerfilActor(new FormData(form));
+        });
+    }
 }
 
 function verPerfil() {
-    // TODO: Implementar modal de perfil
-    console.log('Ver perfil');
+    if (!estado.usuario) return;
+
+    const foto = estado.usuario.foto || estado.usuario.foto_url;
+    document.getElementById('perfil-actor-nombre').value = estado.usuario.nombre || '';
+    document.getElementById('perfil-actor-celular').value = estado.usuario.celular || '';
+    document.getElementById('perfil-actor-foto').value = foto || '';
+    document.getElementById('perfil-actor-descripcion').value = estado.usuario.descripcion || estado.usuario.bio || '';
+    document.getElementById('perfil-actor-password').value = '';
+    abrirModal('perfilActor');
+}
+
+async function guardarPerfilActor(formData) {
+    try {
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const cedula = estado.usuario?.cedula || user.cedula;
+
+        const payload = {
+            nombre: formData.get('nombre')?.trim() || undefined,
+            celular: formData.get('celular')?.trim() || undefined,
+            foto_url: formData.get('foto_url')?.trim() || undefined,
+            descripcion: formData.get('descripcion')?.trim() || undefined,
+            nueva_password: formData.get('nueva_password')?.trim() || undefined
+        };
+
+        Object.keys(payload).forEach((k) => {
+            if (payload[k] === undefined || payload[k] === '') delete payload[k];
+        });
+
+        const resp = await fetch(`/api/usuarios/${cedula}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await resp.json();
+        if (!resp.ok) {
+            throw new Error(data.error || 'No se pudo actualizar el perfil');
+        }
+
+        await refrescarPerfilActor();
+
+        mostrarExito('Perfil actualizado');
+        document.getElementById('perfil-actor-password').value = '';
+        cerrarModal('perfilActor');
+    } catch (error) {
+        console.error('Error al actualizar perfil:', error);
+        mostrarError(error.message || 'No se pudo actualizar el perfil');
+    }
+}
+
+async function refrescarPerfilActor() {
+    try {
+        const token = localStorage.getItem('token');
+        const resp = await fetch('/api/auth/perfil', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!resp.ok) return;
+        const perfil = await resp.json();
+        estado.usuario = perfil;
+        const fotoEl = document.getElementById('fotoUsuario');
+        if (fotoEl) fotoEl.src = perfil.foto || perfil.foto_url || '/assets/baco.png';
+    } catch (error) {
+        console.error('No se pudo refrescar perfil:', error);
+    }
+}
+
+async function readFileAsDataURL(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+async function subirFotoPerfilActor() {
+    const input = document.getElementById('perfil-actor-foto-file');
+    if (!input?.files?.length) {
+        mostrarError('Selecciona una imagen primero');
+        return;
+    }
+
+    const file = input.files[0];
+    try {
+        const base64 = await readFileAsDataURL(file);
+        const token = localStorage.getItem('token');
+        const resp = await fetch('/api/upload/image', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ image: base64, filename: file.name })
+        });
+
+        const data = await resp.json();
+        if (!resp.ok) {
+            mostrarError(data.error || 'No se pudo subir la imagen');
+            return;
+        }
+
+        document.getElementById('perfil-actor-foto').value = data.url;
+        const fotoEl = document.getElementById('fotoUsuario');
+        if (fotoEl) fotoEl.src = data.url;
+        mostrarExito('Imagen subida. Guarda para aplicar al perfil.');
+    } catch (error) {
+        console.error('Error subiendo foto:', error);
+        mostrarError('No se pudo subir la imagen');
+    }
+}
+
+function abrirModal(modalId) {
+    document.getElementById(`modal-${modalId}`)?.classList.add('activo');
+}
+
+function cerrarModal(modalId) {
+    document.getElementById(`modal-${modalId}`)?.classList.remove('activo');
+}
+
+// Funciones de navegación
+function verCumpleanos() {
+    abrirModalCumpleanos();
 }
 
 function verDetalleEntrada(entradaId) {

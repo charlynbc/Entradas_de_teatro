@@ -85,7 +85,11 @@ export async function obtenerPerfil(req, res) {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
     
-    res.json(result.rows[0]);
+    const perfil = result.rows[0];
+    if (!perfil.foto) {
+      perfil.foto = '/assets/baco.png';
+    }
+    res.json(perfil);
   } catch (error) {
     console.error('Error al obtener perfil:', error);
     res.status(500).json({ error: error.message });

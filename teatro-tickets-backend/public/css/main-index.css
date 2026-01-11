@@ -1,4 +1,5 @@
 /* Estilos para el Index Principal - Baco Teatro */
+/* Mobile-First Design - Mejorado */
 /* Colores: Vino (#6A040F) y Dorado (#F48C06) */
 
 :root {
@@ -7,6 +8,11 @@
     --secondary: #F48C06;
     --accent: #FFBE0B;
     --bg-dark: #12090D;
+    --spacing-xs: 8px;
+    --spacing-sm: 16px;
+    --spacing-md: 24px;
+    --spacing-lg: 32px;
+    --spacing-xl: 48px;
 }
 
 * {
@@ -15,22 +21,47 @@
     box-sizing: border-box;
 }
 
+/* FIX: Evitar flash blanco en overscroll */
+html {
+    min-height: 100%;
+    background: linear-gradient(135deg, var(--bg-dark) 0%, var(--primary-dark) 50%, #0f0508 100%);
+    background-attachment: fixed;
+    overscroll-behavior: none;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, var(--bg-dark) 0%, var(--primary-dark) 50%, #0f0508 100%);
+    background-attachment: fixed;
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
     overflow-x: hidden;
+    padding: var(--spacing-sm);
+    margin: 0;
+    overscroll-behavior: none;
 }
 
 .main-container {
     width: 100%;
-    max-width: 1200px;
-    padding: 40px 20px;
+    max-width: 480px;
+    padding: var(--spacing-md) var(--spacing-sm);
     animation: fadeIn 0.8s ease-in;
+}
+
+@media (min-width: 768px) {
+    .main-container {
+        max-width: 600px;
+        padding: var(--spacing-lg) var(--spacing-md);
+    }
+}
+
+@media (min-width: 1024px) {
+    .main-container {
+        max-width: 800px;
+    }
 }
 
 @keyframes fadeIn {
@@ -47,7 +78,7 @@ body {
 /* Logo Container */
 .logo-container {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: var(--spacing-md);
     animation: scaleIn 0.6s ease-out;
 }
 
@@ -63,48 +94,95 @@ body {
 }
 
 .main-logo {
-    width: 180px;
-    height: 180px;
+    width: 120px;
+    height: 120px;
     filter: drop-shadow(0 10px 30px rgba(244, 140, 6, 0.4));
     transition: transform 0.3s ease;
 }
 
+@media (min-width: 768px) {
+    .main-logo {
+        width: 150px;
+        height: 150px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .main-logo {
+        width: 180px;
+        height: 180px;
+    }
+}
+
 .main-logo:hover {
-    transform: scale(1.1) rotate(5deg);
+    transform: scale(1.05) rotate(3deg);
 }
 
 /* Title Container */
 .title-container {
     text-align: center;
-    margin-bottom: 50px;
+    margin-bottom: var(--spacing-lg);
 }
 
 .main-title {
-    font-size: 3.5rem;
+    font-size: 2rem;
     color: var(--secondary);
     text-shadow: 0 0 20px rgba(244, 140, 6, 0.5);
-    margin-bottom: 10px;
-    letter-spacing: 3px;
+    margin-bottom: var(--spacing-xs);
+    letter-spacing: 2px;
     font-weight: bold;
 }
 
+@media (min-width: 768px) {
+    .main-title {
+        font-size: 2.8rem;
+        letter-spacing: 3px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .main-title {
+        font-size: 3.5rem;
+    }
+}
+
 .main-subtitle {
-    font-size: 1.3rem;
+    font-size: 1rem;
     color: #fff;
     opacity: 0.8;
     font-style: italic;
 }
 
-/* Quote Container */
+@media (min-width: 768px) {
+    .main-subtitle {
+        font-size: 1.2rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .main-subtitle {
+        font-size: 1.3rem;
+    }
+}
+
+/* Quote Container - Mobile First */
 .quote-container {
-    max-width: 800px;
-    margin: 0 auto 40px;
-    padding: 30px;
+    max-width: 100%;
+    margin: 0 auto var(--spacing-lg);
+    padding: var(--spacing-md);
     background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(10px);
-    border-left: 4px solid var(--secondary);
-    border-radius: 10px;
+    border-left: 3px solid var(--secondary);
+    border-radius: 8px;
     animation: fadeInUp 0.8s ease-out 0.3s both;
+}
+
+@media (min-width: 768px) {
+    .quote-container {
+        padding: var(--spacing-lg);
+        border-left-width: 4px;
+        border-radius: 12px;
+    }
 }
 
 @keyframes fadeInUp {
@@ -123,53 +201,103 @@ body {
 }
 
 .quote-icon {
-    font-size: 2rem;
+    font-size: 1.5rem;
     color: var(--secondary);
     opacity: 0.3;
     position: absolute;
-    top: -10px;
-    left: -10px;
+    top: -8px;
+    left: -8px;
+}
+
+@media (min-width: 768px) {
+    .quote-icon {
+        font-size: 2rem;
+        top: -10px;
+        left: -10px;
+    }
 }
 
 .quote-text {
-    font-size: 1.2rem;
+    font-size: 1rem;
     color: #fff;
-    line-height: 1.8;
-    margin-bottom: 15px;
-    padding-left: 30px;
+    line-height: 1.6;
+    margin-bottom: var(--spacing-sm);
+    padding-left: var(--spacing-md);
     font-style: italic;
 }
 
+@media (min-width: 768px) {
+    .quote-text {
+        font-size: 1.1rem;
+        line-height: 1.8;
+    }
+}
+
+@media (min-width: 1024px) {
+    .quote-text {
+        font-size: 1.2rem;
+    }
+}
+
 .quote-author {
-    font-size: 1rem;
+    font-size: 0.9rem;
     color: var(--secondary);
     text-align: right;
     font-weight: 600;
 }
 
-/* Navigation Buttons */
+@media (min-width: 768px) {
+    .quote-author {
+        font-size: 1rem;
+    }
+}
+
+/* Navigation Buttons - Mobile First */
 .main-navigation {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 25px;
-    margin-bottom: 50px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-xl);
+}
+
+@media (min-width: 768px) {
+    .main-navigation {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-md);
+    }
+}
+
+@media (min-width: 1024px) {
+    .main-navigation {
+        gap: var(--spacing-lg);
+    }
 }
 
 .nav-button {
     background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(10px);
     border: 2px solid rgba(244, 140, 6, 0.3);
-    border-radius: 15px;
-    padding: 30px 25px;
+    border-radius: 12px;
+    padding: var(--spacing-md) var(--spacing-sm);
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: var(--spacing-sm);
     text-decoration: none;
     color: white;
     transition: all 0.3s ease;
     cursor: pointer;
     position: relative;
     overflow: hidden;
+    min-height: 80px;
+}
+
+@media (min-width: 768px) {
+    .nav-button {
+        padding: var(--spacing-lg) var(--spacing-md);
+        border-radius: 15px;
+        gap: var(--spacing-md);
+    }
 }
 
 .nav-button::before {
@@ -187,18 +315,31 @@ body {
     left: 100%;
 }
 
-.nav-button:hover {
-    transform: translateY(-5px);
-    border-color: var(--secondary);
-    background: rgba(244, 140, 6, 0.1);
-    box-shadow: 0 10px 30px rgba(244, 140, 6, 0.3);
+.nav-button:active {
+    transform: scale(0.98);
+}
+
+@media (hover: hover) {
+    .nav-button:hover {
+        transform: translateY(-3px);
+        border-color: var(--secondary);
+        background: rgba(244, 140, 6, 0.1);
+        box-shadow: 0 8px 24px rgba(244, 140, 6, 0.3);
+    }
 }
 
 .button-icon {
-    font-size: 2.5rem;
+    font-size: 2rem;
     color: var(--secondary);
-    min-width: 60px;
+    min-width: 50px;
     text-align: center;
+}
+
+@media (min-width: 768px) {
+    .button-icon {
+        font-size: 2.5rem;
+        min-width: 60px;
+    }
 }
 
 .button-text {
@@ -206,16 +347,42 @@ body {
 }
 
 .button-text h3 {
-    font-size: 1.4rem;
+    font-size: 1.1rem;
     color: var(--secondary);
-    margin-bottom: 5px;
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+@media (min-width: 768px) {
+    .button-text h3 {
+        font-size: 1.3rem;
+        margin-bottom: 6px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .button-text h3 {
+        font-size: 1.4rem;
+    }
 }
 
 .button-text p {
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     color: #fff;
     opacity: 0.7;
     line-height: 1.4;
+}
+
+@media (min-width: 768px) {
+    .button-text p {
+        font-size: 0.9rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .button-text p {
+        font-size: 0.95rem;
+    }
 }
 
 .login-button {
@@ -223,9 +390,11 @@ body {
     border-color: var(--primary);
 }
 
-.login-button:hover {
-    border-color: var(--secondary);
-    background: linear-gradient(135deg, rgba(106, 4, 15, 0.6), rgba(244, 140, 6, 0.3));
+@media (hover: hover) {
+    .login-button:hover {
+        border-color: var(--secondary);
+        background: linear-gradient(135deg, rgba(106, 4, 15, 0.6), rgba(244, 140, 6, 0.3));
+    }
 }
 
 /* Footer */

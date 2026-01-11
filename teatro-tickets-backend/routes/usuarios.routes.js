@@ -1,6 +1,6 @@
 /**
  * RUTAS DE USUARIOS - SISTEMA BACO
- * Gestión completa de usuarios con roles
+ * Gestión completa de usuarios con roles y permisos validados en backend
  */
 
 import express from 'express';
@@ -11,33 +11,57 @@ import { formatearFecha, calcularEdad } from '../utils/fechas-server.js';
 
 const router = express.Router();
 
+const MAP_ROL = {
+    director: 'DIRECTOR',
+    actor: 'ACTOR',
+    super: 'SUPER'
+};
+
+function normalizeUsuario(row) {
+    const foto = row.foto_url || '/assets/baco.png';
+    return {
+        cedula: row.cedula,
+        rol: (row.rol || row.role || '').toLowerCase(),
+        nombre: row.nombre || row.name,
+        apellido: row.apellido || '',
+        fecha_nacimiento: row.fecha_nacimiento || null,
+        celular: row.celular || row.phone || null,
+        foto_url: foto,
+        descripcion: row.descripcion || row.notas || null,
+        created_at: row.created_at,
+        active: row.active
+    };
+}
+
 // ==========================================
 // OBTENER TODOS LOS USUARIOS (Solo super)
 // ==========================================
-router.get('/', authenticate, requireRole(['SUPER']), async (req, res) => {
+router.get('/', authenticate, requireRole(['SUPER']), async (_req, res) => {
     try {
         const result = await query(`
             SELECT 
                 cedula,
-                rol,
-                nombre,
+                role,
+                name,
                 apellido,
                 fecha_nacimiento,
-                celular,
+                phone,
                 foto_url,
-                descripcion,
+                notas,
                 created_at,
                 active
-            FROM usuarios
+            FROM users
             WHERE active = true
-            ORDER BY nombre, apellido
         `);
 
-        const usuarios = result.rows.map(u => ({
-            ...u,
-            edad: calcularEdad(u.fecha_nacimiento),
-            fecha_nacimiento_formato: formatearFecha(u.fecha_nacimiento)
-        }));
+        const usuarios = result.rows.map((row) => {
+            const usuario = normalizeUsuario(row);
+            return {
+                ...usuario,
+                edad: calcularEdad(usuario.fecha_nacimiento),
+                fecha_nacimiento_formato: formatearFecha(usuario.fecha_nacimiento)
+            };
+        });
 
         res.json(usuarios);
     } catch (error) {
@@ -47,58 +71,22 @@ router.get('/', authenticate, requireRole(['SUPER']), async (req, res) => {
 });
 
 // ==========================================
-// OBTENER UN USUARIO POR CÉDULA
+// OBTENER CUMPLEAÑOS DEL DÍA
 // ==========================================
-router.get('/:cedula', authenticate, async (req, res) => {
+router.get('/cumpleanos/hoy', authenticate, async (_req, res) => {
     try {
-        const { cedula } = req.params;
-
-        const result = await query(`
-            SELECT 
-                cedula,
-                rol,
-                nombre,
-                apellido,
-                fecha_nacimiento,
-                celular,
-                foto_url,
-                descripcion,
-                created_at
-            FROM usuarios
-            WHERE cedula = $1 AND active = true
-        `, [cedula]);
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Usuario no encontrado' });
-        }
-
-        const usuario = result.rows[0];
-        usuario.edad = calcularEdad(usuario.fecha_nacimiento);
-        usuario.fecha_nacimiento_formato = formatearFecha(usuario.fecha_nacimiento);
-
-        // Si no es el mismo usuario o super, limitar información
-        if (req.user.cedula !== cedula && req.user.rol !== 'super') {
-            // Solo mostrar datos básicos
-            return res.json({
-                cedula: usuario.cedula,
-                nombre: usuario.nombre,
-                apellido: usuario.apellido,
-                foto_url: usuario.foto_url,
-                descripcion: usuario.descripcion
-            });
-        }
-
-        res.json(usuario);
+        const result = await query('SELECT * FROM v_cumpleanos_hoy');
+        res.json(result.rows);
     } catch (error) {
-        console.error('Error obteniendo usuario:', error);
-        res.status(500).json({ error: 'Error obteniendo usuario' });
+        console.error('Error obteniendo cumpleaños:', error);
+        res.status(500).json({ error: 'Error obteniendo cumpleaños' });
     }
 });
 
 // ==========================================
-// CREAR USUARIO (Solo super)
+// CREAR USUARIO (Super total, Admin solo actores)
 // ==========================================
-router.post('/', authenticate, requireRole(['SUPER']), async (req, res) => {
+router.post('/', authenticate, requireRole(['SUPER', 'ADMIN']), async (req, res) => {
     try {
         const {
             cedula,
@@ -111,48 +99,50 @@ router.post('/', authenticate, requireRole(['SUPER']), async (req, res) => {
             descripcion
         } = req.body;
 
-        // Validaciones
         if (!cedula || !nombre || !apellido || !fecha_nacimiento || !rol) {
             return res.status(400).json({ error: 'Faltan campos obligatorios' });
         }
 
-        if (!['director', 'actor'].includes(rol)) {
+        const rolNormalizado = MAP_ROL[rol] || rol.toUpperCase();
+        if (!['DIRECTOR', 'ACTOR', 'SUPER'].includes(rolNormalizado)) {
             return res.status(400).json({ error: 'Rol inválido' });
         }
 
-        // Verificar que no exista
-        const existe = await query('SELECT cedula FROM usuarios WHERE cedula = $1', [cedula]);
+        if (req.user.role === 'ADMIN' && rolNormalizado !== 'ACTOR') {
+            return res.status(403).json({ error: 'Solo el super usuario puede crear directores o super.' });
+        }
+
+        const existe = await query('SELECT cedula FROM users WHERE cedula = $1', [cedula]);
         if (existe.rows.length > 0) {
             return res.status(400).json({ error: 'Ya existe un usuario con esa cédula' });
         }
 
-        // Contraseña por defecto: "admin"
         const passwordHash = await bcrypt.hash('admin', 10);
 
-        // Crear usuario
-        await query(`
-            INSERT INTO usuarios (
+        await query(
+            `INSERT INTO users (
                 cedula,
-                rol,
+                role,
+                name,
+                apellido,
+                fecha_nacimiento,
+                phone,
+                foto_url,
+                notas,
+                password_hash
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+            [
+                cedula,
+                rolNormalizado,
                 nombre,
                 apellido,
                 fecha_nacimiento,
                 celular,
-                foto_url,
+                foto_url || '/assets/baco.png',
                 descripcion,
-                password_hash
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-        `, [
-            cedula,
-            rol,
-            nombre,
-            apellido,
-            fecha_nacimiento,
-            celular,
-            foto_url || '/assets/baco.png',
-            descripcion,
-            passwordHash
-        ]);
+                passwordHash
+            ]
+        );
 
         res.status(201).json({
             message: 'Usuario creado exitosamente',
@@ -167,39 +157,40 @@ router.post('/', authenticate, requireRole(['SUPER']), async (req, res) => {
 });
 
 // ==========================================
-// ACTUALIZAR USUARIO
+// ACTUALIZAR USUARIO (Propio, super, o admin sobre actores)
 // ==========================================
 router.put('/:cedula', authenticate, async (req, res) => {
     try {
         const { cedula } = req.params;
-        const {
-            celular,
-            foto_url,
-            descripcion,
-            nueva_password
-        } = req.body;
+        const { celular, foto_url, descripcion, nueva_password } = req.body;
 
-        // Solo puede editar el mismo usuario o super
-        if (req.user.cedula !== cedula && req.user.rol !== 'super') {
-            return res.status(403).json({ error: 'No autorizado' });
+        if (req.user.cedula !== cedula && req.user.role !== 'SUPER') {
+            if (req.user.role !== 'ADMIN') {
+                return res.status(403).json({ error: 'No autorizado' });
+            }
+            const target = await query('SELECT role FROM users WHERE cedula = $1', [cedula]);
+            if (target.rows.length === 0) return res.status(404).json({ error: 'Usuario no encontrado' });
+            if (target.rows[0].role !== 'ACTOR') {
+                return res.status(403).json({ error: 'Solo puedes editar actores' });
+            }
         }
 
-        let updates = [];
-        let values = [];
+        const updates = [];
+        const values = [];
         let paramCount = 1;
 
         if (celular !== undefined) {
-            updates.push(`celular = $${paramCount++}`);
+            updates.push(`phone = $${paramCount++}`);
             values.push(celular);
         }
 
         if (foto_url !== undefined) {
             updates.push(`foto_url = $${paramCount++}`);
-            values.push(foto_url);
+            values.push(foto_url || '/assets/baco.png');
         }
 
         if (descripcion !== undefined) {
-            updates.push(`descripcion = $${paramCount++}`);
+            updates.push(`notas = $${paramCount++}`);
             values.push(descripcion);
         }
 
@@ -215,11 +206,10 @@ router.put('/:cedula', authenticate, async (req, res) => {
 
         values.push(cedula);
 
-        await query(`
-            UPDATE usuarios
-            SET ${updates.join(', ')}
-            WHERE cedula = $${paramCount}
-        `, values);
+        await query(
+            `UPDATE users SET ${updates.join(', ')} WHERE cedula = $${paramCount}`,
+            values
+        );
 
         res.json({ message: 'Usuario actualizado exitosamente' });
     } catch (error) {
@@ -229,23 +219,27 @@ router.put('/:cedula', authenticate, async (req, res) => {
 });
 
 // ==========================================
-// DESACTIVAR USUARIO (Solo super)
+// DESACTIVAR USUARIO (Super total, admin solo actores)
 // ==========================================
-router.delete('/:cedula', authenticate, requireRole(['SUPER']), async (req, res) => {
+router.delete('/:cedula', authenticate, async (req, res) => {
     try {
         const { cedula } = req.params;
 
-        // No permitir eliminar al super
         if (cedula === '48376669') {
-            return res.status(403).json({ error: 'No se puede eliminar al usuario supremo' });
+            return res.status(403).json({ error: 'No se puede eliminar al usuario supremo base' });
         }
 
-        await query(`
-            UPDATE usuarios
-            SET active = false
-            WHERE cedula = $1
-        `, [cedula]);
+        if (req.user.role === 'ADMIN') {
+            const target = await query('SELECT role FROM users WHERE cedula = $1', [cedula]);
+            if (target.rows.length === 0) return res.status(404).json({ error: 'Usuario no encontrado' });
+            if (target.rows[0].role !== 'ACTOR') {
+                return res.status(403).json({ error: 'Solo puedes eliminar actores' });
+            }
+        } else if (req.user.role !== 'SUPER') {
+            return res.status(403).json({ error: 'No autorizado' });
+        }
 
+        await query('UPDATE users SET active = false WHERE cedula = $1', [cedula]);
         res.json({ message: 'Usuario desactivado exitosamente' });
     } catch (error) {
         console.error('Error desactivando usuario:', error);
@@ -254,37 +248,67 @@ router.delete('/:cedula', authenticate, requireRole(['SUPER']), async (req, res)
 });
 
 // ==========================================
-// OBTENER CUMPLEAÑOS DEL DÍA
-// ==========================================
-router.get('/cumpleanos/hoy', authenticate, async (req, res) => {
-    try {
-        const result = await query(`
-            SELECT * FROM v_cumpleanos_hoy
-        `);
-
-        res.json(result.rows);
-    } catch (error) {
-        console.error('Error obteniendo cumpleaños:', error);
-        res.status(500).json({ error: 'Error obteniendo cumpleaños' });
-    }
-});
-
-// ==========================================
-// OBTENER HISTORIAL DE FUNCIONES DE UN USUARIO
+// HISTORIAL DE FUNCIONES DE UN USUARIO
 // ==========================================
 router.get('/:cedula/historial', authenticate, async (req, res) => {
     try {
         const { cedula } = req.params;
-
-        const result = await query(`
-            SELECT * FROM v_historial_funciones
-            WHERE usuario_cedula = $1
-        `, [cedula]);
-
+        const result = await query(
+            'SELECT * FROM v_historial_funciones WHERE usuario_cedula = $1',
+            [cedula]
+        );
         res.json(result.rows);
     } catch (error) {
         console.error('Error obteniendo historial:', error);
         res.status(500).json({ error: 'Error obteniendo historial' });
+    }
+});
+
+// ==========================================
+// OBTENER UN USUARIO POR CÉDULA
+// ==========================================
+router.get('/:cedula', authenticate, async (req, res) => {
+    try {
+        const { cedula } = req.params;
+        const result = await query(
+            `SELECT 
+                cedula,
+                role,
+                name,
+                apellido,
+                fecha_nacimiento,
+                phone,
+                foto_url,
+                notas,
+                created_at,
+                active
+            FROM users
+            WHERE cedula = $1 AND active = true`,
+            [cedula]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Usuario no encontrado' });
+        }
+
+        const usuario = normalizeUsuario(result.rows[0]);
+        usuario.edad = calcularEdad(usuario.fecha_nacimiento);
+        usuario.fecha_nacimiento_formato = formatearFecha(usuario.fecha_nacimiento);
+
+        if (req.user.role !== 'SUPER' && req.user.cedula !== cedula) {
+            return res.json({
+                cedula: usuario.cedula,
+                nombre: usuario.nombre,
+                apellido: usuario.apellido,
+                foto_url: usuario.foto_url,
+                descripcion: usuario.descripcion
+            });
+        }
+
+        res.json(usuario);
+    } catch (error) {
+        console.error('Error obteniendo usuario:', error);
+        res.status(500).json({ error: 'Error obteniendo usuario' });
     }
 });
 

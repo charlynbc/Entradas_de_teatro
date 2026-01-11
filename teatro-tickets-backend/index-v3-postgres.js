@@ -30,6 +30,7 @@ import gastosRoutes from './routes/gastos.routes.js';
 import boleteriaRoutes from './routes/boleteria.routes.js';
 import contabilidadRoutes from './routes/contabilidad.routes.js';
 import pagosRoutes from './routes/pagos.routes.js';
+import entradasV2Routes from './routes/entradasV2.routes.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -151,6 +152,7 @@ async function startServer() {
     app.use('/api/boleteria', boleteriaRoutes);
     app.use('/api/contabilidad', contabilidadRoutes);
     app.use('/api/pagos', pagosRoutes);
+    app.use('/api/entradas-v2', entradasV2Routes);
 
     // ==========================================================================
     // RUTAS DE PÁGINAS (SPA + redirects)

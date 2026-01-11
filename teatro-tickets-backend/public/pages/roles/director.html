@@ -3,11 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#12090D">
     <title>BACO - Director</title>
     <link rel="stylesheet" href="/css/main-index.css">
     <link rel="stylesheet" href="/css/fotos-circulares.css">
     <link rel="stylesheet" href="/css/cumpleanos.css">
     <link rel="stylesheet" href="/shared/styles.css">
+    <link rel="stylesheet" href="/css/baco-footer.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         /* Estilos específicos para Director - hereda de Super pero simplificado */
@@ -28,11 +30,100 @@
             box-shadow: 0 8px 24px rgba(106, 4, 15, 0.3);
         }
 
-        .acciones-rapidas-director {
+        /* Overview card - Acción principal destacada */
+        .overview-card {
+            background: linear-gradient(135deg, rgba(244, 140, 6, 0.15), rgba(106, 4, 15, 0.15));
+            border: 2px solid var(--secondary);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 32px;
+            box-shadow: 0 8px 24px rgba(244, 140, 6, 0.2);
+        }
+
+        .overview-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--secondary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .overview-stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             gap: 16px;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
+        }
+
+        .overview-stat {
+            text-align: center;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+
+        .overview-stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--secondary);
+            display: block;
+        }
+
+        .overview-stat-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 4px;
+        }
+
+        /* Acciones agrupadas por categoría */
+        .seccion-acciones {
+            margin-bottom: 32px;
+        }
+
+        .seccion-acciones-titulo {
+            font-size: 14px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            padding-left: 4px;
+        }
+
+        .acciones-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        .card-accion-secundaria {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .card-accion-secundaria:hover {
+            background: rgba(244, 140, 6, 0.1);
+            border-color: var(--secondary);
+            transform: translateY(-2px);
+        }
+
+        .card-accion-secundaria i {
+            font-size: 24px;
+            color: var(--secondary);
+            margin-bottom: 8px;
+        }
+
+        .card-accion-secundaria .titulo {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
         }
 
         .card-grupo {
@@ -122,10 +213,65 @@
                 gap: 16px;
             }
 
-            .acciones-rapidas-director {
+            .overview-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .acciones-grid {
                 grid-template-columns: 1fr;
             }
         }
+
+            /* Perfil modal */
+            .modal {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.8);
+                z-index: 1000;
+                align-items: center;
+                justify-content: center;
+                padding: 16px;
+            }
+
+            .modal.activo { display: flex; }
+
+            .modal-contenido {
+                background: linear-gradient(145deg, rgba(18, 9, 13, 0.96), rgba(12, 6, 9, 0.98));
+                border: 1px solid rgba(244, 140, 6, 0.3);
+                border-radius: 16px;
+                padding: 22px;
+                width: min(560px, 92vw);
+                box-shadow: 0 18px 60px rgba(0,0,0,0.45);
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+
+            .modal-titulo {
+                font-size: 22px;
+                color: var(--secondary);
+                margin-bottom: 14px;
+            }
+
+            .form-group { margin-bottom: 14px; }
+            .form-label { display: block; margin-bottom: 6px; color: #fff; font-weight: 600; }
+            .form-input, .form-select {
+                width: 100%;
+                padding: 12px;
+                background: rgba(255, 255, 255, 0.06);
+                border: 1px solid rgba(255, 255, 255, 0.16);
+                border-radius: 12px;
+                color: #fff;
+                font-size: 15px;
+            }
+
+            .modal-acciones {
+                display: flex;
+                gap: 10px;
+                justify-content: flex-end;
+                flex-wrap: wrap;
+                margin-top: 8px;
+            }
     </style>
 </head>
 <body>
@@ -136,7 +282,7 @@
                 <div class="header-info">
                     <img src="/assets/baco.png" alt="Director" class="foto-perfil-mediana" id="fotoUsuario">
                     <div>
-                        <h1 class="titulo-principal">🎬 Director</h1>
+                        <h1 class="titulo-principal">🎬 Panel de Director</h1>
                         <p class="subtitulo" id="nombreUsuario">Cargando...</p>
                     </div>
                 </div>
@@ -153,41 +299,88 @@
                 </div>
             </div>
 
-            <!-- Acciones Rápidas -->
-            <div class="acciones-rapidas-director">
-                <div class="card-accion" onclick="abrirModal('crearGrupo')">
-                    <div class="card-accion-icon"><i class="fas fa-users"></i></div>
-                    <div class="card-accion-titulo">Crear Grupo</div>
-                    <div class="card-accion-descripcion">Formar nuevo grupo de teatro</div>
+            <!-- OVERVIEW - Resumen general destacado -->
+            <div class="overview-card">
+                <div class="overview-title">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Resumen General</span>
                 </div>
-
-                <div class="card-accion" onclick="mostrarTab('funciones')">
-                    <div class="card-accion-icon"><i class="fas fa-calendar-plus"></i></div>
-                    <div class="card-accion-titulo">Nueva Función</div>
-                    <div class="card-accion-descripcion">Programar presentación</div>
-                </div>
-
-                <div class="card-accion" onclick="mostrarTab('entradas')">
-                    <div class="card-accion-icon"><i class="fas fa-ticket-alt"></i></div>
-                    <div class="card-accion-titulo">Entradas</div>
-                    <div class="card-accion-descripcion">Gestionar ventas</div>
-                </div>
-
-                <div class="card-accion" onclick="mostrarTab('balance')">
-                    <div class="card-accion-icon"><i class="fas fa-chart-line"></i></div>
-                    <div class="card-accion-titulo">Balance</div>
-                    <div class="card-accion-descripcion">Ver ingresos y gastos</div>
-                </div>
-
-                <div class="card-accion" onclick="window.location.href='/pages/director/contabilidad.html'">
-                    <div class="card-accion-icon"><i class="fas fa-scale-balanced"></i></div>
-                    <div class="card-accion-titulo">Contabilidad anual</div>
-                    <div class="card-accion-descripcion">Cierres y resumen anual</div>
+                <div class="overview-stats" id="overview-stats">
+                    <div class="overview-stat">
+                        <span class="overview-stat-value" id="stat-grupos">0</span>
+                        <span class="overview-stat-label">Grupos</span>
+                    </div>
+                    <div class="overview-stat">
+                        <span class="overview-stat-value" id="stat-funciones">0</span>
+                        <span class="overview-stat-label">Funciones</span>
+                    </div>
+                    <div class="overview-stat">
+                        <span class="overview-stat-value" id="stat-ensayos">0</span>
+                        <span class="overview-stat-label">Ensayos</span>
+                    </div>
+                    <div class="overview-stat">
+                        <span class="overview-stat-value" id="stat-balance">$0</span>
+                        <span class="overview-stat-label">Balance</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- Tabs de Navegación -->
-            <div class="tabs">
+            <!-- ACCIÓN PRINCIPAL: Gestión de Grupos -->
+            <div class="seccion-acciones">
+                <div class="seccion-acciones-titulo">⭐ Acción Principal</div>
+                <div class="acciones-grid">
+                    <div class="card-accion" onclick="mostrarTab('grupos')" style="grid-column: 1 / -1;">
+                        <div class="card-accion-icon"><i class="fas fa-users"></i></div>
+                        <div class="card-accion-titulo">Gestionar Mis Grupos</div>
+                        <div class="card-accion-descripcion">Ver, crear y administrar grupos de teatro</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ACCIONES SECUNDARIAS: Programación -->
+            <div class="seccion-acciones">
+                <div class="seccion-acciones-titulo">📅 Programación</div>
+                <div class="acciones-grid">
+                    <div class="card-accion-secundaria" onclick="mostrarTab('funciones')">
+                        <i class="fas fa-calendar-plus"></i>
+                        <div class="titulo">Funciones</div>
+                    </div>
+                    <div class="card-accion-secundaria" onclick="mostrarTab('ensayos')">
+                        <i class="fas fa-theater-masks"></i>
+                        <div class="titulo">Ensayos</div>
+                    </div>
+                    <div class="card-accion-secundaria" onclick="mostrarTab('escanear')">
+                        <i class="fas fa-qrcode"></i>
+                        <div class="titulo">Escanear</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ACCIONES SECUNDARIAS: Administración -->
+            <div class="seccion-acciones">
+                <div class="seccion-acciones-titulo">💰 Administración</div>
+                <div class="acciones-grid">
+                    <div class="card-accion-secundaria" onclick="mostrarTab('entradas')">
+                        <i class="fas fa-ticket-alt"></i>
+                        <div class="titulo">Entradas</div>
+                    </div>
+                    <div class="card-accion-secundaria" onclick="mostrarTab('cuotas')">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <div class="titulo">Cuotas</div>
+                    </div>
+                    <div class="card-accion-secundaria" onclick="mostrarTab('balance')">
+                        <i class="fas fa-chart-line"></i>
+                        <div class="titulo">Balance</div>
+                    </div>
+                    <div class="card-accion-secundaria" onclick="window.location.href='/pages/director/contabilidad.html'">
+                        <i class="fas fa-scale-balanced"></i>
+                        <div class="titulo">Contabilidad</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs de Navegación (ocultas por defecto, aparecen al navegar) -->
+            <div class="tabs" style="display: none;">
                 <button class="tab activo" onclick="mostrarTab('grupos')">
                     <i class="fas fa-users"></i> Mis Grupos
                 </button>
@@ -215,8 +408,11 @@
             <div id="tab-grupos" class="tab-contenido activo">
                 <div class="seccion">
                     <div class="seccion-titulo">
+                        <button class="btn-header" onclick="volverAlDashboard()" style="margin-right: auto;">
+                            <i class="fas fa-arrow-left"></i> Volver
+                        </button>
                         <i class="fas fa-users"></i>
-                        <span>Mis Grupos</span>
+                        <span>Mis Grupos de Teatro</span>
                         <button class="btn-accion" style="margin-left: auto;" onclick="abrirModal('crearGrupo')">
                             <i class="fas fa-plus"></i> Crear Grupo
                         </button>
@@ -234,6 +430,9 @@
             <div id="tab-ensayos" class="tab-contenido">
                 <div class="seccion">
                     <div class="seccion-titulo">
+                        <button class="btn-header" onclick="volverAlDashboard()" style="margin-right: 12px;">
+                            <i class="fas fa-arrow-left"></i> Volver
+                        </button>
                         <i class="fas fa-theater-masks"></i>
                         <span>Ensayos</span>
                         <button class="btn-accion" style="margin-left: auto;" onclick="abrirModal('crearEnsayo')">
@@ -253,6 +452,9 @@
             <div id="tab-funciones" class="tab-contenido">
                 <div class="seccion">
                     <div class="seccion-titulo">
+                        <button class="btn-header" onclick="volverAlDashboard()" style="margin-right: 12px;">
+                            <i class="fas fa-arrow-left"></i> Volver
+                        </button>
                         <i class="fas fa-calendar"></i>
                         <span>Funciones</span>
                         <button class="btn-accion" style="margin-left: auto;" onclick="abrirModal('crearFuncion')">
@@ -272,6 +474,9 @@
             <div id="tab-entradas" class="tab-contenido">
                 <div class="seccion">
                     <div class="seccion-titulo">
+                        <button class="btn-header" onclick="volverAlDashboard()" style="margin-right: 12px;">
+                            <i class="fas fa-arrow-left"></i> Volver
+                        </button>
                         <i class="fas fa-ticket-alt"></i>
                         <span>Gestión de Entradas</span>
                     </div>
@@ -288,6 +493,9 @@
             <div id="tab-cuotas" class="tab-contenido">
                 <div class="seccion">
                     <div class="seccion-titulo">
+                        <button class="btn-header" onclick="volverAlDashboard()" style="margin-right: 12px;">
+                            <i class="fas fa-arrow-left"></i> Volver
+                        </button>
                         <i class="fas fa-money-bill-wave"></i>
                         <span>Control de Cuotas</span>
                     </div>
@@ -304,6 +512,9 @@
             <div id="tab-balance" class="tab-contenido">
                 <div class="seccion">
                     <div class="seccion-titulo">
+                        <button class="btn-header" onclick="volverAlDashboard()" style="margin-right: 12px;">
+                            <i class="fas fa-arrow-left"></i> Volver
+                        </button>
                         <i class="fas fa-chart-line"></i>
                         <span>Balance Económico</span>
                     </div>
@@ -320,6 +531,9 @@
             <div id="tab-escanear" class="tab-contenido">
                 <div class="seccion">
                     <div class="seccion-titulo">
+                        <button class="btn-header" onclick="volverAlDashboard()" style="margin-right: 12px;">
+                            <i class="fas fa-arrow-left"></i> Volver
+                        </button>
                         <i class="fas fa-qrcode"></i>
                         <span>Escanear Entradas</span>
                     </div>
@@ -332,6 +546,48 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal: Perfil Director -->
+    <div id="modal-perfilDirector" class="modal">
+        <div class="modal-contenido">
+            <h2 class="modal-titulo"><i class="fas fa-user-gear"></i> Mi Perfil</h2>
+            <form id="form-perfil-director">
+                <div class="form-group">
+                    <label class="form-label">Nombre</label>
+                    <input type="text" class="form-input" id="perfil-dir-nombre" name="nombre">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Apellido</label>
+                    <input type="text" class="form-input" id="perfil-dir-apellido" name="apellido">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Celular</label>
+                    <input type="tel" class="form-input" id="perfil-dir-celular" name="celular" inputmode="tel">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Foto (URL)</label>
+                    <input type="url" class="form-input" id="perfil-dir-foto" name="foto_url" placeholder="https://...">
+                    <div style="margin-top:8px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                        <input type="file" id="perfil-dir-foto-file" accept="image/*" style="flex:1; min-width:180px;">
+                        <button type="button" class="btn-header" onclick="subirFotoPerfilDirector()"><i class="fas fa-upload"></i> Subir imagen</button>
+                    </div>
+                    <small style="display:block; color: rgba(255,255,255,0.7); margin-top:6px;">Selecciona y sube una imagen para actualizar tu foto.</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Descripción / Bio</label>
+                    <textarea class="form-input" id="perfil-dir-descripcion" name="descripcion" rows="3" style="resize: vertical;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nueva contraseña (opcional)</label>
+                    <input type="password" class="form-input" id="perfil-dir-password" name="nueva_password" autocomplete="new-password">
+                </div>
+                <div class="modal-acciones">
+                    <button type="button" class="btn-header" onclick="cerrarModal('perfilDirector')">Cancelar</button>
+                    <button type="submit" class="btn-accion"><i class="fas fa-save"></i> Guardar cambios</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -364,22 +620,17 @@
     <script src="/js/cumpleanos.js"></script>
     <script src="/js/director.js"></script>
 
-    <!-- Disclaimer legal + Footer compartido -->
+    <!-- Disclaimer legal -->
     <div id="legalDisclaimer"></div>
-    <div id="footerContainer"></div>
     <script src="/shared/disclaimers.js"></script>
     <script>
       try {
         mostrarDisclaimer('USUARIO_REGISTRADO', 'legalDisclaimer');
       } catch (e) { /* noop */ }
-      (async () => {
-        try {
-          const res = await fetch('/shared/footer.html');
-          const html = await res.text();
-          const container = document.getElementById('footerContainer') || (() => { const d = document.createElement('div'); d.id = 'footerContainer'; document.body.appendChild(d); return d; })();
-          container.innerHTML = html;
-        } catch (e) { console.warn('No se pudo cargar el footer compartido', e); }
-      })();
     </script>
+
+    <!-- Footer compartido -->
+    <div id="footer-container"></div>
+    <script src="/shared/layout-loader.js"></script>
 </body>
 </html>

@@ -3,11 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#12090D">
     <title>BACO - Actor</title>
     <link rel="stylesheet" href="/css/main-index.css">
     <link rel="stylesheet" href="/css/fotos-circulares.css">
     <link rel="stylesheet" href="/css/cumpleanos.css">
     <link rel="stylesheet" href="/shared/styles.css">
+    <link rel="stylesheet" href="/css/baco-footer.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         /* Estilos específicos para Actor - interfaz simplificada */
@@ -150,10 +152,101 @@
             font-weight: 600;
         }
 
+        /* Nueva estructura: secciones sin tabs */
+        .tab-contenido {
+            display: block !important;
+            margin-bottom: 0;
+        }
+
+        .seccion {
+            margin-bottom: 0;
+        }
+
+        /* Esconder tabs antiguos si los hay */
+        .tabs {
+            display: none !important;
+        }
+
+        /* Mejorar visual de secciones agrupadas */
+        details {
+            transition: all 0.3s ease;
+        }
+
+        details[open] {
+            background: rgba(255, 255, 255, 0.05) !important;
+        }
+
+        summary::-webkit-details-marker {
+            color: var(--secondary);
+            margin-right: 12px;
+        }
+
+        /* Modal perfil */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.78);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .modal.activo {
+            display: flex;
+        }
+
+        .modal-contenido {
+            background: linear-gradient(145deg, rgba(18, 9, 13, 0.96), rgba(12, 6, 9, 0.98));
+            border: 1px solid rgba(244, 140, 6, 0.3);
+            border-radius: 16px;
+            padding: 22px;
+            width: min(520px, 92vw);
+            box-shadow: 0 18px 60px rgba(0,0,0,0.45);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-titulo {
+            font-size: 22px;
+            color: var(--secondary);
+            margin-bottom: 14px;
+        }
+
+        .form-group { margin-bottom: 14px; }
+        .form-label { display: block; margin-bottom: 6px; color: #fff; font-weight: 600; }
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 15px;
+        }
+        .form-textarea { resize: vertical; }
+
+        .modal-acciones {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .resumen-actor {
                 grid-template-columns: repeat(2, 1fr);
+            }
+
+            .dashboard-actor {
+                padding: 16px;
+            }
+
+            .header-actor {
+                padding: 20px;
             }
         }
     </style>
@@ -183,106 +276,42 @@
                 </div>
             </div>
 
-            <!-- Resumen Rápido -->
-            <div class="resumen-actor">
-                <div class="resumen-card">
-                    <div class="resumen-card-icon"><i class="fas fa-users"></i></div>
-                    <div class="resumen-card-valor" id="total-grupos">0</div>
-                    <div class="resumen-card-label">Mis Grupos</div>
-                </div>
-                <div class="resumen-card">
-                    <div class="resumen-card-icon"><i class="fas fa-calendar"></i></div>
-                    <div class="resumen-card-valor" id="total-funciones">0</div>
-                    <div class="resumen-card-label">Funciones</div>
-                </div>
-                <div class="resumen-card">
-                    <div class="resumen-card-icon"><i class="fas fa-ticket-alt"></i></div>
-                    <div class="resumen-card-valor" id="total-entradas">0</div>
-                    <div class="resumen-card-label">Mis Entradas</div>
-                </div>
-                <div class="resumen-card">
-                    <div class="resumen-card-icon"><i class="fas fa-money-bill-wave"></i></div>
-                    <div class="resumen-card-valor" id="total-cuotas-dia">0</div>
-                    <div class="resumen-card-label">Cuotas al Día</div>
-                </div>
-            </div>
-
-            <!-- Tabs de Navegación -->
-            <div class="tabs">
-                <button class="tab activo" onclick="mostrarTab('grupos')">
-                    <i class="fas fa-users"></i> Mis Grupos
-                </button>
-                <button class="tab" onclick="mostrarTab('ensayos')">
-                    <i class="fas fa-theater-masks"></i> Ensayos
-                </button>
-                <button class="tab" onclick="mostrarTab('funciones')">
-                    <i class="fas fa-calendar"></i> Funciones
-                </button>
-                <button class="tab" onclick="mostrarTab('entradas')">
-                    <i class="fas fa-ticket-alt"></i> Mis Entradas
-                </button>
-                <button class="tab" onclick="mostrarTab('cuotas')">
-                    <i class="fas fa-money-bill-wave"></i> Mis Cuotas
-                </button>
-                <button class="tab" onclick="mostrarTab('historial')">
-                    <i class="fas fa-history"></i> Historial
-                </button>
-            </div>
-
-            <!-- Contenido: Mis Grupos -->
-            <div id="tab-grupos" class="tab-contenido activo">
-                <div class="seccion">
-                    <div class="seccion-titulo">
-                        <i class="fas fa-users"></i>
-                        <span>Mis Grupos</span>
+            <!-- Resumen de Actividad Destacado (PRIORIDAD MÁXIMA) -->
+            <div style="margin-bottom: 30px;">
+                <h2 style="color: var(--secondary); margin: 0 0 20px 0; font-size: 18px; font-weight: 600;">
+                    <i class="fas fa-chart-line"></i> Tu Actividad
+                </h2>
+                <div class="resumen-actor">
+                    <div class="resumen-card">
+                        <div class="resumen-card-icon"><i class="fas fa-ticket-alt"></i></div>
+                        <div class="resumen-card-valor" id="total-entradas">0</div>
+                        <div class="resumen-card-label">Mis Entradas</div>
                     </div>
-                    <div id="lista-mis-grupos" class="mis-grupos-lista">
-                        <div class="estado-vacio">
-                            <i class="fas fa-spinner fa-spin"></i>
-                            <p>Cargando grupos...</p>
-                        </div>
+                    <div class="resumen-card">
+                        <div class="resumen-card-icon"><i class="fas fa-calendar"></i></div>
+                        <div class="resumen-card-valor" id="total-funciones">0</div>
+                        <div class="resumen-card-label">Funciones</div>
+                    </div>
+                    <div class="resumen-card">
+                        <div class="resumen-card-icon"><i class="fas fa-money-bill-wave"></i></div>
+                        <div class="resumen-card-valor" id="total-cuotas-dia">0</div>
+                        <div class="resumen-card-label">Cuotas al Día</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Contenido: Ensayos -->
-            <div id="tab-ensayos" class="tab-contenido">
-                <div class="seccion">
-                    <div class="seccion-titulo">
-                        <i class="fas fa-theater-masks"></i>
-                        <span>Próximos Ensayos</span>
-                    </div>
-                    <div id="lista-mis-ensayos" class="lista-elementos">
-                        <div class="estado-vacio">
-                            <i class="fas fa-spinner fa-spin"></i>
-                            <p>Cargando ensayos...</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Contenido: Funciones -->
-            <div id="tab-funciones" class="tab-contenido">
-                <div class="seccion">
-                    <div class="seccion-titulo">
-                        <i class="fas fa-calendar"></i>
-                        <span>Funciones Programadas</span>
-                    </div>
-                    <div id="lista-mis-funciones" class="lista-elementos">
-                        <div class="estado-vacio">
-                            <i class="fas fa-spinner fa-spin"></i>
-                            <p>Cargando funciones...</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Contenido: Mis Entradas -->
-            <div id="tab-entradas" class="tab-contenido">
+            <!-- SECCIÓN 1: MIS ENTRADAS (ACCIÓN PRINCIPAL) -->
+            <div id="tab-entradas" class="tab-contenido activo" style="margin-bottom: 30px;">
                 <div class="seccion">
                     <div class="seccion-titulo">
                         <i class="fas fa-ticket-alt"></i>
-                        <span>Entradas Asignadas</span>
+                        <span>Mis Entradas</span>
+                    </div>
+                    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
+                        <span class="badge badge-success">Vendidas: <span id="stats-entradas-vendidas">0</span></span>
+                        <span class="badge badge-warning">Prontas: <span id="stats-entradas-prontas">0</span></span>
+                        <span class="badge badge-danger">No vendidas: <span id="stats-entradas-no">0</span></span>
+                        <span class="badge badge-info">Perdonadas: <span id="stats-entradas-perdonadas">0</span></span>
                     </div>
                     <div id="lista-mis-entradas" class="lista-elementos">
                         <div class="estado-vacio">
@@ -293,8 +322,48 @@
                 </div>
             </div>
 
-            <!-- Contenido: Mis Cuotas -->
-            <div id="tab-cuotas" class="tab-contenido">
+            <!-- SECCIÓN 2: ACCIONES SECUNDARIAS (Ensayos + Funciones agrupadas) -->
+            <div style="margin-bottom: 30px;">
+                <h2 style="color: var(--secondary); margin: 0 0 20px 0; font-size: 18px; font-weight: 600;">
+                    <i class="fas fa-tasks"></i> Próximas Actividades
+                </h2>
+                <div style="display: grid; gap: 16px; margin-bottom: 20px;">
+                    <!-- Ensayos -->
+                    <div id="tab-ensayos" class="tab-contenido">
+                        <div class="seccion">
+                            <div class="seccion-titulo">
+                                <i class="fas fa-theater-masks"></i>
+                                <span>Próximos Ensayos</span>
+                            </div>
+                            <div id="lista-mis-ensayos" class="lista-elementos">
+                                <div class="estado-vacio">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    <p>Cargando ensayos...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Funciones -->
+                    <div id="tab-funciones" class="tab-contenido">
+                        <div class="seccion">
+                            <div class="seccion-titulo">
+                                <i class="fas fa-calendar"></i>
+                                <span>Funciones Programadas</span>
+                            </div>
+                            <div id="lista-mis-funciones" class="lista-elementos">
+                                <div class="estado-vacio">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    <p>Cargando funciones...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 3: MIS CUOTAS -->
+            <div id="tab-cuotas" class="tab-contenido" style="margin-bottom: 30px;">
                 <div class="seccion">
                     <div class="seccion-titulo">
                         <i class="fas fa-money-bill-wave"></i>
@@ -309,21 +378,77 @@
                 </div>
             </div>
 
-            <!-- Contenido: Historial -->
-            <div id="tab-historial" class="tab-contenido">
-                <div class="seccion">
-                    <div class="seccion-titulo">
-                        <i class="fas fa-history"></i>
-                        <span>Mi Historial</span>
-                    </div>
-                    <div id="lista-mi-historial" class="lista-elementos">
-                        <div class="estado-vacio">
-                            <i class="fas fa-spinner fa-spin"></i>
-                            <p>Cargando historial...</p>
+            <!-- SECCIÓN 4: MIS GRUPOS (INFORMACIÓN SECUNDARIA) -->
+            <div style="margin-bottom: 30px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                <h2 style="color: var(--secondary); margin: 0 0 20px 0; font-size: 18px; font-weight: 600;">
+                    <i class="fas fa-users"></i> Mis Grupos
+                </h2>
+                <div id="tab-grupos" class="tab-contenido">
+                    <div class="seccion">
+                        <div id="lista-mis-grupos" class="mis-grupos-lista">
+                            <div class="estado-vacio">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <p>Cargando grupos...</p>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- SECCIÓN 5: HISTORIAL (OPCIONAL, COLAPSABLE) -->
+            <details style="margin-bottom: 30px; padding: 16px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px;">
+                <summary style="cursor: pointer; color: var(--secondary); font-weight: 600; user-select: none;">
+                    <i class="fas fa-history"></i> Mi Historial
+                </summary>
+                <div id="tab-historial" class="tab-contenido" style="margin-top: 16px;">
+                    <div class="seccion">
+                        <div id="lista-mi-historial" class="lista-elementos">
+                            <div class="estado-vacio">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <p>Cargando historial...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- Modal: Perfil Actor -->
+    <div id="modal-perfilActor" class="modal">
+        <div class="modal-contenido">
+            <h2 class="modal-titulo"><i class="fas fa-user"></i> Mi Perfil</h2>
+            <form id="form-perfil-actor">
+                <div class="form-group">
+                    <label class="form-label">Nombre</label>
+                    <input type="text" class="form-input" id="perfil-actor-nombre" name="nombre">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Celular</label>
+                    <input type="tel" class="form-input" id="perfil-actor-celular" name="celular" inputmode="tel">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Foto (URL)</label>
+                    <input type="url" class="form-input" id="perfil-actor-foto" name="foto_url" placeholder="https://...">
+                    <div style="margin-top:8px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                        <input type="file" id="perfil-actor-foto-file" accept="image/*" style="flex:1; min-width:180px;">
+                        <button type="button" class="btn-header" onclick="subirFotoPerfilActor()"><i class="fas fa-upload"></i> Subir imagen</button>
+                    </div>
+                    <small style="display:block; color: rgba(255,255,255,0.7); margin-top:6px;">Selecciona y sube una imagen para actualizar tu foto.</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Descripción / Bio</label>
+                    <textarea class="form-textarea" id="perfil-actor-descripcion" name="descripcion" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nueva contraseña (opcional)</label>
+                    <input type="password" class="form-input" id="perfil-actor-password" name="nueva_password" autocomplete="new-password">
+                </div>
+                <div class="modal-acciones">
+                    <button type="button" class="btn-header" onclick="cerrarModal('perfilActor')">Cancelar</button>
+                    <button type="submit" class="btn-accion"><i class="fas fa-save"></i> Guardar cambios</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -333,20 +458,13 @@
 
     <!-- Disclaimer legal + Footer compartido -->
     <div id="legalDisclaimer"></div>
-    <div id="footerContainer"></div>
+    <div id="footer-container"></div>
     <script src="/shared/disclaimers.js"></script>
     <script>
       try {
         mostrarDisclaimer('USUARIO_REGISTRADO', 'legalDisclaimer');
       } catch (e) { /* noop */ }
-      (async () => {
-        try {
-          const res = await fetch('/shared/footer.html');
-          const html = await res.text();
-          const container = document.getElementById('footerContainer') || (() => { const d = document.createElement('div'); d.id = 'footerContainer'; document.body.appendChild(d); return d; })();
-          container.innerHTML = html;
-        } catch (e) { console.warn('No se pudo cargar el footer compartido', e); }
-      })();
     </script>
+    <script src="/shared/layout-loader.js"></script>
 </body>
 </html>

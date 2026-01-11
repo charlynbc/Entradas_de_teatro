@@ -82,6 +82,46 @@ async function cargarCumpleanerosHoy() {
     }
 }
 
+async function mostrarBannerCumpleanosAuto() {
+    try {
+        const cumpleaneros = await cargarCumpleanerosHoy();
+        if (!cumpleaneros || cumpleaneros.length === 0) return;
+
+        const hoy = new Date().toISOString().slice(0, 10);
+        const key = `cumple-banner-${hoy}`;
+        if (localStorage.getItem(key)) return; // Mostrar solo una vez por día/sesión
+
+        const anterior = document.getElementById('banner-cumpleanos-auto');
+        if (anterior) anterior.remove();
+
+        const banner = document.createElement('div');
+        banner.id = 'banner-cumpleanos-auto';
+        banner.className = 'banner-cumpleanos-auto';
+        banner.innerHTML = `
+            <div class="banner-cumpleanos-contenido">
+                <div class="banner-cumpleanos-icono">🎂</div>
+                <div>
+                    <p class="banner-cumpleanos-titulo">Cumpleaños BACO</p>
+                    <p class="banner-cumpleanos-nombres">
+                        ${cumpleaneros.map(c => `<span class="nombre-dorado">${c.nombre} ${c.apellido || ''}</span>`).join(', ')}
+                    </p>
+                </div>
+                <button class="banner-cumpleanos-cerrar" aria-label="Cerrar" onclick="cerrarBannerCumpleanosAuto()">×</button>
+            </div>`;
+
+        document.body.appendChild(banner);
+        localStorage.setItem(key, 'shown');
+        requestAnimationFrame(() => banner.classList.add('visible'));
+    } catch (error) {
+        console.error('Error mostrando banner de cumpleaños:', error);
+    }
+}
+
+function cerrarBannerCumpleanosAuto() {
+    const banner = document.getElementById('banner-cumpleanos-auto');
+    if (banner) banner.remove();
+}
+
 /**
  * Renderiza un solo cumpleaños con estilo destacado
  */

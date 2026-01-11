@@ -1,0 +1,29 @@
+<!-- Header for authenticated dashboard pages -->
+<header class="dashboard-header" id="dashboardHeader">
+  <div class="dashboard-header-content">
+    <div class="header-brand">
+      <img src="/images/logo-baco.svg" alt="Baco Teatro" class="header-logo">
+      <span class="header-title">BACO TEATRO</span>
+    </div>
+    <div class="header-user">
+      <img src="/assets/baco.png" alt="Usuario" class="header-user-photo" id="headerUserPhoto">
+      <span class="header-user-name" id="headerUserName">Usuario</span>
+      <button class="btn-logout" onclick="cerrarSesion()" title="Cerrar Sesión">
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
+    </div>
+  </div>
+</header>
+
+<script>
+  // Load user info from sessionStorage
+  document.addEventListener('DOMContentLoaded', function() {
+    const user = JSON.parse(sessionStorage.getItem('usuario') || '{}');
+    if (user.nombre || user.name) {
+      document.getElementById('headerUserName').textContent = user.nombre || user.name;
+    }
+    if (user.foto_url) {
+      document.getElementById('headerUserPhoto').src = user.foto_url;
+    }
+  });
+</script>

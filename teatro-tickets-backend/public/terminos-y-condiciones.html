@@ -3,10 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#12090D">
   <title>Términos y Condiciones - Baco Teatro</title>
+  <link rel="stylesheet" href="/css/baco-landing.css">
+  <link rel="stylesheet" href="/css/baco-footer.css">
   <link rel="stylesheet" href="/shared/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
+  <!-- Navigation (loaded from shared component) -->
+  <div id="header-container"></div>
+  
+  <main style="padding-top: 80px; min-height: 100vh;">
   <div class="legal-content">
     <h1>Términos y Condiciones</h1>
     <p><strong>Última actualización:</strong> 11 de enero de 2026</p>
@@ -54,11 +62,11 @@
     <hr>
     <p style="text-align:center;color:#7f8c8d;">Al usar Baco Teatro, aceptás estos Términos y Condiciones.</p>
   </div>
+  </main>
+
+  <!-- Footer (loaded from shared component) -->
   <div id="footer-container"></div>
-  <script>
-    fetch('/shared/footer.html').then(r=>r.text()).then(html=>{
-      document.getElementById('footer-container').innerHTML = html;
-    });
-  </script>
+  
+  <script src="/shared/layout-loader.js"></script>
 </body>
 </html>

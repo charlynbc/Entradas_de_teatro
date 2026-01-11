@@ -1,0 +1,79 @@
+/**
+ * Baco Teatro - Footer Definitivo
+ * Mobile-first, minimalista, elegante
+ * Un solo footer por página, nunca duplicado
+ * Se adapta a los colores de cada página
+ */
+
+.baco-footer {
+  background-color: var(--footer-bg, var(--baco-dark, #12090D));
+  color: var(--footer-text, var(--baco-light, #F4F4F4));
+  padding: 24px 16px;
+  margin-top: 48px;
+  border-top: 1px solid var(--footer-border, rgba(244, 140, 6, 0.15));
+}
+
+.footer-content {
+  max-width: 480px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.footer-brand {
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+  margin-top: 0;
+  color: var(--footer-accent, var(--secondary, #F48C06));
+}
+
+.footer-text {
+  font-size: 12px;
+  opacity: 0.85;
+  margin-bottom: 6px;
+  margin-top: 0;
+  color: var(--footer-text, var(--baco-light, #F4F4F4));
+}
+
+.footer-legal {
+  font-size: 11px;
+  opacity: 0.6;
+  margin-bottom: 0;
+  margin-top: 0;
+  color: var(--footer-text-muted, rgba(255, 255, 255, 0.6));
+}
+
+/* Asegurar que no compite con el contenido */
+.baco-footer * {
+  line-height: 1.4;
+}
+
+/* Variantes de estilo para diferentes contextos */
+.baco-footer.footer-gradient {
+  background: linear-gradient(135deg, var(--primary-dark, #370617) 0%, var(--baco-dark, #12090D) 100%);
+}
+
+.baco-footer.footer-light {
+  --footer-bg: rgba(255, 255, 255, 0.05);
+  --footer-border: rgba(244, 140, 6, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+/* Footer transparente para página principal (index) */
+.baco-footer.footer-transparent {
+  background-color: transparent;
+  border-top: none;
+  margin-top: 0;
+  padding-top: 0;
+}
+
+/* Fallback de colores si no están definidas las variables */
+:root {
+  --baco-dark: #12090D;
+  --baco-light: #F4F4F4;
+  --primary: #6A040F;
+  --primary-dark: #370617;
+  --secondary: #F48C06;
+  --accent: #FFBA08;
+}

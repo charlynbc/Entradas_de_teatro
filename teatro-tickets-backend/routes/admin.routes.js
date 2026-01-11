@@ -95,7 +95,7 @@ router.post('/crear-show', authenticate, requireRole('SUPER', 'ADMIN'), async (r
       obraId = o0.rows[0].id;
     } else {
       const o1 = await query(
-        'INSERT INTO obras (grupo_id, nombre, descripcion) VALUES ($1, $2, $3) RETURNING id',
+        "INSERT INTO obras (grupo_id, nombre, descripcion, estado) VALUES ($1, $2, $3, 'LISTA') RETURNING id",
         [grupoId, obra, 'Obra autogenerada para compatibilidad']
       );
       obraId = o1.rows[0].id;

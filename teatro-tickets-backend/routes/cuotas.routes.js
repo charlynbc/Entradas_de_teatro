@@ -168,7 +168,7 @@ router.get('/:id', authenticate, async (req, res) => {
 // ==========================================
 // ACTUALIZAR CUOTA (Director o Super)
 // ==========================================
-router.put('/:id', authenticate, requireRole(['super', 'director']), async (req, res) => {
+router.put('/:id', authenticate, requireRole(['SUPER', 'ADMIN']), async (req, res) => {
     try {
         const { id } = req.params;
         const { monto, vencimiento, estado } = req.body;

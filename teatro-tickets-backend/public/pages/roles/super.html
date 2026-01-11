@@ -3,181 +3,276 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#12090D">
     <title>BACO - Super Usuario</title>
     <link rel="stylesheet" href="/css/main-index.css">
     <link rel="stylesheet" href="/css/fotos-circulares.css">
     <link rel="stylesheet" href="/css/cumpleanos.css">
     <link rel="stylesheet" href="/shared/styles.css">
+    <link rel="stylesheet" href="/css/baco-footer.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        /* Estilos específicos para Super Usuario */
+        :root {
+            --baco-bg: var(--primary-dark, #0d060a);
+            --baco-surface: rgba(18, 9, 13, 0.92);
+            --baco-card: rgba(28, 14, 18, 0.9);
+            --baco-border: rgba(244, 140, 6, 0.32);
+            --baco-soft: rgba(255, 255, 255, 0.06);
+            --baco-text: var(--text-light, #F5F1ED);
+            --baco-muted: rgba(245, 241, 237, 0.72);
+            --baco-highlight: var(--secondary, #F48C06);
+            --baco-highlight-strong: var(--accent, #FFBA08);
+            --baco-shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+        }
+
+        body.page-super {
+            background: radial-gradient(circle at 20% 20%, rgba(244, 140, 6, 0.08), transparent 32%),
+                        radial-gradient(circle at 80% 0%, rgba(139, 21, 56, 0.16), transparent 38%),
+                        var(--primary, #12090D);
+            color: var(--baco-text);
+            min-height: 100vh;
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            letter-spacing: 0.01em;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #root {
+            padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+            flex: 1;
+            width: 100%;
+        }
+
         .dashboard-super {
-            max-width: 1200px;
+            max-width: 1120px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 16px 14px 80px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
         }
 
         .header-super {
-            display: flex;
-            justify-content: space-between;
+            position: relative;
+            display: grid;
+            grid-template-columns: 1.4fr 1fr;
+            gap: 16px;
             align-items: center;
-            margin-bottom: 30px;
-            padding: 20px;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(106, 4, 15, 0.3);
+            padding: 18px;
+            background: linear-gradient(135deg, rgba(139, 21, 56, 0.7), rgba(18, 9, 13, 0.95));
+            border: 1px solid var(--baco-border);
+            border-radius: 20px;
+            box-shadow: var(--baco-shadow);
+            overflow: hidden;
+        }
+
+        .header-super::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 85% 20%, rgba(244, 140, 6, 0.16), transparent 35%);
+            pointer-events: none;
         }
 
         .header-info {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 14px;
+            z-index: 1;
+        }
+
+        .foto-perfil-mediana {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            border: 2px solid var(--baco-highlight);
+            object-fit: cover;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
         }
 
         .header-actions {
             display: flex;
-            gap: 12px;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: flex-end;
+            z-index: 1;
         }
 
         .btn-header {
-            padding: 10px 20px;
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 8px;
-            color: white;
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 12px;
+            color: var(--baco-text);
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.25s ease;
             font-size: 14px;
+            font-weight: 600;
+            backdrop-filter: blur(8px);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 10px 26px rgba(0,0,0,0.25);
         }
 
         .btn-header:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
-        }
-
-        .btn-header i {
-            margin-right: 6px;
+            background: rgba(255, 255, 255, 0.14);
+            transform: translateY(-1px);
+            border-color: var(--baco-highlight);
         }
 
         .titulo-principal {
-            font-size: 28px;
+            font-size: clamp(22px, 5vw, 30px);
             margin: 0;
-            color: white;
+            color: #fff7ea;
+            line-height: 1.2;
         }
 
         .subtitulo {
-            font-size: 14px;
-            color: rgba(255, 255, 255, 0.8);
-            margin-top: 4px;
+            font-size: 15px;
+            color: var(--baco-muted);
+            margin-top: 6px;
         }
 
-        /* Cards de acciones rápidas */
         .acciones-rapidas {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
         }
 
         .card-accion {
-            background: linear-gradient(135deg, rgba(244, 140, 6, 0.1), rgba(106, 4, 15, 0.1));
-            border: 1px solid rgba(244, 140, 6, 0.3);
-            border-radius: 12px;
-            padding: 24px;
+            background: linear-gradient(150deg, rgba(244, 140, 6, 0.12), rgba(106, 4, 15, 0.16));
+            border: 1px solid var(--baco-border);
+            border-radius: 16px;
+            padding: 18px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
+            transition: all 0.25s ease;
+            text-align: left;
+            box-shadow: var(--baco-shadow);
+            display: grid;
+            gap: 8px;
+            align-content: start;
+        }
+
+        .card-accion.disabled {
+            cursor: not-allowed;
+            opacity: 0.65;
+            pointer-events: none;
+            border-style: dashed;
         }
 
         .card-accion:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(244, 140, 6, 0.3);
-            border-color: var(--secondary);
+            transform: translateY(-3px);
+            box-shadow: 0 18px 38px rgba(244, 140, 6, 0.28);
+            border-color: var(--baco-highlight);
         }
 
         .card-accion-icon {
-            font-size: 48px;
-            color: var(--secondary);
-            margin-bottom: 12px;
+            width: 56px;
+            height: 56px;
+            display: grid;
+            place-items: center;
+            border-radius: 14px;
+            background: rgba(244, 140, 6, 0.14);
+            color: var(--baco-highlight);
+            font-size: 26px;
         }
 
         .card-accion-titulo {
-            font-size: 18px;
-            font-weight: 600;
-            color: white;
-            margin-bottom: 8px;
+            font-size: 17px;
+            font-weight: 700;
+            color: #fff;
         }
 
         .card-accion-descripcion {
             font-size: 14px;
-            color: rgba(255, 255, 255, 0.7);
+            color: var(--baco-muted);
+            line-height: 1.5;
         }
 
-        /* Sección principal */
         .seccion {
-            background: rgba(18, 9, 13, 0.6);
-            border: 1px solid rgba(244, 140, 6, 0.2);
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 20px;
+            background: var(--baco-surface);
+            border: 1px solid var(--baco-border);
+            border-radius: 16px;
+            padding: 18px;
+            box-shadow: var(--baco-shadow);
+            backdrop-filter: blur(10px);
         }
 
         .seccion-titulo {
-            font-size: 20px;
-            color: var(--secondary);
-            margin-bottom: 16px;
+            font-size: 18px;
+            color: var(--baco-highlight);
+            margin-bottom: 14px;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
+            font-weight: 700;
+            letter-spacing: 0.01em;
         }
 
         .seccion-titulo i {
-            font-size: 24px;
+            font-size: 20px;
         }
 
-        /* Tabs */
         .tabs {
+            position: sticky;
+            top: 0;
+            z-index: 10;
             display: flex;
-            gap: 8px;
-            margin-bottom: 20px;
+            gap: 10px;
+            margin-bottom: 6px;
+            padding: 10px 4px;
             overflow-x: auto;
-            padding-bottom: 8px;
+            backdrop-filter: blur(12px);
+            background: linear-gradient(180deg, rgba(18, 9, 13, 0.92), rgba(18, 9, 13, 0.75));
+        }
+
+        .tabs::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .tabs::-webkit-scrollbar-thumb {
+            background: rgba(244, 140, 6, 0.4);
+            border-radius: 999px;
         }
 
         .tab {
-            padding: 12px 24px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            color: white;
+            padding: 11px 18px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 999px;
+            color: var(--baco-text);
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             white-space: nowrap;
             font-size: 14px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .tab.activo {
-            background: var(--secondary);
-            border-color: var(--secondary);
-            color: var(--primary-dark);
-            font-weight: 600;
+            background: var(--baco-highlight);
+            border-color: var(--baco-highlight);
+            color: var(--primary-dark, #12090D);
+            box-shadow: 0 10px 30px rgba(244, 140, 6, 0.4);
         }
 
         .tab:hover:not(.activo) {
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.12);
+            border-color: var(--baco-border);
         }
 
-        /* Contenido de tabs */
         .tab-contenido {
             display: none;
         }
 
         .tab-contenido.activo {
             display: block;
-            animation: fadeIn 0.3s ease;
+            animation: fadeIn 0.25s ease;
         }
 
-        /* Lista de elementos */
         .lista-elementos {
             display: flex;
             flex-direction: column;
@@ -185,68 +280,70 @@
         }
 
         .elemento {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            padding: 16px;
-            transition: all 0.3s ease;
+            background: var(--baco-card);
+            border: 1px solid var(--baco-soft);
+            border-radius: 12px;
+            padding: 14px;
+            transition: all 0.2s ease;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
         }
 
         .elemento:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(244, 140, 6, 0.5);
+            background: rgba(255, 255, 255, 0.06);
+            border-color: var(--baco-border);
         }
 
-        /* Estado vacío */
         .estado-vacio {
             text-align: center;
-            padding: 60px 20px;
-            color: rgba(255, 255, 255, 0.5);
+            padding: 48px 16px;
+            color: var(--baco-muted);
         }
 
         .estado-vacio i {
-            font-size: 64px;
-            margin-bottom: 16px;
-            opacity: 0.3;
+            font-size: 52px;
+            margin-bottom: 12px;
+            opacity: 0.5;
         }
 
         .estado-vacio p {
-            font-size: 16px;
+            font-size: 15px;
         }
 
-        /* Botones de acción */
         .btn-accion {
-            padding: 10px 20px;
-            background: var(--secondary);
-            color: var(--primary-dark);
+            padding: 11px 18px;
+            background: var(--baco-highlight);
+            color: var(--primary-dark, #12090D);
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
+            font-weight: 700;
+            transition: all 0.2s ease;
             font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 12px 26px rgba(244, 140, 6, 0.35);
         }
 
         .btn-accion:hover {
-            background: var(--accent);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(244, 140, 6, 0.4);
+            background: var(--baco-highlight-strong);
+            transform: translateY(-1px);
         }
 
         .btn-accion i {
-            margin-right: 6px;
+            margin: 0;
         }
 
         .btn-peligro {
             background: #DC2626;
             color: white;
+            box-shadow: 0 12px 28px rgba(220, 38, 38, 0.35);
         }
 
         .btn-peligro:hover {
             background: #B91C1C;
         }
 
-        /* Modal */
         .modal {
             display: none;
             position: fixed;
@@ -254,10 +351,12 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.78);
+            backdrop-filter: blur(6px);
             z-index: 1000;
             align-items: center;
             justify-content: center;
+            padding: 16px;
         }
 
         .modal.activo {
@@ -265,88 +364,145 @@
         }
 
         .modal-contenido {
-            background: linear-gradient(135deg, var(--primary-dark), #12090D);
-            border: 2px solid var(--secondary);
-            border-radius: 16px;
-            padding: 32px;
-            max-width: 600px;
-            width: 90%;
+            background: linear-gradient(145deg, rgba(18, 9, 13, 0.96), rgba(12, 6, 9, 0.98));
+            border: 2px solid var(--baco-border);
+            border-radius: 18px;
+            padding: 24px;
+            width: min(560px, 92vw);
             max-height: 90vh;
             overflow-y: auto;
+            box-shadow: var(--baco-shadow);
         }
 
         .modal-titulo {
-            font-size: 24px;
-            color: var(--secondary);
-            margin-bottom: 20px;
+            font-size: 22px;
+            color: var(--baco-highlight);
+            margin-bottom: 18px;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
         .form-label {
             display: block;
-            margin-bottom: 8px;
-            color: white;
-            font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--baco-text);
+            font-weight: 600;
+            letter-spacing: 0.01em;
         }
 
-        .form-input {
-            width: 100%;
-            padding: 12px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            color: white;
-            font-size: 14px;
-        }
-
-        .form-input:focus {
-            outline: none;
-            border-color: var(--secondary);
-            background: rgba(255, 255, 255, 0.15);
-        }
-
+        .form-input,
         .form-select {
             width: 100%;
             padding: 12px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            color: white;
-            font-size: 14px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 12px;
+            color: var(--baco-text);
+            font-size: 15px;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--baco-highlight);
+            background: rgba(255, 255, 255, 0.12);
         }
 
         .modal-acciones {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             justify-content: flex-end;
-            margin-top: 24px;
+            margin-top: 12px;
+            flex-wrap: wrap;
         }
 
-        /* Responsive */
-        @media (max-width: 768px) {
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 960px) {
             .header-super {
-                flex-direction: column;
-                gap: 16px;
+                grid-template-columns: 1fr;
+                align-items: flex-start;
+            }
+
+            .header-actions {
+                justify-content: flex-start;
             }
 
             .acciones-rapidas {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            }
+        }
+
+        @media (max-width: 640px) {
+            .dashboard-super {
+                padding: 12px 10px 64px;
+                gap: 14px;
+            }
+
+            .header-super {
+                padding: 16px;
+                border-radius: 16px;
+            }
+
+            .header-actions .btn-header {
+                width: 100%;
+                justify-content: center;
             }
 
             .tabs {
-                flex-wrap: wrap;
+                gap: 8px;
+                padding-inline: 6px;
             }
 
+            .tab {
+                font-size: 13px;
+                padding: 10px 14px;
+            }
+
+            .seccion {
+                padding: 16px;
+            }
+
+            .card-accion {
+                padding: 16px;
+            }
+        }
+
+        @media (max-width: 440px) {
             .titulo-principal {
-                font-size: 24px;
+                font-size: 22px;
+            }
+
+            .subtitulo {
+                font-size: 14px;
+            }
+
+            .card-accion {
+                text-align: center;
+                align-items: center;
+            }
+
+            .card-accion-descripcion {
+                font-size: 13px;
+            }
+
+            .modal-contenido {
+                padding: 18px;
+            }
+
+            .btn-accion,
+            .btn-header {
+                font-size: 13px;
             }
         }
     </style>
 </head>
-<body>
+<body class="page-super">
     <div id="root">
         <div class="dashboard-super">
             <!-- Header -->
@@ -362,7 +518,7 @@
                     <button class="btn-header" onclick="verCumpleanos()">
                         <i class="fas fa-birthday-cake"></i> Cumpleaños
                     </button>
-                    <button class="btn-header" onclick="verPerfil()">
+                    <button class="btn-header" onclick="abrirModal('perfilSuper')">
                         <i class="fas fa-user-circle"></i> Mi Perfil
                     </button>
                     <button class="btn-header" onclick="cerrarSesion()">
@@ -376,19 +532,19 @@
                 <div class="card-accion" onclick="abrirModal('crearUsuario')">
                     <div class="card-accion-icon"><i class="fas fa-user-plus"></i></div>
                     <div class="card-accion-titulo">Crear Usuario</div>
-                    <div class="card-accion-descripcion">Agregar nuevo integrante al sistema</div>
+                    <div class="card-accion-descripcion">Alta de actores y directores (rol supremo)</div>
                 </div>
 
-                <div class="card-accion" onclick="abrirModal('crearGrupo')">
+                <div class="card-accion" onclick="window.location.href='/pages/roles/director.html#grupos'">
                     <div class="card-accion-icon"><i class="fas fa-users"></i></div>
                     <div class="card-accion-titulo">Crear Grupo</div>
-                    <div class="card-accion-descripcion">Formar nuevo grupo de teatro</div>
+                    <div class="card-accion-descripcion">Crear y dirigir nuevos grupos</div>
                 </div>
 
-                <div class="card-accion" onclick="abrirModal('crearFuncion')">
+                <div class="card-accion" onclick="window.location.href='/pages/roles/director.html#funciones'">
                     <div class="card-accion-icon"><i class="fas fa-calendar-plus"></i></div>
                     <div class="card-accion-titulo">Crear Función</div>
-                    <div class="card-accion-descripcion">Programar nueva presentación</div>
+                    <div class="card-accion-descripcion">Programar funciones para los grupos</div>
                 </div>
 
                 <div class="card-accion" onclick="mostrarTab('escanear')">
@@ -435,8 +591,8 @@
                     <div class="seccion-titulo">
                         <i class="fas fa-users"></i>
                         <span>Todos los Usuarios</span>
-                        <button class="btn-accion" style="margin-left: auto;" onclick="abrirModal('crearUsuario')">
-                            <i class="fas fa-plus"></i> Crear Usuario
+                        <button class="btn-header" style="margin-left: auto; cursor:not-allowed; opacity:0.7;" disabled>
+                            <i class="fas fa-lock"></i> Creación deshabilitada
                         </button>
                     </div>
                     <div id="lista-usuarios" class="lista-elementos">
@@ -454,8 +610,8 @@
                     <div class="seccion-titulo">
                         <i class="fas fa-theater-masks"></i>
                         <span>Todos los Grupos</span>
-                        <button class="btn-accion" style="margin-left: auto;" onclick="abrirModal('crearGrupo')">
-                            <i class="fas fa-plus"></i> Crear Grupo
+                        <button class="btn-header" style="margin-left: auto; cursor:not-allowed; opacity:0.7;" disabled>
+                            <i class="fas fa-lock"></i> Creación deshabilitada
                         </button>
                     </div>
                     <div id="lista-grupos" class="lista-elementos">
@@ -473,8 +629,8 @@
                     <div class="seccion-titulo">
                         <i class="fas fa-calendar"></i>
                         <span>Todas las Funciones</span>
-                        <button class="btn-accion" style="margin-left: auto;" onclick="abrirModal('crearFuncion')">
-                            <i class="fas fa-plus"></i> Crear Función
+                        <button class="btn-header" style="margin-left: auto; cursor:not-allowed; opacity:0.7;" disabled>
+                            <i class="fas fa-lock"></i> Creación deshabilitada
                         </button>
                     </div>
                     <div id="lista-funciones" class="lista-elementos">
@@ -581,6 +737,7 @@
                 <div class="form-group">
                     <label class="form-label">Rol</label>
                     <select class="form-select" name="rol" required>
+                        <option value="super">Super Usuario</option>
                         <option value="director">Director</option>
                         <option value="actor">Actor/Actriz</option>
                     </select>
@@ -593,26 +750,92 @@
         </div>
     </div>
 
+    <!-- Modal: Perfil Super Usuario -->
+    <div id="modal-perfilSuper" class="modal">
+        <div class="modal-contenido">
+            <h2 class="modal-titulo"><i class="fas fa-user-gear"></i> Perfil del Super</h2>
+            <form id="form-perfil-super">
+                <div class="form-group">
+                    <label class="form-label">Nombre</label>
+                    <input type="text" class="form-input" name="nombre" id="perfil-nombre" autocomplete="name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Apellido</label>
+                    <input type="text" class="form-input" name="apellido" id="perfil-apellido" autocomplete="family-name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Celular</label>
+                    <input type="tel" class="form-input" name="celular" id="perfil-celular" inputmode="tel" autocomplete="tel">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Foto (URL)</label>
+                    <input type="url" class="form-input" name="foto_url" id="perfil-foto" placeholder="https://...">
+                    <div style="margin-top:8px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                        <input type="file" id="perfil-foto-file" accept="image/*" style="flex:1; min-width:180px;">
+                        <button type="button" class="btn-header" onclick="subirFotoPerfil('super')"><i class="fas fa-upload"></i> Subir imagen</button>
+                    </div>
+                    <small style="display:block; color: var(--baco-muted); margin-top:6px;">Selecciona una imagen y súbela para generar la URL automáticamente.</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Descripción / Bio</label>
+                    <textarea class="form-input" name="descripcion" id="perfil-descripcion" rows="3" style="resize: vertical;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nueva contraseña (opcional)</label>
+                    <input type="password" class="form-input" name="nueva_password" id="perfil-password" autocomplete="new-password">
+                </div>
+                <div class="modal-acciones">
+                    <button type="button" class="btn-header" onclick="cerrarModal('perfilSuper')">Cancelar</button>
+                    <button type="submit" class="btn-accion"><i class="fas fa-save"></i> Guardar cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Ver Perfil Usuario (solo lectura para SUPER) -->
+    <div id="modal-ver-usuario" class="modal">
+        <div class="modal-contenido">
+            <h2 class="modal-titulo"><i class="fas fa-user-astronaut"></i> Perfil completo</h2>
+            <div style="display:flex; gap:12px; align-items:center; margin-bottom:12px;">
+                <img id="ver-usuario-foto" src="/assets/baco.png" alt="Usuario" class="foto-perfil-mediana">
+                <div>
+                    <p class="usuario-nombre" id="ver-usuario-nombre">...</p>
+                    <p class="usuario-descripcion" style="color: rgba(255,255,255,0.8);">
+                        <span class="badge-rol" id="ver-usuario-rol">...</span>
+                    </p>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Cédula</label>
+                <div id="ver-usuario-cedula" style="font-weight:700; color: var(--secondary);"></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Celular</label>
+                <div id="ver-usuario-celular" style="color: rgba(255,255,255,0.85);"></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Descripción</label>
+                <div id="ver-usuario-descripcion" style="color: rgba(255,255,255,0.85);"></div>
+            </div>
+            <div class="modal-acciones">
+                <button type="button" class="btn-header" onclick="cerrarModal('ver-usuario')">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
     <script src="/js/utils/fechas.js"></script>
     <script src="/js/cumpleanos.js"></script>
     <script src="/js/super-usuario.js"></script>
 
     <!-- Disclaimer legal + Footer compartido -->
     <div id="legalDisclaimer"></div>
-    <div id="footerContainer"></div>
+    <div id="footer-container"></div>
     <script src="/shared/disclaimers.js"></script>
     <script>
       try {
         mostrarDisclaimer('USUARIO_REGISTRADO', 'legalDisclaimer');
       } catch (e) { /* noop */ }
-      (async () => {
-        try {
-          const res = await fetch('/shared/footer.html');
-          const html = await res.text();
-          const container = document.getElementById('footerContainer') || (() => { const d = document.createElement('div'); d.id = 'footerContainer'; document.body.appendChild(d); return d; })();
-          container.innerHTML = html;
-        } catch (e) { console.warn('No se pudo cargar el footer compartido', e); }
-      })();
     </script>
+    <script src="/shared/layout-loader.js"></script>
 </body>
 </html>
