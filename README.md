@@ -4,6 +4,28 @@ Sistema integral de gestión y venta de entradas para teatro con autenticación 
 
 ---
 
+## 🧠 Pitch (2 minutos)
+
+> “Baco Teatro es un sistema de gestión integral para compañías teatrales.
+> Resuelve el desorden en obras, entradas y dinero.”
+
+> “Separa responsabilidades: el actor vende, el director valida, y el sistema audita todo.”
+
+> “No procesa pagos ni factura: registra operaciones y genera reportes claros.”
+
+---
+
+## 🛡️ Legal y Auditoría (PASO 9)
+
+- Términos y condiciones publicados
+- Política de privacidad Ley 18.331 (Uruguay)
+- Disclaimers en pantallas clave
+- Auditoría completa de cambios críticos
+
+Detalles y checklist: [PASO-9-COMPLETADO.md](PASO-9-COMPLETADO.md) · Guía: [QUICK-START-PASO-9.md](QUICK-START-PASO-9.md)
+
+---
+
 ## 🚀 Ejecución Rápida (2 pasos)
 
 ### Opción 1: Con VS Code Tasks (Recomendado ⭐)
