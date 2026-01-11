@@ -4,11 +4,13 @@
 const PUBLIC_API_URL = '/api/public';
 
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('[Funciones Hoy] DOM Cargado');
     initFecha();
     loadFuncionesHoy();
 });
 
 function initFecha() {
+    console.log('[Funciones Hoy] initFecha()');
     const fechaElement = document.getElementById('fecha-hoy');
     if (!fechaElement) return;
     
@@ -18,15 +20,25 @@ function initFecha() {
 }
 
 async function loadFuncionesHoy() {
+    console.log('[Funciones Hoy] loadFuncionesHoy() iniciada');
     const container = document.getElementById('hoyGrid');
     const badge = document.getElementById('totalHoy');
     
+    console.log('[Funciones Hoy] Container:', container);
+    console.log('[Funciones Hoy] Badge:', badge);
+    
     try {
+        console.log('[Funciones Hoy] Haciendo fetch...');
         const response = await fetch(`${PUBLIC_API_URL}/funciones`);
+        console.log('[Funciones Hoy] Response:', response.status);
+        
         if (!response.ok) throw new Error('Error al cargar funciones');
         
         const data = await response.json();
+        console.log('[Funciones Hoy] Data:', data);
+        
         const funciones = Array.isArray(data) ? data : (data.funciones || []);
+        console.log('[Funciones Hoy] Total funciones:', funciones.length);
         
         // Filtrar solo de hoy
         const today = new Date();
@@ -34,10 +46,16 @@ async function loadFuncionesHoy() {
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
         
+        console.log('[Funciones Hoy] Rango:', today, 'a', tomorrow);
+        
         const funcionesHoy = funciones.filter(f => {
             const fecha = new Date(f.fecha);
-            return fecha >= today && fecha < tomorrow;
+            const esHoy = fecha >= today && fecha < tomorrow;
+            console.log(`[Funciones Hoy] Función ${f.id}: ${f.fecha} -> ${esHoy ? 'HOY' : 'OTRO DÍA'}`);
+            return esHoy;
         });
+        
+        console.log('[Funciones Hoy] Funciones de hoy:', funcionesHoy.length);
         
         if (funcionesHoy.length === 0) {
             container.innerHTML = `

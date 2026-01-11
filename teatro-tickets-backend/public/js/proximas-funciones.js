@@ -4,25 +4,45 @@
 const PUBLIC_API_URL = '/api/public';
 
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('[Próximas Funciones] DOM Cargado, iniciando carga...');
     loadProximasFunciones();
 });
 
 async function loadProximasFunciones() {
+    console.log('[Próximas Funciones] loadProximasFunciones() iniciada');
     const container = document.getElementById('proximasTimeline');
     const badge = document.getElementById('totalProximas');
     
+    console.log('[Próximas Funciones] Container:', container);
+    console.log('[Próximas Funciones] Badge:', badge);
+    
     try {
+        console.log('[Próximas Funciones] Haciendo fetch a:', `${PUBLIC_API_URL}/funciones`);
         const response = await fetch(`${PUBLIC_API_URL}/funciones`);
+        console.log('[Próximas Funciones] Response:', response.status);
+        
         if (!response.ok) throw new Error('Error al cargar funciones');
         
         const data = await response.json();
+        console.log('[Próximas Funciones] Data recibida:', data);
+        
         const funciones = Array.isArray(data) ? data : (data.funciones || []);
+        console.log('[Próximas Funciones] Funciones parseadas:', funciones.length);
         
         // Filtrar futuras y ordenar
         const now = new Date();
+        console.log('[Próximas Funciones] Fecha actual:', now);
+        
         const proximas = funciones
-            .filter(f => new Date(f.fecha) >= now)
+            .filter(f => {
+                const fechaFuncion = new Date(f.fecha);
+                const esFutura = fechaFuncion >= now;
+                console.log(`[Próximas Funciones] Función ${f.id}: ${f.fecha} -> ${esFutura ? 'FUTURA' : 'PASADA'}`);
+                return esFutura;
+            })
             .sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+        
+        console.log('[Próximas Funciones] Funciones futuras:', proximas.length);
         
         if (proximas.length === 0) {
             container.innerHTML = `
