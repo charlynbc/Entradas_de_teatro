@@ -1,0 +1,472 @@
+/* 🎟️ ESTILOS MODALES DE RESERVA - Elegancia Teatral BACO */
+
+/* ==========================================
+   OVERLAY + MODAL BASE
+   ========================================== */
+.reserva-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+
+.reserva-modal-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.reserva-modal-content {
+  background: linear-gradient(
+    135deg,
+    rgba(18, 9, 13, 0.98),
+    rgba(106, 4, 15, 0.95)
+  );
+  border: 2px solid rgba(218, 165, 32, 0.3);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5),
+    0 0 40px rgba(218, 165, 32, 0.2);
+  backdrop-filter: blur(10px);
+  max-width: 600px;
+  width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ==========================================
+   HEADER DEL MODAL
+   ========================================== */
+.reserva-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 28px;
+  border-bottom: 2px solid rgba(218, 165, 32, 0.2);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.reserva-modal-title {
+  font-size: 1.6rem;
+  color: #F48C06;
+  font-weight: 700;
+  letter-spacing: 1px;
+  font-family: 'Georgia', serif;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.reserva-modal-close {
+  background: rgba(218, 165, 32, 0.15);
+  border: 1px solid rgba(218, 165, 32, 0.4);
+  color: #F48C06;
+  font-size: 1.3rem;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reserva-modal-close:hover {
+  background: rgba(218, 165, 32, 0.3);
+  transform: rotate(90deg);
+}
+
+/* ==========================================
+   BODY DEL MODAL
+   ========================================== */
+.reserva-modal-body {
+  padding: 28px;
+  color: #F5F1ED;
+}
+
+.reserva-modal-subtitle {
+  font-size: 1.1rem;
+  color: rgba(244, 140, 6, 0.9);
+  margin-bottom: 20px;
+  text-align: center;
+  font-weight: 500;
+}
+
+/* ==========================================
+   LISTA DE VENDEDORES
+   ========================================== */
+.vendedores-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.vendedor-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(218, 165, 32, 0.2);
+  border-radius: 16px;
+  padding: 16px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.vendedor-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(218, 165, 32, 0.1), transparent);
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.vendedor-card.clickable {
+  cursor: pointer;
+}
+
+.vendedor-card.clickable:hover {
+  background: rgba(218, 165, 32, 0.12);
+  border-color: rgba(218, 165, 32, 0.5);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(218, 165, 32, 0.2);
+}
+
+.vendedor-card.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.vendedor-card-header {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.vendedor-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(218, 165, 32, 0.3), rgba(106, 4, 15, 0.3));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  color: #F48C06;
+  flex-shrink: 0;
+}
+
+.vendedor-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.vendedor-nombre {
+  font-size: 1.1rem;
+  color: #F5F1ED;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  font-family: 'Georgia', serif;
+}
+
+.vendedor-rol {
+  font-size: 0.9rem;
+  color: rgba(218, 165, 32, 0.8);
+  margin: 0;
+  font-weight: 500;
+}
+
+.vendedor-badge {
+  display: inline-block;
+  background: rgba(76, 175, 80, 0.2);
+  border: 1px solid #4CAF50;
+  color: #81C784;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.vendedor-card-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+.vendedor-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-wa,
+.btn-reservar {
+  flex: 1;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: 'Georgia', serif;
+}
+
+.btn-wa {
+  background: rgba(37, 211, 102, 0.2);
+  border: 1px solid rgba(37, 211, 102, 0.5);
+  color: #81C784;
+}
+
+.btn-wa:hover {
+  background: rgba(37, 211, 102, 0.3);
+  box-shadow: 0 0 15px rgba(37, 211, 102, 0.3);
+}
+
+.btn-reservar {
+  background: rgba(218, 165, 32, 0.2);
+  border: 1px solid rgba(218, 165, 32, 0.5);
+  color: #F48C06;
+}
+
+.btn-reservar:hover {
+  background: rgba(218, 165, 32, 0.3);
+  box-shadow: 0 0 15px rgba(218, 165, 32, 0.3);
+}
+
+.texto-sin-contacto {
+  font-size: 0.9rem;
+  color: rgba(255, 193, 7, 0.7);
+  text-align: center;
+  padding: 8px;
+}
+
+/* ==========================================
+   FORMULARIO DE RESERVA
+   ========================================== */
+.reserva-modal-form .reserva-modal-body {
+  padding: 24px;
+}
+
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: #F48C06;
+  font-weight: 600;
+  font-family: 'Georgia', serif;
+  font-size: 1rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(218, 165, 32, 0.3);
+  border-radius: 10px;
+  color: #F5F1ED;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #F48C06;
+  background: rgba(244, 140, 6, 0.1);
+  box-shadow: 0 0 15px rgba(244, 140, 6, 0.3);
+}
+
+.form-input::placeholder {
+  color: rgba(245, 241, 237, 0.5);
+}
+
+.reserva-aviso {
+  background: rgba(255, 193, 7, 0.1);
+  border-left: 4px solid #FFC107;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: rgba(245, 241, 237, 0.9);
+  margin-bottom: 20px;
+}
+
+.reserva-aviso i {
+  margin-right: 8px;
+  color: #FFC107;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #F48C06, #FFBE0B);
+  color: #12090D;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Georgia', serif;
+  letter-spacing: 0.5px;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(244, 140, 6, 0.4);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-block {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* ==========================================
+   RESULTADO (ÉXITO)
+   ========================================== */
+.reserva-modal-resultado .reserva-modal-body {
+  text-align: center;
+  padding: 40px 28px;
+}
+
+.resultado-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.resultado-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+}
+
+.resultado-icon.success {
+  background: rgba(76, 175, 80, 0.2);
+  border: 2px solid #4CAF50;
+  color: #81C784;
+}
+
+.resultado-titulo {
+  font-size: 1.6rem;
+  color: #F48C06;
+  font-weight: 700;
+  font-family: 'Georgia', serif;
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+.resultado-texto {
+  font-size: 1rem;
+  color: #F5F1ED;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.resultado-subtexto {
+  font-size: 0.95rem;
+  color: rgba(245, 241, 237, 0.8);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.resultado-subtexto code {
+  background: rgba(218, 165, 32, 0.2);
+  border: 1px solid rgba(218, 165, 32, 0.4);
+  color: #F48C06;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+@media (max-width: 640px) {
+  .reserva-modal-content {
+    width: 95vw;
+    border-radius: 16px;
+  }
+
+  .reserva-modal-header {
+    padding: 16px 20px;
+  }
+
+  .reserva-modal-title {
+    font-size: 1.4rem;
+  }
+
+  .reserva-modal-body {
+    padding: 20px;
+  }
+
+  .vendedor-card {
+    padding: 12px;
+  }
+
+  .vendedor-actions {
+    flex-direction: column;
+  }
+
+  .btn-wa,
+  .btn-reservar {
+    width: 100%;
+  }
+
+  .form-input {
+    padding: 10px 12px;
+    font-size: 16px; /* Evita zoom en iOS */
+  }
+
+  .resultado-titulo {
+    font-size: 1.4rem;
+  }
+}

@@ -126,30 +126,8 @@ function renderTimelineItem(f, index) {
 }
 
 async function handleReserva(funcionId, esProfesional, fechaIso) {
-    if (esProfesional) {
-        window.open('/pages/boleteria/index.html', '_blank');
-        return;
-    }
-    try {
-        if (!funcionId) throw new Error('Función inválida');
-        const res = await fetch(`${PUBLIC_API_URL}/funciones/${funcionId}/vendedores`);
-        if (!res.ok) throw new Error('No se pudo obtener vendedores');
-        const vendedoresRes = await res.json();
-        const lista = Array.isArray(vendedoresRes) ? vendedoresRes : (vendedoresRes.vendedores || []);
-        const v = lista.find(x => x.phone || x.telefono || x.whatsapp || x.contacto_publico);
-        if (v) {
-            const phone = (v.phone || v.telefono || v.whatsapp || v.contacto_publico || '').replace(/[^0-9]/g, '');
-            const fechaTxt = fechaIso ? fechaTextoCorta(new Date(fechaIso)) : '';
-            const texto = encodeURIComponent(`Hola! Quiero reservar entrada para la función del ${fechaTxt}.`);
-            const wa = `https://wa.me/${phone}?text=${texto}`;
-            window.open(wa, '_blank');
-        } else {
-            alert('No hay vendedores disponibles por ahora. Por favor, intentá más tarde.');
-        }
-    } catch (e) {
-        alert('No pudimos iniciar la reserva por WhatsApp. Intentalo luego.');
-        console.error(e);
-    }
+    // Usar nuevo flujo unificado
+    await iniciarFlujoReserva(funcionId, esProfesional, fechaIso);
 }
 
 function fFecha(f) {
