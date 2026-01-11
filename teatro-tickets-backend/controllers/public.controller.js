@@ -51,6 +51,54 @@ export async function listarFuncionesInvitado(req, res) {
 }
 
 /**
+ * Obtener datos de una función específica (sin autenticación)
+ * GET /public/funciones/:funcionId
+ */
+export async function obtenerFuncionPublica(req, res) {
+  try {
+    const funcionId = Number(req.params.funcionId);
+    if (!Number.isFinite(funcionId)) {
+      return res.status(400).json({ error: 'funcionId inválido' });
+    }
+
+    const result = await pool.query(
+      `SELECT 
+          f.id,
+          f.fecha AS fecha,
+          to_char(f.fecha, 'HH24:MI') AS hora,
+          COALESCE(f.lugar, '') AS sala,
+          COALESCE(f.precio_base, 0) AS precio,
+          COALESCE(o.nombre, 'Baco Teatro') AS obra_nombre,
+          COALESCE(o.descripcion, '') AS descripcion,
+          g.nombre AS grupo_nombre,
+          g.id AS grupo_id,
+          FALSE AS es_profesional,
+          'INDEPENDIENTE' AS tipo_funcion,
+          FALSE AS permite_compra_online,
+          COALESCE(f.estado, 'PROGRAMADA') AS estado,
+          (SELECT COUNT(*) FROM tickets t WHERE t.funcion_id = f.id AND t.estado = 'DISPONIBLE') AS entradas_disponibles,
+          $1 AS boleteria_contacto,
+          $2 AS boleteria_nombre
+       FROM funciones f
+       LEFT JOIN obras o ON o.id = f.obra_id
+       LEFT JOIN grupos g ON g.id = o.grupo_id
+       WHERE f.id = $3 AND f.fecha >= NOW()
+       LIMIT 1`,
+      [BOLETERIA_PHONE, BOLETERIA_NOMBRE, funcionId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Función no encontrada o ya pasada' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al obtener función pública:', error);
+    res.status(500).json({ error: 'Error al obtener función' });
+  }
+}
+
+/**
  * Vendedores públicos por función (sin autenticación)
  * Reglas:
  * - Solo vendedores del grupo de la función

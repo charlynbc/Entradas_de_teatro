@@ -1,5 +1,5 @@
 import express from 'express';
-import { listarFuncionesInvitado, listarVendedoresPublicosPorFuncion, reservarEntradaInvitado } from '../controllers/public.controller.js';
+import { listarFuncionesInvitado, obtenerFuncionPublica, listarVendedoresPublicosPorFuncion, reservarEntradaInvitado } from '../controllers/public.controller.js';
 import { 
   comprarTicket, 
   obtenerDetallesCompra,
@@ -17,6 +17,10 @@ const router = express.Router();
 // GET /public/funciones
 // Lista funciones disponibles para compra
 router.get('/funciones', listarFuncionesInvitado);
+
+// GET /public/funciones/:funcionId
+// Obtener datos de una función específica
+router.get('/funciones/:funcionId', obtenerFuncionPublica);
 
 // GET /public/funciones/:funcionId/vendedores
 // Lista vendedores de una función (solo INDEPENDIENTE)
