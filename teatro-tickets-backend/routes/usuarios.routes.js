@@ -18,7 +18,7 @@ const MAP_ROL = {
 };
 
 function normalizeUsuario(row) {
-    const foto = row.foto_url || '/assets/baco.png';
+    const foto = row.foto_url || '/images/logo-baco.svg';
     return {
         cedula: row.cedula,
         rol: (row.rol || row.role || '').toLowerCase(),
@@ -138,7 +138,7 @@ router.post('/', authenticate, requireRole(['SUPER', 'ADMIN']), async (req, res)
                 apellido,
                 fecha_nacimiento,
                 celular,
-                foto_url || '/assets/baco.png',
+                foto_url || '/images/logo-baco.svg',
                 descripcion,
                 passwordHash
             ]
@@ -186,7 +186,7 @@ router.put('/:cedula', authenticate, async (req, res) => {
 
         if (foto_url !== undefined) {
             updates.push(`foto_url = $${paramCount++}`);
-            values.push(foto_url || '/assets/baco.png');
+            values.push(foto_url || '/images/logo-baco.svg');
         }
 
         if (descripcion !== undefined) {

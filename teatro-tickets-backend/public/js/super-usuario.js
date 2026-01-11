@@ -65,7 +65,7 @@ function mostrarDatosUsuario() {
     const nombreCompleto = apellido ? `${nombre} ${apellido}` : nombre;
     document.getElementById('nombreUsuario').textContent = nombreCompleto;
     
-    const fotoPerfil = usuarioActual?.foto || usuarioActual?.foto_url || '/assets/baco.png';
+    const fotoPerfil = usuarioActual?.foto || usuarioActual?.foto_url || '/images/logo-baco.svg';
     const fotoEl = document.getElementById('fotoUsuario');
     if (fotoEl) fotoEl.src = fotoPerfil;
 
@@ -114,7 +114,7 @@ async function cargarUsuarios() {
 
         container.innerHTML = usuarios.map(u => `
             <div class="elemento usuario-con-foto">
-                <img src="${u.foto_url || '/assets/baco.png'}" alt="${u.nombre}" class="foto-perfil-mediana">
+                <img src="${u.foto_url || '/images/logo-baco.svg'}" alt="${u.nombre}" class="foto-perfil-mediana">
                 <div class="usuario-info" style="flex: 1;">
                     <p class="usuario-nombre nombre-dorado">${u.nombre} ${u.apellido}</p>
                     <p class="usuario-descripcion">
@@ -161,7 +161,7 @@ async function cargarGrupos() {
         container.innerHTML = grupos.map(g => `
             <div class="elemento">
                 <div style="display: flex; gap: 16px; align-items: center;">
-                    <img src="${g.foto_url || '/assets/baco.png'}" alt="${g.nombre}" class="foto-perfil-mediana">
+                    <img src="${g.foto_url || '/images/logo-baco.svg'}" alt="${g.nombre}" class="foto-perfil-mediana">
                     <div style="flex: 1;">
                         <h3 style="margin: 0 0 4px 0; color: var(--secondary);" class="nombre-dorado">${g.nombre}</h3>
                         <p style="margin: 0; font-size: 14px; color: rgba(255,255,255,0.7);">
@@ -453,7 +453,7 @@ async function verPerfilUsuario(cedula) {
             return;
         }
 
-        document.getElementById('ver-usuario-foto').src = data.foto || data.foto_url || '/assets/baco.png';
+        document.getElementById('ver-usuario-foto').src = data.foto || data.foto_url || '/images/logo-baco.svg';
         document.getElementById('ver-usuario-nombre').textContent = `${data.nombre || ''} ${data.apellido || ''}`.trim();
         document.getElementById('ver-usuario-rol').textContent = traducirRol(data.rol);
         document.getElementById('ver-usuario-cedula').textContent = data.cedula || '';

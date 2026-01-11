@@ -137,7 +137,7 @@ function renderizarCumpleanosSolo(persona) {
             
             <div class="cumpleanos-cuerpo">
                 <div class="cumpleanos-foto-grande">
-                    <img src="${persona.foto || '/assets/baco.png'}" 
+                    <img src="${persona.foto || '/images/logo-baco.svg'}" 
                          alt="${persona.nombre}" 
                          class="foto-perfil-grande cumpleanos-foto-destacada">
                     <div class="edad-badge">${edad} años</div>
@@ -181,7 +181,7 @@ function renderizarCumpleanosMultiples(personas) {
                 ${personas.map(persona => `
                     <div class="cumpleanero-item">
                         <div class="usuario-con-foto">
-                            <img src="${persona.foto || '/assets/baco.png'}" 
+                            <img src="${persona.foto || '/images/logo-baco.svg'}" 
                                  alt="${persona.nombre}" 
                                  class="foto-perfil-mediana">
                             <div class="cumpleanero-datos">

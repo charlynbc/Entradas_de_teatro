@@ -59,7 +59,7 @@ async function cargarUsuario() {
 
         // Actualizar UI
         document.getElementById('nombreUsuario').textContent = estado.usuario.nombre || user.name;
-        const fotoPerfil = estado.usuario.foto || estado.usuario.foto_url || '/assets/baco.png';
+        const fotoPerfil = estado.usuario.foto || estado.usuario.foto_url || '/images/logo-baco.svg';
         document.getElementById('fotoUsuario').src = fotoPerfil;
     } catch (error) {
         console.error('Error al cargar usuario:', error);
@@ -209,7 +209,7 @@ function renderizarGrupos() {
     container.innerHTML = estado.grupos.map(grupo => `
         <div class="card-grupo" onclick="verDetalleGrupo(${grupo.id})">
             <div class="card-grupo-header">
-                <img src="${grupo.foto || '/assets/baco.png'}" class="foto-perfil-mediana" alt="${grupo.nombre}">
+                <img src="${grupo.foto || '/images/logo-baco.svg'}" class="foto-perfil-mediana" alt="${grupo.nombre}">
                 <div class="card-grupo-info">
                     <h3>${grupo.nombre}</h3>
                     <p><i class="fas fa-clock"></i> ${grupo.horario_fijo || 'Sin horario fijo'}</p>
@@ -400,7 +400,7 @@ function renderizarCuotas() {
                     <div class="elemento-card">
                         <div class="elemento-info">
                             <div class="usuario-con-foto">
-                                <img src="${cuota.actor_foto || '/assets/baco.png'}" class="foto-perfil-pequena" alt="${cuota.actor_nombre}">
+                                <img src="${cuota.actor_foto || '/images/logo-baco.svg'}" class="foto-perfil-pequena" alt="${cuota.actor_nombre}">
                                 <div>
                                     <div class="elemento-titulo">${cuota.actor_nombre}</div>
                                     <div class="elemento-subtitulo">Cuota mensual</div>
@@ -625,7 +625,7 @@ async function refrescarPerfilDirector() {
         const perfil = await resp.json();
         estado.usuario = perfil;
         const fotoEl = document.getElementById('fotoUsuario');
-        if (fotoEl) fotoEl.src = perfil.foto || perfil.foto_url || '/assets/baco.png';
+        if (fotoEl) fotoEl.src = perfil.foto || perfil.foto_url || '/images/logo-baco.svg';
     } catch (error) {
         console.error('No se pudo refrescar perfil:', error);
     }

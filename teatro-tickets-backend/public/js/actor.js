@@ -62,7 +62,7 @@ async function cargarUsuario() {
         // Actualizar UI
         document.getElementById('nombreUsuario').textContent = `🎭 ${estado.usuario.nombre || user.name}`;
         document.getElementById('cedulaUsuario').textContent = `Cédula: ${estado.usuario.cedula || user.cedula}`;
-        const fotoPerfil = estado.usuario.foto || estado.usuario.foto_url || '/assets/baco.png';
+        const fotoPerfil = estado.usuario.foto || estado.usuario.foto_url || '/images/logo-baco.svg';
         document.getElementById('fotoUsuario').src = fotoPerfil;
     } catch (error) {
         console.error('Error al cargar usuario:', error);
@@ -242,7 +242,7 @@ function renderizarGrupos() {
 
     container.innerHTML = estado.grupos.map(grupo => `
         <div class="grupo-card-simple">
-            <img src="${grupo.foto || '/assets/baco.png'}" class="foto-perfil-mediana" alt="${grupo.nombre}">
+            <img src="${grupo.foto || '/images/logo-baco.svg'}" class="foto-perfil-mediana" alt="${grupo.nombre}">
             <div class="grupo-card-simple-info">
                 <h3>${grupo.nombre}</h3>
                 <p>
@@ -702,7 +702,7 @@ async function refrescarPerfilActor() {
         const perfil = await resp.json();
         estado.usuario = perfil;
         const fotoEl = document.getElementById('fotoUsuario');
-        if (fotoEl) fotoEl.src = perfil.foto || perfil.foto_url || '/assets/baco.png';
+        if (fotoEl) fotoEl.src = perfil.foto || perfil.foto_url || '/images/logo-baco.svg';
     } catch (error) {
         console.error('No se pudo refrescar perfil:', error);
     }

@@ -87,7 +87,7 @@ export async function obtenerPerfil(req, res) {
     
     const perfil = result.rows[0];
     if (!perfil.foto) {
-      perfil.foto = '/assets/baco.png';
+      perfil.foto = '/images/logo-baco.svg';
     }
     res.json(perfil);
   } catch (error) {
