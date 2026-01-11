@@ -3,14 +3,26 @@
 
 const PUBLIC_API_URL = '/api/public';
 
+// Debug visual
+const debugLogs = [];
+function debugLog(msg) {
+    console.log(msg);
+    debugLogs.push(`${new Date().toISOString().substr(14, 9)} - ${msg}`);
+    const debugEl = document.getElementById('debug-info-hoy');
+    if (debugEl) {
+        debugEl.innerHTML = '<pre style="background:#000;color:#0f0;padding:10px;font-size:10px;max-height:200px;overflow:auto;">' + 
+            debugLogs.join('\n') + '</pre>';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('[Funciones Hoy] DOM Cargado');
+    debugLog('[Funciones Hoy] DOM Cargado');
     initFecha();
     loadFuncionesHoy();
 });
 
 function initFecha() {
-    console.log('[Funciones Hoy] initFecha()');
+    debugLog('[Funciones Hoy] initFecha()');
     const fechaElement = document.getElementById('fecha-hoy');
     if (!fechaElement) return;
     
@@ -20,25 +32,25 @@ function initFecha() {
 }
 
 async function loadFuncionesHoy() {
-    console.log('[Funciones Hoy] loadFuncionesHoy() iniciada');
+    debugLog('[Funciones Hoy] loadFuncionesHoy() iniciada');
     const container = document.getElementById('hoyGrid');
     const badge = document.getElementById('totalHoy');
     
-    console.log('[Funciones Hoy] Container:', container);
-    console.log('[Funciones Hoy] Badge:', badge);
+    debugLog('[Funciones Hoy] Container: ' + (container ? 'OK' : 'NULL'));
+    debugLog('[Funciones Hoy] Badge: ' + (badge ? 'OK' : 'NULL'));
     
     try {
-        console.log('[Funciones Hoy] Haciendo fetch...');
+        debugLog('[Funciones Hoy] Haciendo fetch...');
         const response = await fetch(`${PUBLIC_API_URL}/funciones`);
-        console.log('[Funciones Hoy] Response:', response.status);
+        debugLog('[Funciones Hoy] Response status: ' + response.status);
         
         if (!response.ok) throw new Error('Error al cargar funciones');
         
         const data = await response.json();
-        console.log('[Funciones Hoy] Data:', data);
+        debugLog('[Funciones Hoy] Data: ' + data.length + ' funciones');
         
         const funciones = Array.isArray(data) ? data : (data.funciones || []);
-        console.log('[Funciones Hoy] Total funciones:', funciones.length);
+        debugLog('[Funciones Hoy] Total funciones: ' + funciones.length);
         
         // Filtrar solo de hoy
         const today = new Date();
@@ -46,16 +58,16 @@ async function loadFuncionesHoy() {
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
         
-        console.log('[Funciones Hoy] Rango:', today, 'a', tomorrow);
+        debugLog('[Funciones Hoy] Rango: ' + today.toISOString() + ' a ' + tomorrow.toISOString());
         
         const funcionesHoy = funciones.filter(f => {
             const fecha = new Date(f.fecha);
             const esHoy = fecha >= today && fecha < tomorrow;
-            console.log(`[Funciones Hoy] Función ${f.id}: ${f.fecha} -> ${esHoy ? 'HOY' : 'OTRO DÍA'}`);
+            debugLog(`[Funciones Hoy] Función ${f.id}: ${f.fecha} -> ${esHoy ? 'HOY' : 'OTRO DÍA'}`);
             return esHoy;
         });
         
-        console.log('[Funciones Hoy] Funciones de hoy:', funcionesHoy.length);
+        debugLog('[Funciones Hoy] Funciones de hoy: ' + funcionesHoy.length);
         
         if (funcionesHoy.length === 0) {
             container.innerHTML = `
