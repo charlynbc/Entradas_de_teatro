@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Política de Privacidad - Baco Teatro</title>
+  <link rel="stylesheet" href="/shared/styles.css">
+</head>
+<body>
+  <div class="legal-content">
+    <h1>Política de Privacidad</h1>
+    <p><strong>Última actualización:</strong> 11 de enero de 2026</p>
+
+    <div class="disclaimer-box disclaimer-info">
+      <h3>📌 Cumplimiento</h3>
+      <p>Esta política cumple con la Ley 18.331 de Protección de Datos Personales (Uruguay).</p>
+    </div>
+
+    <h2>1. Responsable</h2>
+    <ul>
+      <li>Nombre: Baco Teatro (responsable del sistema)</li>
+      <li>Email: contacto@bacoteatro.uy</li>
+      <li>Dirección: Montevideo, Uruguay</li>
+    </ul>
+
+    <h2>2. Datos que recopilamos</h2>
+    <ul>
+      <li>Identificación: nombre, email, teléfono, cédula, fecha de nacimiento.</li>
+      <li>Financieros: cuentas declaradas por directores, comprobantes, historial de pagos.</li>
+      <li>Uso: funciones/tickets, IP de acceso, timestamps.</li>
+      <li>Menores: datos y consentimiento del responsable legal.</li>
+    </ul>
+
+    <h2>3. Base legal</h2>
+    <ul>
+      <li>Consentimiento (registro, privacidad).</li>
+      <li>Interés legítimo (auditoría y seguridad).</li>
+    </ul>
+
+    <h2>4. Uso de datos</h2>
+    <ul>
+      <li>Gestión de usuarios y roles.</li>
+      <li>Registro de operaciones internas y reportes.</li>
+      <li>Notificaciones esenciales (QR, recordatorios).</li>
+      <li>Seguridad y auditoría.</li>
+    </ul>
+
+    <h2>5. Compartir con terceros</h2>
+    <ul>
+      <li>Grupos/Directores: datos necesarios para gestión interna.</li>
+      <li>Pasarela de pagos: nombre, email y monto cuando proceda.</li>
+      <li>Autoridades: ante requerimientos legales.</li>
+    </ul>
+
+    <h2>6. Protección</h2>
+    <ul>
+      <li>Cifrado de contraseñas (bcrypt), HTTPS, roles.</li>
+      <li>Auditoría de cambios críticos.</li>
+      <li>Backups encriptados.</li>
+    </ul>
+
+    <h2>7. Derechos</h2>
+    <ul>
+      <li>Acceso, rectificación, eliminación, oposición.</li>
+      <li>Portabilidad y revocación de consentimiento.</li>
+    </ul>
+
+    <h2>8. Cookies</h2>
+    <p>Uso mínimo para sesión y preferencias.</p>
+
+    <h2>9. Cambios</h2>
+    <p>Notificados por email y en la plataforma.</p>
+
+    <hr>
+    <p style="text-align:center;color:#7f8c8d;">Al usar Baco Teatro, aceptás esta Política de Privacidad.</p>
+  </div>
+  <div id="footer-container"></div>
+  <script>
+    fetch('/shared/footer.html').then(r=>r.text()).then(html=>{
+      document.getElementById('footer-container').innerHTML = html;
+    });
+  </script>
+</body>
+</html>

@@ -6,6 +6,7 @@
     <title>Funciones de Hoy - Baco Teatro</title>
     <link rel="stylesheet" href="/css/baco-landing.css">
     <link rel="stylesheet" href="/css/nav-auth.css">
+    <link rel="stylesheet" href="/shared/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
@@ -63,44 +64,8 @@
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="main-footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-brand">
-                    <img src="/images/logo-baco.svg" alt="Baco Teatro" class="footer-logo">
-                    <p>Baco Teatro Uruguay</p>
-                    <p class="footer-slogan">Donde el arte cobra vida</p>
-                </div>
-                <div class="footer-links">
-                    <h4>Navegación</h4>
-                    <a href="/">Inicio</a>
-                    <a href="/funciones-hoy.html">Funciones de Hoy</a>
-                    <a href="/proximas-funciones.html">Próximas Funciones</a>
-                    <a href="/sobre-baco.html">Sobre Baco</a>
-                    <a href="/guia.html">Cómo Usar</a>
-                    <a href="/desarrollador.html">Desarrollador</a>
-                </div>
-                <div class="footer-contact">
-                    <h4>Contacto</h4>
-                    <p><i class="fas fa-phone"></i> 099 893 748</p>
-                    <p><i class="fab fa-whatsapp"></i> +598 94 687 473</p>
-                    <p><i class="fas fa-envelope"></i> bacoteatro@montevideo.com.uy</p>
-                    <div class="footer-social">
-                        <a href="https://www.instagram.com/bacoteatro" target="_blank">
-                            <i class="fab fa-instagram"></i>
-                        </a>
-                        <a href="https://www.facebook.com/BACO.TEATRO.URUGUAY" target="_blank">
-                            <i class="fab fa-facebook"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; 2025 Baco Teatro Uruguay. Todos los derechos reservados.</p>
-            </div>
-        </div>
-    </footer>
+    <!-- Footer compartido -->
+    <div id="footerContainer"></div>
 
     <!-- Modal de Detalle de Función -->
     <div id="funcionModal" class="modal">
@@ -133,6 +98,23 @@
         document.getElementById('navToggle')?.addEventListener('click', function() {
             document.getElementById('navMenu')?.classList.toggle('active');
         });
+    </script>
+
+    <!-- Disclaimer legal + Footer compartido -->
+    <div id="legalDisclaimer"></div>
+    <script src="/shared/disclaimers.js"></script>
+    <script>
+      try {
+        mostrarDisclaimer('GENERAL', 'legalDisclaimer');
+      } catch (e) { /* noop */ }
+      (async () => {
+        try {
+          const res = await fetch('/shared/footer.html');
+          const html = await res.text();
+          const container = document.getElementById('footerContainer') || (() => { const d = document.createElement('div'); d.id = 'footerContainer'; document.body.appendChild(d); return d; })();
+          container.innerHTML = html;
+        } catch (e) { console.warn('No se pudo cargar el footer compartido', e); }
+      })();
     </script>
 </body>
 </html>

@@ -6,6 +6,7 @@
     <title>Baco Teatro Uruguay - Inicio</title>
     <link rel="stylesheet" href="/css/main-index.css">
     <link rel="stylesheet" href="/css/nav-auth.css">
+    <link rel="stylesheet" href="/shared/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
@@ -97,18 +98,8 @@
             </div>
         </nav>
 
-        <!-- Footer -->
-        <footer class="main-footer">
-            <p>&copy; 2025 Baco Teatro Uruguay</p>
-            <div class="social-links">
-                <a href="https://www.instagram.com/bacoteatro" target="_blank" title="Instagram">
-                    <i class="fab fa-instagram"></i>
-                </a>
-                <a href="https://www.facebook.com/BACO.TEATRO.URUGUAY" target="_blank" title="Facebook">
-                    <i class="fab fa-facebook"></i>
-                </a>
-            </div>
-        </footer>
+        <!-- Footer compartido -->
+        <div id="footerContainer"></div>
     </div>
 
     <script>
@@ -283,6 +274,23 @@
     <script id="AppEntry">
         // Backend tradicional - Sin SPA framework
         console.log('Baco Teatro - Sistema cargado');
+    </script>
+
+    <!-- Disclaimer legal + Footer compartido -->
+    <div id="legalDisclaimer"></div>
+    <script src="/shared/disclaimers.js"></script>
+    <script>
+      try {
+        mostrarDisclaimer('GENERAL', 'legalDisclaimer');
+      } catch (e) { /* noop */ }
+      (async () => {
+        try {
+          const res = await fetch('/shared/footer.html');
+          const html = await res.text();
+          const container = document.getElementById('footerContainer') || (() => { const d = document.createElement('div'); d.id = 'footerContainer'; document.body.appendChild(d); return d; })();
+          container.innerHTML = html;
+        } catch (e) { console.warn('No se pudo cargar el footer compartido', e); }
+      })();
     </script>
     </div> <!-- Cierre de div#root -->
 </body>
