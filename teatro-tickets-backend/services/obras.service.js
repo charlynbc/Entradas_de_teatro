@@ -29,7 +29,7 @@ async function autoAsignarBoleteriaEnObra(obraId) {
  * Solo el director del grupo o SUPER pueden crear obras
  */
 export async function createObra(obraData, userCedula, userRole) {
-  const { grupo_id, nombre, descripcion, autor, genero, duracion_aprox, es_profesional } = obraData;
+  const { grupo_id, nombre, descripcion, autor, genero, duracion_aprox } = obraData;
 
   // Verificar que el grupo existe y el usuario tiene permisos
   const grupoResult = await query(
@@ -64,12 +64,12 @@ export async function createObra(obraData, userCedula, userRole) {
     }
   }
 
-  // Crear obra
+  // Crear obra - sin columna es_profesional
   const result = await query(
-    `INSERT INTO obras (grupo_id, nombre, descripcion, autor, genero, duracion_aprox, es_profesional)
-     VALUES ($1, $2, $3, $4, $5, $6, COALESCE($7, FALSE))
+    `INSERT INTO obras (grupo_id, nombre, descripcion, autor, genero, duracion_aprox)
+     VALUES ($1, $2, $3, $4, $5, $6)
      RETURNING *`,
-    [grupo_id, nombre, descripcion, autor, genero, duracion_aprox, es_profesional]
+    [grupo_id, nombre, descripcion, autor, genero, duracion_aprox]
   );
 
   return result.rows[0];
@@ -184,7 +184,7 @@ export async function listObrasByGrupo(grupoId, userCedula, userRole) {
  * Actualizar una obra
  */
 export async function updateObra(obraId, obraData, userCedula, userRole) {
-  const { nombre, descripcion, autor, genero, duracion_aprox, estado, es_profesional } = obraData;
+  const { nombre, descripcion, autor, genero, duracion_aprox, estado } = obraData;
 
   // Obtener obra y verificar permisos
   const obraResult = await query(
@@ -218,20 +218,13 @@ export async function updateObra(obraId, obraData, userCedula, userRole) {
          genero = COALESCE($4, genero),
          duracion_aprox = COALESCE($5, duracion_aprox),
          estado = COALESCE($6, estado),
-         es_profesional = COALESCE($7, es_profesional),
          updated_at = NOW()
-     WHERE id = $8
+     WHERE id = $7
      RETURNING *`,
-    [nombre, descripcion, autor, genero, duracion_aprox, estado, es_profesional, obraId]
+    [nombre, descripcion, autor, genero, duracion_aprox, estado, obraId]
   );
 
-  const updated = result.rows[0];
-
-  if (!obra.es_profesional && updated?.es_profesional) {
-    await autoAsignarBoleteriaEnObra(obraId);
-  }
-
-  return updated;
+  return result.rows[0];
 }
 
 /**
