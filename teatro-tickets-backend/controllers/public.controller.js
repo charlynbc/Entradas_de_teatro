@@ -21,10 +21,12 @@ export async function listarFuncionesInvitado(req, res) {
           COALESCE(f.descripcion_obra, o.descripcion, '') AS descripcion,
           g.nombre AS grupo_nombre,
           COALESCE(o.es_profesional, FALSE) AS es_profesional,
-         COALESCE(f.estado, 'PROGRAMADA') AS estado,
-         (SELECT COUNT(*) FROM tickets t WHERE t.funcion_id = f.id AND t.estado = 'DISPONIBLE') AS entradas_disponibles,
-         $1 AS boleteria_contacto,
-         $2 AS boleteria_nombre
+          COALESCE(f.tipo_funcion, 'INDEPENDIENTE') AS tipo_funcion,
+          COALESCE(f.permite_compra_online, FALSE) AS permite_compra_online,
+          COALESCE(f.estado, 'PROGRAMADA') AS estado,
+          (SELECT COUNT(*) FROM tickets t WHERE t.funcion_id = f.id AND t.estado = 'DISPONIBLE') AS entradas_disponibles,
+          $1 AS boleteria_contacto,
+          $2 AS boleteria_nombre
        FROM funciones f
        LEFT JOIN obras o ON o.id = f.obra_id
        LEFT JOIN grupos g ON g.id = o.grupo_id

@@ -1,6 +1,8 @@
 import QRCode from 'qrcode';
 import { query } from '../db/postgres.js';
 import { logAction } from '../services/action-logs.service.js';
+import * as ticketService from '../services/ticketService.js';
+import { logger } from '../utils/logger.js';
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 
