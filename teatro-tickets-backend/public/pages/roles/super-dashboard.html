@@ -19,6 +19,7 @@
                 <div class="super-hero__info">
                     <h1>👑 Super Usuario</h1>
                     <p id="nombreSuper">Guardián del Teatro BACÓ</p>
+                    <span class="badge badge-super" style="margin-top: 8px;">🔐 Control Total del Sistema</span>
                 </div>
                 <div class="super-hero__actions">
                     <button class="btn btn-ghost btn-sm" onclick="editarMiPerfil()">
@@ -163,10 +164,27 @@
     <!-- Modal Editar Mi Perfil -->
     <div id="editProfileModal" class="modal-overlay">
         <div class="modal-card" style="max-width: 500px;">
-            <h3>Editar Mi Perfil</h3>
+            <h3>👑 Editar Mi Perfil</h3>
             <form id="editProfileForm" class="form-grid">
+                <!-- Foto de Perfil -->
+                <div class="field" style="grid-column: 1/-1; text-align: center;">
+                    <label class="label">Foto de Perfil</label>
+                    <div style="margin: 15px 0;">
+                        <img id="profile-foto-preview" src="/img/default-avatar.png" alt="Preview" 
+                             style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #DAA520;">
+                    </div>
+                    <input type="file" id="profile-foto-input" accept="image/*" style="display:none;" onchange="previewProfilePhoto(event)">
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <button type="button" class="btn btn-sm" onclick="document.getElementById('profile-foto-input').click()">
+                            <i class="fas fa-camera"></i> Cambiar Foto
+                        </button>
+                        <button type="button" class="btn btn-sm btn-danger" onclick="removeProfilePhoto()">
+                            <i class="fas fa-trash"></i> Quitar
+                        </button>
+                    </div>
+                </div>
                 <div class="field">
-                    <label class="label">Nombre</label>
+                    <label class="label">Nombre *</label>
                     <input class="input" type="text" id="profile-nombre" placeholder="Nombre" required>
                 </div>
                 <div class="field">
@@ -197,8 +215,17 @@
                 return;
             }
             
-            // Cargar nombre
-            document.getElementById('nombreSuper').textContent = user.name || user.nombre || 'Super Usuario';
+            // Cargar nombre y avatar
+            const userName = user.name || user.nombre || 'Super Usuario';
+            const userApellido = user.apellido || '';
+            document.getElementById('nombreSuper').textContent = `${userName} ${userApellido}`.trim();
+            
+            // Cargar avatar
+            const avatarUrl = user.foto_url || user.foto || '/img/default-avatar.png';
+            document.getElementById('avatarSuper').src = avatarUrl;
+            document.getElementById('avatarSuper').onerror = function() {
+                this.src = '/img/default-avatar.png';
+            };
             
             // Cargar datos
             await Promise.all([
@@ -448,7 +475,74 @@
             document.getElementById('profile-email').value = user.email || '';
             document.getElementById('profile-phone').value = user.phone || '';
             
+            // Cargar foto actual
+            const fotoUrl = user.foto_url || user.foto || '/img/default-avatar.png';
+            document.getElementById('profile-foto-preview').src = fotoUrl;
+            
             modal.classList.add('show');
+        }
+
+        // 📸 MANEJO DE FOTO DE PERFIL
+        let profilePhotoFile = null;
+
+        function previewProfilePhoto(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Validar tipo
+            if (!file.type.startsWith('image/')) {
+                Baco.UI.showError('Solo se permiten imágenes');
+                return;
+            }
+
+            // Validar tamaño (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                Baco.UI.showError('La imagen no puede superar 5MB');
+                return;
+            }
+
+            profilePhotoFile = file;
+
+            // Mostrar preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('profile-foto-preview').src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeProfilePhoto() {
+            profilePhotoFile = null;
+            document.getElementById('profile-foto-preview').src = '/img/default-avatar.png';
+            document.getElementById('profile-foto-input').value = '';
+        }
+
+        async function uploadProfilePhoto(cedula) {
+            if (!profilePhotoFile) return null;
+
+            const formData = new FormData();
+            formData.append('foto', profilePhotoFile);
+
+            try {
+                const response = await fetch(`/api/users/${cedula}/foto`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error al subir foto');
+                }
+
+                const data = await response.json();
+                return data.foto_url || data.url;
+            } catch (error) {
+                console.error('Error subiendo foto:', error);
+                Baco.UI.showError('No se pudo subir la foto');
+                return null;
+            }
         }
 
         function closeEditProfileModal() {
@@ -460,28 +554,52 @@
             event.preventDefault();
             const user = JSON.parse(localStorage.getItem('user') || '{}');
             
-            const payload = {
-                nombre: document.getElementById('profile-nombre').value.trim(),
-                apellido: document.getElementById('profile-apellido').value.trim(),
-                email: document.getElementById('profile-email').value.trim(),
-                phone: document.getElementById('profile-phone').value.trim()
-            };
-
             try {
+                // 1. Subir foto si hay una nueva
+                let fotoUrl = user.foto_url || user.foto;
+                if (profilePhotoFile) {
+                    const uploadedUrl = await uploadProfilePhoto(user.cedula);
+                    if (uploadedUrl) {
+                        fotoUrl = uploadedUrl;
+                    }
+                }
+
+                // 2. Actualizar datos
+                const payload = {
+                    nombre: document.getElementById('profile-nombre').value.trim(),
+                    apellido: document.getElementById('profile-apellido').value.trim(),
+                    email: document.getElementById('profile-email').value.trim(),
+                    phone: document.getElementById('profile-phone').value.trim()
+                };
+
+                if (fotoUrl) {
+                    payload.foto_url = fotoUrl;
+                }
+
                 await Baco.API.put(`/users/${user.cedula}`, payload);
-                Baco.UI.showSuccess('Perfil actualizado');
                 
-                // Actualizar localStorage
+                // 3. Actualizar localStorage
                 user.name = payload.nombre;
+                user.nombre = payload.nombre;
                 user.apellido = payload.apellido;
                 user.email = payload.email;
                 user.phone = payload.phone;
+                if (fotoUrl) {
+                    user.foto = fotoUrl;
+                    user.foto_url = fotoUrl;
+                }
                 localStorage.setItem('user', JSON.stringify(user));
                 
+                // 4. Actualizar avatar en el hero
+                document.getElementById('avatarSuper').src = fotoUrl || '/img/default-avatar.png';
+                document.getElementById('nombreSuper').textContent = `${payload.nombre} ${payload.apellido || ''}`.trim();
+                
+                Baco.UI.showSuccess('✨ Perfil actualizado correctamente');
                 closeEditProfileModal();
-                location.reload();
+                profilePhotoFile = null;
             } catch (error) {
                 console.error('Error:', error);
+                Baco.UI.showError('Error al actualizar perfil');
             }
         }
 
