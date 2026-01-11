@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/baco-common.css">
     <link rel="stylesheet" href="/css/super-usuario.css">
+    <link rel="stylesheet" href="/css/usuarios.css">
 </head>
 <body>
     <div class="super-dashboard">
@@ -20,7 +21,7 @@
                     <p id="nombreSuper">Guardián del Teatro BACÓ</p>
                 </div>
                 <div class="super-hero__actions">
-                    <button class="btn btn-ghost btn-sm" onclick="verPerfil()">
+                    <button class="btn btn-ghost btn-sm" onclick="editarMiPerfil()">
                         <i class="fas fa-user-circle"></i> Mi Perfil
                     </button>
                     <button class="btn btn-ghost btn-sm" onclick="Baco.Auth.logout()">
@@ -159,8 +160,34 @@
         </section>
     </div>
 
-    <script src="/js/baco-common.js"></script>
-    <script>
+    <!-- Modal Editar Mi Perfil -->
+    <div id="editProfileModal" class="modal-overlay">
+        <div class="modal-card" style="max-width: 500px;">
+            <h3>Editar Mi Perfil</h3>
+            <form id="editProfileForm" class="form-grid">
+                <div class="field">
+                    <label class="label">Nombre</label>
+                    <input class="input" type="text" id="profile-nombre" placeholder="Nombre" required>
+                </div>
+                <div class="field">
+                    <label class="label">Apellido</label>
+                    <input class="input" type="text" id="profile-apellido" placeholder="Apellido">
+                </div>
+                <div class="field">
+                    <label class="label">Email</label>
+                    <input class="input" type="email" id="profile-email" placeholder="correo@baco.uy">
+                </div>
+                <div class="field">
+                    <label class="label">Teléfono</label>
+                    <input class="input" type="tel" id="profile-phone" placeholder="09xxxxxxx" inputmode="tel">
+                </div>
+            </form>
+            <div class="modal-actions">
+                <button type="button" class="btn" onclick="closeEditProfileModal()">Cancelar</button>
+                <button type="submit" form="editProfileForm" class="btn btn-primary">Guardar cambios</button>
+            </div>
+        </div>
+    </div>
         // 🔐 Verificar autenticación SUPER
         (async () => {
             const user = await Baco.Auth.ensureUser();
@@ -263,6 +290,9 @@
                                 <button class="btn btn-secondary btn-sm" onclick="verPerfil('${u.cedula}')">
                                     <i class="fas fa-eye"></i> Ver
                                 </button>
+                                ${u.role !== 'SUPER' ? `<button class="btn btn-danger btn-sm" onclick="eliminarUsuario('${u.cedula}', '${u.nombre || u.name}')">
+                                    <i class="fas fa-trash"></i> Eliminar
+                                </button>` : ''}
                             </div>
                         </div>
                     </div>
@@ -400,7 +430,76 @@
             if (cedula) {
                 window.location.href = `/pages/usuarios/ver-usuario.html?cedula=${cedula}`;
             } else {
-                Baco.UI.showInfo('Vista de perfil propio en desarrollo');
+                editarMiPerfil();
+            }
+        }
+
+        function editarMiPerfil() {
+            const modal = document.getElementById('editProfileModal');
+            if (!modal) {
+                Baco.UI.showError('Modal no encontrado');
+                return;
+            }
+            
+            // Cargar datos actuales
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            document.getElementById('profile-nombre').value = user.nombre || user.name || '';
+            document.getElementById('profile-apellido').value = user.apellido || '';
+            document.getElementById('profile-email').value = user.email || '';
+            document.getElementById('profile-phone').value = user.phone || '';
+            
+            modal.classList.add('show');
+        }
+
+        function closeEditProfileModal() {
+            const modal = document.getElementById('editProfileModal');
+            if (modal) modal.classList.remove('show');
+        }
+
+        async function handleEditProfile(event) {
+            event.preventDefault();
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            
+            const payload = {
+                nombre: document.getElementById('profile-nombre').value.trim(),
+                apellido: document.getElementById('profile-apellido').value.trim(),
+                email: document.getElementById('profile-email').value.trim(),
+                phone: document.getElementById('profile-phone').value.trim()
+            };
+
+            try {
+                await Baco.API.put(`/users/${user.cedula}`, payload);
+                Baco.UI.showSuccess('Perfil actualizado');
+                
+                // Actualizar localStorage
+                user.name = payload.nombre;
+                user.apellido = payload.apellido;
+                user.email = payload.email;
+                user.phone = payload.phone;
+                localStorage.setItem('user', JSON.stringify(user));
+                
+                closeEditProfileModal();
+                location.reload();
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function eliminarUsuario(cedula, nombre) {
+            const confirmed = await Baco.UI.confirm(
+                `¿Estás seguro de que quieres eliminar a ${nombre}? Esta acción es irreversible.`,
+                '⚠️ Eliminar Usuario',
+                'Sí, eliminar'
+            );
+
+            if (confirmed) {
+                try {
+                    await Baco.API.delete(`/users/${cedula}`);
+                    Baco.UI.showSuccess('Usuario eliminado correctamente');
+                    cargarUsuariosRecientes();
+                } catch (error) {
+                    console.error('Error:', error);
+                }
             }
         }
 
@@ -410,13 +509,28 @@
 
         function verFuncion(id) {
             window.location.href = `/pages/roles/director.html#funciones/${id}`;
-
-                function crearFuncion() {
-                    // Para crear función, Super debe ir a director.html donde están los formularios
-                    Baco.UI.showInfo('Redireccionar al panel de funciones...');
-                    setTimeout(() => window.location.href = '/pages/roles/director.html#funciones', 800);
-                }
         }
+
+        function crearFuncion() {
+            // Para crear función, Super debe ir a director.html donde están los formularios
+            Baco.UI.showInfo('Redireccionar al panel de funciones...');
+            setTimeout(() => window.location.href = '/pages/roles/director.html#funciones', 800);
+        }
+
+        // Event listeners para modal
+        document.addEventListener('DOMContentLoaded', () => {
+            const editForm = document.getElementById('editProfileForm');
+            if (editForm) {
+                editForm.addEventListener('submit', handleEditProfile);
+            }
+            
+            const modal = document.getElementById('editProfileModal');
+            if (modal) {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) closeEditProfileModal();
+                });
+            }
+        });
     </script>
 </body>
 </html>
