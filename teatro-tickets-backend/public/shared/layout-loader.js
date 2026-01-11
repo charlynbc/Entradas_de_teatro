@@ -88,6 +88,7 @@
     // Load public header if container exists
     if (document.getElementById('header-container')) {
       await loadComponent('/shared/header-public.html', '#header-container');
+      initPublicNav();
     }
 
     // Load dashboard header if container exists
@@ -106,6 +107,24 @@
 
     // Emit event when layout is loaded
     document.dispatchEvent(new CustomEvent('bacoLayoutLoaded'));
+  }
+
+  // Initialize public nav functionality
+  function initPublicNav() {
+    const currentPath = window.location.pathname;
+    const navLinks = document.querySelectorAll('#publicNav .nav-link');
+    
+    navLinks.forEach(link => {
+      const href = link.getAttribute('href');
+      if (currentPath === href || (href !== '/' && currentPath.includes(href))) {
+        link.classList.add('active');
+      }
+    });
+
+    // Mobile menu toggle
+    document.getElementById('navToggle')?.addEventListener('click', function() {
+      document.getElementById('navMenu')?.classList.toggle('active');
+    });
   }
 
   // Auto-initialize on DOMContentLoaded

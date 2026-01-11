@@ -90,3 +90,16 @@ export async function deleteImage(req, res) {
     res.status(500).json({ error: error.message });
   }
 }
+
+// Lista de imágenes subidas (solo nombres/urls públicas)
+export async function listImages(req, res) {
+  try {
+    await ensureUploadDir();
+    const files = await fs.readdir(UPLOAD_DIR);
+    const urls = files.map((file) => `/uploads/${file}`);
+    res.json({ ok: true, total: urls.length, urls });
+  } catch (error) {
+    console.error('Error listando imágenes:', error);
+    res.status(500).json({ error: error.message });
+  }
+}

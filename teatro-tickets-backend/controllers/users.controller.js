@@ -218,6 +218,89 @@ export async function updateMe(req, res) {
   }
 }
 
+// Obtener perfil de un usuario por cédula (solo SUPER o ADMIN)
+export async function obtenerUsuarioPorCedula(req, res) {
+  try {
+    const { id } = req.params;
+    const target = await getUserByCedula(id);
+
+    if (!target) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    // Solo SUPER puede ver a SUPER; ADMIN puede ver ACTOR/ADMIN
+    if (target.role === 'SUPER' && req.user.role !== 'SUPER') {
+      return res.status(403).json({ error: 'No autorizado' });
+    }
+
+    if (req.user.role === 'ADMIN' && target.role === 'ADMIN' && target.cedula !== req.user.cedula) {
+      return res.status(403).json({ error: 'No autorizado' });
+    }
+
+    const { password_hash, ...userData } = target;
+    return res.json(userData);
+  } catch (error) {
+    console.error('Error obteniendo usuario:', error);
+    res.status(500).json({ error: 'Error obteniendo usuario' });
+  }
+}
+
+// Actualizar usuario por cédula (solo SUPER o ADMIN sobre actores propios)
+export async function actualizarUsuarioPorCedula(req, res) {
+  try {
+    const { id } = req.params;
+    const requesterRole = req.user.role;
+    const target = await getUserByCedula(id);
+
+    if (!target) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    if (target.role === 'SUPER' && requesterRole !== 'SUPER') {
+      return res.status(403).json({ error: 'No autorizado' });
+    }
+
+    // Directores solo pueden editar actores
+    if (requesterRole === 'ADMIN' && target.role !== 'ACTOR') {
+      return res.status(403).json({ error: 'Solo puedes editar actores' });
+    }
+
+    const allowedMap = {
+      name: 'name',
+      nombre: 'name',
+      apellido: 'apellido',
+      email: 'email',
+      phone: 'phone',
+      telefono: 'phone',
+      fecha_nacimiento: 'fecha_nacimiento',
+      foto_url: 'foto_url',
+      notas: 'notas',
+      descripcion: 'notas',
+      direccion: 'direccion',
+      genero: 'genero'
+    };
+
+    const payload = {};
+    Object.entries(req.body || {}).forEach(([key, value]) => {
+      const dbKey = allowedMap[key];
+      if (dbKey) {
+        payload[dbKey] = value;
+      }
+    });
+
+    const updated = await updateUserByCedula(id, payload);
+    if (!updated) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    const { password_hash, ...userData } = updated;
+    res.json(userData);
+  } catch (error) {
+    console.error('Error actualizando usuario:', error);
+    res.status(500).json({ error: 'Error actualizando usuario' });
+  }
+}
+
 // Cambiar contraseña del usuario actual
 export async function changePassword(req, res) {
   try {

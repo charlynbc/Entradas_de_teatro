@@ -341,3 +341,4 @@ router.post('/foto', authenticate, async (req, res) => {
     }
 });
 
+export default router;

@@ -4,67 +4,55 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#12090D">
-    <title>Funciones de Hoy - Baco Teatro</title>
+    <title>Funciones de Hoy | BACÓ Teatro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/baco-landing.css">
     <link rel="stylesheet" href="/css/nav-auth.css">
     <link rel="stylesheet" href="/css/baco-footer.css">
-    <link rel="stylesheet" href="/shared/styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/css/funciones-publicas.css">
 </head>
 <body>
-    <!-- Navigation (loaded from shared component) -->
-    <div id="header-container"></div>
-
-    <!-- Funciones del Día -->
-    <section id="funciones-hoy" class="funciones-hoy" style="padding-top: 120px;">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">
-                    <i class="fas fa-calendar-day"></i>
-                    Funciones de Hoy
-                </h2>
-                <p class="section-subtitle">Las presentaciones de hoy, <span id="fecha-hoy"></span></p>
+    <!-- 🔥 HERO Urgente e impactante -->
+    <section class="funciones-hero">
+        <div class="funciones-hero__inner">
+            <div class="funciones-hero__icon">🔥</div>
+            <h1 class="funciones-hero__title">Funciones de Hoy</h1>
+            <p class="funciones-hero__subtitle">
+                Teatro en vivo, hoy <span id="fecha-hoy"></span>. ¡No te lo pierdas!
+            </p>
+            <div class="funciones-hero__badge">
+                <i class="fas fa-bolt"></i>
+                <span id="totalHoy">Cargando...</span>
             </div>
-            <div id="funciones-hoy-grid" class="funciones-grid">
-                <!-- Se cargarán dinámicamente -->
-                <div class="no-funciones">
-                    <i class="fas fa-theater-masks"></i>
-                    <h3>🎭 Cargando la cartelera...</h3>
-                    <p>Un momento mientras preparamos el escenario</p>
-                </div>
+            <div class="hero-actions">
+                <a href="/proximas-funciones.html" class="hero-button">
+                    <span class="button-icon"><i class="fas fa-calendar-alt"></i></span>
+                    <span class="button-text"><h3>Próximas Funciones</h3></span>
+                </a>
+                <a href="/" class="hero-button">
+                    <span class="button-icon"><i class="fas fa-home"></i></span>
+                    <span class="button-text"><h3>Inicio</h3></span>
+                </a>
             </div>
         </div>
     </section>
 
-    <!-- Footer (loaded from shared component) -->
+    <!-- 🎬 GRID - Cards urgentes con hora destacada -->
+    <section class="hoy-container">
+        <div id="hoyGrid" class="hoy-grid">
+            <div class="loading-state">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Cargando funciones de hoy...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
     <div id="footer-container"></div>
-
-    <!-- Modal de Detalle de Función -->
-    <div id="funcionModal" class="modal">
-        <div class="modal-content modal-large">
-            <button class="modal-close" onclick="closeFuncionModal()">
-                <i class="fas fa-times"></i>
-            </button>
-            <div id="funcionModalContent">
-                <!-- Se cargará dinámicamente -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de Reserva -->
-    <div id="reservaModal" class="modal">
-        <div class="modal-content">
-            <button class="modal-close" onclick="closeReservaModal()">
-                <i class="fas fa-times"></i>
-            </button>
-            <div id="reservaModalContent">
-                <!-- Se cargará dinámicamente -->
-            </div>
-        </div>
-    </div>
 
     <script src="/shared/layout-loader.js"></script>
     <script src="/js/nav-auth.js"></script>
-    <script src="/js/baco-funciones-publicas.js"></script>
+    <script src="/js/funciones-hoy.js"></script>
 </body>
 </html>

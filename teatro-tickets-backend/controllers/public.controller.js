@@ -25,11 +25,11 @@ export async function listarFuncionesInvitado(req, res) {
           COALESCE(f.lugar, '') AS sala,
           COALESCE(f.precio_base, 0) AS precio,
           COALESCE(o.nombre, 'Baco Teatro') AS obra_nombre,
-          COALESCE(f.descripcion_obra, o.descripcion, '') AS descripcion,
+          COALESCE(o.descripcion, '') AS descripcion,
           g.nombre AS grupo_nombre,
-          COALESCE(o.es_profesional, FALSE) AS es_profesional,
-          COALESCE(f.tipo_funcion, 'INDEPENDIENTE') AS tipo_funcion,
-          COALESCE(f.permite_compra_online, FALSE) AS permite_compra_online,
+          FALSE AS es_profesional,
+          'INDEPENDIENTE' AS tipo_funcion,
+          FALSE AS permite_compra_online,
           COALESCE(f.estado, 'PROGRAMADA') AS estado,
           (SELECT COUNT(*) FROM tickets t WHERE t.funcion_id = f.id AND t.estado = 'DISPONIBLE') AS entradas_disponibles,
           $1 AS boleteria_contacto,
@@ -42,8 +42,8 @@ export async function listarFuncionesInvitado(req, res) {
       [BOLETERIA_PHONE, BOLETERIA_NOMBRE]
      );
 
-    // La UI espera { funciones: [] }
-    res.json({ total: result.rows.length, funciones: result.rows });
+    // Retornar directamente como array (compatible con frontend)
+    res.json(result.rows);
   } catch (error) {
     console.error('Error al listar funciones invitado:', error);
     res.status(500).json({ error: 'Error al listar funciones públicas' });
@@ -66,14 +66,10 @@ export async function listarVendedoresPublicosPorFuncion(req, res) {
       return res.status(400).json({ error: 'funcionId inválido' });
     }
 
-    // Determinar si es una función pública vigente y si la obra es profesional
+    // Verificar que la función exista y esté vigente
     const meta = await pool.query(
-      `SELECT f.id, f.fecha, f.estado,
-              COALESCE(o.es_profesional, FALSE) AS es_profesional,
-              g.id AS grupo_id
+      `SELECT f.id, f.fecha, f.estado
          FROM funciones f
-         LEFT JOIN obras o ON o.id = f.obra_id
-         LEFT JOIN grupos g ON g.id = o.grupo_id
         WHERE f.id = $1
         LIMIT 1`,
       [funcionId]
@@ -89,43 +85,11 @@ export async function listarVendedoresPublicosPorFuncion(req, res) {
       return res.json({ total: 0, vendedores: [] });
     }
 
-    // Si es profesional: retornar solo boletería
-    if (row.es_profesional) {
-      const v = [{ nombre: BOLETERIA_NOMBRE, contacto_publico: BOLETERIA_PHONE }]
-        .filter(x => x.contacto_publico);
-      return res.json({ total: v.length, vendedores: v });
-    }
+    // Simplificar: retornar contacto de boletería como fallback público
+    const vendedores = [{ nombre: BOLETERIA_NOMBRE, contacto_publico: BOLETERIA_PHONE }]
+      .filter(v => !!v.contacto_publico);
 
-    // Caso común: actores/directores con entradas asignadas en entradas_v2
-    const result = await pool.query(
-      `SELECT 
-          u.cedula,
-          u.name,
-          u.apellido,
-          u.role,
-          COALESCE(u.phone, u.celular, u.cedula) AS contacto_publico,
-          COUNT(*) FILTER (WHERE e.estado = 'asignada') AS disponibles,
-          COUNT(*) AS total_asignadas
-       FROM entradas_v2 e
-       JOIN users u ON u.cedula = e.actor_cedula
-      WHERE e.funcion_id = $1
-      GROUP BY u.cedula, u.name, u.apellido, u.role, u.phone, u.celular
-     HAVING COUNT(*) FILTER (WHERE e.estado = 'asignada') > 0
-     ORDER BY u.name ASC`,
-      [funcionId]
-    );
-
-    const vendedores = result.rows
-      .map(v => ({
-        cedula: v.cedula,
-        nombre: `${v.name || ''} ${v.apellido || ''}`.trim() || v.name || 'Vendedor',
-        contacto_publico: v.contacto_publico || null,
-        rol: v.role,
-        disponibles: Number(v.disponibles || 0)
-      }))
-      .filter(v => v.contacto_publico);
-
-    res.json({ total: vendedores.length, vendedores });
+    return res.json({ total: vendedores.length, vendedores });
   } catch (error) {
     console.error('Error al listar vendedores públicos por función:', error);
     res.status(500).json({ error: 'Error al listar vendedores públicos' });

@@ -253,14 +253,14 @@
                 
                 // Redirigir según el rol del usuario
                 const role = data.user.role;
-                let redirectUrl = '/pages/roles/super.html'; // Default para SUPER
+                let redirectUrl = '/pages/roles/super-dashboard.html'; // Default para SUPER
 
                 if (role === 'ADMIN') {
                     redirectUrl = '/pages/roles/director.html';
                 } else if (role === 'ACTOR') {
                     redirectUrl = '/pages/roles/actor.html';
                 } else if (role === 'SUPER') {
-                    redirectUrl = '/pages/roles/super.html';
+                    redirectUrl = '/pages/roles/super-dashboard.html';
                 }
 
                 window.location.href = redirectUrl;

@@ -3,7 +3,7 @@
 // Sin autenticación, sin acciones de compra/reserva
 // ========================================
 
-const PUBLIC_API_URL = '/public';
+const PUBLIC_API_URL = '/api/public';
 const MP_FALLBACK_LINK = '/pages/boleteria/index.html';
 const reservasCache = new Map();
 let reservaContext = { funcion: null, vendedor: null };

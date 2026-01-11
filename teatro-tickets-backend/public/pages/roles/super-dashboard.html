@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>👑 Super Usuario - BACÓ</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/baco-common.css">
+    <link rel="stylesheet" href="/css/super-usuario.css">
+</head>
+<body>
+    <div class="super-dashboard">
+        <!-- 👑 HERO HEADER -->
+        <section class="super-hero">
+            <div class="super-hero__inner">
+                <img src="/img/default-avatar.png" alt="Super Usuario" class="super-hero__avatar" id="avatarSuper">
+                <div class="super-hero__info">
+                    <h1>👑 Super Usuario</h1>
+                    <p id="nombreSuper">Guardián del Teatro BACÓ</p>
+                </div>
+                <div class="super-hero__actions">
+                    <button class="btn btn-ghost btn-sm" onclick="verPerfil()">
+                        <i class="fas fa-user-circle"></i> Mi Perfil
+                    </button>
+                    <button class="btn btn-ghost btn-sm" onclick="Baco.Auth.logout()">
+                        <i class="fas fa-sign-out-alt"></i> Salir
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 📊 STATS OVERVIEW -->
+        <section class="super-stats">
+            <div class="stat-card" onclick="navegarA('usuarios')">
+                <div class="stat-card__label">
+                    <i class="fas fa-users"></i> Total Usuarios
+                </div>
+                <div class="stat-card__value" id="statUsuarios">0</div>
+            </div>
+            <div class="stat-card" onclick="navegarA('grupos')">
+                <div class="stat-card__label">
+                    <i class="fas fa-theater-masks"></i> Grupos Activos
+                </div>
+                <div class="stat-card__value" id="statGrupos">0</div>
+            </div>
+            <div class="stat-card" onclick="navegarA('funciones')">
+                <div class="stat-card__label">
+                    <i class="fas fa-calendar"></i> Funciones Programadas
+                </div>
+                <div class="stat-card__value" id="statFunciones">0</div>
+            </div>
+            <div class="stat-card" onclick="navegarA('entradas')">
+                <div class="stat-card__label">
+                    <i class="fas fa-ticket-alt"></i> Entradas Vendidas
+                </div>
+                <div class="stat-card__value" id="statEntradas">0</div>
+            </div>
+        </section>
+
+        <!-- 🎯 ACCIONES RÁPIDAS -->
+        <section class="section-panel">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-bolt"></i> Acciones Rápidas
+                </h2>
+            </div>
+            <div class="quick-grid">
+                <div class="quick-action" onclick="window.location.href='/pages/usuarios/crear-director.html'">
+                    <div class="quick-action__icon">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <div class="quick-action__title">Crear Director</div>
+                    <div class="quick-action__desc">Solo tú puedes crear directores en el sistema</div>
+                </div>
+                <div class="quick-action" onclick="window.location.href='/pages/usuarios/crear-actor.html'">
+                    <div class="quick-action__icon">
+                        <i class="fas fa-theater-masks"></i>
+                    </div>
+                    <div class="quick-action__title">Crear Actor</div>
+                    <div class="quick-action__desc">Agregar nuevos miembros al elenco</div>
+                </div>
+                <div class="quick-action" onclick="window.location.href='/pages/grupos/crear-grupo.html'">
+                    <div class="quick-action__icon">
+                        <i class="fas fa-users-cog"></i>
+                    </div>
+                    <div class="quick-action__title">Crear Grupo</div>
+                    <div class="quick-action__desc">Formar nuevo grupo teatral</div>
+                </div>
+                <div class="quick-action" onclick="crearFuncion()">
+                    <div class="quick-action__icon">
+                        <i class="fas fa-calendar-plus"></i>
+                    </div>
+                    <div class="quick-action__title">Crear Función</div>
+                    <div class="quick-action__desc">Programar una nueva función teatral</div>
+                </div>
+                <div class="quick-action" onclick="navegarA('escanear')">
+                    <div class="quick-action__icon">
+                        <i class="fas fa-qrcode"></i>
+                    </div>
+                    <div class="quick-action__title">Escanear Entrada</div>
+                    <div class="quick-action__desc">Validar entradas en puerta</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 👥 GESTIÓN DE USUARIOS -->
+        <section class="section-panel">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-users"></i> Gestión de Usuarios
+                </h2>
+                <button class="btn btn-primary" onclick="window.location.href='/pages/usuarios/listar-usuarios.html'">
+                    <i class="fas fa-list"></i> Ver Todos
+                </button>
+            </div>
+            <div id="usuariosRecientes" class="module-list">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Cargando usuarios...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 🎭 GRUPOS TEATRALES -->
+        <section class="section-panel">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-theater-masks"></i> Grupos Teatrales
+                </h2>
+                <button class="btn btn-primary" onclick="navegarA('grupos')">
+                    <i class="fas fa-list"></i> Ver Todos
+                </button>
+            </div>
+            <div id="gruposActivos" class="module-list">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Cargando grupos...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 📅 FUNCIONES PRÓXIMAS -->
+        <section class="section-panel">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-calendar-alt"></i> Próximas Funciones
+                </h2>
+                <button class="btn btn-primary" onclick="navegarA('funciones')">
+                    <i class="fas fa-list"></i> Ver Todas
+                </button>
+            </div>
+            <div id="funcionesProximas" class="module-list">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Cargando funciones...</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="/js/baco-common.js"></script>
+    <script>
+        // 🔐 Verificar autenticación SUPER
+        (async () => {
+            const user = await Baco.Auth.ensureUser();
+            if (!user || user.role !== 'SUPER') {
+                Baco.UI.showError('Acceso denegado. Solo Super Usuarios.');
+                setTimeout(() => window.location.href = '/pages/auth/login.html', 1200);
+                return;
+            }
+            
+            // Cargar nombre
+            document.getElementById('nombreSuper').textContent = user.name || user.nombre || 'Super Usuario';
+            
+            // Cargar datos
+            await Promise.all([
+                cargarStats(),
+                cargarUsuariosRecientes(),
+                cargarGruposActivos(),
+                cargarFuncionesProximas()
+            ]);
+        })();
+
+        // 📊 Cargar estadísticas
+        async function cargarStats() {
+            try {
+                const [usuarios, grupos, funciones] = await Promise.all([
+                    Baco.API.get('/users'),
+                    Baco.API.get('/grupos'),
+                    Baco.API.get('/funciones')
+                ]);
+                
+                document.getElementById('statUsuarios').textContent = usuarios.length;
+                document.getElementById('statGrupos').textContent = grupos.filter(g => !g.suspendido).length;
+                document.getElementById('statFunciones').textContent = funciones.filter(f => new Date(f.fecha_hora) > Date.now()).length;
+                
+                // Calcular entradas vendidas (suma de todas las funciones)
+                const totalEntradas = funciones.reduce((acc, f) => acc + (f.entradas_vendidas || 0), 0);
+                document.getElementById('statEntradas').textContent = totalEntradas;
+            } catch (error) {
+                console.error('Error cargando stats:', error);
+            }
+        }
+
+        // 👥 Cargar usuarios recientes (últimos 5)
+        async function cargarUsuariosRecientes() {
+            try {
+                const usuarios = await Baco.API.get('/users');
+                const recientes = usuarios
+                    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                    .slice(0, 5);
+                
+                renderUsuarios(recientes);
+            } catch (error) {
+                document.getElementById('usuariosRecientes').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state__icon">❌</div>
+                        <div class="empty-state__title">Error al cargar usuarios</div>
+                    </div>
+                `;
+            }
+        }
+
+        function renderUsuarios(usuarios) {
+            const container = document.getElementById('usuariosRecientes');
+            
+            if (usuarios.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state__icon">👤</div>
+                        <div class="empty-state__title">No hay usuarios</div>
+                        <div class="empty-state__text">Comienza creando tu primer director o actor</div>
+                        <button class="btn btn-primary" onclick="window.location.href='/pages/usuarios/crear-director.html'">
+                            <i class="fas fa-plus"></i> Crear Director
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = usuarios.map(u => {
+                const roleClass = u.role === 'SUPER' ? 'super' : u.role === 'ADMIN' ? 'admin' : 'actor';
+                const roleText = u.role === 'SUPER' ? 'Super Usuario' : u.role === 'ADMIN' ? 'Director' : 'Actor';
+                const isNew = u.created_at && (Date.now() - new Date(u.created_at).getTime() < 7 * 24 * 60 * 60 * 1000);
+                
+                return `
+                    <div class="module-item fade-in">
+                        <div class="module-item__header">
+                            <div class="module-item__icon">
+                                ${u.role === 'SUPER' ? '👑' : u.role === 'ADMIN' ? '🎬' : '🎭'}
+                            </div>
+                            <div class="module-item__info">
+                                <div class="module-item__title">${u.nombre || u.name}</div>
+                                <div class="module-item__meta">
+                                    <span class="badge badge-${roleClass}">${roleText}</span>
+                                    ${isNew ? '<span class="badge badge-success">✨ Nuevo</span>' : ''}
+                                    <span>CI: ${Baco.Format.cedula(u.cedula)}</span>
+                                    <span>${u.email || 'Sin email'}</span>
+                                </div>
+                            </div>
+                            <div class="module-item__actions">
+                                <button class="btn btn-secondary btn-sm" onclick="verPerfil('${u.cedula}')">
+                                    <i class="fas fa-eye"></i> Ver
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 🎭 Cargar grupos activos
+        async function cargarGruposActivos() {
+            try {
+                const grupos = await Baco.API.get('/grupos');
+                const activos = grupos
+                    .filter(g => !g.suspendido)
+                    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                    .slice(0, 5);
+                
+                renderGrupos(activos);
+            } catch (error) {
+                document.getElementById('gruposActivos').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state__icon">❌</div>
+                        <div class="empty-state__title">Error al cargar grupos</div>
+                    </div>
+                `;
+            }
+        }
+
+        function renderGrupos(grupos) {
+            const container = document.getElementById('gruposActivos');
+            
+            if (grupos.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state__icon">🎭</div>
+                        <div class="empty-state__title">No hay grupos</div>
+                        <div class="empty-state__text">Los directores pueden crear grupos teatrales</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = grupos.map(g => `
+                <div class="module-item fade-in">
+                    <div class="module-item__header">
+                        <div class="module-item__icon">🎭</div>
+                        <div class="module-item__info">
+                            <div class="module-item__title">${g.nombre}</div>
+                            <div class="module-item__meta">
+                                <span>${g.miembros?.length || 0} miembros</span>
+                                <span>${g.funciones?.length || 0} funciones</span>
+                            </div>
+                        </div>
+                        <div class="module-item__actions">
+                            <button class="btn btn-secondary btn-sm" onclick="verGrupo('${g.id}')">
+                                <i class="fas fa-eye"></i> Ver
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 📅 Cargar funciones próximas
+        async function cargarFuncionesProximas() {
+            try {
+                const funciones = await Baco.API.get('/funciones/publicas');
+                const proximas = funciones
+                    .filter(f => new Date(f.fecha_hora) > Date.now())
+                    .sort((a, b) => new Date(a.fecha_hora) - new Date(b.fecha_hora))
+                    .slice(0, 5);
+                
+                renderFunciones(proximas);
+            } catch (error) {
+                document.getElementById('funcionesProximas').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state__icon">❌</div>
+                        <div class="empty-state__title">Error al cargar funciones</div>
+                    </div>
+                `;
+            }
+        }
+
+        function renderFunciones(funciones) {
+            const container = document.getElementById('funcionesProximas');
+            
+            if (funciones.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state__icon">📅</div>
+                        <div class="empty-state__title">No hay funciones programadas</div>
+                        <div class="empty-state__text">Los directores pueden programar funciones</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = funciones.map(f => `
+                <div class="module-item fade-in">
+                    <div class="module-item__header">
+                        <div class="module-item__icon">🎬</div>
+                        <div class="module-item__info">
+                            <div class="module-item__title">${f.nombre || 'Función sin nombre'}</div>
+                            <div class="module-item__meta">
+                                <span><i class="fas fa-calendar"></i> ${Baco.Format.date(f.fecha_hora)}</span>
+                                <span><i class="fas fa-clock"></i> ${Baco.Format.time(f.fecha_hora)}</span>
+                                <span><i class="fas fa-ticket-alt"></i> ${f.entradas_vendidas || 0}/${f.capacidad_maxima || 0}</span>
+                            </div>
+                        </div>
+                        <div class="module-item__actions">
+                            <button class="btn btn-secondary btn-sm" onclick="verFuncion('${f.id}')">
+                                <i class="fas fa-eye"></i> Ver
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 🧭 Navegación
+        function navegarA(modulo) {
+            const rutas = {
+                usuarios: '/pages/usuarios/listar-usuarios.html',
+                grupos: '/pages/roles/director.html#grupos',
+                funciones: '/pages/roles/director.html#funciones',
+                entradas: '/pages/roles/director.html#entradas',
+                escanear: '/pages/roles/director.html#escanear'
+            };
+            
+            if (rutas[modulo]) {
+                window.location.href = rutas[modulo];
+            }
+        }
+
+        function verPerfil(cedula) {
+            if (cedula) {
+                window.location.href = `/pages/usuarios/ver-usuario.html?cedula=${cedula}`;
+            } else {
+                Baco.UI.showInfo('Vista de perfil propio en desarrollo');
+            }
+        }
+
+        function verGrupo(id) {
+            window.location.href = `/pages/roles/director.html#grupos/${id}`;
+        }
+
+        function verFuncion(id) {
+            window.location.href = `/pages/roles/director.html#funciones/${id}`;
+
+                function crearFuncion() {
+                    // Para crear función, Super debe ir a director.html donde están los formularios
+                    Baco.UI.showInfo('Redireccionar al panel de funciones...');
+                    setTimeout(() => window.location.href = '/pages/roles/director.html#funciones', 800);
+                }
+        }
+    </script>
+</body>
+</html>

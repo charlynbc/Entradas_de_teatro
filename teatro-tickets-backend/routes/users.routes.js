@@ -1,5 +1,5 @@
 import express from 'express';
-import { crearUsuario, listarUsuarios, listarVendedores as listarActores, desactivarUsuario, listarMiembros, resetPassword, crearActor, crearDirector, getWeeklyBirthdays, getMe, updateMe, changePassword } from '../controllers/users.controller.js';
+import { crearUsuario, listarUsuarios, listarVendedores as listarActores, desactivarUsuario, listarMiembros, resetPassword, crearActor, crearDirector, getWeeklyBirthdays, getMe, updateMe, changePassword, obtenerUsuarioPorCedula, actualizarUsuarioPorCedula } from '../controllers/users.controller.js';
 import { authenticate, requireRole } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
@@ -24,6 +24,8 @@ router.get('/', authenticate, requireRole('ADMIN', 'SUPER'), listarUsuarios);
 router.get('/actores', authenticate, listarActores);
 router.get('/vendedores', authenticate, listarActores); // Compatibilidad
 router.get('/miembros', authenticate, listarMiembros); // Nueva ruta para todos los miembros
+router.get('/:id', authenticate, requireRole('ADMIN', 'SUPER'), obtenerUsuarioPorCedula);
+router.put('/:id', authenticate, requireRole('ADMIN', 'SUPER'), actualizarUsuarioPorCedula);
 router.delete('/:id', authenticate, requireRole('ADMIN', 'SUPER'), desactivarUsuario);
 // Resetear contraseña (solo SUPER). Acepta id o cedula en :id. Body opcional { newPassword }
 router.post('/:id/reset-password', authenticate, requireRole('SUPER'), resetPassword);

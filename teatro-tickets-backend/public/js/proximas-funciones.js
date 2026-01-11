@@ -1,145 +1,166 @@
-// Página pública independiente: Próximas Funciones
-// Reglas: sin login, sin acciones, solo GET /api/funciones/publicas
+// 📅 PRÓXIMAS FUNCIONES - Lógica específica
+// Vista Timeline elegante sin modal "Ver detalles"
 
-const API_URL = '/api';
+const PUBLIC_API_URL = '/api/public';
 
 document.addEventListener('DOMContentLoaded', () => {
-    setupNavigation();
     loadProximasFunciones();
 });
 
-function setupNavigation() {
-    const navToggle = document.getElementById('navToggle');
-    const navMenu = document.getElementById('navMenu');
-    const navLinks = document.querySelectorAll('.nav-link');
-
-    navToggle?.addEventListener('click', () => {
-        navMenu.classList.toggle('active');
-    });
-
-    navLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            navMenu.classList.remove('active');
-            navLinks.forEach(l => l.classList.remove('active'));
-            link.classList.add('active');
-        });
-    });
-
-    window.addEventListener('scroll', () => {
-        const nav = document.querySelector('.main-nav');
-        if (!nav) return;
-        nav.style.background = 'linear-gradient(135deg, #370617, #6A040F)';
-    });
-}
-
 async function loadProximasFunciones() {
-    const grid = document.getElementById('proximas-funciones-grid');
-    if (!grid) return;
-
+    const container = document.getElementById('proximasTimeline');
+    const badge = document.getElementById('totalProximas');
+    
     try {
-        const response = await fetch(`${API_URL}/funciones/publicas`);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
+        const response = await fetch(`${PUBLIC_API_URL}/funciones`);
+        if (!response.ok) throw new Error('Error al cargar funciones');
+        
         const data = await response.json();
         const funciones = Array.isArray(data) ? data : (data.funciones || []);
-
-        if (!Array.isArray(funciones) || funciones.length === 0) {
-            grid.innerHTML = `
-                <div class="no-funciones">
-                    <i class="fas fa-calendar-times"></i>
-                    <h3>🌙 No hay funciones publicadas</h3>
-                    <p>Volvé pronto para ver nuevas fechas</p>
+        
+        // Filtrar futuras y ordenar
+        const now = new Date();
+        const proximas = funciones
+            .filter(f => new Date(f.fecha) >= now)
+            .sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+        
+        if (proximas.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state fade-in">
+                    <div class="empty-state__icon">🌙</div>
+                    <h3 class="empty-state__title">No hay funciones publicadas</h3>
+                    <p class="empty-state__text">
+                        El telón está cerrado por ahora. Volvé pronto para ver nuevas fechas.
+                    </p>
+                    <a href="/funciones-hoy.html" class="btn-primary">
+                        <i class="fas fa-calendar-day"></i> Ver funciones de hoy
+                    </a>
                 </div>
             `;
+            badge.textContent = '0 funciones';
             return;
         }
-
-        const ordenadas = funciones
-            .slice()
-            .sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
-
-        grid.innerHTML = '';
-        ordenadas.forEach(f => grid.appendChild(createCard(f)));
+        
+        badge.textContent = `${proximas.length} ${proximas.length === 1 ? 'función' : 'funciones'}`;
+        
+        // Renderizar timeline
+        container.innerHTML = proximas.map((f, index) => renderTimelineItem(f, index)).join('');
+        
     } catch (error) {
-        console.error('Error cargando próximas funciones:', error);
-        grid.innerHTML = `
-            <div class="no-funciones">
-                <i class="fas fa-exclamation-triangle"></i>
-                <h3>⚠️ No pudimos cargar la cartelera</h3>
-                <p>Por favor, intenta recargar la página</p>
+        console.error('Error:', error);
+        container.innerHTML = `
+            <div class="empty-state fade-in">
+                <div class="empty-state__icon">⚠️</div>
+                <h3 class="empty-state__title">Error al cargar la cartelera</h3>
+                <p class="empty-state__text">Por favor, intentá recargar la página</p>
+                <button class="btn-primary" onclick="location.reload()">
+                    <i class="fas fa-rotate"></i> Recargar
+                </button>
             </div>
         `;
+        badge.textContent = 'Error';
     }
 }
 
-function createCard(funcion) {
-    const card = document.createElement('div');
-    card.className = 'funcion-card';
-
-    const fecha = new Date(funcion.fecha);
-    const fechaStr = fecha.toLocaleDateString('es-UY', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
-    const horaStr = fecha.toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' });
-
-    const precio = Number(funcion.precio_base);
-    const showPrecio = Number.isFinite(precio) && precio > 0;
-
-    card.innerHTML = `
-        <div class="funcion-header">
-            <h3 class="funcion-title">${escapeHtml(funcion.obra_nombre || 'Obra sin título')}</h3>
-            <div class="funcion-date">
-                <i class="fas fa-calendar-alt"></i>
-                <span>${escapeHtml(fechaStr)}</span>
-            </div>
-            <div class="funcion-date">
-                <i class="fas fa-clock"></i>
-                <span>${escapeHtml(horaStr)}</span>
-            </div>
-        </div>
-        <div class="funcion-body">
-            <div class="funcion-info">
-                <div class="info-item">
-                    <i class="fas fa-masks-theater"></i>
-                    <span>${escapeHtml(funcion.grupo_nombre || 'Grupo a confirmar')}</span>
+function renderTimelineItem(f, index) {
+    const fecha = new Date(f.fecha);
+    const dia = fecha.getDate();
+    const mes = fecha.toLocaleDateString('es-UY', { month: 'short' }).toUpperCase();
+    const hora = f.hora || '20:00';
+    
+    const grupo = f.grupo_nombre || 'Grupo a confirmar';
+    const sala = f.sala || 'Sala a confirmar';
+    const obra = f.obra_nombre || 'Obra sin título';
+    const descripcion = f.descripcion || '';
+    const precio = f.precio ? `$${Number(f.precio).toFixed(0)}` : '';
+    const esProfesional = Boolean(f.es_profesional);
+    const cupo = Number(f.entradas_disponibles || 0);
+    
+    const ctaText = esProfesional ? 'Comprar en Boletería' : 'Reservar Entrada';
+    const ctaIcon = esProfesional ? 'fa-ticket' : 'fa-calendar-check';
+    
+    return `
+        <div class="funcion-timeline-item fade-in" style="animation-delay: ${index * 0.1}s">
+            <div class="funcion-timeline-header">
+                <h3 class="funcion-timeline-title">${escapeHtml(obra)}</h3>
+                <div class="funcion-timeline-date">
+                    <div class="funcion-date-day">${dia}</div>
+                    <div class="funcion-date-month">${mes}</div>
                 </div>
-                <div class="info-item">
+            </div>
+            
+            <div class="funcion-timeline-meta">
+                <div class="funcion-meta-item">
+                    <i class="fas fa-clock"></i>
+                    <span>${hora} hs</span>
+                </div>
+                <div class="funcion-meta-item">
+                    <i class="fas fa-theater-masks"></i>
+                    <span>${escapeHtml(grupo)}</span>
+                </div>
+                <div class="funcion-meta-item">
                     <i class="fas fa-map-marker-alt"></i>
-                    <span>${escapeHtml(funcion.lugar || 'Lugar a confirmar')}</span>
+                    <span>${escapeHtml(sala)}</span>
                 </div>
+                ${cupo > 0 ? `
+                <div class="funcion-meta-item">
+                    <i class="fas fa-chair"></i>
+                    <span>${cupo} disponibles</span>
+                </div>
+                ` : ''}
             </div>
-            ${showPrecio ? `
-            <div class="funcion-price">
-                <i class="fas fa-ticket-alt"></i> $${escapeHtml(formatPrice(precio))}
-            </div>
+            
+            ${descripcion ? `
+            <p class="funcion-timeline-desc">${escapeHtml(descripcion)}</p>
             ` : ''}
-        </div>
-        <div class="funcion-footer">
-            <a class="btn-reservar" href="/guia.html">
-                <i class="fas fa-info-circle"></i> Cómo comprar entradas
-            </a>
+            
+            <div class="funcion-timeline-footer">
+                ${precio ? `<div class="funcion-precio">${precio}</div>` : '<div></div>'}
+                <button class="btn-reservar" onclick="handleReserva(${JSON.stringify(f.id || f.funcion_id || '')}, ${esProfesional}, ${JSON.stringify(f.fecha || '')})">
+                    <i class="fas ${ctaIcon}"></i>
+                    ${ctaText}
+                </button>
+            </div>
         </div>
     `;
-
-    return card;
 }
 
-function formatPrice(value) {
-    try {
-        return new Intl.NumberFormat('es-UY', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(value);
-    } catch {
-        return String(value);
+async function handleReserva(funcionId, esProfesional, fechaIso) {
+    if (esProfesional) {
+        window.open('/pages/boleteria/index.html', '_blank');
+        return;
     }
+    try {
+        if (!funcionId) throw new Error('Función inválida');
+        const res = await fetch(`${PUBLIC_API_URL}/funciones/${funcionId}/vendedores`);
+        if (!res.ok) throw new Error('No se pudo obtener vendedores');
+        const vendedoresRes = await res.json();
+        const lista = Array.isArray(vendedoresRes) ? vendedoresRes : (vendedoresRes.vendedores || []);
+        const v = lista.find(x => x.phone || x.telefono || x.whatsapp || x.contacto_publico);
+        if (v) {
+            const phone = (v.phone || v.telefono || v.whatsapp || v.contacto_publico || '').replace(/[^0-9]/g, '');
+            const fechaTxt = fechaIso ? fechaTextoCorta(new Date(fechaIso)) : '';
+            const texto = encodeURIComponent(`Hola! Quiero reservar entrada para la función del ${fechaTxt}.`);
+            const wa = `https://wa.me/${phone}?text=${texto}`;
+            window.open(wa, '_blank');
+        } else {
+            alert('No hay vendedores disponibles por ahora. Por favor, intentá más tarde.');
+        }
+    } catch (e) {
+        alert('No pudimos iniciar la reserva por WhatsApp. Intentalo luego.');
+        console.error(e);
+    }
+}
+
+function fFecha(f) {
+    try { return new Date(f.fecha); } catch { return new Date(); }
+}
+function fechaTextoCorta(d) {
+    try { return d.toLocaleDateString('es-UY', { day: '2-digit', month: 'short' }); } catch { return ''; }
 }
 
 function escapeHtml(text) {
-    return String(text ?? '')
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#039;');
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }

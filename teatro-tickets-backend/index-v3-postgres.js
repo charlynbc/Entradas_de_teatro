@@ -9,6 +9,7 @@ import { validateEnvironment, validateOptionalEnvironment } from './utils/envVal
 import { initDatabase } from './bootstrap/database.js';
 import { initSuperUser } from './bootstrap/superUser.js';
 import { initSeed } from './bootstrap/seed.js';
+import pool from './db/postgres.js';
 
 // Routes imports
 import authRoutes from './routes/auth.routes.js';
@@ -111,23 +112,48 @@ async function startServer() {
     app.get('/health', async (req, res) => {
       try {
         const data = await readData();
+        
+        // Verificar conexión a BD
+        let dbConnected = false;
+        let dbVersion = null;
+        try {
+          const dbRes = await pool.query('SELECT version()');
+          dbConnected = true;
+          dbVersion = dbRes.rows[0]?.version?.split(',')[0] || 'PostgreSQL';
+        } catch (err) {
+          logger.warn('BD no conectada:', err.message);
+        }
+
         res.json({
           status: 'ok',
+          timestamp: new Date().toISOString(),
           storage: 'postgresql',
-          database: process.env.DATABASE_URL ? 'connected' : 'not configured',
+          database: {
+            connected: dbConnected,
+            version: dbVersion,
+            name: process.env.PGDATABASE || 'teatro',
+            host: process.env.PGHOST || 'localhost'
+          },
           totals: {
             users: data.users.length,
             funciones: data.funciones.length,
             shows: data.funciones.length, // Alias de compatibilidad
-            tickets: data.tickets.length
-          }
+            tickets: data.tickets.length,
+            grupos: data.grupos?.length || 0,
+            obras: data.obras?.length || 0
+          },
+          uptime: process.uptime(),
+          version: '3.0'
         });
       } catch (error) {
         logger.error('Healthcheck error:', error.message);
         res.status(500).json({ 
           status: 'error', 
           message: error.message,
-          storage: 'postgresql'
+          storage: 'postgresql',
+          database: {
+            connected: false
+          }
         });
       }
     });
@@ -137,7 +163,7 @@ async function startServer() {
     app.use('/api/users', usersRoutes); // Alias para compatibilidad con frontend antiguo
     app.use('/api/funciones', funcionesRoutes);
     app.use('/api/shows', funcionesRoutes); // Alias para compatibilidad con frontend antiguo
-    app.use('/public', publicRoutes);
+    app.use('/api/public', publicRoutes);
     app.use('/api/tickets', ticketsRoutes);
     app.use('/api/reportes', reportesRoutes);
     app.use('/api/auditoria', auditoriaReportesRoutes);

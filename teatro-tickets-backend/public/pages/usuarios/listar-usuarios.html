@@ -7,403 +7,96 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/baco-common.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --negro: #0a0a0a;
-            --bordo: #8B1538;
-            --dorado: #D4AF37;
-            --blanco: #F8F8F8;
-            --gris-oscuro: #1a1a1a;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--negro);
-            color: var(--blanco);
-            min-height: 100vh;
-        }
-
-        .header {
-            background: linear-gradient(135deg, var(--gris-oscuro), var(--negro));
-            padding: 20px;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .btn-back {
-            background: rgba(212, 175, 55, 0.1);
-            border: 1px solid var(--dorado);
-            color: var(--dorado);
-            padding: 10px 15px;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-back:hover {
-            background: var(--dorado);
-            color: var(--negro);
-        }
-
-        .header-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.5rem;
-            color: var(--dorado);
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 30px 20px;
-            animation: fadeInUp 0.6s ease-out;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* FILTROS */
-        .filters-section {
-            background: linear-gradient(135deg, var(--gris-oscuro), #252525);
-            border: 1.5px solid rgba(212, 175, 55, 0.3);
-            border-radius: 20px;
-            padding: 25px;
-            margin-bottom: 30px;
-        }
-
-        .filters-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .filter-group label {
-            display: block;
-            color: var(--dorado);
-            font-weight: 600;
-            margin-bottom: 8px;
-            font-size: 0.9rem;
-        }
-
-        .filter-group select,
-        .filter-group input {
-            width: 100%;
-            padding: 12px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1.5px solid rgba(212, 175, 55, 0.3);
-            border-radius: 10px;
-            color: var(--blanco);
-            font-size: 0.95rem;
-            transition: all 0.3s ease;
-        }
-
-        .filter-group select:focus,
-        .filter-group input:focus {
-            outline: none;
-            border-color: var(--dorado);
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
-        }
-
-        .stats-row {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-
-        .stat-box {
-            flex: 1;
-            min-width: 150px;
-            background: rgba(212, 175, 55, 0.1);
-            padding: 15px;
-            border-radius: 12px;
-            border: 1px solid rgba(212, 175, 55, 0.3);
-        }
-
-        .stat-box .number {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--dorado);
-        }
-
-        .stat-box .label {
-            font-size: 0.85rem;
-            color: rgba(248, 248, 248, 0.7);
-            margin-top: 5px;
-        }
-
-        /* USUARIOS GRID */
-        .users-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-        }
-
-        .user-card {
-            background: linear-gradient(135deg, var(--gris-oscuro), #252525);
-            border: 2px solid rgba(212, 175, 55, 0.3);
-            border-radius: 18px;
-            padding: 25px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .user-card:hover {
-            border-color: var(--dorado);
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
-        }
-
-        .user-header {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .user-photo {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            border: 3px solid var(--dorado);
-            object-fit: cover;
-            box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
-            background: var(--gris-oscuro);
-        }
-
-        .user-info {
-            flex: 1;
-        }
-
-        .user-name {
-            font-weight: 700;
-            font-size: 1.1rem;
-            margin-bottom: 5px;
-        }
-
-        .user-role {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .role-super {
-            background: linear-gradient(135deg, var(--dorado), #F4E3B5);
-            color: var(--negro);
-        }
-
-        .role-admin {
-            background: linear-gradient(135deg, var(--bordo), #A31D45);
-            color: white;
-        }
-
-        .role-actor {
-            background: linear-gradient(135deg, #3b82f6, #60a5fa);
-            color: white;
-        }
-
-        .user-details {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid rgba(212, 175, 55, 0.2);
-        }
-
-        .detail-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 8px;
-            font-size: 0.9rem;
-            color: rgba(248, 248, 248, 0.8);
-        }
-
-        .detail-row i {
-            color: var(--dorado);
-            width: 20px;
-        }
-
-        .user-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .btn-action {
-            flex: 1;
-            padding: 8px 12px;
-            border-radius: 10px;
-            border: none;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-
-        .btn-view {
-            background: rgba(212, 175, 55, 0.2);
-            color: var(--dorado);
-            border: 1px solid var(--dorado);
-        }
-
-        .btn-view:hover {
-            background: var(--dorado);
-            color: var(--negro);
-        }
-
-        .btn-suspend {
-            background: rgba(139, 21, 56, 0.2);
-            color: #ff6b6b;
-            border: 1px solid #ff6b6b;
-        }
-
-        .btn-suspend:hover {
-            background: #ff6b6b;
-            color: white;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--dorado);
-            font-size: 1.2rem;
-        }
-
-        .loading i {
-            font-size: 3rem;
-            margin-bottom: 20px;
-            display: block;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 80px 20px;
-        }
-
-        .empty-state i {
-            font-size: 5rem;
-            color: rgba(212, 175, 55, 0.3);
-            margin-bottom: 20px;
-        }
-
-        .empty-state h3 {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.8rem;
-            color: var(--dorado);
-            margin-bottom: 10px;
-        }
-
-        .empty-state p {
-            color: rgba(248, 248, 248, 0.6);
-        }
-
-        @media (max-width: 768px) {
-            .users-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .filters-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .stat-box {
-                min-width: 100%;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="/css/usuarios.css">
 </head>
 <body>
-    <header class="header">
-        <div class="header-left">
-            <a href="admin-dashboard.html" class="btn-back">
+    <div class="page">
+        <div class="topbar">
+            <a href="/pages/admin/admin-dashboard.html" class="btn-back">
                 <i class="fas fa-arrow-left"></i>
-                Volver
+                Volver al panel
             </a>
-            <h1 class="header-title">Gestión de Usuarios</h1>
-        </div>
-    </header>
-
-    <div class="container">
-        <!-- FILTROS Y ESTADÍSTICAS -->
-        <div class="filters-section">
-            <div class="filters-grid">
-                <div class="filter-group">
-                    <label>Buscar</label>
-                    <input type="text" id="searchInput" placeholder="Nombre o cédula...">
-                </div>
-                <div class="filter-group">
-                    <label>Filtrar por Rol</label>
-                    <select id="filterRole">
-                        <option value="">Todos</option>
-                        <option value="SUPER">Super Usuario</option>
-                        <option value="ADMIN">Director</option>
-                        <option value="ACTOR">Actor/Actriz</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label>Ordenar por</label>
-                    <select id="sortBy">
-                        <option value="nombre">Nombre</option>
-                        <option value="role">Rol</option>
-                        <option value="fecha">Fecha de registro</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="stats-row">
-                <div class="stat-box">
-                    <div class="number" id="totalUsers">0</div>
-                    <div class="label">Total Usuarios</div>
-                </div>
-                <div class="stat-box">
-                    <div class="number" id="totalDirectores">0</div>
-                    <div class="label">Directores</div>
-                </div>
-                <div class="stat-box">
-                    <div class="number" id="totalActores">0</div>
-                    <div class="label">Actores</div>
-                </div>
-            </div>
         </div>
 
-        <!-- GRID DE USUARIOS -->
-        <div id="usersContainer">
-            <div class="loading">
-                <i class="fas fa-spinner fa-spin"></i>
-                <div>Cargando usuarios...</div>
+        <section class="hero">
+            <h1 class="hero__title">Usuarios de BACÓ</h1>
+            <p class="hero__subtitle">Orquesta a tu elenco con filtros rápidos, acciones directas y una visual teatral.</p>
+            <div class="hero__actions">
+                <div class="btn-toggle-group">
+                    <button class="btn-toggle active" data-view="grid" onclick="toggleView('grid')">
+                        <span>⊞</span> Tarjetas
+                    </button>
+                    <button class="btn-toggle" data-view="list" onclick="toggleView('list')">
+                        <span>☰</span> Lista
+                    </button>
+                </div>
+                <button class="btn-secondary btn-export" onclick="exportToCSV()">
+                    <span>⬇</span> Exportar CSV
+                </button>
+                <button class="btn-ghost" id="refreshUsers" type="button"><i class="fas fa-rotate"></i> Recargar lista</button>
+                <a class="btn-primary" href="crear-director.html" id="btnCrearDirector" style="display: none;"><i class="fas fa-user-tie"></i> Alta Director</a>
+                <a class="btn-secondary" href="crear-actor.html"><i class="fas fa-theater-masks"></i> Alta Actor/Actriz</a>
             </div>
+        </section>
+
+        <div class="layout">
+            <aside>
+                <div class="panel">
+                    <h3 class="panel__title"><i class="fas fa-filter"></i> Filtros rápidos</h3>
+                    <div class="filter-grid">
+                        <div class="field">
+                            <label class="label">Buscar</label>
+                            <input class="input" type="text" id="searchInput" placeholder="Nombre o cédula...">
+                        </div>
+                        <div class="field">
+                            <label class="label">Rol</label>
+                            <select class="select" id="filterRole">
+                                <option value="">Todos</option>
+                                <option value="SUPER">Super Usuario</option>
+                                <option value="ADMIN">Director</option>
+                                <option value="ACTOR">Actor/Actriz</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label class="label">Orden</label>
+                            <select class="select" id="sortBy">
+                                <option value="nombre">Nombre</option>
+                                <option value="role">Rol</option>
+                                <option value="fecha">Fecha de registro</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <section class="stack">
+                <div class="panel">
+                    <div class="stats-row">
+                        <div class="stat-pill">
+                            <div class="stat-pill__label">Total Usuarios</div>
+                            <div class="stat-pill__value" id="totalUsers">0</div>
+                        </div>
+                        <div class="stat-pill">
+                            <div class="stat-pill__label">Directores</div>
+                            <div class="stat-pill__value" id="totalDirectores">0</div>
+                        </div>
+                        <div class="stat-pill">
+                            <div class="stat-pill__label">Actores</div>
+                            <div class="stat-pill__value" id="totalActores">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3 class="panel__title"><i class="fas fa-users"></i> Lista de usuarios</h3>
+                    <div id="usersContainer">
+                        <div class="loading">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <div>Cargando usuarios...</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </div>
     </div>
 
@@ -428,6 +121,69 @@
             })();
 
         let allUsers = [];
+        let currentView = localStorage.getItem('usuarios-vista') || 'grid';
+        
+        // 👑 Mostrar botón Crear Director solo para SUPER
+        if (user.role === 'SUPER') {
+            document.getElementById('btnCrearDirector').style.display = 'inline-flex';
+        }
+
+        // Toggle de vista
+        function toggleView(view) {
+            currentView = view;
+            localStorage.setItem('usuarios-vista', view);
+            
+            const container = document.getElementById('usersContainer');
+            const grid = container.querySelector('.users-grid');
+            const toggles = document.querySelectorAll('.btn-toggle');
+            
+            toggles.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.view === view);
+            });
+            
+            if (grid) {
+                if (view === 'list') {
+                    grid.classList.add('list-view');
+                } else {
+                    grid.classList.remove('list-view');
+                }
+            }
+        }
+
+        // Exportar a CSV
+        function exportToCSV() {
+            if (allUsers.length === 0) {
+                Baco.UI.showError('No hay usuarios para exportar');
+                return;
+            }
+            
+            const headers = ['Cédula', 'Nombre', 'Rol', 'Email', 'Teléfono', 'Fecha Nacimiento', 'Estado', 'Fecha Alta'];
+            const rows = allUsers.map(u => [
+                u.cedula || '',
+                u.nombre || u.name || '',
+                u.role || '',
+                u.email || '',
+                u.phone || '',
+                u.fecha_nacimiento || '',
+                u.suspendido ? 'SUSPENDIDO' : 'ACTIVO',
+                u.created_at ? new Date(u.created_at).toLocaleDateString() : ''
+            ]);
+            
+            const csvContent = [
+                headers.join(','),
+                ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+            ].join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `usuarios-baco-${new Date().toISOString().slice(0,10)}.csv`;
+            link.click();
+            URL.revokeObjectURL(url);
+            
+            Baco.UI.showSuccess(`${allUsers.length} usuarios exportados`);
+        }
 
         // Cargar usuarios
         async function loadUsers() {
@@ -437,6 +193,8 @@
                 allUsers = await Baco.API.get('/users');
                 updateStats();
                 renderUsers(allUsers);
+                // Restaurar vista
+                setTimeout(() => toggleView(currentView), 100);
             } catch (error) {
                 showError('Error al cargar usuarios');
             } finally {
@@ -457,10 +215,18 @@
 
             if (users.length === 0) {
                 container.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-users"></i>
-                        <h3>No hay usuarios</h3>
-                        <p>No se encontraron usuarios con los filtros seleccionados</p>
+                    <div style="text-align: center; padding: 80px 20px;">
+                        <div style="font-size: 4rem; opacity: 0.3; margin-bottom: 20px;">🎭</div>
+                        <h3 style="color: var(--texto-suave); margin-bottom: 12px; font-weight: 600;">No se encontraron usuarios</h3>
+                        <p style="color: var(--texto-suave); opacity: 0.7; margin-bottom: 24px;">Intenta ajustar los filtros de búsqueda o crea nuevos usuarios</p>
+                        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                            <button class="btn-secondary" onclick="document.getElementById('searchInput').value=''; document.getElementById('roleFilter').value=''; applyFilters();">
+                                Limpiar filtros
+                            </button>
+                            <a href="crear-actor.html" class="btn-primary">
+                                Crear primer actor
+                            </a>
+                        </div>
                     </div>
                 `;
                 return;
@@ -468,29 +234,57 @@
 
             const usersGrid = document.createElement('div');
             usersGrid.className = 'users-grid';
+            if (currentView === 'list') {
+                usersGrid.classList.add('list-view');
+            }
 
             users.forEach(usuario => {
                 const card = document.createElement('div');
                 card.className = 'user-card';
                 
-                const roleClass = usuario.role === 'SUPER' ? 'role-super' : 
-                                 usuario.role === 'ADMIN' ? 'role-admin' : 'role-actor';
+                const roleClass = usuario.role === 'SUPER' ? 'super' : 
+                                 usuario.role === 'ADMIN' ? 'admin' : 'actor';
                 
                 const roleText = usuario.role === 'SUPER' ? 'Super Usuario' : 
                                 usuario.role === 'ADMIN' ? 'Director' : 'Actor/Actriz';
 
+                // Calcular estado "nuevo"
+                const isNew = usuario.created_at && (Date.now() - new Date(usuario.created_at).getTime() < 7 * 24 * 60 * 60 * 1000);
+                
+                // Calcular actividad reciente
+                const lastActivity = usuario.updated_at ? new Date(usuario.updated_at) : null;
+                const daysSinceActivity = lastActivity ? Math.floor((Date.now() - lastActivity.getTime()) / (24 * 60 * 60 * 1000)) : 999;
+                const activityStatus = daysSinceActivity < 7 ? 'active' : daysSinceActivity < 30 ? 'recent' : 'inactive';
+                
+                // Contar funciones activas (si existen)
+                const funcionesActivas = (usuario.funciones || []).filter(f => new Date(f.fecha_hora) > Date.now()).length;
+
                 // Usar componente de imagen circular
-                const photoUrl = usuario.photo_url || Baco.Image.getPlaceholder(usuario.nombre, 70);
+                const photoUrl = usuario.photo_url || Baco.Image.getPlaceholder(usuario.nombre || usuario.name, 70);
 
                 card.innerHTML = `
+                    <div class="quick-actions">
+                        <button class="quick-btn" onclick="viewUser('${usuario.cedula}')" title="Ver perfil">
+                            👁
+                        </button>
+                        <button class="quick-btn" onclick="editUser('${usuario.cedula}')" title="Editar">
+                            ✎
+                        </button>
+                    </div>
+                    
                     <div class="user-header">
                         <img src="${photoUrl}" 
-                             alt="${usuario.nombre}" 
+                             alt="${usuario.nombre || usuario.name}" 
                              class="user-photo photo-circular"
-                             onerror="this.src='${Baco.Image.getPlaceholder(usuario.nombre, 70)}'">
+                             onerror="this.src='${Baco.Image.getPlaceholder(usuario.nombre || usuario.name, 70)}'">
                         <div class="user-info">
-                            <div class="user-name">${usuario.nombre}</div>
-                            <span class="user-role ${roleClass}">${roleText}</span>
+                            <div class="user-name">${usuario.nombre || usuario.name}</div>
+                            <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                                <span class="status-dot ${activityStatus}"></span>
+                                <span class="badge ${roleClass}">${roleText}</span>
+                                ${isNew ? '<span class="badge nuevo">✨ Nuevo</span>' : ''}
+                                ${funcionesActivas > 0 ? `<span class="funciones-badge">🎭 ${funcionesActivas}</span>` : ''}
+                            </div>
                         </div>
                     </div>
                     <div class="user-details">
@@ -528,6 +322,10 @@
             container.appendChild(usersGrid);
         }
 
+        function editUser(cedula) {
+            window.location.href = `ver-usuario.html?cedula=${cedula}#editar`;
+        }
+
         function showError(message) {
             const container = document.getElementById('usersContainer');
             container.innerHTML = `
@@ -560,29 +358,36 @@
 
         // Filtros
         document.getElementById('searchInput').addEventListener('input', filterUsers);
-        document.getElementById('filterRole').addEventListener('change', filterUsers);
+        document.getElementById('roleFilter').addEventListener('change', filterUsers);
         document.getElementById('sortBy').addEventListener('change', filterUsers);
+        document.getElementById('refreshUsers').addEventListener('click', loadUsers);
 
         function filterUsers() {
             const search = document.getElementById('searchInput').value.toLowerCase();
-            const role = document.getElementById('filterRole').value;
+            const role = document.getElementById('roleFilter').value;
             const sort = document.getElementById('sortBy').value;
 
             let filtered = allUsers.filter(u => {
-                const matchSearch = u.nombre.toLowerCase().includes(search) || 
-                                   u.cedula.includes(search);
+                const matchSearch = (u.nombre || u.name || '').toLowerCase().includes(search) || 
+                                   (u.cedula || '').includes(search);
                 const matchRole = !role || u.role === role;
                 return matchSearch && matchRole;
             });
 
             // Ordenar
             if (sort === 'nombre') {
-                filtered.sort((a, b) => a.nombre.localeCompare(b.nombre));
+                filtered.sort((a, b) => (a.nombre || a.name || '').localeCompare(b.nombre || b.name || ''));
             } else if (sort === 'role') {
-                filtered.sort((a, b) => a.role.localeCompare(b.role));
+                filtered.sort((a, b) => (a.role || '').localeCompare(b.role || ''));
+            } else if (sort === 'fecha') {
+                filtered.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
             }
 
             renderUsers(filtered);
+        }
+
+        function applyFilters() {
+            filterUsers();
         }
 
         // Cargar al inicio

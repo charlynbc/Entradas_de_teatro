@@ -4,67 +4,55 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#12090D">
-    <title>Próximas Funciones - Baco Teatro</title>
+    <title>Próximas Funciones | BACÓ Teatro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/baco-landing.css">
     <link rel="stylesheet" href="/css/nav-auth.css">
     <link rel="stylesheet" href="/css/baco-footer.css">
-    <link rel="stylesheet" href="/shared/styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/css/funciones-publicas.css">
 </head>
-<body class="bg-texture">
-    <!-- Navigation (loaded from shared component) -->
-    <div id="header-container"></div>
-
-    <!-- Hero -->
-    <section style="padding: 80px 0 50px;">
-        <div class="container">
-            <h1 style="margin:0; color:#12090D; font-size:36px; font-weight:700;">Próximas Funciones</h1>
-        </div>
-    </section>
-
-    <!-- Próximas Funciones -->
-    <section id="proximas" class="proximas-funciones" style="padding: 0 0 80px;">
-        <div class="container">
-            <div id="proximas-grid" class="funciones-grid">
-                <!-- Se cargarán dinámicamente -->
-                <div class="no-funciones" style="background:#fff9f2; border:1px solid rgba(244,140,6,0.2); border-radius:8px; padding:40px 20px;">
-                    <i class="fas fa-theater-masks"></i>
-                    <h3>🎭 Cargando funciones...</h3>
-                    <p>Un momento mientras preparamos el escenario</p>
-                </div>
+<body>
+    <!-- 🎭 HERO Elegante y anticipatorio -->
+    <section class="funciones-hero">
+        <div class="funciones-hero__inner">
+            <div class="funciones-hero__icon">🎭</div>
+            <h1 class="funciones-hero__title">Próximas Funciones</h1>
+            <p class="funciones-hero__subtitle">
+                Descubrí el teatro que viene. Elegí tu fecha, reservá con tiempo y viví BACÓ.
+            </p>
+            <div class="funciones-hero__badge">
+                <i class="fas fa-calendar-alt"></i>
+                <span id="totalProximas">Cargando cartelera...</span>
+            </div>
+            <div class="hero-actions">
+                <a href="/funciones-hoy.html" class="hero-button">
+                    <span class="button-icon"><i class="fas fa-calendar-day"></i></span>
+                    <span class="button-text"><h3>Funciones de Hoy</h3></span>
+                </a>
+                <a href="/" class="hero-button">
+                    <span class="button-icon"><i class="fas fa-home"></i></span>
+                    <span class="button-text"><h3>Inicio</h3></span>
+                </a>
             </div>
         </div>
     </section>
 
-    <!-- Footer (loaded from shared component) -->
+    <!-- 📅 CARTELERA - Cards elegantes con anticipación -->
+    <section class="proximas-container">
+        <div id="proximasTimeline">
+            <div class="loading-state">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Preparando la cartelera...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
     <div id="footer-container"></div>
-
-    <!-- Modal de Detalle de Función -->
-    <div id="funcionModal" class="modal">
-        <div class="modal-content modal-large">
-            <button class="modal-close" onclick="closeFuncionModal()">
-                <i class="fas fa-times"></i>
-            </button>
-            <div id="funcionModalContent">
-                <!-- Se cargará dinámicamente -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de Reserva -->
-    <div id="reservaModal" class="modal">
-        <div class="modal-content">
-            <button class="modal-close" onclick="closeReservaModal()">
-                <i class="fas fa-times"></i>
-            </button>
-            <div id="reservaModalContent">
-                <!-- Se cargará dinámicamente -->
-            </div>
-        </div>
-    </div>
 
     <script src="/shared/layout-loader.js"></script>
     <script src="/js/nav-auth.js"></script>
-    <script src="/js/baco-funciones-publicas.js"></script>
+    <script src="/js/proximas-funciones.js"></script>
 </body>
 </html>

@@ -1,8 +1,8 @@
-<!-- Navigation for public pages -->
+<!-- Navigation for public pages - Diseño teatral BACO -->
 <nav class="main-nav" id="publicNav">
   <div class="container">
     <div class="nav-brand" onclick="window.location.href='/'">
-      <img src="/images/logo-baco.svg" alt="Baco Teatro" class="logo">
+      <img src="/images/logo-baco.svg" alt="BACO TEATRO" class="logo">
       <span class="brand-text">BACO TEATRO</span>
     </div>
     <div class="nav-menu" id="navMenu">
@@ -12,32 +12,10 @@
       <a href="/sobre-baco.html" class="nav-link">Sobre Baco</a>
       <a href="/guia.html" class="nav-link">Cómo Usar</a>
       <a href="/desarrollador.html" class="nav-link">Desarrollador</a>
-      <button class="btn-login" onclick="window.location.href='/login.html'">
-        <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
-      </button>
+      <div id="authButtons"></div>
     </div>
     <button class="nav-toggle" id="navToggle">
       <i class="fas fa-bars"></i>
     </button>
   </div>
 </nav>
-
-<script>
-  // Auto-highlight active page
-  document.addEventListener('DOMContentLoaded', function() {
-    const currentPath = window.location.pathname;
-    const navLinks = document.querySelectorAll('#publicNav .nav-link');
-    
-    navLinks.forEach(link => {
-      const href = link.getAttribute('href');
-      if (currentPath === href || (href !== '/' && currentPath.includes(href))) {
-        link.classList.add('active');
-      }
-    });
-
-    // Mobile menu toggle
-    document.getElementById('navToggle')?.addEventListener('click', function() {
-      document.getElementById('navMenu')?.classList.toggle('active');
-    });
-  });
-</script>
