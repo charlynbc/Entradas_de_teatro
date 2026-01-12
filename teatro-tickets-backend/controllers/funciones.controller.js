@@ -521,38 +521,66 @@ export async function listarFunciones(req, res) {
         const userRole = req.user.role;
         const userCedula = req.user.cedula;
 
-        let query = `
-            SELECT 
-                f.*,
-                o.id as obra_id,
-                o.nombre as obra_nombre,
-                g.id as grupo_id,
-                g.nombre as grupo_nombre,
-                g.estado as grupo_estado
-            FROM funciones f
-            JOIN obras o ON f.obra_id = o.id
-            JOIN grupos g ON o.grupo_id = g.id
-        `;
+        // Detectar si el schema usa obras (funciones.obra_id) o schema antiguo (funciones.grupo_id)
+        const schemaCheck = await pool.query(`
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'funciones' AND column_name IN ('obra_id', 'grupo_id')
+        `);
+        const columns = schemaCheck.rows.map(r => r.column_name);
+        const usaObras = columns.includes('obra_id');
+        const usaGrupoDirecto = columns.includes('grupo_id');
 
-        const conditions = [];
-        const values = [];
-        let paramCount = 1;
+        let query, conditions = [], values = [], paramCount = 1;
 
-        // Filtro por rol
-        if (userRole === 'ACTOR') {
-            // Actores solo ven funciones de sus grupos (donde son integrantes con cualquier rol)
-            query += ` JOIN grupo_integrantes gi ON g.id = gi.grupo_id `;
-            conditions.push(`gi.usuario_cedula = $${paramCount++}`);
-            values.push(userCedula);
-        } else if (userRole === 'ADMIN') {
-            // Admins solo ven funciones de grupos donde son directores
-            // Opción 1: usar grupos.director_cedula directamente
-            conditions.push(`g.director_cedula = $${paramCount++}`);
-            values.push(userCedula);
-            // Opción 2: o usar grupo_integrantes con rol_en_grupo = 'DIRECTOR'
-            // query += ` JOIN grupo_integrantes gi ON g.id = gi.grupo_id `;
-            // conditions.push(`gi.usuario_cedula = $${paramCount++} AND gi.rol_en_grupo = 'DIRECTOR'`);
-            // values.push(userCedula);
+        if (usaObras) {
+            // Schema v3: funciones -> obras -> grupos
+            query = `
+                SELECT 
+                    f.*,
+                    o.id as obra_id,
+                    o.nombre as obra_nombre,
+                    g.id as grupo_id,
+                    g.nombre as grupo_nombre,
+                    g.estado as grupo_estado
+                FROM funciones f
+                JOIN obras o ON f.obra_id = o.id
+                JOIN grupos g ON o.grupo_id = g.id
+            `;
+
+            // Filtro por rol
+            if (userRole === 'ACTOR') {
+                query += ` JOIN grupo_integrantes gi ON g.id = gi.grupo_id `;
+                conditions.push(`gi.usuario_cedula = $${paramCount++}`);
+                values.push(userCedula);
+            } else if (userRole === 'ADMIN') {
+                conditions.push(`g.director_cedula = $${paramCount++}`);
+                values.push(userCedula);
+            }
+        } else if (usaGrupoDirecto) {
+            // Schema antiguo: funciones -> grupos directamente
+            query = `
+                SELECT 
+                    f.*,
+                    g.id as grupo_id,
+                    g.nombre as grupo_nombre,
+                    g.obra_nombre as obra_nombre,
+                    g.obra_a_realizar as obra_nombre_alt
+                FROM funciones f
+                JOIN grupos g ON f.grupo_id = g.id
+            `;
+
+            // Filtro por rol
+            if (userRole === 'ACTOR') {
+                query += ` JOIN grupo_integrantes gi ON g.id = gi.grupo_id `;
+                conditions.push(`gi.usuario_cedula = $${paramCount++}`);
+                values.push(userCedula);
+            } else if (userRole === 'ADMIN') {
+                conditions.push(`g.director_cedula = $${paramCount++}`);
+                values.push(userCedula);
+            }
+        } else {
+            return res.status(500).json({ error: 'Schema de funciones no reconocido' });
         }
 
         // Filtros adicionales
@@ -577,18 +605,24 @@ export async function listarFunciones(req, res) {
 
         const result = await pool.query(query, values);
 
+        // Normalizar respuesta: asegurar que obra_nombre esté presente
+        const funciones = result.rows.map(f => ({
+            ...f,
+            obra_nombre: f.obra_nombre || f.obra_nombre_alt || 'Sin título'
+        }));
+
         // Compatibilidad: /api/shows espera array y claves legacy
         if (req.baseUrl === '/api/shows') {
             return res.json(
-                result.rows.map(r => ({
+                funciones.map(r => ({
                     ...r,
                     obra: r.obra_nombre ?? r.obra,
-                    base_price: r.precio_base
+                    base_price: r.precio_base || r.precio_entrada
                 }))
             );
         }
 
-        res.json({ total: result.rows.length, funciones: result.rows });
+        res.json({ total: funciones.length, funciones });
 
     } catch (error) {
         console.error('Error al listar funciones:', error);
