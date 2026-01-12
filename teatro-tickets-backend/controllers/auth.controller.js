@@ -13,6 +13,12 @@ export async function login(req, res) {
       return res.status(404).json({ error: 'Usuario no existe' });
     }
     const user = result.rows[0];
+    
+    // Validar que el usuario esté activo
+    if (user.active === false) {
+      return res.status(403).json({ error: 'Usuario desactivado. Contacta al administrador.' });
+    }
+    
     if (!user.password_hash) {
       return res.status(400).json({ error: 'Debe completar registro', requiresSetup: true, cedula: user.cedula });
     }

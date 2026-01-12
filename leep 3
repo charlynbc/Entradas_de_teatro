@@ -1,0 +1,4 @@
+ id | fecha | lugar | capacidad | precio_base | estado | obra_nombre | grupo_nombre 
+----+-------+-------+-----------+-------------+--------+-------------+--------------
+(0 rows)
+

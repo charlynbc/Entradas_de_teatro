@@ -20,18 +20,30 @@ async function loadProximasFunciones() {
     const container = document.getElementById('proximasTimeline');
     const badge = document.getElementById('totalProximas');
     
-    debugLog('[Próximas Funciones] Container: ' + (container ? 'OK' : 'NULL'));
+    if (!container) {
+        console.error('Container proximasTimeline not found!');
+        return;
+    }
+    
+    debugLog('[Próximas Funciones] Container: OK');
     debugLog('[Próximas Funciones] Badge: ' + (badge ? 'OK' : 'NULL'));
     
     try {
-        debugLog('[Próximas Funciones] Haciendo fetch a: ' + `${PUBLIC_API_URL}/funciones`);
-        const response = await fetch(`${PUBLIC_API_URL}/funciones`);
-        debugLog('[Próximas Funciones] Response status: ' + response.status);
+        const url = `${PUBLIC_API_URL}/funciones`;
+        debugLog('[Próximas Funciones] Haciendo fetch a: ' + url);
         
-        if (!response.ok) throw new Error('Error al cargar funciones');
+        const response = await fetch(url);
+        debugLog('[Próximas Funciones] Response status: ' + response.status);
+        debugLog('[Próximas Funciones] Response ok: ' + response.ok);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         
         const data = await response.json();
-        debugLog('[Próximas Funciones] Data recibida: ' + data.length + ' funciones');
+        debugLog('[Próximas Funciones] Data recibida (tipo): ' + typeof data);
+        debugLog('[Próximas Funciones] Data es array: ' + Array.isArray(data));
+        debugLog('[Próximas Funciones] Data length: ' + (Array.isArray(data) ? data.length : 'N/A'));
         
         const funciones = Array.isArray(data) ? data : (data.funciones || []);
         debugLog('[Próximas Funciones] Funciones parseadas: ' + funciones.length);
@@ -52,16 +64,42 @@ async function loadProximasFunciones() {
         debugLog('[Próximas Funciones] Funciones futuras: ' + proximas.length);
         
         if (proximas.length === 0) {
+            // Frases teatrales aleatorias
+            const frases = [
+                '"El teatro es la poesía que se levanta del libro y se hace humana" - García Lorca',
+                '"Todo el mundo es un escenario" - William Shakespeare',
+                '"El teatro es un arte que muere cada noche y nace de nuevo cada día" - Jean-Louis Barrault',
+                '"La vida es puro teatro, y nosotros los actores" - Calderón de la Barca',
+                '"El teatro no puede desaparecer porque es el único arte donde la humanidad se mira a sí misma" - Arthur Miller',
+                '"En el teatro, como en el amor, todo es posible si se cree en ello" - Alejandro Dumas'
+            ];
+            const fraseAleatoria = frases[Math.floor(Math.random() * frases.length)];
+            
             container.innerHTML = `
-                <div class="empty-state fade-in">
-                    <div class="empty-state__icon">🌙</div>
-                    <h3 class="empty-state__title">No hay funciones publicadas</h3>
-                    <p class="empty-state__text">
-                        El telón está cerrado por ahora. Volvé pronto para ver nuevas fechas.
-                    </p>
-                    <a href="/funciones-hoy.html" class="btn-primary">
-                        <i class="fas fa-calendar-day"></i> Ver funciones de hoy
-                    </a>
+                <div class="empty-state fade-in" style="text-align: center;">
+                    <div style="font-size: 120px; margin-bottom: 30px; opacity: 0.3;">🎭</div>
+                    <div style="max-width: 600px; margin: 0 auto;">
+                        <h2 style="font-size: 2.5em; margin-bottom: 20px; color: #d4af37; font-family: 'Georgia', serif; font-weight: normal;">
+                            El Telón Descansa
+                        </h2>
+                        <div style="border-left: 4px solid #d4af37; padding-left: 20px; margin: 30px auto; max-width: 500px; text-align: left;">
+                            <p style="font-style: italic; font-size: 1.1em; line-height: 1.6; color: #ccc;">
+                                ${fraseAleatoria}
+                            </p>
+                        </div>
+                        <p style="margin: 30px 0; font-size: 1.1em; color: #aaa;">
+                            Por el momento no hay funciones programadas.<br>
+                            Volvé pronto para descubrir nuevas experiencias teatrales.
+                        </p>
+                        <div style="margin-top: 40px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                            <a href="/funciones-hoy.html" class="btn-primary">
+                                <i class="fas fa-calendar-day"></i> Ver funciones de hoy
+                            </a>
+                            <a href="/" class="btn-primary" style="background: transparent; border: 2px solid #d4af37;">
+                                <i class="fas fa-home"></i> Volver al inicio
+                            </a>
+                        </div>
+                    </div>
                 </div>
             `;
             badge.textContent = '0 funciones';
@@ -76,13 +114,23 @@ async function loadProximasFunciones() {
     } catch (error) {
         console.error('Error:', error);
         container.innerHTML = `
-            <div class="empty-state fade-in">
-                <div class="empty-state__icon">⚠️</div>
-                <h3 class="empty-state__title">Error al cargar la cartelera</h3>
-                <p class="empty-state__text">Por favor, intentá recargar la página</p>
-                <button class="btn-primary" onclick="location.reload()">
-                    <i class="fas fa-rotate"></i> Recargar
-                </button>
+            <div class="empty-state fade-in" style="text-align: center;">
+                <div style="font-size: 100px; margin-bottom: 20px; opacity: 0.4;">🎪</div>
+                <div style="max-width: 500px; margin: 0 auto;">
+                    <h2 style="font-size: 2em; margin-bottom: 15px; color: #ff6b6b; font-family: 'Georgia', serif;">
+                        ¡Telón Trabado!
+                    </h2>
+                    <p style="margin: 20px 0; font-size: 1.1em; color: #aaa; font-style: italic;">
+                        "Los problemas técnicos son parte del espectáculo..."
+                    </p>
+                    <p style="margin: 25px 0; color: #ccc;">
+                        Hubo un error al cargar la cartelera.<br>
+                        Por favor, intentá recargar la página.
+                    </p>
+                    <button class="btn-primary" onclick="location.reload()" style="margin-top: 20px;">
+                        <i class="fas fa-rotate"></i> Recargar página
+                    </button>
+                </div>
             </div>
         `;
         badge.textContent = 'Error';

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug API</title>
+    <style>
+        body {
+            font-family: monospace;
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #00ff00;
+        }
+        h1 { color: #00ffff; }
+        .section { margin: 20px 0; padding: 20px; background: #2a2a2a; border-radius: 8px; }
+        .status { font-weight: bold; margin: 10px 0; }
+        .ok { color: #00ff00; }
+        .error { color: #ff0000; }
+        pre { background: #000; padding: 15px; border-radius: 4px; overflow-x: auto; }
+        button { 
+            background: #00ffff; 
+            color: #000; 
+            border: none; 
+            padding: 10px 20px; 
+            cursor: pointer; 
+            border-radius: 4px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug API /api/public/funciones</h1>
+    
+    <div class="section">
+        <h2>Test del Endpoint</h2>
+        <button onclick="testAPI()">Ejecutar Test</button>
+        
+        <div id="status" class="status"></div>
+        <pre id="response"></pre>
+    </div>
+    
+    <div class="section">
+        <h2>Crear Datos de Prueba</h2>
+        <button onclick="crearDatosPrueba()">Insertar Función de Prueba</button>
+        
+        <div id="createStatus" class="status"></div>
+        <pre id="createResponse"></pre>
+    </div>
+
+    <script>
+        async function testAPI() {
+            const statusEl = document.getElementById('status');
+            const responseEl = document.getElementById('response');
+            
+            statusEl.textContent = '⏳ Consultando...';
+            statusEl.className = 'status';
+            responseEl.textContent = '';
+            
+            try {
+                const response = await fetch('/api/public/funciones');
+                
+                const statusText = `Status: ${response.status} ${response.statusText}`;
+                const data = await response.json();
+                
+                if (response.ok) {
+                    statusEl.textContent = `✅ ${statusText}`;
+                    statusEl.className = 'status ok';
+                } else {
+                    statusEl.textContent = `❌ ${statusText}`;
+                    statusEl.className = 'status error';
+                }
+                
+                responseEl.textContent = JSON.stringify({
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: {
+                        contentType: response.headers.get('content-type')
+                    },
+                    data: data,
+                    totalFunciones: Array.isArray(data) ? data.length : 'N/A',
+                    funcionesFuturas: Array.isArray(data) ? 
+                        data.filter(f => new Date(f.fecha) >= new Date()).length : 'N/A'
+                }, null, 2);
+                
+            } catch (error) {
+                statusEl.textContent = `❌ Error: ${error.message}`;
+                statusEl.className = 'status error';
+                responseEl.textContent = error.stack;
+            }
+        }
+        
+        async function crearDatosPrueba() {
+            const statusEl = document.getElementById('createStatus');
+            const responseEl = document.getElementById('createResponse');
+            
+            statusEl.textContent = '⏳ Creando función de prueba...';
+            statusEl.className = 'status';
+            responseEl.textContent = '';
+            
+            try {
+                // Necesitamos autenticación para crear datos
+                // Primero intentemos ver si podemos hacer un login
+                statusEl.textContent = 'ℹ️ Para crear datos, necesitas ejecutar el script desde el servidor';
+                statusEl.className = 'status';
+                responseEl.textContent = `
+Ejecuta en la terminal del servidor:
+
+cd /workspaces/Entradas_de_teatro
+node scripts/insertar-funcion-prueba.js
+
+O desde npm:
+
+cd teatro-tickets-backend
+npm run db:crear-datos-completos
+                `.trim();
+                
+            } catch (error) {
+                statusEl.textContent = `❌ Error: ${error.message}`;
+                statusEl.className = 'status error';
+                responseEl.textContent = error.stack;
+            }
+        }
+        
+        // Auto-test al cargar
+        window.addEventListener('DOMContentLoaded', () => {
+            testAPI();
+        });
+    </script>
+</body>
+</html>

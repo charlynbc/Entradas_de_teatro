@@ -37,6 +37,7 @@ import boleteriaRoutes from './routes/boleteria.routes.js';
 import contabilidadRoutes from './routes/contabilidad.routes.js';
 import pagosRoutes from './routes/pagos.routes.js';
 import entradasV2Routes from './routes/entradasV2.routes.js';
+import reservasUnificadasRoutes from './routes/reservasUnificadas.routes.js';
 
 const app = express();
 
@@ -542,6 +543,7 @@ function mountRoutes() {
   app.use('/api/contabilidad', contabilidadRoutes);
   app.use('/api/pagos', pagosRoutes);
   app.use('/api/entradas-v2', entradasV2Routes);
+  app.use('/api/reservas', reservasUnificadasRoutes);
 
   // =========================================================================
   // RUTAS DE PÁGINAS (SPA)

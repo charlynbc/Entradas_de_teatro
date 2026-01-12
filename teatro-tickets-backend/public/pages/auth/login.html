@@ -253,16 +253,29 @@
                 
                 // Redirigir según el rol del usuario
                 const role = data.user.role;
-                let redirectUrl = '/pages/roles/super-dashboard.html'; // Default para SUPER
+                let redirectUrl;
 
-                if (role === 'ADMIN') {
-                    redirectUrl = '/pages/roles/director.html';
-                } else if (role === 'ACTOR') {
-                    redirectUrl = '/pages/roles/actor.html';
-                } else if (role === 'SUPER') {
-                    redirectUrl = '/pages/roles/super-dashboard.html';
+                switch(role) {
+                    case 'SUPER':
+                        redirectUrl = '/pages/roles/super-dashboard.html';
+                        break;
+                    case 'ADMIN':
+                    case 'DIRECTOR':
+                        redirectUrl = '/pages/roles/director.html';
+                        break;
+                    case 'ACTOR':
+                    case 'VENDEDOR':
+                        redirectUrl = '/pages/roles/actor.html';
+                        break;
+                    case 'INVITADO':
+                        redirectUrl = '/';
+                        break;
+                    default:
+                        console.warn('Rol desconocido:', role);
+                        redirectUrl = '/'; // Fallback a inicio
                 }
 
+                console.log(`Login exitoso. Rol: ${role}, Redirigiendo a: ${redirectUrl}`);
                 window.location.href = redirectUrl;
                 
             } catch (error) {

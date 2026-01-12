@@ -6,6 +6,8 @@
   "type": "module",
   "scripts": {
     "db:seed-minimo": "node ../scripts/seed-minimo.js",
+    "db:crear-datos-completos": "node ../scripts/crear-datos-completos.js",
+    "db:migrar-entradas": "node ../scripts/migrar-tickets-a-entradas-v2.js",
     "start": "node index-v3-postgres.js",
     "dev": "nodemon --watch . --ext js,json --exec \"node index-v3-postgres.js\"",
     "reload": "pkill -f \"node index-v3-postgres.js\" || true && NODE_ENV=development node index-v3-postgres.js & echo $! > /tmp/backend.pid",

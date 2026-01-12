@@ -311,6 +311,8 @@ export async function actualizarTicketLegacy(req, res) {
 
 export async function actualizarEstadoTicket(req, res) {
   try {
+    // NOTA: Este endpoint maneja la tabla 'tickets' (sistema legacy)
+    // Para entradas_v2 (nuevas), ver entradasV2.controller.js
     const actorPhone = req.user.phone || req.user.cedula;
     const { ticketId, ticketCode, estado, comprador_nombre, comprador_telefono } = req.body || {};
     const code = String(ticketId || ticketCode || '').trim();

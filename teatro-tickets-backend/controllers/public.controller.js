@@ -244,7 +244,10 @@ export async function reservarEntradaInvitado(req, res) {
 
     if (candidata.rows.length === 0) {
       await client.query('ROLLBACK');
-      return res.status(409).json({ error: 'El vendedor no tiene entradas disponibles para reservar' });
+      return res.status(409).json({ 
+        error: 'El vendedor no tiene entradas disponibles para reservar',
+        mensaje: 'Este vendedor no tiene stock asignado para esta función. Por favor, intenta con otro vendedor o contacta al director del grupo.'
+      });
     }
 
     const entrada = candidata.rows[0];

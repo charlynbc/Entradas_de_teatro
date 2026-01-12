@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Endpoint</title>
+</head>
+<body>
+    <h1>Testing /api/public/funciones</h1>
+    <button onclick="testEndpoint()">Test Endpoint</button>
+    <pre id="result"></pre>
+
+    <script>
+        async function testEndpoint() {
+            const result = document.getElementById('result');
+            result.textContent = 'Loading...';
+            
+            try {
+                console.log('Fetching /api/public/funciones...');
+                const response = await fetch('/api/public/funciones');
+                console.log('Response status:', response.status);
+                
+                const data = await response.json();
+                console.log('Data:', data);
+                
+                result.textContent = JSON.stringify({
+                    status: response.status,
+                    ok: response.ok,
+                    dataLength: Array.isArray(data) ? data.length : 'not array',
+                    data: data
+                }, null, 2);
+            } catch (error) {
+                console.error('Error:', error);
+                result.textContent = 'ERROR: ' + error.message + '\n' + error.stack;
+            }
+        }
+        
+        // Auto-test on load
+        window.addEventListener('DOMContentLoaded', testEndpoint);
+    </script>
+</body>
+</html>

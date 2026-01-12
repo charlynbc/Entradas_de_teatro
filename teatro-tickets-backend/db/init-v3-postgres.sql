@@ -183,6 +183,34 @@ CREATE INDEX IF NOT EXISTS idx_tickets_vendedor ON tickets(vendedor_phone);
 CREATE INDEX IF NOT EXISTS idx_tickets_estado ON tickets(estado);
 CREATE INDEX IF NOT EXISTS idx_tickets_comprador ON tickets(comprador_nombre);
 
+-- 6.0.5) ENTRADAS V2 (Nueva tabla unificada para sistema de entradas)
+CREATE TABLE IF NOT EXISTS entradas_v2 (
+  id SERIAL PRIMARY KEY,
+  code VARCHAR(50) UNIQUE NOT NULL,
+  funcion_id INT NOT NULL REFERENCES funciones(id) ON DELETE CASCADE,
+  estado VARCHAR(20) NOT NULL DEFAULT 'sin_asignar',
+  actor_cedula VARCHAR(20) REFERENCES users(cedula) ON DELETE SET NULL,
+  creador_cedula VARCHAR(20) REFERENCES users(cedula) ON DELETE SET NULL,
+  reservante_nombre VARCHAR(150),
+  reservante_telefono VARCHAR(150),
+  precio NUMERIC(10,2),
+  qr_token TEXT,
+  reservada_at TIMESTAMP,
+  pagada_at TIMESTAMP,
+  utilizada_at TIMESTAMP,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE entradas_v2 DROP CONSTRAINT IF EXISTS entradas_v2_estado_check;
+ALTER TABLE entradas_v2 ADD CONSTRAINT entradas_v2_estado_check
+  CHECK (estado IN ('sin_asignar', 'asignada', 'reservada', 'pronta', 'pagada', 'utilizada', 'cancelada'));
+
+CREATE INDEX IF NOT EXISTS idx_entradas_v2_funcion ON entradas_v2(funcion_id);
+CREATE INDEX IF NOT EXISTS idx_entradas_v2_actor ON entradas_v2(actor_cedula);
+CREATE INDEX IF NOT EXISTS idx_entradas_v2_estado ON entradas_v2(estado);
+CREATE INDEX IF NOT EXISTS idx_entradas_v2_code ON entradas_v2(code);
+
 -- 6.1) AUDITORÍA: Movimientos de tickets
 CREATE TABLE IF NOT EXISTS ticket_movimientos (
   id           SERIAL PRIMARY KEY,

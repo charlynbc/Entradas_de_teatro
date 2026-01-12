@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Simple</title>
+</head>
+<body>
+    <h1>Test Endpoint</h1>
+    <div id="result">Loading...</div>
+    
+    <script>
+        fetch('/api/public/funciones')
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('result').innerHTML = 
+                    '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                console.log('Data received:', data);
+            })
+            .catch(err => {
+                document.getElementById('result').innerHTML = 
+                    '<pre style="color:red">ERROR: ' + err + '</pre>';
+                console.error('Error:', err);
+            });
+    </script>
+</body>
+</html>

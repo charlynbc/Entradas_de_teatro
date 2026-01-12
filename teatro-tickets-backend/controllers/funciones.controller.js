@@ -697,15 +697,13 @@ export async function listarFuncionesPublicas(req, res) {
                     o.nombre as obra_nombre,
                     o.descripcion as obra_descripcion,
                     g.nombre as grupo_nombre,
-                    COUNT(t.code) FILTER (WHERE t.estado = 'DISPONIBLE') as entradas_disponibles
+                    COALESCE(COUNT(t.code) FILTER (WHERE t.estado = 'DISPONIBLE'), 0) as entradas_disponibles
                 FROM funciones f
                 JOIN obras o ON f.obra_id = o.id
                 JOIN grupos g ON o.grupo_id = g.id
                 LEFT JOIN tickets t ON t.funcion_id = f.id
                 WHERE f.fecha > CURRENT_TIMESTAMP
                     AND f.estado = 'PROGRAMADA'
-                    AND o.estado = 'LISTA'
-                    AND g.estado = 'ACTIVO'
                 GROUP BY f.id, o.nombre, o.descripcion, g.nombre
                 ORDER BY f.fecha ASC
             `;
@@ -720,17 +718,16 @@ export async function listarFuncionesPublicas(req, res) {
                     f.precio_base,
                     f.foto_url,
                     f.estado,
-                    g.obra_nombre as obra_nombre,
+                    COALESCE(g.obra_nombre, g.obra_a_realizar, 'Sin título') as obra_nombre,
                     g.descripcion as obra_descripcion,
                     g.nombre as grupo_nombre,
-                    COUNT(t.code) FILTER (WHERE t.estado = 'DISPONIBLE') as entradas_disponibles
+                    COALESCE(COUNT(t.code) FILTER (WHERE t.estado = 'DISPONIBLE'), 0) as entradas_disponibles
                 FROM funciones f
                 JOIN grupos g ON f.grupo_id = g.id
                 LEFT JOIN tickets t ON t.funcion_id = f.id
                 WHERE f.fecha > CURRENT_TIMESTAMP
                     AND f.estado = 'PROGRAMADA'
-                    AND g.estado = 'ACTIVO'
-                GROUP BY f.id, g.obra_nombre, g.descripcion, g.nombre
+                GROUP BY f.id, g.obra_nombre, g.obra_a_realizar, g.descripcion, g.nombre
                 ORDER BY f.fecha ASC
             `;
         } else {

@@ -2,6 +2,20 @@
 
 Sistema integral de gestión y venta de entradas para teatro con autenticación por roles y dashboards personalizados.
 
+## ✅ ACTUALIZACIÓN ENERO 2026 - Sistema Completamente Mejorado
+
+**Todas las mejoras implementadas y funcionando:**
+- ✅ Login con redirección automática según rol
+- ✅ Sistema unificado de reservas (tickets + entradas_v2)
+- ✅ Validación de usuarios activos
+- ✅ Scripts de migración y datos de prueba
+- ✅ API unificada para reservas
+
+📖 **Documentación Nueva:**
+- **[INICIO-RAPIDO.md](INICIO-RAPIDO.md)** ← Empieza aquí 🚀
+- **[MEJORAS-IMPLEMENTADAS.md](MEJORAS-IMPLEMENTADAS.md)** - Detalle completo
+- **[SISTEMAS-ENTRADAS-EXPLICACION.md](SISTEMAS-ENTRADAS-EXPLICACION.md)** - Documentación técnica
+
 ---
 
 ## 🧠 Pitch (2 minutos)
