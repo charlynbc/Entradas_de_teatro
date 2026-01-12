@@ -196,16 +196,31 @@ const allowedOrigins = buildAllowedOrigins();
 
 const corsOptions = {
   origin: (origin, callback) => {
+    // Permitir requests sin origin (Postman, curl, mismo servidor)
     if (!origin) {
       return callback(null, true);
     }
     
+    // En desarrollo, permitir localhost en cualquier puerto
+    if (NODE_ENV === 'development' && origin.includes('localhost')) {
+      return callback(null, true);
+    }
+    
+    // Verificar origins configurados
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
     
+    // En desarrollo, ser más permisivo
+    if (NODE_ENV === 'development') {
+      logger.warn(`⚠️ CORS: Permitiendo origen no configurado en desarrollo: ${origin}`);
+      return callback(null, true);
+    }
+    
+    // En producción, rechazar
     const err = new Error('CORS: Origen no permitido');
     err.status = 403;
+    logger.error(`❌ CORS bloqueado: ${origin}`);
     return callback(err);
   },
   credentials: true,
