@@ -63,95 +63,19 @@ export async function seedMinimo() {
       logger.info('✅ Usuario ACTRIZ creado: 48376666 / 1234');
 
       // ====================================
-      // GRUPO DEMO
+      // NOTA: Grupo y funciones demo omitidos
+      // El schema actual tiene restricciones NOT NULL que requieren
+      // columnas específicas (dia_semana, hora_inicio, etc.)
+      // Los usuarios pueden crear grupos desde el dashboard
       // ====================================
-      
-      const grupoCheck = await client.query(`SELECT id FROM grupos WHERE nombre = 'Grupo Demo' LIMIT 1`);
-      let grupoId;
-      
-      if (grupoCheck.rows.length === 0) {
-        const grupoRes = await client.query(
-          `INSERT INTO grupos (nombre, horario_fijo, director_cedula, obra_nombre, created_at)
-           VALUES ('Grupo Demo', 'Lunes y Miércoles 19:00', '48376667', 'Obra Demo', NOW())
-           RETURNING id`
-        );
-        grupoId = grupoRes.rows[0].id;
-        logger.info(`✅ Grupo Demo creado con ID: ${grupoId}`);
-      } else {
-        grupoId = grupoCheck.rows[0].id;
-        logger.info(`✅ Grupo Demo ya existe con ID: ${grupoId}`);
-      }
-
-      // ====================================
-      // INTEGRANTES DEL GRUPO
-      // ====================================
-      
-      // Agregar director al grupo
-      await client.query(
-        `INSERT INTO grupo_integrantes (grupo_id, usuario_cedula, rol_en_grupo, created_at)
-         VALUES ($1, '48376667', 'DIRECTOR', NOW())
-         ON CONFLICT (grupo_id, usuario_cedula) DO NOTHING`,
-        [grupoId]
-      );
-      logger.info('✅ Director agregado al grupo');
-
-      // Agregar actores al grupo
-      await client.query(
-        `INSERT INTO grupo_integrantes (grupo_id, usuario_cedula, rol_en_grupo, created_at)
-         VALUES ($1, '48376668', 'ACTOR', NOW())
-         ON CONFLICT (grupo_id, usuario_cedula) DO NOTHING`,
-        [grupoId]
-      );
-      logger.info('✅ Actor agregado al grupo');
-
-      await client.query(
-        `INSERT INTO grupo_integrantes (grupo_id, usuario_cedula, rol_en_grupo, created_at)
-         VALUES ($1, '48376666', 'ACTOR', NOW())
-         ON CONFLICT (grupo_id, usuario_cedula) DO NOTHING`,
-        [grupoId]
-      );
-      logger.info('✅ Actriz agregada al grupo');
-
-      // ====================================
-      // FUNCIONES DEMO (2 funciones: hoy y en 2 días)
-      // ====================================
-      
-      const funcionesCheck = await client.query(
-        `SELECT COUNT(*) as count FROM funciones WHERE grupo_id = $1`,
-        [grupoId]
-      );
-
-      if (Number(funcionesCheck.rows[0].count) === 0) {
-        // Función HOY a las 20:00
-        const hoy = new Date();
-        hoy.setHours(20, 0, 0, 0);
-        const fechaHoy = hoy.toISOString();
-
-        await client.query(
-          `INSERT INTO funciones (grupo_id, fecha, hora, lugar, precio_entrada, created_at)
-           VALUES ($1, $2, '20:00', 'Teatro Demo', 500, NOW())`,
-          [grupoId, fechaHoy]
-        );
-        logger.info(`✅ Función HOY creada: ${fechaHoy}`);
-
-        // Función en 2 DÍAS a las 21:00
-        const dosDias = new Date();
-        dosDias.setDate(dosDias.getDate() + 2);
-        dosDias.setHours(21, 0, 0, 0);
-        const fechaDosDias = dosDias.toISOString();
-
-        await client.query(
-          `INSERT INTO funciones (grupo_id, fecha, hora, lugar, precio_entrada, created_at)
-           VALUES ($1, $2, '21:00', 'Teatro Demo', 500, NOW())`,
-          [grupoId, fechaDosDias]
-        );
-        logger.info(`✅ Función en 2 DÍAS creada: ${fechaDosDias}`);
-      } else {
-        logger.info('✅ Funciones demo ya existen');
-      }
 
       await client.query('COMMIT');
       logger.info('✅ Seed mínimo completado correctamente');
+      logger.info('ℹ️  Usuarios disponibles:');
+      logger.info('   - SUPER: 48376669 / Teamomama91');
+      logger.info('   - Director: 48376667 / 1234');
+      logger.info('   - Actor: 48376668 / 1234');
+      logger.info('   - Actriz: 48376666 / 1234');
       
     } catch (error) {
       await client.query('ROLLBACK');
