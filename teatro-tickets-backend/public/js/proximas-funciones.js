@@ -3,16 +3,9 @@
 
 const PUBLIC_API_URL = '/api/public';
 
-// Debug visual
-const debugLogs = [];
+// Debug en consola solamente (sin UI)
 function debugLog(msg) {
-    console.log(msg);
-    debugLogs.push(`${new Date().toISOString().substr(14, 9)} - ${msg}`);
-    const debugEl = document.getElementById('debug-info');
-    if (debugEl) {
-        debugEl.innerHTML = '<pre style="background:#000;color:#0f0;padding:10px;font-size:10px;max-height:200px;overflow:auto;">' + 
-            debugLogs.join('\n') + '</pre>';
-    }
+    console.log(`[Próximas Funciones] ${msg}`);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
