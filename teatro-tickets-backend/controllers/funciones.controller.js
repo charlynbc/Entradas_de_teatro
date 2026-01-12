@@ -671,31 +671,73 @@ export async function listarFuncionesConcluidas(req, res) {
  */
 export async function listarFuncionesPublicas(req, res) {
     try {
-        const result = await pool.query(
-            `SELECT 
-                f.id,
-                f.fecha,
-                f.lugar,
-                f.capacidad,
-                f.precio_base,
-                f.foto_url,
-                f.estado,
-                o.nombre as obra_nombre,
-                o.descripcion as obra_descripcion,
-                g.nombre as grupo_nombre,
-                COUNT(t.code) FILTER (WHERE t.estado = 'DISPONIBLE') as entradas_disponibles
-            FROM funciones f
-            JOIN obras o ON f.obra_id = o.id
-            JOIN grupos g ON o.grupo_id = g.id
-            LEFT JOIN tickets t ON t.funcion_id = f.id
-                        WHERE f.fecha > CURRENT_TIMESTAMP
-                            AND f.estado = 'PROGRAMADA'
-                            AND o.estado = 'LISTA'
-                            AND g.estado = 'ACTIVO'
-            GROUP BY f.id, o.nombre, o.descripcion, g.nombre
-            ORDER BY f.fecha ASC`
-        );
+        // Detectar schema igual que en listarFunciones
+        const schemaCheck = await pool.query(`
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'funciones' AND column_name IN ('obra_id', 'grupo_id')
+        `);
+        const columns = schemaCheck.rows.map(r => r.column_name);
+        const usaObras = columns.includes('obra_id');
+        const usaGrupoDirecto = columns.includes('grupo_id');
 
+        let query;
+
+        if (usaObras) {
+            // Schema v3: funciones -> obras -> grupos
+            query = `
+                SELECT 
+                    f.id,
+                    f.fecha,
+                    f.lugar,
+                    f.capacidad,
+                    f.precio_base,
+                    f.foto_url,
+                    f.estado,
+                    o.nombre as obra_nombre,
+                    o.descripcion as obra_descripcion,
+                    g.nombre as grupo_nombre,
+                    COUNT(t.code) FILTER (WHERE t.estado = 'DISPONIBLE') as entradas_disponibles
+                FROM funciones f
+                JOIN obras o ON f.obra_id = o.id
+                JOIN grupos g ON o.grupo_id = g.id
+                LEFT JOIN tickets t ON t.funcion_id = f.id
+                WHERE f.fecha > CURRENT_TIMESTAMP
+                    AND f.estado = 'PROGRAMADA'
+                    AND o.estado = 'LISTA'
+                    AND g.estado = 'ACTIVO'
+                GROUP BY f.id, o.nombre, o.descripcion, g.nombre
+                ORDER BY f.fecha ASC
+            `;
+        } else if (usaGrupoDirecto) {
+            // Schema antiguo: funciones -> grupos directamente
+            query = `
+                SELECT 
+                    f.id,
+                    f.fecha,
+                    f.lugar,
+                    f.capacidad,
+                    f.precio_base,
+                    f.foto_url,
+                    f.estado,
+                    g.obra_nombre as obra_nombre,
+                    g.descripcion as obra_descripcion,
+                    g.nombre as grupo_nombre,
+                    COUNT(t.code) FILTER (WHERE t.estado = 'DISPONIBLE') as entradas_disponibles
+                FROM funciones f
+                JOIN grupos g ON f.grupo_id = g.id
+                LEFT JOIN tickets t ON t.funcion_id = f.id
+                WHERE f.fecha > CURRENT_TIMESTAMP
+                    AND f.estado = 'PROGRAMADA'
+                    AND g.estado = 'ACTIVO'
+                GROUP BY f.id, g.obra_nombre, g.descripcion, g.nombre
+                ORDER BY f.fecha ASC
+            `;
+        } else {
+            return res.status(500).json({ error: 'Schema de funciones no reconocido' });
+        }
+
+        const result = await pool.query(query);
         const funciones = result.rows;
 
         // Compatibilidad: /api/shows (público) espera array
