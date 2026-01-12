@@ -152,9 +152,11 @@ async function cargarFunciones() {
         const response = await fetchAPI('/api/funciones');
         if (response.ok) {
             const data = await response.json();
+            // Soportar ambas formas: array directo o {funciones: []}
+            const todasFunciones = Array.isArray(data) ? data : (data.funciones || []);
             // Solo funciones de mis grupos
             const misGruposIds = estado.grupos.map(g => g.id);
-            estado.funciones = data.filter(f => misGruposIds.includes(f.grupo_id));
+            estado.funciones = todasFunciones.filter(f => misGruposIds.includes(f.grupo_id));
             renderizarFunciones();
         }
     } catch (error) {
@@ -323,14 +325,15 @@ function renderizarFunciones() {
 
     container.innerHTML = estado.funciones.map(funcion => {
         const grupo = estado.grupos.find(g => g.id === funcion.grupo_id);
+        const titulo = funcion.obra_nombre || funcion.nombre || 'Función';
         return `
             <div class="elemento-card">
                 <div class="elemento-info">
-                    <div class="elemento-titulo">${funcion.nombre}</div>
+                    <div class="elemento-titulo">${titulo}</div>
                     <div class="elemento-subtitulo">
                         <i class="fas fa-users"></i> ${grupo?.nombre || 'Grupo'}
                         <i class="fas fa-calendar"></i> ${formatearFecha(funcion.fecha)}
-                        <i class="fas fa-clock"></i> ${formatearHora(funcion.hora)}
+                        <i class="fas fa-clock"></i> ${formatearHora(funcion.fecha)}
                     </div>
                     ${funcion.lugar ? `<div><i class="fas fa-map-marker-alt"></i> ${funcion.lugar}</div>` : ''}
                     <div class="elemento-stats">

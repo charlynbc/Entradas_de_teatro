@@ -126,7 +126,7 @@ export const listarGrupos = async (req, res) => {
         // ACTOR solo ve grupos donde está asignado
         if (userRole === 'ACTOR') {
             query += ` AND id IN (
-                SELECT grupo_id FROM grupo_integrantes WHERE cedula = $${paramIndex}
+                SELECT grupo_id FROM grupo_integrantes WHERE usuario_cedula = $${paramIndex}
             )`;
             params.push(userCedula);
             paramIndex++;
@@ -180,7 +180,7 @@ export const obtenerGrupo = async (req, res) => {
         // Verificar permisos para ACTOR
         if (userRole === 'ACTOR') {
             const checkActor = await pool.query(
-                'SELECT 1 FROM grupo_actores WHERE grupo_id = $1 AND actor_cedula = $2',
+                'SELECT 1 FROM grupo_integrantes WHERE grupo_id = $1 AND usuario_cedula = $2',
                 [id, userCedula]
             );
 
@@ -191,48 +191,33 @@ export const obtenerGrupo = async (req, res) => {
             }
         }
 
-        // Obtener directores
-        const directoresResult = await pool.query(
+        // Obtener integrantes (tanto directores como actores)
+        const integrantesResult = await pool.query(
             `SELECT
-                gd.grupo_id,
-                gd.director_cedula,
-                gd.activo,
-                gd.joined_at as fecha_asignacion,
-                gd.es_principal,
+                gi.grupo_id,
+                gi.usuario_cedula,
+                gi.rol_en_grupo,
+                gi.created_at as fecha_asignacion,
                 u.name as nombre,
                 u.apellido,
                 u.email,
                 u.foto_url
-            FROM grupo_directores gd
-            JOIN users u ON gd.director_cedula = u.cedula
-            WHERE gd.grupo_id = $1
-            ORDER BY gd.es_principal DESC, gd.joined_at`,
+            FROM grupo_integrantes gi
+            JOIN users u ON gi.usuario_cedula = u.cedula
+            WHERE gi.grupo_id = $1
+            ORDER BY gi.created_at`,
             [id]
         );
 
-        // Obtener actores
-        const actoresResult = await pool.query(
-            `SELECT
-                ga.grupo_id,
-                ga.actor_cedula,
-                ga.activo,
-                ga.joined_at as fecha_asignacion,
-                ga.personaje,
-                u.name as nombre,
-                u.apellido,
-                u.email,
-                u.foto_url
-            FROM grupo_actores ga
-            JOIN users u ON ga.actor_cedula = u.cedula
-            WHERE ga.grupo_id = $1
-            ORDER BY ga.joined_at`,
-            [id]
-        );
+        // Separar por rol
+        const directores = integrantesResult.rows.filter(i => i.rol_en_grupo === 'DIRECTOR');
+        const actores = integrantesResult.rows.filter(i => i.rol_en_grupo === 'ACTOR' || !i.rol_en_grupo);
 
         res.json({
             ...grupo,
-            directores: directoresResult.rows,
-            actores: actoresResult.rows
+            directores,
+            actores,
+            integrantes: integrantesResult.rows
         });
 
     } catch (error) {

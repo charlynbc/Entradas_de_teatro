@@ -47,7 +47,7 @@ export async function crearFuncion(req, res) {
     const client = await pool.connect();
     
     try {
-        const { obra_id, obra: obraNombreLegacy, fecha, lugar, capacidad, precio_base, base_price, foto_url } = req.body;
+        const { obra_id, obra: obraNombreLegacy, fecha, hora_inicio, lugar, capacidad, precio_base, base_price, foto_url } = req.body;
         const userRole = req.user.role;
         const userCedula = req.user.cedula;
 
@@ -73,8 +73,22 @@ export async function crearFuncion(req, res) {
 
         await client.query('BEGIN');
 
+        // Construir timestamp completo con fecha y hora
+        let fechaTimestamp = fecha;
+        if (hora_inicio) {
+            // Si viene hora_inicio, combinar fecha + hora
+            const fechaSolo = fecha.includes('T') ? fecha.split('T')[0] : fecha;
+            fechaTimestamp = `${fechaSolo}T${hora_inicio}:00`;
+        } else if (!fecha.includes('T')) {
+            // Si no viene hora y fecha es solo YYYY-MM-DD, agregar hora actual
+            const ahora = new Date();
+            const hora = ahora.getHours().toString().padStart(2, '0');
+            const minutos = ahora.getMinutes().toString().padStart(2, '0');
+            fechaTimestamp = `${fecha}T${hora}:${minutos}:00`;
+        }
+
         if (!obraId && obraNombreLegacy) {
-            const dateObj = new Date(fecha);
+            const dateObj = new Date(fechaTimestamp);
             if (Number.isNaN(dateObj.getTime())) {
                 await client.query('ROLLBACK');
                 return res.status(400).json({ error: 'fecha inválida' });
@@ -82,7 +96,7 @@ export async function crearFuncion(req, res) {
 
             const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
             const dia_semana = dayNames[dateObj.getDay()];
-            const hora_inicio = dateObj.toTimeString().slice(0, 8);
+            const hora_inicio_calc = dateObj.toTimeString().slice(0, 8);
 
             const today = new Date();
             const fecha_inicio = today.toISOString().slice(0, 10);
@@ -99,7 +113,7 @@ export async function crearFuncion(req, res) {
                     'Grupo creado automáticamente por compatibilidad (shows → funciones)',
                     userCedula,
                     dia_semana,
-                    hora_inicio,
+                    hora_inicio_calc,
                     fecha_inicio,
                     fecha_fin,
                     String(obraNombreLegacy)
@@ -116,7 +130,7 @@ export async function crearFuncion(req, res) {
                 [grupo.id, userCedula]
             );
 
-            // Crear obra mínima
+            // Crear obra mínima y marcarla LISTA
             const obraRes = await client.query(
                 `INSERT INTO obras (grupo_id, nombre, descripcion, estado)
                  VALUES ($1, $2, $3, 'LISTA')
@@ -153,13 +167,29 @@ export async function crearFuncion(req, res) {
             });
         }
 
-        // Insertar función
+        // Marcar la obra como LISTA si no lo estaba (porque si creás función, es porque querés mostrarla)
+        if (obra.estado !== 'LISTA') {
+            await client.query(
+                `UPDATE obras SET estado = 'LISTA' WHERE id = $1`,
+                [obraId]
+            );
+        }
+
+        // Si la obra es profesional, marcar como tal
+        if (obra.es_profesional && !obra.es_profesional) {
+            await client.query(
+                `UPDATE obras SET es_profesional = true WHERE id = $1`,
+                [obraId]
+            );
+        }
+
+        // Insertar función con timestamp completo
         const result = await client.query(
             `INSERT INTO funciones (
                 obra_id, fecha, lugar, capacidad, precio_base, foto_url, estado
             ) VALUES ($1, $2, $3, $4, $5, $6, 'PROGRAMADA')
             RETURNING *`,
-            [obraId, fecha, lugar, capacidad, precioBase, foto_url]
+            [obraId, fechaTimestamp, lugar, capacidad, precioBase, foto_url]
         );
 
         const funcion = result.rows[0];
@@ -510,15 +540,19 @@ export async function listarFunciones(req, res) {
 
         // Filtro por rol
         if (userRole === 'ACTOR') {
-            // Actores solo ven funciones de sus grupos
-            query += ` JOIN grupo_actores ga ON g.id = ga.grupo_id `;
-            conditions.push(`ga.actor_cedula = $${paramCount++}`);
+            // Actores solo ven funciones de sus grupos (donde son integrantes con cualquier rol)
+            query += ` JOIN grupo_integrantes gi ON g.id = gi.grupo_id `;
+            conditions.push(`gi.usuario_cedula = $${paramCount++}`);
             values.push(userCedula);
         } else if (userRole === 'ADMIN') {
             // Admins solo ven funciones de grupos donde son directores
-            query += ` JOIN grupo_directores gd ON g.id = gd.grupo_id `;
-            conditions.push(`gd.director_cedula = $${paramCount++}`);
+            // Opción 1: usar grupos.director_cedula directamente
+            conditions.push(`g.director_cedula = $${paramCount++}`);
             values.push(userCedula);
+            // Opción 2: o usar grupo_integrantes con rol_en_grupo = 'DIRECTOR'
+            // query += ` JOIN grupo_integrantes gi ON g.id = gi.grupo_id `;
+            // conditions.push(`gi.usuario_cedula = $${paramCount++} AND gi.rol_en_grupo = 'DIRECTOR'`);
+            // values.push(userCedula);
         }
 
         // Filtros adicionales
