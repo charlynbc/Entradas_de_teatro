@@ -31,7 +31,7 @@ export async function listarFuncionesInvitado(req, res) {
           'INDEPENDIENTE' AS tipo_funcion,
           FALSE AS permite_compra_online,
           COALESCE(f.estado, 'PROGRAMADA') AS estado,
-          (SELECT COUNT(*) FROM tickets t WHERE t.funcion_id = f.id AND t.estado = 'DISPONIBLE') AS entradas_disponibles,
+          (SELECT COUNT(*) FROM entradas_v2 t WHERE t.funcion_id = f.id AND t.estado IN ('sin_asignar', 'asignada')) AS entradas_disponibles,
           $1 AS boleteria_contacto,
           $2 AS boleteria_nombre
        FROM funciones f
@@ -76,7 +76,7 @@ export async function obtenerFuncionPublica(req, res) {
           'INDEPENDIENTE' AS tipo_funcion,
           FALSE AS permite_compra_online,
           COALESCE(f.estado, 'PROGRAMADA') AS estado,
-          (SELECT COUNT(*) FROM tickets t WHERE t.funcion_id = f.id AND t.estado = 'DISPONIBLE') AS entradas_disponibles,
+          (SELECT COUNT(*) FROM entradas_v2 t WHERE t.funcion_id = f.id AND t.estado IN ('sin_asignar', 'asignada')) AS entradas_disponibles,
           $1 AS boleteria_contacto,
           $2 AS boleteria_nombre
        FROM funciones f

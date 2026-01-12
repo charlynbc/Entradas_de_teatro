@@ -150,7 +150,7 @@ function renderTimelineItem(f, index) {
             
             <div class="funcion-timeline-footer">
                 ${precio ? `<div class="funcion-precio">${precio}</div>` : '<div></div>'}
-                <button class="btn-reservar" onclick="handleReserva(${JSON.stringify(f.id || f.funcion_id || '')}, ${esProfesional}, ${JSON.stringify(f.fecha || '')})">
+                <button class="btn-reservar" onclick="handleReserva('${String(f.id || f.funcion_id || '')}', ${esProfesional}, '${String(f.fecha || '')}')">
                     <i class="fas ${ctaIcon}"></i>
                     ${ctaText}
                 </button>
@@ -160,12 +160,21 @@ function renderTimelineItem(f, index) {
 }
 
 async function handleReserva(funcionId, esProfesional, fechaIso) {
+    // Validar funcionId
+    if (!funcionId || funcionId === '' || funcionId === 'undefined') {
+        debugLog('[Próximas Funciones] ERROR: funcionId inválido: ' + funcionId);
+        alert('⚠️ Error: Función no válida. Por favor, recarga la página.');
+        return;
+    }
+    
     // Verificar que la función esté disponible
     if (typeof window.iniciarFlujoReserva !== 'function') {
         debugLog('[Próximas Funciones] ERROR: iniciarFlujoReserva no está definida');
         alert('Error al iniciar reserva. Por favor, recarga la página.');
         return;
     }
+    
+    debugLog('[Próximas Funciones] Iniciando reserva para función: ' + funcionId);
     // Usar nuevo flujo unificado
     await window.iniciarFlujoReserva(funcionId, esProfesional, fechaIso);
 }

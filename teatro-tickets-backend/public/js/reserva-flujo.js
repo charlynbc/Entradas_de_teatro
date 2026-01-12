@@ -199,6 +199,10 @@ function renderVendedorSelectable(vendedor, funcion) {
 
   const badge = disponibles > 0 ? `<span class="vendedor-badge">${disponibles} disp.</span>` : '';
 
+  // Convertir objetos a JSON y escapar para onclick
+  const funcionJsonStr = JSON.stringify(funcion).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  const vendedorJsonStr = JSON.stringify(vendedor).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  
   return `
     <div class="vendedor-card ${tieneContacto ? 'clickable' : 'disabled'}">
       <div class="vendedor-card-header">
@@ -215,10 +219,10 @@ function renderVendedorSelectable(vendedor, funcion) {
         ${badge}
         <div class="vendedor-actions">
           ${tieneContacto ? `
-            <button class="btn-wa" onclick="abrirWhatsAppVendedor('${phoneClean}', ${escapeHtml(JSON.stringify(funcion))}, '${escapeHtml(nombre)}')">
+            <button class="btn-wa" onclick='abrirWhatsAppVendedor("${phoneClean}", "${funcionJsonStr}", "${escapeHtml(nombre)}")'>
               <i class="fab fa-whatsapp"></i> WhatsApp
             </button>
-            <button class="btn-reservar" onclick="abrirFormularioReserva(${escapeHtml(JSON.stringify(funcion))}, ${escapeHtml(JSON.stringify(vendedor))})">
+            <button class="btn-reservar" onclick='abrirFormularioReserva("${funcionJsonStr}", "${vendedorJsonStr}")'>
               <i class="fas fa-ticket-alt"></i> Reservar
             </button>
           ` : `
@@ -233,7 +237,10 @@ function renderVendedorSelectable(vendedor, funcion) {
 /**
  * 💬 Abrir WhatsApp con vendedor
  */
-function abrirWhatsAppVendedor(phone, funcion, vendedorNombre) {
+function abrirWhatsAppVendedor(phone, funcionJson, vendedorNombre) {
+  // Decodificar entidades HTML
+  const jsonDecoded = funcionJson.replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+  const funcion = typeof jsonDecoded === 'string' ? JSON.parse(jsonDecoded) : jsonDecoded;
   const mensaje = construirMensajeVendedor(funcion, vendedorNombre);
   const url = `https://wa.me/${phone}?text=${encodeURIComponent(mensaje)}`;
   window.open(url, '_blank');
@@ -242,7 +249,13 @@ function abrirWhatsAppVendedor(phone, funcion, vendedorNombre) {
 /**
  * 📝 Formulario de reserva con datos (nombre + teléfono)
  */
-function abrirFormularioReserva(funcion, vendedor) {
+function abrirFormularioReserva(funcionJson, vendedorJson) {
+  // Decodificar entidades HTML
+  const funcionDecoded = funcionJson.replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+  const vendedorDecoded = vendedorJson.replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+  
+  const funcion = typeof funcionDecoded === 'string' ? JSON.parse(funcionDecoded) : funcionDecoded;
+  const vendedor = typeof vendedorDecoded === 'string' ? JSON.parse(vendedorDecoded) : vendedorDecoded;
   const modal = document.createElement('div');
   modal.className = 'reserva-modal-overlay';
   modal.id = 'formularioModal';
@@ -252,6 +265,10 @@ function abrirFormularioReserva(funcion, vendedor) {
 
   const nombreGuardado = localStorage.getItem('reservaNombre') || '';
   const telefonoGuardado = localStorage.getItem('reservaTelefono') || '';
+  
+  // Convertir objetos a JSON y escapar para el form onsubmit
+  const funcionFormJson = JSON.stringify(funcion).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  const vendedorFormJson = JSON.stringify(vendedor).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
   const html = `
     <div class="reserva-modal-header">
@@ -268,7 +285,7 @@ function abrirFormularioReserva(funcion, vendedor) {
         Vendedor: <strong>${escapeHtml(vendedor.nombre || 'Vendedor')}</strong>
       </p>
       
-      <form id="formularioReserva" onsubmit="enviarReserva(event, ${escapeHtml(JSON.stringify(funcion))}, ${escapeHtml(JSON.stringify(vendedor))})">
+      <form id="formularioReserva" onsubmit='enviarReserva(event, "${funcionFormJson}", "${vendedorFormJson}")'>
         <div class="form-group">
           <label for="nombreReserva">Nombre completo</label>
           <input 
@@ -318,8 +335,15 @@ function abrirFormularioReserva(funcion, vendedor) {
 /**
  * 📤 Enviar reserva al backend
  */
-async function enviarReserva(event, funcion, vendedor) {
+async function enviarReserva(event, funcionJson, vendedorJson) {
   event.preventDefault();
+  
+  // Decodificar entidades HTML
+  const funcionDecoded = funcionJson.replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+  const vendedorDecoded = vendedorJson.replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+  
+  const funcion = typeof funcionDecoded === 'string' ? JSON.parse(funcionDecoded) : funcionDecoded;
+  const vendedor = typeof vendedorDecoded === 'string' ? JSON.parse(vendedorDecoded) : vendedorDecoded;
 
   const nombre = document.getElementById('nombreReserva')?.value?.trim();
   const telefono = document.getElementById('telefonoReserva')?.value?.trim();

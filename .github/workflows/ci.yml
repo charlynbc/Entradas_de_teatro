@@ -1,0 +1,90 @@
+name: CI Super Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  super-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: teatro
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres" 
+          --health-interval 10s 
+          --health-timeout 5s 
+          --health-retries 10
+
+    strategy:
+      matrix:
+        node-version: [20.x, 22.x]
+
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/teatro
+      NODE_ENV: development
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install backend deps
+        working-directory: teatro-tickets-backend
+        run: npm ci || npm install
+
+      - name: Migrate DB (phone+FK)
+        working-directory: teatro-tickets-backend
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+        run: npm run db:migrate-phone-fk
+
+      - name: Start backend
+        working-directory: teatro-tickets-backend
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          RATE_LIMIT_MAX: 500
+        run: |
+          nohup node index-v3-postgres.js > server.log 2>&1 &
+          echo $! > backend.pid
+
+      - name: Wait for health
+        working-directory: teatro-tickets-backend
+        run: |
+          for i in {1..30}; do
+            if curl -fsS http://localhost:3000/health > /dev/null; then
+              echo "Backend OK"; exit 0;
+            fi
+            echo "Esperando backend... ($i)"; sleep 2;
+          done
+          echo "Backend no respondió"; cat server.log; exit 1
+
+      - name: Run super test suite
+        working-directory: teatro-tickets-backend
+        run: node super-test-completo.js
+
+      - name: Upload backend log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-log-${{ matrix.node-version }}
+          path: teatro-tickets-backend/server.log
+
+      - name: Stop backend
+        if: always()
+        working-directory: teatro-tickets-backend
+        run: |
+          if [ -f backend.pid ]; then kill $(cat backend.pid) || true; fi

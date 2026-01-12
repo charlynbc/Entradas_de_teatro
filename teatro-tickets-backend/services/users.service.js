@@ -331,16 +331,41 @@ export async function getUserByCedula(cedula) {
 
 // Actualizar un usuario por cédula
 export async function updateUserByCedula(cedula, data) {
+  // Normalizar alias comunes desde el frontend
+  const normalized = { ...data };
+  if (normalized.nombre !== undefined) {
+    normalized.name = normalized.nombre;
+  }
+  if (normalized.telefono !== undefined) {
+    normalized.phone = normalized.telefono;
+  }
+  delete normalized.nombre;
+  delete normalized.telefono;
+
+  // Restringir a columnas válidas para evitar fallos por claves desconocidas
+  const allowed = new Set([
+    'name',
+    'phone',
+    'email',
+    'genero',
+    'foto_url',
+    'apellido',
+    'fecha_nacimiento',
+    'active',
+    'role'
+  ]);
+
   const fields = [];
   const values = [];
   let idx = 1;
   
-  for (const [key, value] of Object.entries(data)) {
-    if (value !== undefined) {
-      fields.push(`${key} = $${idx}`);
-      values.push(value);
-      idx++;
-    }
+  for (const [key, value] of Object.entries(normalized)) {
+    if (value === undefined) continue;
+    if (!allowed.has(key)) continue;
+
+    fields.push(`${key} = $${idx}`);
+    values.push(value);
+    idx++;
   }
   
   if (fields.length === 0) {

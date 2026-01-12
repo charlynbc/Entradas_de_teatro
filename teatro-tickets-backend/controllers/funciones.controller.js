@@ -307,11 +307,11 @@ export async function obtenerFuncion(req, res) {
                 estado,
                 vendedor_phone,
                 comprador_nombre,
-                     comprador_phone,
+                COALESCE(comprador_contacto, '') AS comprador_phone,
                 precio
-             FROM tickets
-             WHERE funcion_id = $1
-             ORDER BY code ASC`,
+            FROM tickets
+            WHERE funcion_id = $1
+            ORDER BY code ASC`,
             [id]
         );
 
@@ -628,10 +628,12 @@ export async function listarFuncionesPublicas(req, res) {
             ORDER BY f.fecha ASC`
         );
 
+        const funciones = result.rows;
+
         // Compatibilidad: /api/shows (público) espera array
         if (req.baseUrl === '/api/shows') {
             return res.json(
-                result.rows.map(r => ({
+                funciones.map(r => ({
                     ...r,
                     obra: r.obra_nombre ?? r.obra,
                     base_price: r.precio_base
@@ -639,7 +641,12 @@ export async function listarFuncionesPublicas(req, res) {
             );
         }
 
-        res.json({ total: result.rows.length, funciones: result.rows });
+        // Entrega array por defecto; permitir objeto con meta si se solicita
+        if (req.query.formato === 'obj' || req.query.withMeta === 'true') {
+            return res.json({ total: funciones.length, funciones });
+        }
+
+        res.json(funciones);
     } catch (error) {
         console.error('Error al listar funciones públicas:', error);
         res.status(500).json({ error: 'Error al listar funciones públicas' });

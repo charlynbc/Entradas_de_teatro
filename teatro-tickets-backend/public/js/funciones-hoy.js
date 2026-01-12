@@ -54,18 +54,17 @@ async function loadFuncionesHoy() {
         const funciones = Array.isArray(data) ? data : (data.funciones || []);
         debugLog('[Funciones Hoy] Total funciones: ' + funciones.length);
         
-        // Filtrar solo de hoy
+        // Filtrar solo de hoy (comparar solo la fecha, no la hora)
         const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
+        const todayDateOnly = today.toISOString().split('T')[0]; // "2026-01-12"
         
-        debugLog('[Funciones Hoy] Rango: ' + today.toISOString() + ' a ' + tomorrow.toISOString());
+        debugLog('[Funciones Hoy] Fecha de hoy: ' + todayDateOnly);
         
         const funcionesHoy = funciones.filter(f => {
             const fecha = new Date(f.fecha);
-            const esHoy = fecha >= today && fecha < tomorrow;
-            debugLog(`[Funciones Hoy] Función ${f.id}: ${f.fecha} -> ${esHoy ? 'HOY' : 'OTRO DÍA'}`);
+            const fechaDateOnly = fecha.toISOString().split('T')[0];
+            const esHoy = fechaDateOnly === todayDateOnly;
+            debugLog(`[Funciones Hoy] Función ${f.id}: ${f.fecha} (${fechaDateOnly}) -> ${esHoy ? 'HOY ✓' : 'OTRO DÍA ✗'}`);
             return esHoy;
         });
         
@@ -77,7 +76,9 @@ async function loadFuncionesHoy() {
                     <div class="empty-state__icon">🎭</div>
                     <h3 class="empty-state__title">El telón permanece cerrado hoy</h3>
                     <p class="empty-state__text">
-                        No hay funciones programadas para hoy.
+                        Las luces están apagadas, el escenario vacío.<br>
+                        Hoy no hay funciones, pero el arte nunca descansa.<br>
+                        <a href="/proximas-funciones.html" style="color: #F48C06; text-decoration: underline; margin-top: 1rem; display: inline-block;">📅 Mirá las próximas funciones</a>
                     </p>
                 </div>
             `;
@@ -148,7 +149,7 @@ function renderHoyCard(f, index) {
                 ` : ''}
             </div>
             
-            <button class="funcion-hoy-cta" onclick="handleReservaHoy(${JSON.stringify(f.id || f.funcion_id || '')}, ${esProfesional})">
+            <button class="funcion-hoy-cta" onclick="handleReservaHoy('${String(f.id || f.funcion_id || '')}', ${esProfesional})">
                 ${ctaText}
             </button>
         </div>
@@ -156,12 +157,21 @@ function renderHoyCard(f, index) {
 }
 
 async function handleReservaHoy(funcionId, esProfesional) {
+    // Validar funcionId
+    if (!funcionId || funcionId === '' || funcionId === 'undefined') {
+        debugLog('[Funciones Hoy] ERROR: funcionId inválido: ' + funcionId);
+        alert('⚠️ Error: Función no válida. Por favor, recarga la página.');
+        return;
+    }
+    
     // Verificar que la función esté disponible
     if (typeof window.iniciarFlujoReserva !== 'function') {
         debugLog('[Funciones Hoy] ERROR: iniciarFlujoReserva no está definida');
         alert('Error al iniciar reserva. Por favor, recarga la página.');
         return;
     }
+    
+    debugLog('[Funciones Hoy] Iniciando reserva para función: ' + funcionId);
     // Usar flujo unificado
     await window.iniciarFlujoReserva(funcionId, esProfesional);
 }

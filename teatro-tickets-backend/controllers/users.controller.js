@@ -86,7 +86,7 @@ export async function resetPassword(req, res) {
       error.status = 403;
       throw error;
     }
-    const finalPassword = newPassword || 'admin123';
+    const finalPassword = newPassword || 'admin';
     await resetPasswordByFlexibleId(id, finalPassword);
     res.json({ ok: true, mensaje: 'Contraseña reseteada correctamente', nueva: finalPassword });
   } catch (error) {
@@ -104,7 +104,7 @@ export async function crearActor(req, res) {
       cedula, 
       nombre: nombre || name, 
       name: nombre || name,
-      password: password || 'admin123', 
+      password: password || 'admin', 
       rol: 'ACTOR',
       role: 'ACTOR',
       genero: genero || 'otro',
@@ -145,7 +145,7 @@ export async function crearDirector(req, res) {
       cedula, 
       nombre: nombre || name,
       name: nombre || name,
-      password: password || 'admin123', 
+      password: password || 'admin', 
       rol: 'ADMIN',
       role: 'ADMIN',
       genero: genero || 'otro',

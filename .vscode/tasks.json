@@ -91,29 +91,12 @@
       "dependsOrder": "sequence"
     },
     {
-      "label": "Tests: Super Usuario",
+      "label": "Tests: Super Completo",
       "type": "shell",
-      "command": "node tests/test-super-usuario.js",
+      "command": "node teatro-tickets-backend/super-test-completo.js",
       "problemMatcher": []
     },
-    {
-      "label": "Tests: Director",
-      "type": "shell",
-      "command": "node tests/test-director.js",
-      "problemMatcher": []
-    },
-    {
-      "label": "Tests: Vendedores",
-      "type": "shell",
-      "command": "node tests/test-vendedores.js",
-      "problemMatcher": []
-    },
-    {
-      "label": "Tests: Invitados",
-      "type": "shell",
-      "command": "node tests/test-invitados.js",
-      "problemMatcher": []
-    },
+    
     {
       "label": "DB: borrar (salvo supremo)",
       "type": "shell",

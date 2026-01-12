@@ -1,0 +1,25 @@
+                                         Table "public.funciones"
+   Column    |            Type             | Collation | Nullable |                Default                
+-------------+-----------------------------+-----------+----------+---------------------------------------
+ id          | integer                     |           | not null | nextval('funciones_id_seq'::regclass)
+ obra_id     | integer                     |           | not null | 
+ fecha       | timestamp without time zone |           | not null | 
+ lugar       | character varying(200)      |           |          | 
+ capacidad   | integer                     |           | not null | 
+ precio_base | numeric(10,2)               |           | not null | 
+ foto_url    | text                        |           |          | 
+ estado      | character varying(20)       |           | not null | 'PROGRAMADA'::character varying
+ created_at  | timestamp without time zone |           | not null | now()
+ updated_at  | timestamp without time zone |           | not null | now()
+Indexes:
+    "funciones_pkey" PRIMARY KEY, btree (id)
+    "idx_funciones_estado" btree (estado)
+    "idx_funciones_fecha" btree (fecha)
+    "idx_funciones_obra_id" btree (obra_id)
+Check constraints:
+    "funciones_estado_check" CHECK (estado::text = ANY (ARRAY['PROGRAMADA'::character varying, 'CONFIRMADA'::character varying, 'CANCELADA'::character varying, 'REALIZADA'::character varying]::text[]))
+Foreign-key constraints:
+    "funciones_obra_id_fkey" FOREIGN KEY (obra_id) REFERENCES obras(id) ON DELETE CASCADE
+Referenced by:
+    TABLE "tickets" CONSTRAINT "tickets_funcion_id_fkey" FOREIGN KEY (funcion_id) REFERENCES funciones(id) ON DELETE CASCADE
+

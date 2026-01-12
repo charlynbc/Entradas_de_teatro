@@ -1,0 +1,30 @@
+                                           Table "public.grupos"
+     Column      |            Type             | Collation | Nullable |              Default               
+-----------------+-----------------------------+-----------+----------+------------------------------------
+ id              | integer                     |           | not null | nextval('grupos_id_seq'::regclass)
+ nombre          | character varying(200)      |           | not null | 
+ descripcion     | text                        |           |          | 
+ director_cedula | character varying(20)       |           | not null | 
+ dia_semana      | character varying(20)       |           | not null | 
+ hora_inicio     | time without time zone      |           | not null | 
+ fecha_inicio    | date                        |           | not null | 
+ fecha_fin       | date                        |           | not null | 
+ obra_a_realizar | character varying(200)      |           |          | 
+ estado          | character varying(20)       |           | not null | 'ACTIVO'::character varying
+ foto_url        | text                        |           |          | 
+ created_at      | timestamp without time zone |           | not null | now()
+ updated_at      | timestamp without time zone |           | not null | now()
+Indexes:
+    "grupos_pkey" PRIMARY KEY, btree (id)
+    "idx_grupos_director" btree (director_cedula)
+    "idx_grupos_estado" btree (estado)
+    "idx_grupos_fecha_fin" btree (fecha_fin)
+Check constraints:
+    "grupos_estado_check" CHECK (estado::text = ANY (ARRAY['ACTIVO'::character varying, 'INACTIVO'::character varying, 'PAUSADO'::character varying, 'ARCHIVADO'::character varying, 'FINALIZADO'::character varying, 'CANCELADO'::character varying, 'CERRADO'::character varying]::text[]))
+Foreign-key constraints:
+    "grupos_director_cedula_fkey" FOREIGN KEY (director_cedula) REFERENCES users(cedula)
+Referenced by:
+    TABLE "grupo_miembros" CONSTRAINT "grupo_miembros_grupo_id_fkey" FOREIGN KEY (grupo_id) REFERENCES grupos(id) ON DELETE CASCADE
+    TABLE "liquidaciones_grupo" CONSTRAINT "liquidaciones_grupo_grupo_id_fkey" FOREIGN KEY (grupo_id) REFERENCES grupos(id) ON DELETE CASCADE
+    TABLE "obras" CONSTRAINT "obras_grupo_id_fkey" FOREIGN KEY (grupo_id) REFERENCES grupos(id) ON DELETE CASCADE
+

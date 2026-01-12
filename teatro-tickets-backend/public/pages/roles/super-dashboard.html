@@ -3,34 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>👑 Super Usuario - BACÓ</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/css/baco-common.css">
-    <link rel="stylesheet" href="/css/super-usuario.css">
-    <link rel="stylesheet" href="/css/usuarios.css">
+    <title>👑 Super Usuario - BACÓ Teatro</title>
+    <script>
+        // Redirección automática al nuevo dashboard
+        window.location.href = '/pages/super/dashboard.html';
+    </script>
 </head>
 <body>
-    <div class="super-dashboard">
-        <!-- 👑 HERO HEADER -->
-        <section class="super-hero">
-            <div class="super-hero__inner">
-                <img src="/img/default-avatar.png" alt="Super Usuario" class="super-hero__avatar" id="avatarSuper">
-                <div class="super-hero__info">
-                    <h1>👑 Super Usuario</h1>
-                    <p id="nombreSuper">Guardián del Teatro BACÓ</p>
-                    <span class="badge badge-super" style="margin-top: 8px;">🔐 Control Total del Sistema</span>
-                </div>
-                <div class="super-hero__actions">
-                    <button class="btn btn-ghost btn-sm" onclick="editarMiPerfil()">
-                        <i class="fas fa-user-circle"></i> Mi Perfil
-                    </button>
-                    <button class="btn btn-ghost btn-sm" onclick="Baco.Auth.logout()">
-                        <i class="fas fa-sign-out-alt"></i> Salir
-                    </button>
-                </div>
-            </div>
-        </section>
+    <div style="display: flex; align-items: center; justify-content: center; height: 100vh; font-family: 'Inter', sans-serif;">
+        <div style="text-align: center;">
+            <h2>Redirigiendo al Dashboard del Super Usuario...</h2>
+            <p>Si no se redirige automáticamente, <a href="/pages/super/dashboard.html">haz click aquí</a></p>
+        </div>
+    </div>
+</body>
+</html>
 
         <!-- 📊 STATS OVERVIEW -->
         <section class="super-stats">
@@ -206,6 +193,8 @@
             </div>
         </div>
     </div>
+
+    <script>
         // 🔐 Verificar autenticación SUPER
         (async () => {
             const user = await Baco.Auth.ensureUser();
@@ -650,5 +639,9 @@
             }
         });
     </script>
+
+    <!-- Scripts esenciales -->
+    <script src="/js/baco-common.js"></script>
+    <script src="/js/cumpleanos.js"></script>
 </body>
 </html>

@@ -1,0 +1,3 @@
+console.log('🚀 Aplicación iniciada');
+
+// ...existing code...

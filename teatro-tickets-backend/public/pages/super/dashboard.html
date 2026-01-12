@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>👑 Super Usuario - BACÓ Teatro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/baco-common.css">
+    <link rel="stylesheet" href="/css/super-usuario.css">
+    <link rel="stylesheet" href="/css/usuarios.css">
+</head>
+<body>
+    <div class="super-dashboard">
+        <!-- 👑 HERO HEADER -->
+        <section class="super-hero">
+            <div class="super-hero__inner">
+                <img src="/img/logo-baco.svg" alt="Super Usuario" class="super-hero__avatar" id="avatarSuper" onerror="this.src='/img/default-avatar.png'">
+                <div class="super-hero__info">
+                    <h1>👑 Super Usuario</h1>
+                    <p id="nombreSuper">Administrador del Sistema BACÓ</p>
+                    <span class="badge badge-super" style="margin-top: 8px;">🔐 Control Total del Sistema</span>
+                </div>
+                <div class="super-hero__actions">
+                    <button class="btn btn-ghost btn-sm" onclick="abrirEditarPerfil()">
+                        <i class="fas fa-user-circle"></i> Mi Perfil
+                    </button>
+                    <button class="btn btn-ghost btn-sm" onclick="Baco.Auth.logout()">
+                        <i class="fas fa-sign-out-alt"></i> Salir
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 📊 STATS OVERVIEW -->
+        <section class="super-stats">
+            <div class="stat-card" onclick="verTodosLosUsuarios()">
+                <div class="stat-card__label">
+                    <i class="fas fa-users"></i> Total Usuarios
+                </div>
+                <div class="stat-card__value" id="statUsuarios">0</div>
+            </div>
+            <div class="stat-card" onclick="verTodosLosGrupos()">
+                <div class="stat-card__label">
+                    <i class="fas fa-theater-masks"></i> Grupos Activos
+                </div>
+                <div class="stat-card__value" id="statGrupos">0</div>
+            </div>
+            <div class="stat-card" onclick="verTodasLasFunciones()">
+                <div class="stat-card__label">
+                    <i class="fas fa-calendar"></i> Funciones Programadas
+                </div>
+                <div class="stat-card__value" id="statFunciones">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card__label">
+                    <i class="fas fa-ticket-alt"></i> Entradas Vendidas
+                </div>
+                <div class="stat-card__value" id="statEntradas">0</div>
+            </div>
+        </section>
+
+        <!-- 🎯 ACCIONES RÁPIDAS (NO DUPLICADAS) -->
+        <section class="section-panel">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-bolt"></i> Acciones Rápidas
+                </h2>
+            </div>
+            <div class="quick-grid">
+                <div class="quick-action" onclick="abrirCrearDirector()">
+                    <div class="quick-action__icon">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <div class="quick-action__title">Crear Director</div>
+                    <div class="quick-action__desc">Solo tú puedes crear directores</div>
+                </div>
+                <div class="quick-action" onclick="abrirCrearActor()">
+                    <div class="quick-action__icon">
+                        <i class="fas fa-theater-masks"></i>
+                    </div>
+                    <div class="quick-action__title">Crear Actor</div>
+                    <div class="quick-action__desc">Agregar nuevos miembros al elenco</div>
+                </div>
+                <div class="quick-action" onclick="abrirCrearGrupo()">
+                    <div class="quick-action__icon">
+                        <i class="fas fa-users-cog"></i>
+                    </div>
+                    <div class="quick-action__title">Crear Grupo</div>
+                    <div class="quick-action__desc">Formar nuevo grupo teatral</div>
+                </div>
+                <div class="quick-action" onclick="abrirCrearFuncion()">
+                    <div class="quick-action__icon">
+                        <i class="fas fa-calendar-plus"></i>
+                    </div>
+                    <div class="quick-action__title">Crear Función</div>
+                    <div class="quick-action__desc">Programar nueva función</div>
+                </div>
+                <div class="quick-action" onclick="abrirEscanearEntrada()">
+                    <div class="quick-action__icon">
+                        <i class="fas fa-qrcode"></i>
+                    </div>
+                    <div class="quick-action__title">Escanear Entrada</div>
+                    <div class="quick-action__desc">Validar entradas en puerta</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 👥 ÚLTIMOS USUARIOS -->
+        <section class="section-panel">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-users"></i> Últimos Usuarios Creados
+                </h2>
+                <button class="btn btn-primary" onclick="verTodosLosUsuarios()">
+                    <i class="fas fa-list"></i> Ver Todos
+                </button>
+            </div>
+            <div id="usuariosRecientes" class="module-list">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Cargando usuarios...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 🎭 GRUPOS ACTIVOS -->
+        <section class="section-panel">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-theater-masks"></i> Grupos Teatrales Activos
+                </h2>
+                <button class="btn btn-primary" onclick="verTodosLosGrupos()">
+                    <i class="fas fa-list"></i> Ver Todos
+                </button>
+            </div>
+            <div id="gruposActivos" class="module-list">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Cargando grupos...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 📅 PRÓXIMAS FUNCIONES -->
+        <section class="section-panel">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-calendar-alt"></i> Próximas Funciones
+                </h2>
+                <button class="btn btn-primary" onclick="verTodasLasFunciones()">
+                    <i class="fas fa-list"></i> Ver Todas
+                </button>
+            </div>
+            <div id="funcionesProximas" class="module-list">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Cargando funciones...</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- MODAL: EDITAR MI PERFIL -->
+    <div id="modalEditarPerfil" class="modal-overlay" style="display: none;">
+        <div class="modal-card" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>👑 Editar Mi Perfil</h3>
+                <button class="btn-close" onclick="cerrarModal('modalEditarPerfil')">&times;</button>
+            </div>
+            <form id="formEditarPerfil" onsubmit="guardarPerfil(event)" class="form-grid">
+                <!-- Foto de Perfil -->
+                <div class="field" style="grid-column: 1/-1; text-align: center;">
+                    <label class="label">Foto de Perfil</label>
+                    <div style="margin: 15px 0;">
+                        <img id="previsualizacionFoto" src="/img/logo-baco.svg" alt="Preview" 
+                             style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #DAA520;" onerror="this.src='/img/default-avatar.png'">
+                    </div>
+                    <input type="file" id="inputFoto" accept="image/*" style="display:none;" onchange="previsualizarFoto(event)">
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <button type="button" class="btn btn-sm" onclick="document.getElementById('inputFoto').click()">
+                            <i class="fas fa-camera"></i> Cambiar Foto
+                        </button>
+                        <button type="button" class="btn btn-sm btn-secondary" onclick="eliminarFoto()">
+                            <i class="fas fa-trash"></i> Usar Logo BACÓ
+                        </button>
+                    </div>
+                    <div class="note" style="margin-top: 10px;">Por defecto se muestra el logo de BACÓ</div>
+                </div>
+
+                <!-- Datos del perfil -->
+                <div class="field">
+                    <label class="label">Nombre *</label>
+                    <input class="input" type="text" id="inputNombre" required>
+                </div>
+                <div class="field">
+                    <label class="label">Apellido</label>
+                    <input class="input" type="text" id="inputApellido">
+                </div>
+                <div class="field">
+                    <label class="label">Email</label>
+                    <input class="input" type="email" id="inputEmail">
+                </div>
+                <div class="field">
+                    <label class="label">Teléfono</label>
+                    <input class="input" type="tel" id="inputTelefono" pattern="[0-9]{8,9}">
+                </div>
+                <div class="field" style="grid-column: 1/-1;">
+                    <div class="info-box">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Nota:</strong> No puedes cambiar tu cédula (es tu identificador único en el sistema).
+                    </div>
+                </div>
+                
+                <div class="modal-actions" style="grid-column: 1/-1;">
+                    <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalEditarPerfil')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: CREAR DIRECTOR -->
+    <div id="modalCrearDirector" class="modal-overlay" style="display: none;">
+        <div class="modal-card" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-user-tie"></i> Crear Director</h3>
+                <button class="btn-close" onclick="cerrarModal('modalCrearDirector')">&times;</button>
+            </div>
+            <div class="info-box" style="margin-bottom: 20px;">
+                <i class="fas fa-info-circle"></i>
+                <div>
+                    <strong>Contraseña inicial:</strong> director123<br>
+                    <strong>Rol asignado:</strong> ADMIN<br>
+                    <span class="note">El director podrá cambiar su contraseña después.</span>
+                </div>
+            </div>
+            <form id="formCrearDirector" onsubmit="crearDirector(event)" class="form-grid">
+                <div class="field">
+                    <label class="label">Cédula *</label>
+                    <input class="input" type="text" id="dirCedula" required pattern="[0-9]{7,8}" placeholder="12345678">
+                    <div class="note">7 u 8 dígitos sin puntos</div>
+                </div>
+                <div class="field">
+                    <label class="label">Nombre *</label>
+                    <input class="input" type="text" id="dirNombre" required placeholder="Juan Pérez">
+                </div>
+                <div class="field">
+                    <label class="label">Teléfono *</label>
+                    <input class="input" type="tel" id="dirTelefono" required pattern="[0-9]{8,9}" placeholder="099123456">
+                </div>
+                <div class="field">
+                    <label class="label">Fecha de nacimiento *</label>
+                    <input class="input" type="date" id="dirFechaNac" required>
+                </div>
+                <div class="field">
+                    <label class="label">Género *</label>
+                    <select class="select" id="dirGenero" required>
+                        <option value="">Seleccionar...</option>
+                        <option value="M">Masculino</option>
+                        <option value="F">Femenino</option>
+                        <option value="Otro">Otro</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label class="label">Email</label>
+                    <input class="input" type="email" id="dirEmail" placeholder="correo@ejemplo.com">
+                </div>
+                
+                <div class="modal-actions" style="grid-column: 1/-1;">
+                    <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalCrearDirector')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Crear Director
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: CREAR ACTOR -->
+    <div id="modalCrearActor" class="modal-overlay" style="display: none;">
+        <div class="modal-card" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-theater-masks"></i> Crear Actor</h3>
+                <button class="btn-close" onclick="cerrarModal('modalCrearActor')">&times;</button>
+            </div>
+            <div class="info-box" style="margin-bottom: 20px;">
+                <i class="fas fa-info-circle"></i>
+                <div>
+                    <strong>Contraseña inicial:</strong> actor123<br>
+                    <strong>Rol asignado:</strong> ACTOR<br>
+                    <span class="note">El actor podrá cambiar su contraseña después.</span>
+                </div>
+            </div>
+            <form id="formCrearActor" onsubmit="crearActor(event)" class="form-grid">
+                <div class="field">
+                    <label class="label">Cédula *</label>
+                    <input class="input" type="text" id="actCedula" required pattern="[0-9]{7,8}" placeholder="12345678">
+                    <div class="note">7 u 8 dígitos sin puntos</div>
+                </div>
+                <div class="field">
+                    <label class="label">Nombre *</label>
+                    <input class="input" type="text" id="actNombre" required placeholder="María González">
+                </div>
+                <div class="field">
+                    <label class="label">Teléfono *</label>
+                    <input class="input" type="tel" id="actTelefono" required pattern="[0-9]{8,9}" placeholder="099123456">
+                </div>
+                <div class="field">
+                    <label class="label">Fecha de nacimiento *</label>
+                    <input class="input" type="date" id="actFechaNac" required>
+                </div>
+                <div class="field">
+                    <label class="label">Género *</label>
+                    <select class="select" id="actGenero" required>
+                        <option value="">Seleccionar...</option>
+                        <option value="M">Masculino</option>
+                        <option value="F">Femenino</option>
+                        <option value="Otro">Otro</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label class="label">Email</label>
+                    <input class="input" type="email" id="actEmail" placeholder="correo@ejemplo.com">
+                </div>
+                
+                <div class="modal-actions" style="grid-column: 1/-1;">
+                    <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalCrearActor')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Crear Actor
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ESCANEAR ENTRADA -->
+    <div id="modalEscanear" class="modal-overlay" style="display: none;">
+        <div class="modal-card" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-qrcode"></i> Escanear Entrada</h3>
+                <button class="btn-close" onclick="cerrarModal('modalEscanear')">&times;</button>
+            </div>
+            <div class="field">
+                <label class="label">Selecciona la Función *</label>
+                <select class="select" id="funcionEscaneo" required>
+                    <option value="">Cargando funciones...</option>
+                </select>
+                <div class="note">Elige la función antes de escanear</div>
+            </div>
+            <div class="field">
+                <label class="label">Código de Entrada *</label>
+                <input class="input" type="text" id="codigoEntrada" placeholder="Ingresa o escanea el código" autofocus>
+                <div class="note">Puedes escribir o escanear con lector QR</div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalEscanear')">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="validarEntrada()">
+                    <i class="fas fa-check"></i> Validar Entrada
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/baco-common.js"></script>
+    <script src="/js/cumpleanos.js"></script>
+    
+    <script>
+        let archivoFoto = null;
+        let usuarioActual = null;
+
+        // 🔐 Verificar autenticación SUPER
+        (async () => {
+            const user = await Baco.Auth.ensureUser();
+            if (!user || user.role !== 'SUPER') {
+                Baco.UI.showError('Acceso denegado. Solo Super Usuarios.');
+                setTimeout(() => window.location.href = '/pages/auth/login.html', 1200);
+                return;
+            }
+
+            usuarioActual = user;
+            
+            // Cargar nombre y avatar
+            const userName = user.name || user.nombre || 'Super Usuario';
+            const userApellido = user.apellido || '';
+            document.getElementById('nombreSuper').textContent = `${userName} ${userApellido}`.trim();
+            
+            // Cargar avatar (por defecto logo BACÓ)
+            const avatarUrl = user.foto_url || user.foto || '/img/logo-baco.svg';
+            document.getElementById('avatarSuper').src = avatarUrl;
+            
+            // Cargar todos los datos
+            await Promise.all([
+                cargarEstadisticas(),
+                cargarUsuariosRecientes(),
+                cargarGruposActivos(),
+                cargarFuncionesProximas()
+            ]);
+        })();
+
+        // ========================================
+        // ESTADÍSTICAS
+        // ========================================
+        async function cargarEstadisticas() {
+            try {
+                const [usuarios, grupos, funciones] = await Promise.all([
+                    Baco.API.get('/users'),
+                    Baco.API.get('/grupos'),
+                    Baco.API.get('/funciones')
+                ]);
+                
+                document.getElementById('statUsuarios').textContent = usuarios.length;
+                document.getElementById('statGrupos').textContent = grupos.filter(g => !g.suspendido).length;
+                
+                // Funciones futuras
+                const ahora = new Date();
+                const funcionesFuturas = funciones.filter(f => new Date(f.fecha_hora) > ahora);
+                document.getElementById('statFunciones').textContent = funcionesFuturas.length;
+                
+                // Total de entradas vendidas (suma de todas las funciones)
+                const totalEntradas = funciones.reduce((acc, f) => acc + (f.entradas_vendidas || 0), 0);
+                document.getElementById('statEntradas').textContent = totalEntradas;
+            } catch (error) {
+                console.error('Error cargando estadísticas:', error);
+            }
+        }
+
+        // ========================================
+        // USUARIOS
+        // ========================================
+        async function cargarUsuariosRecientes() {
+            try {
+                const usuarios = await Baco.API.get('/users');
+                const recientes = usuarios
+                    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                    .slice(0, 5);
+                
+                renderUsuarios(recientes);
+            } catch (error) {
+                document.getElementById('usuariosRecientes').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state__icon">❌</div>
+                        <div class="empty-state__title">Error al cargar usuarios</div>
+                    </div>
+                `;
+            }
+        }
+
+        function renderUsuarios(usuarios) {
+            const container = document.getElementById('usuariosRecientes');
+            
+            if (usuarios.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state__icon">👤</div>
+                        <div class="empty-state__title">No hay usuarios</div>
+                        <div class="empty-state__text">Comienza creando directores y actores</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = usuarios.map(u => {
+                const roleClass = u.role === 'SUPER' ? 'super' : u.role === 'ADMIN' ? 'admin' : 'actor';
+                const roleText = u.role === 'SUPER' ? 'Super' : u.role === 'ADMIN' ? 'Director' : 'Actor';
+                const isNew = u.created_at && (Date.now() - new Date(u.created_at).getTime() < 7 * 24 * 60 * 60 * 1000);
+                
+                return `
+                    <div class="module-item fade-in">
+                        <div class="module-item__header">
+                            <div class="module-item__icon">
+                                ${u.role === 'SUPER' ? '👑' : u.role === 'ADMIN' ? '🎬' : '🎭'}
+                            </div>
+                            <div class="module-item__info">
+                                <div class="module-item__title">${u.nombre || u.name || 'Sin nombre'}</div>
+                                <div class="module-item__meta">
+                                    <span class="badge badge-${roleClass}">${roleText}</span>
+                                    ${isNew ? '<span class="badge badge-success">✨ Nuevo</span>' : ''}
+                                    <span>CI: ${Baco.Format.cedula(u.cedula)}</span>
+                                </div>
+                            </div>
+                            <div class="module-item__actions">
+                                <button class="btn btn-sm btn-secondary" onclick="verUsuario('${u.cedula}')">
+                                    <i class="fas fa-eye"></i> Ver
+                                </button>
+                                <button class="btn btn-sm btn-primary" onclick="editarUsuario('${u.cedula}')">
+                                    <i class="fas fa-edit"></i> Editar
+                                </button>
+                                ${u.role !== 'SUPER' ? `<button class="btn btn-sm btn-danger" onclick="eliminarUsuario('${u.cedula}', '${(u.nombre || u.name || '').replace(/'/g, "\\'")}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function verTodosLosUsuarios() {
+            window.location.href = '/pages/usuarios/listar-usuarios.html';
+        }
+
+        async function verUsuario(cedula) {
+            Baco.UI.showInfo('Abriendo perfil de usuario...');
+            window.location.href = `/pages/usuarios/ver-usuario.html?cedula=${cedula}`;
+        }
+
+        async function editarUsuario(cedula) {
+            Baco.UI.showInfo('Función de edición en desarrollo...');
+            // TODO: Implementar modal de edición inline
+        }
+
+        async function eliminarUsuario(cedula, nombre) {
+            const confirmed = await Baco.UI.confirm(
+                `¿Estás seguro de eliminar a ${nombre}? Esta acción no se puede deshacer.`,
+                '⚠️ Confirmar Eliminación',
+                'Sí, eliminar'
+            );
+
+            if (confirmed) {
+                try {
+                    await Baco.API.delete(`/users/${cedula}`);
+                    Baco.UI.showSuccess('Usuario eliminado correctamente');
+                    await cargarUsuariosRecientes();
+                    await cargarEstadisticas();
+                } catch (error) {
+                    console.error('Error:', error);
+                    Baco.UI.showError('Error al eliminar usuario');
+                }
+            }
+        }
+
+        // ========================================
+        // GRUPOS
+        // ========================================
+        async function cargarGruposActivos() {
+            try {
+                const grupos = await Baco.API.get('/grupos');
+                const activos = grupos
+                    .filter(g => !g.suspendido)
+                    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                    .slice(0, 5);
+                
+                renderGrupos(activos);
+            } catch (error) {
+                document.getElementById('gruposActivos').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state__icon">❌</div>
+                        <div class="empty-state__title">Error al cargar grupos</div>
+                    </div>
+                `;
+            }
+        }
+
+        function renderGrupos(grupos) {
+            const container = document.getElementById('gruposActivos');
+            
+            if (grupos.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state__icon">🎭</div>
+                        <div class="empty-state__title">No hay grupos activos</div>
+                        <div class="empty-state__text">Crea el primer grupo teatral</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = grupos.map(g => `
+                <div class="module-item fade-in">
+                    <div class="module-item__header">
+                        <div class="module-item__icon">🎭</div>
+                        <div class="module-item__info">
+                            <div class="module-item__title">${g.nombre}</div>
+                            <div class="module-item__meta">
+                                <span>${g.miembros_count || 0} miembros</span>
+                                <span>${g.funciones_count || 0} funciones</span>
+                            </div>
+                        </div>
+                        <div class="module-item__actions">
+                            <button class="btn btn-sm btn-secondary" onclick="verGrupo('${g.id}')">
+                                <i class="fas fa-eye"></i> Ver
+                            </button>
+                            <button class="btn btn-sm btn-primary" onclick="editarGrupo('${g.id}')">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="eliminarGrupo('${g.id}', '${g.nombre.replace(/'/g, "\\'")}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function verTodosLosGrupos() {
+            Baco.UI.showInfo('Redirigiendo a la lista completa...');
+            // TODO: Crear página de lista completa de grupos
+            window.location.href = '/pages/grupos/listar-grupos.html';
+        }
+
+        function verGrupo(id) {
+            window.location.href = `/pages/grupos/ver-grupo.html?id=${id}`;
+        }
+
+        function editarGrupo(id) {
+            Baco.UI.showInfo('Función de edición en desarrollo...');
+            // TODO: Implementar edición de grupo
+        }
+
+        async function eliminarGrupo(id, nombre) {
+            const confirmed = await Baco.UI.confirm(
+                `¿Estás seguro de eliminar el grupo "${nombre}"?`,
+                '⚠️ Confirmar Eliminación',
+                'Sí, eliminar'
+            );
+
+            if (confirmed) {
+                try {
+                    await Baco.API.delete(`/grupos/${id}`);
+                    Baco.UI.showSuccess('Grupo eliminado correctamente');
+                    await cargarGruposActivos();
+                    await cargarEstadisticas();
+                } catch (error) {
+                    console.error('Error:', error);
+                    Baco.UI.showError('Error al eliminar grupo');
+                }
+            }
+        }
+
+        // ========================================
+        // FUNCIONES
+        // ========================================
+        async function cargarFuncionesProximas() {
+            try {
+                const funciones = await Baco.API.get('/funciones');
+                const ahora = new Date();
+                const proximas = funciones
+                    .filter(f => new Date(f.fecha_hora) > ahora)
+                    .sort((a, b) => new Date(a.fecha_hora) - new Date(b.fecha_hora))
+                    .slice(0, 5);
+                
+                renderFunciones(proximas);
+            } catch (error) {
+                document.getElementById('funcionesProximas').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state__icon">❌</div>
+                        <div class="empty-state__title">Error al cargar funciones</div>
+                    </div>
+                `;
+            }
+        }
+
+        function renderFunciones(funciones) {
+            const container = document.getElementById('funcionesProximas');
+            
+            if (funciones.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state__icon">📅</div>
+                        <div class="empty-state__title">No hay funciones programadas</div>
+                        <div class="empty-state__text">Crea la primera función</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = funciones.map(f => {
+                const fecha = new Date(f.fecha_hora);
+                const fechaStr = fecha.toLocaleDateString('es-UY');
+                const horaStr = fecha.toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' });
+                
+                return `
+                    <div class="module-item fade-in">
+                        <div class="module-item__header">
+                            <div class="module-item__icon">📅</div>
+                            <div class="module-item__info">
+                                <div class="module-item__title">${f.nombre_obra || 'Sin título'}</div>
+                                <div class="module-item__meta">
+                                    <span><i class="fas fa-calendar"></i> ${fechaStr}</span>
+                                    <span><i class="fas fa-clock"></i> ${horaStr}</span>
+                                    <span>${f.entradas_vendidas || 0} entradas</span>
+                                </div>
+                            </div>
+                            <div class="module-item__actions">
+                                <button class="btn btn-sm btn-secondary" onclick="verFuncion('${f.id}')">
+                                    <i class="fas fa-eye"></i> Ver
+                                </button>
+                                <button class="btn btn-sm btn-primary" onclick="editarFuncion('${f.id}')">
+                                    <i class="fas fa-edit"></i> Editar
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="eliminarFuncion('${f.id}', '${(f.nombre_obra || '').replace(/'/g, "\\'")}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function verTodasLasFunciones() {
+            Baco.UI.showInfo('Redirigiendo a la lista completa...');
+            // TODO: Crear página de lista completa
+            window.location.href = '/pages/funciones/listar-funciones.html';
+        }
+
+        function verFuncion(id) {
+            window.location.href = `/pages/funciones/ver-funcion.html?id=${id}`;
+        }
+
+        function editarFuncion(id) {
+            Baco.UI.showInfo('Función de edición en desarrollo...');
+            // TODO: Implementar edición
+        }
+
+        async function eliminarFuncion(id, nombre) {
+            const confirmed = await Baco.UI.confirm(
+                `¿Estás seguro de eliminar la función "${nombre}"?`,
+                '⚠️ Confirmar Eliminación',
+                'Sí, eliminar'
+            );
+
+            if (confirmed) {
+                try {
+                    await Baco.API.delete(`/funciones/${id}`);
+                    Baco.UI.showSuccess('Función eliminada correctamente');
+                    await cargarFuncionesProximas();
+                    await cargarEstadisticas();
+                } catch (error) {
+                    console.error('Error:', error);
+                    Baco.UI.showError('Error al eliminar función');
+                }
+            }
+        }
+
+        // ========================================
+        // ACCIONES RÁPIDAS
+        // ========================================
+        function abrirEditarPerfil() {
+            document.getElementById('inputNombre').value = usuarioActual.name || usuarioActual.nombre || '';
+            document.getElementById('inputApellido').value = usuarioActual.apellido || '';
+            document.getElementById('inputEmail').value = usuarioActual.email || '';
+            document.getElementById('inputTelefono').value = usuarioActual.phone || '';
+            
+            const fotoUrl = usuarioActual.foto_url || usuarioActual.foto || '/img/logo-baco.svg';
+            document.getElementById('previsualizacionFoto').src = fotoUrl;
+            
+            document.getElementById('modalEditarPerfil').style.display = 'flex';
+        }
+
+        function previsualizarFoto(event) {
+            const file = event.target.files[0];
+            if (file) {
+                archivoFoto = file;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('previsualizacionFoto').src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function eliminarFoto() {
+            archivoFoto = null;
+            document.getElementById('previsualizacionFoto').src = '/img/logo-baco.svg';
+            document.getElementById('inputFoto').value = '';
+        }
+
+        async function guardarPerfil(event) {
+            event.preventDefault();
+            Baco.UI.showLoading('Guardando perfil...');
+
+            try {
+                let fotoUrl = usuarioActual.foto_url || usuarioActual.foto;
+
+                // 1. Subir foto si hay una nueva
+                if (archivoFoto) {
+                    const formData = new FormData();
+                    formData.append('foto', archivoFoto);
+
+                    const uploadRes = await fetch(`${Baco.API.baseURL}/upload/foto-perfil/${usuarioActual.cedula}`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${Baco.Auth.getToken()}`
+                        },
+                        body: formData
+                    });
+
+                    if (uploadRes.ok) {
+                        const data = await uploadRes.json();
+                        fotoUrl = data.url;
+                    }
+                } else if (document.getElementById('previsualizacionFoto').src.includes('logo-baco.svg')) {
+                    fotoUrl = '/img/logo-baco.svg';
+                }
+
+                // 2. Actualizar datos del perfil
+                const payload = {
+                    nombre: document.getElementById('inputNombre').value.trim(),
+                    apellido: document.getElementById('inputApellido').value.trim(),
+                    email: document.getElementById('inputEmail').value.trim(),
+                    phone: document.getElementById('inputTelefono').value.trim(),
+                    foto_url: fotoUrl
+                };
+
+                await Baco.API.put(`/users/${usuarioActual.cedula}`, payload);
+
+                // 3. Actualizar localStorage y UI
+                usuarioActual.name = payload.nombre;
+                usuarioActual.nombre = payload.nombre;
+                usuarioActual.apellido = payload.apellido;
+                usuarioActual.email = payload.email;
+                usuarioActual.phone = payload.phone;
+                usuarioActual.foto_url = fotoUrl;
+                usuarioActual.foto = fotoUrl;
+                
+                localStorage.setItem('user', JSON.stringify(usuarioActual));
+
+                document.getElementById('avatarSuper').src = fotoUrl;
+                document.getElementById('nombreSuper').textContent = `${payload.nombre} ${payload.apellido}`.trim();
+
+                Baco.UI.hideLoading();
+                Baco.UI.showSuccess('✨ Perfil actualizado correctamente');
+                cerrarModal('modalEditarPerfil');
+                archivoFoto = null;
+            } catch (error) {
+                Baco.UI.hideLoading();
+                console.error('Error:', error);
+                Baco.UI.showError('Error al actualizar perfil');
+            }
+        }
+
+        function abrirCrearDirector() {
+            document.getElementById('formCrearDirector').reset();
+            document.getElementById('modalCrearDirector').style.display = 'flex';
+        }
+
+        async function crearDirector(event) {
+            event.preventDefault();
+            Baco.UI.showLoading('Creando director...');
+
+            try {
+                const payload = {
+                    cedula: document.getElementById('dirCedula').value.trim(),
+                    nombre: document.getElementById('dirNombre').value.trim(),
+                    phone: document.getElementById('dirTelefono').value.trim(),
+                    fecha_nacimiento: document.getElementById('dirFechaNac').value,
+                    genero: document.getElementById('dirGenero').value,
+                    email: document.getElementById('dirEmail').value.trim() || null
+                };
+
+                await Baco.API.post('/users/directores', payload);
+
+                Baco.UI.hideLoading();
+                Baco.UI.showSuccess('✅ Director creado correctamente');
+                cerrarModal('modalCrearDirector');
+                await cargarUsuariosRecientes();
+                await cargarEstadisticas();
+            } catch (error) {
+                Baco.UI.hideLoading();
+                console.error('Error:', error);
+                Baco.UI.showError(error.message || 'Error al crear director');
+            }
+        }
+
+        function abrirCrearActor() {
+            document.getElementById('formCrearActor').reset();
+            document.getElementById('modalCrearActor').style.display = 'flex';
+        }
+
+        async function crearActor(event) {
+            event.preventDefault();
+            Baco.UI.showLoading('Creando actor...');
+
+            try {
+                const payload = {
+                    cedula: document.getElementById('actCedula').value.trim(),
+                    nombre: document.getElementById('actNombre').value.trim(),
+                    phone: document.getElementById('actTelefono').value.trim(),
+                    fecha_nacimiento: document.getElementById('actFechaNac').value,
+                    genero: document.getElementById('actGenero').value,
+                    email: document.getElementById('actEmail').value.trim() || null
+                };
+
+                await Baco.API.post('/users/actores', payload);
+
+                Baco.UI.hideLoading();
+                Baco.UI.showSuccess('✅ Actor creado correctamente');
+                cerrarModal('modalCrearActor');
+                await cargarUsuariosRecientes();
+                await cargarEstadisticas();
+            } catch (error) {
+                Baco.UI.hideLoading();
+                console.error('Error:', error);
+                Baco.UI.showError(error.message || 'Error al crear actor');
+            }
+        }
+
+        function abrirCrearGrupo() {
+            window.location.href = '/pages/grupos/crear-grupo.html';
+        }
+
+        function abrirCrearFuncion() {
+            Baco.UI.showInfo('Redirigiendo...');
+            // El Super puede crear funciones desde el panel completo
+            window.location.href = '/pages/funciones/crear-funcion.html';
+        }
+
+        async function abrirEscanearEntrada() {
+            // Cargar funciones disponibles
+            try {
+                const funciones = await Baco.API.get('/funciones');
+                const ahora = new Date();
+                const disponibles = funciones.filter(f => {
+                    const fecha = new Date(f.fecha_hora);
+                    const diff = fecha - ahora;
+                    // Funciones de hoy o próximas 24h
+                    return diff > -86400000 && diff < 86400000;
+                });
+
+                const select = document.getElementById('funcionEscaneo');
+                if (disponibles.length === 0) {
+                    select.innerHTML = '<option value="">No hay funciones para hoy</option>';
+                } else {
+                    select.innerHTML = disponibles.map(f => {
+                        const fecha = new Date(f.fecha_hora);
+                        const label = `${f.nombre_obra} - ${fecha.toLocaleDateString('es-UY')} ${fecha.toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' })}`;
+                        return `<option value="${f.id}">${label}</option>`;
+                    }).join('');
+                }
+
+                document.getElementById('codigoEntrada').value = '';
+                document.getElementById('modalEscanear').style.display = 'flex';
+            } catch (error) {
+                Baco.UI.showError('Error al cargar funciones');
+            }
+        }
+
+        async function validarEntrada() {
+            const funcionId = document.getElementById('funcionEscaneo').value;
+            const codigo = document.getElementById('codigoEntrada').value.trim();
+
+            if (!funcionId) {
+                Baco.UI.showError('Selecciona una función');
+                return;
+            }
+
+            if (!codigo) {
+                Baco.UI.showError('Ingresa el código de entrada');
+                return;
+            }
+
+            Baco.UI.showLoading('Validando entrada...');
+
+            try {
+                const response = await Baco.API.post(`/entradas-v2/${codigo}/escanear`, {
+                    funcionId: parseInt(funcionId)
+                });
+
+                Baco.UI.hideLoading();
+                Baco.UI.showSuccess(`✅ Entrada validada correctamente`);
+                document.getElementById('codigoEntrada').value = '';
+                document.getElementById('codigoEntrada').focus();
+            } catch (error) {
+                Baco.UI.hideLoading();
+                console.error('Error:', error);
+                Baco.UI.showError(error.message || 'Error al validar entrada');
+            }
+        }
+
+        // ========================================
+        // UTILIDADES
+        // ========================================
+        function cerrarModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Cerrar modal al hacer click fuera
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        });
+
+        // ESC para cerrar modales
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay').forEach(modal => {
+                    modal.style.display = 'none';
+                });
+            }
+        });
+    </script>
+</body>
+</html>

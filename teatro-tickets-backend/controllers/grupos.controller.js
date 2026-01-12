@@ -389,7 +389,7 @@ export const agregarDirector = async (req, res) => {
             await createUser({
                 cedula: targetCedula,
                 nombre: finalName,
-                password: password || 'admin123',
+                password: password || 'admin',
                 rol: 'ADMIN',
                 genero: genero || 'otro',
                 phone,

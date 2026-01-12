@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📅 Crear Función - BACÓ Teatro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/css/baco-common.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #12090D 0%, #1a0f13 100%);
+            color: #f0f0f0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(218, 165, 32, 0.1);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid rgba(218, 165, 32, 0.3);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #DAA520;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .tipo-funcion-selector {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .tipo-card {
+            flex: 1;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .tipo-card:hover {
+            border-color: #DAA520;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(218, 165, 32, 0.2);
+        }
+
+        .tipo-card.active {
+            border-color: #DAA520;
+            background: rgba(218, 165, 32, 0.1);
+        }
+
+        .tipo-card-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .tipo-card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #f0f0f0;
+            margin-bottom: 8px;
+        }
+
+        .tipo-card-description {
+            font-size: 14px;
+            color: #999;
+            line-height: 1.5;
+        }
+
+        .info-box {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .info-box.info {
+            background: rgba(33, 150, 243, 0.1);
+            border-left: 4px solid #2196F3;
+        }
+
+        .info-box.warning {
+            background: rgba(255, 193, 7, 0.1);
+            border-left: 4px solid #FFC107;
+        }
+
+        .info-box-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .info-box-content {
+            flex: 1;
+        }
+
+        .info-box-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .info-box-text {
+            font-size: 14px;
+            color: #ccc;
+            line-height: 1.6;
+        }
+
+        .btn-volver {
+            background: transparent;
+            border: 1px solid #DAA520;
+            color: #DAA520;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-volver:hover {
+            background: rgba(218, 165, 32, 0.2);
+            transform: translateX(-3px);
+        }
+
+        .form-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .form-section {
+            margin-bottom: 32px;
+        }
+
+        .form-section h3 {
+            color: #DAA520;
+            font-size: 18px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(218, 165, 32, 0.3);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #DAA520;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-group label .required {
+            color: #ff4444;
+            margin-left: 4px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #f0f0f0;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #DAA520;
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 3px rgba(218, 165, 32, 0.1);
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group small {
+            display: block;
+            color: rgba(240, 240, 240, 0.6);
+            font-size: 12px;
+            margin-top: 6px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 16px;
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #DAA520 0%, #B8860B 100%);
+            color: #12090D;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(218, 165, 32, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #f0f0f0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #DAA520;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .alert {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-success {
+            background: rgba(40, 167, 69, 0.2);
+            border: 1px solid #28a745;
+            color: #28a745;
+        }
+
+        .alert-error {
+            background: rgba(220, 53, 69, 0.2);
+            border: 1px solid #dc3545;
+            color: #dc3545;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .info-box {
+            background: rgba(52, 152, 219, 0.1);
+            border-left: 4px solid #3498db;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            color: #3498db;
+        }
+
+        .info-box i {
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                <i class="fas fa-calendar-plus"></i>
+                Nueva Función
+            </h1>
+            <button class="btn-volver" onclick="volver()">
+                <i class="fas fa-arrow-left"></i>
+                Volver
+            </button>
+        </div>
+        <!-- Selector de Tipo de Función -->
+        <div class="tipo-funcion-selector">
+            <div class="tipo-card active" id="tipo-normal" onclick="seleccionarTipo('normal')">
+                <div class="tipo-card-icon">🎭</div>
+                <div class="tipo-card-title">Función Normal</div>
+                <div class="tipo-card-description">
+                    Para grupos de teatro. Las entradas se reparten automáticamente entre el elenco.
+                </div>
+            </div>
+
+            <div class="tipo-card" id="tipo-profesional" onclick="seleccionarTipo('profesional')">
+                <div class="tipo-card-icon">💼</div>
+                <div class="tipo-card-title">Función Profesional</div>
+                <div class="tipo-card-description">
+                    Boletería exclusiva. Las entradas NO se reparten al elenco, solo venta directa.
+                </div>
+            </div>
+        </div>
+
+        <!-- Info boxes según tipo -->
+        <div id="info-normal" class="info-box info">
+            <div class="info-box-icon">ℹ️</div>
+            <div class="info-box-content">
+                <div class="info-box-title">Función de Grupo Teatral</div>
+                <div class="info-box-text">
+                    • Cada actor del grupo recibirá entradas para vender<br>
+                    • Las ganancias se reparten entre el elenco<br>
+                    • Ideal para grupos de teatro amateur
+                </div>
+            </div>
+        </div>
+
+        <div id="info-profesional" class="info-box warning" style="display: none;">
+            <div class="info-box-icon">⚠️</div>
+            <div class="info-box-content">
+                <div class="info-box-title">Función Profesional - Solo Boletería</div>
+                <div class="info-box-text">
+                    • Las entradas NO se reparten al elenco<br>
+                    • Solo venta por boletería oficial<br>
+                    • Ideal para obras comerciales o profesionales<br>
+                    • Todas las entradas quedan asignadas a boletería
+                </div>
+            </div>
+        </div>
+        <div id="alert" class="alert"></div>
+
+        <div class="form-card">
+            <div class="info-box">
+                <i class="fas fa-info-circle"></i>
+                Complete los datos de la función. Todos los campos marcados con <span style="color: #ff4444;">*</span> son obligatorios.
+            </div>
+
+            <form id="formCrearFuncion">
+                <!-- Sección: Obra -->
+                <div class="form-section">
+                    <h3><i class="fas fa-theater-masks"></i> Obra Teatral</h3>
+                    
+                    <div class="form-group">
+                        <label for="obraId">
+                            Seleccionar Obra <span class="required">*</span>
+                        </label>
+                        <select id="obraId" name="obra_id" required>
+                            <option value="">-- Cargando obras... --</option>
+                        </select>
+                        <small>Si no hay obras disponibles, primero debe crear una en su grupo</small>
+                    </div>
+                </div>
+
+                <!-- Sección: Fecha y Lugar -->
+                <div class="form-section">
+                    <h3><i class="fas fa-calendar-alt"></i> Fecha y Ubicación</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="fecha">
+                                Fecha <span class="required">*</span>
+                            </label>
+                            <input type="date" id="fecha" name="fecha" required>
+                            <small>La función debe ser en una fecha futura</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="horaInicio">
+                                Hora de Inicio <span class="required">*</span>
+                            </label>
+                            <input type="time" id="horaInicio" name="hora_inicio" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="lugar">
+                            Lugar <span class="required">*</span>
+                        </label>
+                        <input type="text" id="lugar" name="lugar" placeholder="Ej: Teatro Municipal, Auditorio Central" required>
+                        <small>Nombre del lugar donde se realizará la función</small>
+                    </div>
+                </div>
+
+                <!-- Sección: Capacidad y Precios -->
+                <div class="form-section">
+                    <h3><i class="fas fa-ticket-alt"></i> Capacidad y Precios</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="capacidad">
+                                Capacidad Total <span class="required">*</span>
+                            </label>
+                            <input type="number" id="capacidad" name="capacidad" min="1" max="10000" placeholder="100" required>
+                            <small>Número máximo de asistentes</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="precioBase">
+                                Precio Base <span class="required">*</span>
+                            </label>
+                            <input type="number" id="precioBase" name="precio_base" min="0" step="0.01" placeholder="500" required>
+                            <small>Precio en pesos uruguayos ($)</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección: Información Adicional (Opcional) -->
+                <div class="form-section">
+                    <h3><i class="fas fa-info"></i> Información Adicional</h3>
+                    
+                    <div class="form-group">
+                        <label for="descripcion">
+                            Descripción
+                        </label>
+                        <textarea id="descripcion" name="descripcion" placeholder="Información adicional sobre esta función específica..."></textarea>
+                        <small>Opcional: detalles específicos de esta función</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fotoUrl">
+                            URL de Imagen/Afiche
+                        </label>
+                        <input type="url" id="fotoUrl" name="foto_url" placeholder="https://ejemplo.com/afiche.jpg">
+                        <small>Opcional: URL de la imagen promocional</small>
+                    </div>
+                </div>
+
+                <!-- Botones -->
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="limpiarFormulario()">
+                        <i class="fas fa-eraser"></i>
+                        Limpiar
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="btnSubmit">
+                        <i class="fas fa-save"></i>
+                        Crear Función
+                    </button>
+                </div>
+            </form>
+
+            <div class="loading" id="loading">
+                <i class="fas fa-spinner fa-spin fa-3x"></i>
+                <p style="margin-top: 16px;">Creando función...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/baco-common.js"></script>
+    <script>
+        let obras = [];
+        let user = null;
+        let tipoFuncion = 'normal'; // Por defecto función normal
+
+        // Seleccionar tipo de función
+        function seleccionarTipo(tipo) {
+            tipoFuncion = tipo;
+
+            // Actualizar UI
+            document.getElementById('tipo-normal').classList.toggle('active', tipo === 'normal');
+            document.getElementById('tipo-profesional').classList.toggle('active', tipo === 'profesional');
+
+            document.getElementById('info-normal').style.display = tipo === 'normal' ? 'flex' : 'none';
+            document.getElementById('info-profesional').style.display = tipo === 'profesional' ? 'flex' : 'none';
+
+            console.log('Tipo de función seleccionada:', tipo);
+        }
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Verificar autenticación
+                user = await Baco.Auth.ensureUser();
+                
+                if (!user || !['SUPER', 'ADMIN'].includes(user.role)) {
+                    Baco.UI.showError('No tienes permisos para crear funciones');
+                    setTimeout(() => window.location.href = '/pages/auth/login.html', 1500);
+                    return;
+                }
+
+                // Cargar obras
+                await cargarObras();
+
+                // Configurar fecha mínima (hoy)
+                const hoy = new Date().toISOString().split('T')[0];
+                document.getElementById('fecha').min = hoy;
+                document.getElementById('fecha').value = hoy;
+
+            } catch (error) {
+                console.error('Error de inicialización:', error);
+                mostrarError('Error al cargar la página');
+            }
+        });
+
+        // Cargar obras disponibles
+        async function cargarObras() {
+            try {
+                const selectObra = document.getElementById('obraId');
+                selectObra.innerHTML = '<option value="">Cargando...</option>';
+
+                obras = await Baco.API.get('/obras');
+                
+                if (!obras || obras.length === 0) {
+                    selectObra.innerHTML = '<option value="">No hay obras disponibles</option>';
+                    mostrarError('No hay obras disponibles. Primero debe crear una obra en su grupo.');
+                    return;
+                }
+
+                // Filtrar solo obras en estado LISTA
+                const obrasDisponibles = obras.filter(o => o.estado === 'LISTA');
+
+                if (obrasDisponibles.length === 0) {
+                    selectObra.innerHTML = '<option value="">No hay obras listas para función</option>';
+                    mostrarError('No hay obras en estado LISTA. Las obras deben estar listas antes de crear funciones.');
+                    return;
+                }
+
+                selectObra.innerHTML = '<option value="">-- Seleccione una obra --</option>';
+                
+                obrasDisponibles.forEach(obra => {
+                    const option = document.createElement('option');
+                    option.value = obra.id;
+                    option.textContent = `${obra.nombre} (${obra.grupo_nombre || 'Sin grupo'})`;
+                    selectObra.appendChild(option);
+                });
+
+            } catch (error) {
+                console.error('Error al cargar obras:', error);
+                mostrarError('Error al cargar las obras disponibles');
+            }
+        }
+
+        // Manejar envío del formulario
+        document.getElementById('formCrearFuncion').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const btnSubmit = document.getElementById('btnSubmit');
+            const loading = document.getElementById('loading');
+            const formData = new FormData(e.target);
+
+            // Validaciones
+            const obraId = formData.get('obra_id');
+            const fecha = formData.get('fecha');
+            const capacidad = parseInt(formData.get('capacidad'));
+
+            if (!obraId) {
+                mostrarError('Debe seleccionar una obra');
+                return;
+            }
+
+            if (capacidad < 1 || capacidad > 10000) {
+                mostrarError('La capacidad debe estar entre 1 y 10000');
+                return;
+            }
+
+            // Verificar que la fecha sea futura
+            const fechaSeleccionada = new Date(fecha + 'T' + formData.get('hora_inicio'));
+            if (fechaSeleccionada <= new Date()) {
+                mostrarError('La función debe ser en una fecha y hora futura');
+                return;
+            }
+
+            try {
+                btnSubmit.disabled = true;
+                loading.classList.add('active');
+                document.getElementById('formCrearFuncion').style.display = 'none';
+
+                // Preparar datos
+                const datos = {
+                    obra_id: parseInt(obraId),
+                    fecha: fecha,
+                    hora_inicio: formData.get('hora_inicio'),
+                    lugar: formData.get('lugar'),
+                    capacidad: capacidad,
+                    precio_base: parseFloat(formData.get('precio_base')),
+                    descripcion: formData.get('descripcion') || null,
+                    foto_url: formData.get('foto_url') || null,
+                    estado: 'PROGRAMADA'
+                };
+
+                console.log('Creando función con datos:', datos);
+                console.log('Tipo de función:', tipoFuncion);
+
+                // Si es función profesional, actualizar la obra
+                if (tipoFuncion === 'profesional') {
+                    try {
+                        const obraActual = obras.find(o => o.id == obraId);
+                        if (obraActual) {
+                            await Baco.API.put(`/obras/${obraId}`, {
+                                ...obraActual,
+                                es_profesional: true
+                            });
+                            console.log('Obra marcada como profesional');
+                        }
+                    } catch (error) {
+                        console.warn('No se pudo marcar la obra como profesional:', error);
+                    }
+                }
+
+                // Crear función
+                const response = await Baco.API.post('/funciones', datos);
+                
+                console.log('Respuesta del servidor:', response);
+
+                if (tipoFuncion === 'profesional') {
+                    mostrarExito('✅ Función profesional creada. Todas las entradas en boletería.');
+                } else {
+                    mostrarExito('✅ Función creada exitosamente');
+                }
+
+                // Redirigir después de 2 segundos
+                setTimeout(() => {
+                    if (user.role === 'SUPER') {
+                        window.location.href = '/pages/super/dashboard.html';
+                    } else {
+                        window.location.href = '/pages/roles/director.html';
+                    }
+                }, 2000);
+
+            } catch (error) {
+                console.error('Error al crear función:', error);
+                mostrarError(error.message || 'Error al crear la función');
+                
+                btnSubmit.disabled = false;
+                loading.classList.remove('active');
+                document.getElementById('formCrearFuncion').style.display = 'block';
+            }
+        });
+
+        // Limpiar formulario
+        function limpiarFormulario() {
+            document.getElementById('formCrearFuncion').reset();
+            const hoy = new Date().toISOString().split('T')[0];
+            document.getElementById('fecha').value = hoy;
+            document.getElementById('obraId').selectedIndex = 0;
+            ocultarAlerta();
+        }
+
+        // Volver
+        function volver() {
+            if (user && user.role === 'SUPER') {
+                window.location.href = '/pages/super/dashboard.html';
+            } else {
+                window.location.href = '/pages/roles/director.html';
+            }
+        }
+
+        // Mostrar alerta
+        function mostrarAlerta(mensaje, tipo) {
+            const alert = document.getElementById('alert');
+            alert.className = `alert alert-${tipo} show`;
+            alert.textContent = mensaje;
+            
+            // Auto-ocultar después de 5 segundos
+            setTimeout(() => {
+                alert.classList.remove('show');
+            }, 5000);
+        }
+
+        function mostrarExito(mensaje) {
+            mostrarAlerta(mensaje, 'success');
+        }
+
+        function mostrarError(mensaje) {
+            mostrarAlerta(mensaje, 'error');
+        }
+
+        function ocultarAlerta() {
+            document.getElementById('alert').classList.remove('show');
+        }
+    </script>
+</body>
+</html>

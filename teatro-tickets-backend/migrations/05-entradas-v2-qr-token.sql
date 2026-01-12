@@ -12,6 +12,6 @@ UPDATE entradas_v2
 
 ALTER TABLE entradas_v2
   ALTER COLUMN qr_token SET NOT NULL,
-  ALTER COLUMN qr_token SET DEFAULT md5(random()::text || clock_timestamp()::text || id::text);
+  ALTER COLUMN qr_token SET DEFAULT md5(random()::text || clock_timestamp()::text || pg_backend_pid()::text);
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_entradas_v2_qr_token ON entradas_v2(qr_token);

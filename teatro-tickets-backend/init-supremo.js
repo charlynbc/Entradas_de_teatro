@@ -5,6 +5,7 @@
 
 import pool from './db/postgres.js';
 import { logger } from './utils/logger.js';
+import { hashPassword } from './config/auth.js';
 
 export async function initSupremo() {
   try {
@@ -23,14 +24,14 @@ export async function initSupremo() {
       
       // Crear usuario SUPER si no existe
       const supremoCedula = '48376669';
-      const supremoName = 'Super Usuario';
+      const supremoName = 'Super Baco';
       
-      // Usar contraseña hasheada por defecto
-      const passwordHash = 'hashedPassword_Teamomama91';
+      // Hash de contraseña por defecto
+      const passwordHash = await hashPassword('Teamomama91');
       
       await client.query(
-        `INSERT INTO users (cedula, name, password_hash, role, genero, active, created_at)
-         VALUES ($1, $2, $3, 'SUPER', 'otro', true, NOW())
+        `INSERT INTO users (cedula, name, password_hash, role, genero, active, phone, created_at)
+         VALUES ($1, $2, $3, 'SUPER', 'otro', true, $1, NOW())
          ON CONFLICT (cedula) DO NOTHING`,
         [supremoCedula, supremoName, passwordHash]
       );

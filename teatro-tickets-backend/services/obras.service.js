@@ -66,8 +66,8 @@ export async function createObra(obraData, userCedula, userRole) {
 
   // Crear obra - sin columna es_profesional
   const result = await query(
-    `INSERT INTO obras (grupo_id, nombre, descripcion, autor, genero, duracion_aprox)
-     VALUES ($1, $2, $3, $4, $5, $6)
+    `INSERT INTO obras (grupo_id, nombre, descripcion, autor, genero, duracion_aprox, estado)
+     VALUES ($1, $2, $3, $4, $5, $6, 'LISTA')
      RETURNING *`,
     [grupo_id, nombre, descripcion, autor, genero, duracion_aprox]
   );
